@@ -1,6 +1,10 @@
 mod fmodl;
+use std::path::Path;
+
 use fmodl::ast::expression::{Expression, Literal};
+use fmodl::db;
 use fmodl::grammar::parse;
+use serde_json::Value;
 
 fn main() {
     assert_eq!(
@@ -58,6 +62,19 @@ fn main() {
         match parse(code) {
             Ok(expr) => println!("\n✅\t{}\n\n🧾\t{}\n\n", code, expr),
             Err(error) => println!("\n❌\t{}\n\n🧾\t{}\n\n", code, error),
+        }
+    }
+
+    match db::open(Path::new("./fmodl.db")) {
+        Ok(db) => {
+            let edges = db::query_prop(db, "name", Value::String(String::from("John Connor")));
+            println!("Found edges: {}", edges.iter().count());
+            for edge in edges {
+                println!("Got edge: {:?}", edge)
+            }
+        }
+        Err(error) => {
+            println!("Error: {:?}", error)
         }
     }
 }
