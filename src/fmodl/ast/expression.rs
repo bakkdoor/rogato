@@ -1,10 +1,14 @@
+pub use super::fn_call::FunctionArgs;
 use std::fmt::Display;
+
+pub type Identifier = String;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum Expression {
     LiteralExpr(LiteralExpr),
     Sum(Box<Expression>, Box<Expression>),
     Product(Box<Expression>, Box<Expression>),
+    FnCall(Identifier, Box<FunctionArgs>),
 }
 
 impl Display for Expression {
@@ -13,6 +17,9 @@ impl Display for Expression {
             Expression::LiteralExpr(lit_exp) => lit_exp.fmt(f),
             Expression::Sum(a, b) => f.write_fmt(format_args!("(+ {} {})", a, b)),
             Expression::Product(a, b) => f.write_fmt(format_args!("(* {} {})", a, b)),
+            Expression::FnCall(fn_ident, args) => {
+                f.write_fmt(format_args!("({} {})", fn_ident, args))
+            }
         }
     }
 }

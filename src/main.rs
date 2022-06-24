@@ -48,11 +48,11 @@ fn main() {
         "1*2",
         "(2*3)*(3+5)",
         "2 * 3 + 4 * 8",
-        "invalid",
+        "(myFunction 2)",
     ] {
         match parse(code) {
-            Ok(expr) => println!("\n\n\n\n✅\t{}\n\n🧾\t{}", code, expr),
-            Err(error) => println!("\n\n\n\n❌\t{}\n\n🧾\t{}", code, error),
+            Ok(expr) => println!("\n✅\t{}\n\n🧾\t{}\n\n\n", code, expr),
+            Err(error) => println!("\n❌\t{}\n\n🧾\t{}\n\n\n", code, error),
         }
     }
 }
