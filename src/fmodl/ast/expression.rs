@@ -9,6 +9,7 @@ pub enum Expression {
     Sum(Box<Expression>, Box<Expression>),
     Product(Box<Expression>, Box<Expression>),
     FnCall(Identifier, Box<FunctionArgs>),
+    Var(Identifier),
 }
 
 impl Display for Expression {
@@ -20,6 +21,7 @@ impl Display for Expression {
             Expression::FnCall(fn_ident, args) => {
                 f.write_fmt(format_args!("({}{})", fn_ident, args))
             }
+            Expression::Var(id) => f.write_str(id),
         }
     }
 }

@@ -30,7 +30,13 @@ grammar parser() for str {
     rule atom() -> Expression
         = number_lit()
         / "(" _ v:sum() _ ")" { v }
+        / variable()
         / fn_call()
+
+    rule variable() -> Expression
+        = _ id:identifier() _ {
+            Expression::Var(id)
+        }
 
     rule fn_call() -> Expression
         = "(" _ id:(operator() / identifier()) _ args:(fn_arg())* _ ")" {
@@ -56,8 +62,11 @@ grammar parser() for str {
         }
 
     rule identifier() -> Identifier
-        = id:$([ 'a'..='z' | 'A'..='Z']['a'..='z' | 'A'..='Z' | '0'..='9' ]?)+ {
-            String::from_iter(id)
+        = id1:$([ 'a'..='z' | 'A'..='Z' | '-' | '_']) id2:$(['a'..='z' | 'A'..='Z' | '-' | '_' | '0'..='9'])* {
+            let mut id = String::new();
+            id.push_str(id1);
+            id.push_str(String::from_iter(id2).as_str());
+            id
         }
 
     rule operator() -> Identifier

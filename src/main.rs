@@ -52,6 +52,8 @@ fn main() {
         "(myFunction 2 3)",
         "(foo (bar 1) 2 3)",
         "(foo (bar (baz (* 3 (+ 4 5) (+ 6 7)))))",
+        "(to-upper a b)",
+        "(to-upper (__do-something-with__ a-var b_var))",
     ] {
         match parse(code) {
             Ok(expr) => println!("\n✅\t{}\n\n🧾\t{}\n\n\n", code, expr),
