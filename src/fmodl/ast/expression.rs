@@ -28,15 +28,15 @@ impl Display for Expression {
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum Literal {
-    Int64(i64),
-    String(String),
+    Int64Lit(i64),
+    StringLit(String),
 }
 
 impl Display for Literal {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Literal::Int64(num) => f.write_fmt(format_args!("{}", num)),
-            Literal::String(string) => f.write_fmt(format_args!("{}", string)),
+            Literal::Int64Lit(num) => f.write_fmt(format_args!("{}", num)),
+            Literal::StringLit(string) => f.write_fmt(format_args!("{}", string)),
         }
     }
 }

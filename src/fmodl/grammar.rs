@@ -53,12 +53,12 @@ grammar parser() for str {
 
     rule number_lit() -> Expression
         = n:$(['0'..='9']+) {
-            Expression::Literal(Literal::Int64(n.parse().unwrap()))
+            Expression::Literal(Literal::Int64Lit(n.parse().unwrap()))
         }
 
     rule string_lit() -> Expression
         = "\"" s:([^ '"']*) "\"" {
-            Expression::Literal(Literal::String(String::from_iter(s)))
+            Expression::Literal(Literal::StringLit(String::from_iter(s)))
         }
 
     rule identifier() -> Identifier

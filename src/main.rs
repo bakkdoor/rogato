@@ -1,7 +1,7 @@
 mod fmodl;
 use std::path::Path;
 
-use fmodl::ast::expression::{Expression, Literal};
+use fmodl::ast::expression::{Expression::*, Literal::*};
 use fmodl::db;
 use fmodl::grammar::parse;
 use serde_json::Value;
@@ -9,36 +9,36 @@ use serde_json::Value;
 fn main() {
     assert_eq!(
         parse("1+1"),
-        Ok(Expression::Sum(
-            Box::new(Expression::Literal(Literal::Int64(1))),
-            Box::new(Expression::Literal(Literal::Int64(1)))
+        Ok(Sum(
+            Box::new(Literal(Int64Lit(1))),
+            Box::new(Literal(Int64Lit(1)))
         ))
     );
     assert_eq!(
         parse("5*5"),
-        Ok(Expression::Product(
-            Box::new(Expression::Literal(Literal::Int64(5))),
-            Box::new(Expression::Literal(Literal::Int64(5)))
+        Ok(Product(
+            Box::new(Literal(Int64Lit(5))),
+            Box::new(Literal(Int64Lit(5)))
         ))
     );
     assert_eq!(
         parse("2+3*4"),
-        Ok(Expression::Sum(
-            Box::new(Expression::Literal(Literal::Int64(2))),
-            Box::new(Expression::Product(
-                Box::new(Expression::Literal(Literal::Int64(3))),
-                Box::new(Expression::Literal(Literal::Int64(4)))
+        Ok(Sum(
+            Box::new(Literal(Int64Lit(2))),
+            Box::new(Product(
+                Box::new(Literal(Int64Lit(3))),
+                Box::new(Literal(Int64Lit(4)))
             )),
         ))
     );
     assert_eq!(
         parse("(2+3) * 4"),
-        Ok(Expression::Product(
-            Box::new(Expression::Sum(
-                Box::new(Expression::Literal(Literal::Int64(2))),
-                Box::new(Expression::Literal(Literal::Int64(3))),
+        Ok(Product(
+            Box::new(Sum(
+                Box::new(Literal(Int64Lit(2))),
+                Box::new(Literal(Int64Lit(3))),
             )),
-            Box::new(Expression::Literal(Literal::Int64(4)))
+            Box::new(Literal(Int64Lit(4)))
         ))
     );
     assert!(parse("(22+)+1").is_err());
