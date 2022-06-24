@@ -5,7 +5,7 @@ pub type Identifier = String;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum Expression {
-    LiteralExpr(LiteralExpr),
+    Literal(Literal),
     Sum(Box<Expression>, Box<Expression>),
     Product(Box<Expression>, Box<Expression>),
     FnCall(Identifier, Box<FunctionArgs>),
@@ -15,7 +15,7 @@ pub enum Expression {
 impl Display for Expression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Expression::LiteralExpr(lit_exp) => lit_exp.fmt(f),
+            Expression::Literal(lit_exp) => lit_exp.fmt(f),
             Expression::Sum(a, b) => f.write_fmt(format_args!("(+ {} {})", a, b)),
             Expression::Product(a, b) => f.write_fmt(format_args!("(* {} {})", a, b)),
             Expression::FnCall(fn_ident, args) => {
@@ -27,16 +27,16 @@ impl Display for Expression {
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub enum LiteralExpr {
+pub enum Literal {
     Int64(i64),
     String(String),
 }
 
-impl Display for LiteralExpr {
+impl Display for Literal {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            LiteralExpr::Int64(num) => f.write_fmt(format_args!("{}", num)),
-            LiteralExpr::String(string) => f.write_fmt(format_args!("{}", string)),
+            Literal::Int64(num) => f.write_fmt(format_args!("{}", num)),
+            Literal::String(string) => f.write_fmt(format_args!("{}", string)),
         }
     }
 }

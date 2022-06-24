@@ -2,7 +2,7 @@ extern crate peg;
 
 use peg::{error::ParseError, parser, str::LineCol};
 
-use crate::fmodl::ast::expression::{Expression, FunctionArgs, Identifier, LiteralExpr};
+use crate::fmodl::ast::expression::{Expression, FunctionArgs, Identifier, Literal};
 
 parser! {
 /// Doc comment
@@ -53,12 +53,12 @@ grammar parser() for str {
 
     rule number_lit() -> Expression
         = n:$(['0'..='9']+) {
-            Expression::LiteralExpr(LiteralExpr::Int64(n.parse().unwrap()))
+            Expression::Literal(Literal::Int64(n.parse().unwrap()))
         }
 
     rule string_lit() -> Expression
         = "\"" s:([^ '"']*) "\"" {
-            Expression::LiteralExpr(LiteralExpr::String(String::from_iter(s)))
+            Expression::Literal(Literal::String(String::from_iter(s)))
         }
 
     rule identifier() -> Identifier

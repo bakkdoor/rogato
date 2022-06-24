@@ -1,29 +1,29 @@
 mod fmodl;
-use fmodl::ast::expression::{Expression, LiteralExpr};
+use fmodl::ast::expression::{Expression, Literal};
 use fmodl::grammar::parse;
 
 fn main() {
     assert_eq!(
         parse("1+1"),
         Ok(Expression::Sum(
-            Box::new(Expression::LiteralExpr(LiteralExpr::Int64(1))),
-            Box::new(Expression::LiteralExpr(LiteralExpr::Int64(1)))
+            Box::new(Expression::Literal(Literal::Int64(1))),
+            Box::new(Expression::Literal(Literal::Int64(1)))
         ))
     );
     assert_eq!(
         parse("5*5"),
         Ok(Expression::Product(
-            Box::new(Expression::LiteralExpr(LiteralExpr::Int64(5))),
-            Box::new(Expression::LiteralExpr(LiteralExpr::Int64(5)))
+            Box::new(Expression::Literal(Literal::Int64(5))),
+            Box::new(Expression::Literal(Literal::Int64(5)))
         ))
     );
     assert_eq!(
         parse("2+3*4"),
         Ok(Expression::Sum(
-            Box::new(Expression::LiteralExpr(LiteralExpr::Int64(2))),
+            Box::new(Expression::Literal(Literal::Int64(2))),
             Box::new(Expression::Product(
-                Box::new(Expression::LiteralExpr(LiteralExpr::Int64(3))),
-                Box::new(Expression::LiteralExpr(LiteralExpr::Int64(4)))
+                Box::new(Expression::Literal(Literal::Int64(3))),
+                Box::new(Expression::Literal(Literal::Int64(4)))
             )),
         ))
     );
@@ -31,10 +31,10 @@ fn main() {
         parse("(2+3) * 4"),
         Ok(Expression::Product(
             Box::new(Expression::Sum(
-                Box::new(Expression::LiteralExpr(LiteralExpr::Int64(2))),
-                Box::new(Expression::LiteralExpr(LiteralExpr::Int64(3))),
+                Box::new(Expression::Literal(Literal::Int64(2))),
+                Box::new(Expression::Literal(Literal::Int64(3))),
             )),
-            Box::new(Expression::LiteralExpr(LiteralExpr::Int64(4)))
+            Box::new(Expression::Literal(Literal::Int64(4)))
         ))
     );
     assert!(parse("(22+)+1").is_err());
