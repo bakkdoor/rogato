@@ -39,10 +39,14 @@ grammar parser() for str {
         }
 
     rule fn_call() -> Expression
-        = "(" _ id:(operator() / identifier()) _ args:(fn_arg())* _ ")" {
+        = "(" _ id:fn_id() _ args:(fn_arg())* _ ")" {
             let args = FunctionArgs::new(args);
             Expression::FnCall(id, Box::new(args))
         }
+
+    rule fn_id() -> Identifier
+        = operator()
+        / identifier()
 
     rule fn_arg() -> Expression
         = _ e:expression() { e }
