@@ -18,7 +18,7 @@ impl Display for Expression {
             Expression::Sum(a, b) => f.write_fmt(format_args!("(+ {} {})", a, b)),
             Expression::Product(a, b) => f.write_fmt(format_args!("(* {} {})", a, b)),
             Expression::FnCall(fn_ident, args) => {
-                f.write_fmt(format_args!("({} {})", fn_ident, args))
+                f.write_fmt(format_args!("({}{})", fn_ident, args))
             }
         }
     }

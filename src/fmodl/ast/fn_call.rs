@@ -20,7 +20,7 @@ impl Display for FunctionArgs {
             .args
             .iter()
             .map(|arg| format!("{}", arg))
-            .fold(String::from(""), |acc, fmt| format!("{}{}", acc, fmt));
+            .fold(String::from(""), |acc, fmt| format!("{} {}", acc, fmt));
 
         f.write_fmt(format_args!("{}", fmt_str))
     }

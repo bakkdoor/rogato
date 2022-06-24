@@ -33,7 +33,7 @@ grammar parser() for str {
         / fn_call()
 
     rule fn_call() -> Expression
-        = "(" _ id:identifier() _ args:(fn_arg())* _ ")" {
+        = "(" _ id:(operator() / identifier()) _ args:(fn_arg())* _ ")" {
             let args = FunctionArgs::new(args);
             Expression::FnCall(id, Box::new(args))
         }
@@ -56,9 +56,15 @@ grammar parser() for str {
         }
 
     rule identifier() -> Identifier
-        = id:$([ 'a'..='z' | 'A'..='Z']['a'..='z' | 'A'..='Z' | '0'..='9' ])+ {
+        = id:$([ 'a'..='z' | 'A'..='Z']['a'..='z' | 'A'..='Z' | '0'..='9' ]?)+ {
             String::from_iter(id)
         }
+
+    rule operator() -> Identifier
+        = id:$(['+' | '-' | '*' | '/' | '>' | '<' | '=' | '!' | '^'])+ {
+            String::from_iter(id)
+        }
+
 
 }}
 

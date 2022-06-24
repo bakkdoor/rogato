@@ -48,7 +48,10 @@ fn main() {
         "1*2",
         "(2*3)*(3+5)",
         "2 * 3 + 4 * 8",
-        "(myFunction 2)",
+        "(+ 3 (* 4 5))",
+        "(myFunction 2 3)",
+        "(foo (bar 1) 2 3)",
+        "(foo (bar (baz (* 3 (+ 4 5) (+ 6 7)))))",
     ] {
         match parse(code) {
             Ok(expr) => println!("\n✅\t{}\n\n🧾\t{}\n\n\n", code, expr),
