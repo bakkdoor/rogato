@@ -56,8 +56,8 @@ fn main() {
         "(      to-upper   (  __do-something-with__         a-var        b_var      )   )",
     ] {
         match parse(code) {
-            Ok(expr) => println!("\n✅\t{}\n\n🧾\t{}\n\n\n", code, expr),
-            Err(error) => println!("\n❌\t{}\n\n🧾\t{}\n\n\n", code, error),
+            Ok(expr) => println!("\n✅\t{}\n\n🧾\t{}\n\n", code, expr),
+            Err(error) => println!("\n❌\t{}\n\n🧾\t{}\n\n", code, error),
         }
     }
 }
