@@ -6,6 +6,8 @@ use fmodl::db;
 use fmodl::grammar::parse;
 use serde_json::Value;
 
+const DB_PATH: &str = "./fmodl.db";
+
 fn main() {
     assert_eq!(
         parse("1+1"),
@@ -65,16 +67,17 @@ fn main() {
         }
     }
 
-    match db::open(Path::new("./fmodl.db")) {
-        Ok(db) => {
-            let edges = db::query_prop(db, "name", Value::String(String::from("John Connor")));
-            println!("Found edges: {}", edges.iter().count());
-            for edge in edges {
-                println!("Got edge: {:?}", edge)
+    let result = db::with_db(Path::new(DB_PATH), move |db| {
+        match db::query_prop(db, "name", Value::String(String::from("John Connor"))) {
+            Ok(edges) => {
+                println!("Found edges: {}", edges.iter().count());
+                for edge in edges.iter() {
+                    println!("Got edge: {:?}", edge)
+                }
+                Ok(edges)
             }
+            err => err,
         }
-        Err(error) => {
-            println!("Error: {:?}", error)
-        }
-    }
+    });
+    println!("DB Query Result: {:?}", result);
 }
