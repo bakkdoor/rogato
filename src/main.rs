@@ -67,17 +67,32 @@ fn main() {
         }
     }
 
-    let result = db::with_db(Path::new(DB_PATH), move |db| {
-        match db::query_prop(db, "name", Value::String(String::from("John Connor"))) {
-            Ok(edges) => {
-                println!("Found edges: {}", edges.iter().count());
-                for edge in edges.iter() {
-                    println!("Got edge: {:?}", edge)
-                }
-                Ok(edges)
-            }
-            err => err,
+    do_db_stuff();
+}
+
+fn do_db_stuff() {
+    println!("Opening DB @ {}", DB_PATH);
+
+    let datastore = db::open(Path::new(DB_PATH)).map_err(print_error).unwrap();
+
+    let result = db::query_prop(
+        &datastore,
+        "name",
+        Value::String(String::from("John Connor")),
+    )
+    .map(|edges| {
+        println!("Found edges: {}", edges.iter().count());
+        for edge in edges.iter() {
+            println!("Got edge: {:?}", edge)
         }
-    });
+        edges
+    })
+    .map_err(print_error);
+
     println!("DB Query Result: {:?}", result);
+}
+
+fn print_error<E: std::fmt::Debug>(error: E) -> E {
+    eprintln!("Error doing DB stuff: {:?}", error);
+    error
 }
