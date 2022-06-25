@@ -1,0 +1,96 @@
+module People (@People, Person, Location, oldestPeopleNear)
+
+type @People :: [Person]
+
+type Person :: {
+  name :: String
+  age :: Uint
+  location :: Location
+}
+
+type Location :: {
+  lat :: Lattitude
+  long :: Longitude
+}
+
+type @Locations :: [Location]
+
+type City :: {
+  name :: String
+  Country :: Country
+  location :: Location
+}
+
+type @Cities :: [City]
+
+// query from graph db
+let oldestPeopleNear loc =
+  from @People
+  |> where (p -> Location.isNear p.location loc)
+  |> orderBy ascending(.age)
+  // same as:
+  |> orderBy (.age |> ascending)
+  // .age is syntax sugar for: let .age p = p.age
+  // same as:
+  |> orderBy ((p -> p.age) |> ascending)
+  // same as:
+  |> orderBy ((p1 p2 -> p1.age <=> p2.age) |> ascending)
+
+
+let oldestPeopleNear loc personLimit =
+  from (oldestPeopleNear loc)
+  |> limit personLimit
+
+
+// add some locations
+let Germany = Country{name: "Germany"}
+let Osnabrueck = City{
+  name: "Osnabrück",
+  country: Germany,
+  location: Location{lat: 150, long: 150}
+}
+let Bremen = City{
+  name: "Bremen",
+  country: Germany,
+  location: Location{lat: 150, long: 250}
+}
+
+let addLocations =
+  [
+    @Cities
+      <- Osnabrueck
+      <- Bremen,
+
+    // alternative:
+    @Locations
+      <- Bremen.location#{city: Bremen}
+      <- Osnabrück.location#{city: Osnabrueck}
+  ]
+
+
+let locationsNearOsna =
+  locationsWithin Osnabrueck.location (10 |> km)
+
+let locationsWithin loc maxDistance =
+  (l <- @Locations)
+  -> ((Location.distance l loc) <= maxDistance)
+
+// same as:
+
+let locationsWithin loc maxDistance =
+  from @Locations
+  |> where (l -> (Location.distance l loc) <= maxDistance)
+
+
+// MAIN variations
+
+let main ({ db }) =
+  db.exec addLocations
+
+let main ({ db }) =
+  addLocations
+  |> List.map db.exec
+
+let main ({ db }) =
+  db.exec <- addLocations
+
