@@ -1,30 +1,55 @@
 #[cfg(test)]
 mod parser_tests {
-    use crate::fmodl::ast::expression::{Expression::*, FnDefArgs, Literal::*};
     use crate::fmodl::ast::AST::FnDef;
+    use crate::fmodl::ast::{
+        expression::{
+            Expression::{self, *},
+            FnDefArgs,
+            Literal::{self, *},
+        },
+        AST,
+    };
     use crate::fmodl::parser::{parse, parse_expr};
 
-    fn s<S: ToString>(s: S) -> String {
-        s.to_string()
+    fn lit(lit: Literal) -> Box<Expression> {
+        Box::new(Lit(lit))
     }
 
-    fn b<T>(t: T) -> Box<T> {
-        Box::new(t)
+    fn var(id: &str) -> Box<Expression> {
+        Box::new(Var(id.to_string()))
+    }
+
+    fn sum(a: Box<Expression>, b: Box<Expression>) -> Box<Expression> {
+        Box::new(Sum(a, b))
+    }
+
+    fn product(a: Box<Expression>, b: Box<Expression>) -> Box<Expression> {
+        Box::new(Product(a, b))
+    }
+
+    fn fn_def(id: &str, args: Vec<&str>, body: Box<Expression>) -> AST {
+        FnDef(id.to_string(), fn_def_args(args), body)
+    }
+
+    fn fn_def_args(args: Vec<&str>) -> FnDefArgs {
+        FnDefArgs::new(Vec::from_iter(args.iter().map(|a| a.to_string())))
     }
 
     #[test]
     fn fn_defs() {
-        assert_eq!(
-            parse("let id x = x"),
-            Ok(FnDef(s("id"), FnDefArgs::new(vec![s("x")]), b(Var(s("x")))))
-        );
+        assert_eq!(parse("let id x = x"), Ok(fn_def("id", vec!["x"], var("x"))));
 
         assert_eq!(
             parse("let add a b = a + b"),
-            Ok(FnDef(
-                s("add"),
-                FnDefArgs::new(vec![s("a"), s("b")]),
-                b(Sum(b(Var(s("a"))), b(Var(s("b")))))
+            Ok(fn_def("add", vec!["a", "b"], sum(var("a"), var("b"))))
+        );
+
+        assert_eq!(
+            parse("let add a b c = a + b * (c * a)"),
+            Ok(fn_def(
+                "add",
+                vec!["a", "b", "c"],
+                sum(var("a"), product(var("b"), product(var("c"), var("a"))))
             ))
         );
     }
@@ -33,27 +58,27 @@ mod parser_tests {
     fn expressions() {
         assert_eq!(
             parse_expr("1+1"),
-            Ok(Sum(b(Lit(Int64Lit(1))), b(Lit(Int64Lit(1)))))
+            Ok(sum(lit(Int64Lit(1)), lit(Int64Lit(1))))
         );
 
         assert_eq!(
             parse_expr("5*5"),
-            Ok(Product(b(Lit(Int64Lit(5))), b(Lit(Int64Lit(5)))))
+            Ok(product(lit(Int64Lit(5)), lit(Int64Lit(5))))
         );
 
         assert_eq!(
             parse_expr("2+3*4"),
-            Ok(Sum(
-                b(Lit(Int64Lit(2))),
-                b(Product(b(Lit(Int64Lit(3))), b(Lit(Int64Lit(4))))),
+            Ok(sum(
+                lit(Int64Lit(2)),
+                product(lit(Int64Lit(3)), lit(Int64Lit(4)))
             ))
         );
 
         assert_eq!(
             parse_expr("(2+3) * 4"),
-            Ok(Product(
-                b(Sum(b(Lit(Int64Lit(2))), b(Lit(Int64Lit(3))),)),
-                b(Lit(Int64Lit(4)))
+            Ok(product(
+                sum(lit(Int64Lit(2)), lit(Int64Lit(3))),
+                lit(Int64Lit(4))
             ))
         );
 

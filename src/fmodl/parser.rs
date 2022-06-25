@@ -95,6 +95,9 @@ pub fn parse(str: &str) -> Result<AST, ParseError<LineCol>> {
     parser::root_def(str)
 }
 
-pub fn parse_expr(str: &str) -> Result<Expression, ParseError<LineCol>> {
-    parser::expression(str)
+pub fn parse_expr(str: &str) -> Result<Box<Expression>, ParseError<LineCol>> {
+    match parser::expression(str) {
+        Ok(expr) => Ok(Box::new(expr)),
+        Err(err) => Err(err),
+    }
 }
