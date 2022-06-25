@@ -1,4 +1,5 @@
-pub use super::fn_call::FunctionArgs;
+pub use super::fn_call::FnCallArgs;
+pub use super::fn_def::{FnDefArgs, FnDefBody};
 use std::fmt::Display;
 
 pub type Identifier = String;
@@ -8,8 +9,9 @@ pub enum Expression {
     Literal(Literal),
     Sum(Box<Expression>, Box<Expression>),
     Product(Box<Expression>, Box<Expression>),
-    FnCall(Identifier, Box<FunctionArgs>),
+    FnCall(Identifier, Box<FnCallArgs>),
     Var(Identifier),
+    FnDef(Identifier, FnDefArgs, FnDefBody),
 }
 
 impl Display for Expression {
@@ -22,6 +24,9 @@ impl Display for Expression {
                 f.write_fmt(format_args!("({}{})", fn_ident, args))
             }
             Expression::Var(id) => f.write_str(id),
+            Expression::FnDef(id, args, body) => {
+                f.write_fmt(format_args!("let {} {} = {}", id, args, body))
+            }
         }
     }
 }

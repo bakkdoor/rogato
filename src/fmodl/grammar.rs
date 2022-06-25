@@ -2,7 +2,9 @@ extern crate peg;
 
 use peg::{error::ParseError, parser, str::LineCol};
 
-use crate::fmodl::ast::expression::{Expression, FunctionArgs, Identifier, Literal};
+use crate::fmodl::ast::expression::{
+    Expression, FnCallArgs, FnDefArgs, FnDefBody, Identifier, Literal,
+};
 
 parser! {
 /// Doc comment
@@ -10,8 +12,9 @@ grammar parser() for str {
     /// Top level parser rule
     /// This doc comment has multiple lines to test support for that as well
     pub rule expression() -> Expression
-        = sum()
+        = fn_def()
         / fn_call()
+        / sum()
 
     rule _ = [' ' | '\n']*
 
@@ -40,7 +43,7 @@ grammar parser() for str {
 
     rule fn_call() -> Expression
         = "(" _ id:fn_id() _ args:(fn_arg())* _ ")" {
-            let args = FunctionArgs::new(args);
+            let args = FnCallArgs::new(args);
             Expression::FnCall(id, Box::new(args))
         }
 
@@ -79,6 +82,23 @@ grammar parser() for str {
         }
 
 
+    rule fn_def() -> Expression
+        = "let " _ id:identifier() _ args:(fn_def_arg())* _ "=" _ body:(fn_def_body_expr())* {
+            Expression::FnDef(id, FnDefArgs::new(args), FnDefBody::new(body))
+        }
+
+    rule fn_def_arg() -> Identifier
+        = _ id:identifier() _ {
+            id
+        }
+
+    rule fn_def_body_expr() -> Expression
+        = _ expr:expression() _ {
+            expr
+        }
+        / _ "(" _ expr:expression() _ ")" _ {
+            expr
+        }
 }}
 
 pub fn parse(str: &str) -> Result<Expression, ParseError<LineCol>> {

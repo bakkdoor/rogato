@@ -60,6 +60,9 @@ fn main() {
         "(foo (bar (baz (* 3 (+ 4 5) (+ 6 7)))))",
         "(to-upper a b)",
         "(      to-upper   (  __do-something-with__         a-var        b_var      )   )",
+        "let squared x = (x * x)",
+        "let add a b = a + b",
+        "let addTwice a b = 2 * (a + b)",
     ] {
         match parse(code) {
             Ok(expr) => println!("\n✅\t{}\n\n🧾\t{}\n\n", code, expr),

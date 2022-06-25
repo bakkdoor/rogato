@@ -2,19 +2,19 @@ use super::expression::Expression;
 use std::fmt::Display;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub struct FunctionArgs {
+pub struct FnCallArgs {
     args: Box<Vec<Expression>>,
 }
 
-impl FunctionArgs {
+impl FnCallArgs {
     pub fn new(args: Vec<Expression>) -> Self {
-        FunctionArgs {
+        FnCallArgs {
             args: Box::new(args),
         }
     }
 }
 
-impl Display for FunctionArgs {
+impl Display for FnCallArgs {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let fmt_str = self
             .args
