@@ -10,6 +10,7 @@ pub enum Expression {
     Product(Box<Expression>, Box<Expression>),
     FnCall(Identifier, Box<FnCallArgs>),
     Var(Identifier),
+    Let(Box<LetBindings>, Box<Expression>),
 }
 
 impl Display for Expression {
@@ -22,7 +23,33 @@ impl Display for Expression {
                 f.write_fmt(format_args!("({}{})", fn_ident, args))
             }
             Expression::Var(id) => f.write_str(id),
+            Expression::Let(bindings, body) => {
+                f.write_fmt(format_args!("let {} in {}", bindings, body))
+            }
         }
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct LetBindings {
+    bindings: Vec<(Identifier, Expression)>,
+}
+
+impl LetBindings {
+    pub fn new(bindings: Vec<(Identifier, Expression)>) -> Box<LetBindings> {
+        Box::new(LetBindings { bindings: bindings })
+    }
+}
+
+impl Display for LetBindings {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let fmt_str = self
+            .bindings
+            .iter()
+            .map(|(ident, expr)| format!("{} = {}", ident, expr))
+            .fold(String::from(""), |acc, fmt| format!("{}, {}", acc, fmt));
+
+        f.write_fmt(format_args!("{}", fmt_str))
     }
 }
 

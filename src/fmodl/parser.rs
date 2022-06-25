@@ -2,7 +2,7 @@ extern crate peg;
 
 use peg::{error::ParseError, parser, str::LineCol};
 
-use crate::fmodl::ast::expression::{Expression, FnCallArgs, FnDefArgs, Literal};
+use crate::fmodl::ast::expression::{Expression, FnCallArgs, FnDefArgs, LetBindings, Literal};
 use crate::fmodl::ast::{Identifier, AST};
 
 parser! {
@@ -27,7 +27,8 @@ grammar parser() for str {
         = fn_call()
         / sum()
         / variable()
-        / number_lit()
+        / literal_exp()
+        / let_exp()
 
     rule _ = [' ' | '\n']*
 
@@ -62,6 +63,28 @@ grammar parser() for str {
 
     rule fn_arg() -> Expression
         = " "+ e:expression()  { e }
+
+    rule let_exp() -> Expression
+        = "let " _ bindings:let_bindings() _ "in" _ body:expression() {
+            Expression::Let(LetBindings::new(bindings), Box::new(body))
+        }
+
+    rule let_bindings() -> Vec<(Identifier, Expression)>
+        = binding:let_binding() bindings:(additional_let_binding())* {
+            let mut bindings = bindings.to_owned();
+            bindings.push(binding);
+            bindings
+        }
+
+    rule additional_let_binding() -> (Identifier, Expression)
+        = _ "," _ binding:let_binding() {
+            binding
+        }
+
+    rule let_binding() -> (Identifier, Expression)
+        = _ id:identifier() _ "=" _ val:expression() _ {
+            (id, val)
+        }
 
     rule literal_exp() -> Expression
         = number_lit()

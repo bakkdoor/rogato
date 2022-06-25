@@ -1,5 +1,6 @@
 #[cfg(test)]
 mod parser_tests {
+    use crate::fmodl::ast::expression::LetBindings;
     use crate::fmodl::ast::AST::FnDef;
     use crate::fmodl::ast::{
         expression::{
@@ -35,6 +36,16 @@ mod parser_tests {
         FnDefArgs::new(Vec::from_iter(args.iter().map(|a| a.to_string())))
     }
 
+    fn let_exp(bindings: Vec<(&str, Box<Expression>)>, body: Box<Expression>) -> Box<Expression> {
+        let bindings: Vec<(String, Expression)> = bindings
+            .iter()
+            .cloned()
+            .map(|(name, expr)| (name.to_string(), *expr))
+            .collect();
+
+        Box::new(Let(LetBindings::new(bindings), body))
+    }
+
     #[test]
     fn fn_defs() {
         assert_eq!(parse("let id x = x"), Ok(fn_def("id", vec!["x"], var("x"))));
@@ -56,6 +67,12 @@ mod parser_tests {
 
     #[test]
     fn expressions() {
+        assert_eq!(parse_expr("1"), Ok(lit(Int64Lit(1))));
+        assert_eq!(
+            parse_expr("\"Hello, world!\""),
+            Ok(lit(StringLit("Hello, world!".to_string())))
+        );
+
         assert_eq!(
             parse_expr("1+1"),
             Ok(sum(lit(Int64Lit(1)), lit(Int64Lit(1))))
@@ -79,6 +96,14 @@ mod parser_tests {
             Ok(product(
                 sum(lit(Int64Lit(2)), lit(Int64Lit(3))),
                 lit(Int64Lit(4))
+            ))
+        );
+
+        assert_eq!(
+            parse_expr("let x = 1, y = 2 in x + y"),
+            Ok(let_exp(
+                vec![("x", lit(Int64Lit(1))), ("y", lit(Int64Lit(2)))],
+                sum(var("x"), var("y"))
             ))
         );
 
