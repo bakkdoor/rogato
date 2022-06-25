@@ -9,44 +9,6 @@ use serde_json::Value;
 const DB_PATH: &str = "./fmodl.db";
 
 fn main() {
-    // assert_eq!(
-    //     parse("1+1"),
-    //     Ok(Sum(
-    //         Box::new(Literal(Int64Lit(1))),
-    //         Box::new(Literal(Int64Lit(1)))
-    //     ))
-    // );
-    // assert_eq!(
-    //     parse("5*5"),
-    //     Ok(Product(
-    //         Box::new(Literal(Int64Lit(5))),
-    //         Box::new(Literal(Int64Lit(5)))
-    //     ))
-    // );
-    // assert_eq!(
-    //     parse("2+3*4"),
-    //     Ok(Sum(
-    //         Box::new(Literal(Int64Lit(2))),
-    //         Box::new(Product(
-    //             Box::new(Literal(Int64Lit(3))),
-    //             Box::new(Literal(Int64Lit(4)))
-    //         )),
-    //     ))
-    // );
-    // assert_eq!(
-    //     parse("(2+3) * 4"),
-    //     Ok(Product(
-    //         Box::new(Sum(
-    //             Box::new(Literal(Int64Lit(2))),
-    //             Box::new(Literal(Int64Lit(3))),
-    //         )),
-    //         Box::new(Literal(Int64Lit(4)))
-    //     ))
-    // );
-    // assert!(parse("(22+)+1").is_err());
-    // assert!(parse("1++1").is_err());
-    // assert!(parse("3)+1").is_err());
-
     for root_def in [
         "let squared x = x",
         "let add a b = 1 + b",
