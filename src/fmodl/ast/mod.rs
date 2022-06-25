@@ -17,7 +17,7 @@ impl Display for AST {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             AST::FnDef(id, args, body) => {
-                f.write_fmt(format_args!("let {} {} = {}", id, args, body))
+                f.write_fmt(format_args!("let {}{} = {}", id, args, body))
             }
         }
     }

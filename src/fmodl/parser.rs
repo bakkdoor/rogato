@@ -34,10 +34,10 @@ grammar parser() for str {
         / atom()
 
     rule atom() -> Expression
-        = number_lit()
+        = variable()
+        / number_lit()
         / "(" _ v:sum() _ ")" { v }
-        / variable()
-        / fn_call()
+        / "(" _ c:fn_call() _ ")" { c }
 
     rule variable() -> Expression
         = _ id:identifier() _ {
@@ -45,7 +45,7 @@ grammar parser() for str {
         }
 
     rule fn_call() -> Expression
-        = _ id:identifier() args:(fn_arg())* _ {
+        = _ id:identifier() args:(fn_arg())+ _ {
             let args = FnCallArgs::new(args);
             Expression::FnCall(id, Box::new(args))
         }
@@ -94,6 +94,8 @@ grammar parser() for str {
     rule fn_def_body_expr() -> Expression
         = fn_call()
         / sum()
+        / variable()
+        / number_lit()
 }}
 
 pub fn parse(str: &str) -> Result<AST, ParseError<LineCol>> {

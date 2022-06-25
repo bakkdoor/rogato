@@ -48,8 +48,8 @@ fn main() {
     // assert!(parse("3)+1").is_err());
 
     for root_def in [
-        "let squared x = (x * x)",
-        "let add a b = a + b",
+        "let squared x = x",
+        "let add a b = 1 + b",
         "let addTwice a b = 2 * (a + b)",
     ] {
         print_parse_result(root_def, parse(root_def))
