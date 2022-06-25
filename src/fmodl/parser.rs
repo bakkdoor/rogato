@@ -2,9 +2,7 @@ extern crate peg;
 
 use peg::{error::ParseError, parser, str::LineCol};
 
-use crate::fmodl::ast::expression::{
-    Expression, FnCallArgs, FnDefArgs, FnDefBody, Identifier, Literal,
-};
+use crate::fmodl::ast::expression::{Expression, FnCallArgs, FnDefArgs, Identifier, Literal};
 
 parser! {
 /// Doc comment
@@ -83,8 +81,8 @@ grammar parser() for str {
 
 
     rule fn_def() -> Expression
-        = "let " _ id:identifier() _ args:(fn_def_arg())* _ "=" _ body:(fn_def_body_expr())* {
-            Expression::FnDef(id, FnDefArgs::new(args), FnDefBody::new(body))
+        = "let " _ id:identifier() _ args:(fn_def_arg())* _ "=" _ body:(fn_def_body_expr()) {
+            Expression::FnDef(id, FnDefArgs::new(args), Box::new(body))
         }
 
     rule fn_def_arg() -> Identifier

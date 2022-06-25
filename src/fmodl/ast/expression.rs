@@ -1,5 +1,5 @@
 pub use super::fn_call::FnCallArgs;
-pub use super::fn_def::{FnDefArgs, FnDefBody};
+pub use super::fn_def::FnDefArgs;
 use std::fmt::Display;
 
 pub type Identifier = String;
@@ -11,7 +11,7 @@ pub enum Expression {
     Product(Box<Expression>, Box<Expression>),
     FnCall(Identifier, Box<FnCallArgs>),
     Var(Identifier),
-    FnDef(Identifier, FnDefArgs, FnDefBody),
+    FnDef(Identifier, FnDefArgs, Box<Expression>),
 }
 
 impl Display for Expression {
