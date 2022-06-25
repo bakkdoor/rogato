@@ -9,10 +9,14 @@ parser! {
 grammar parser() for str {
     /// Top level parser rule
     /// This doc comment has multiple lines to test support for that as well
-    pub rule expression() -> Expression
+    pub rule root_def() -> Expression
         = fn_def()
-        / fn_call()
-        / sum()
+
+    pub rule expression() -> Expression
+        = fn_def_body_expr()
+        / "(" _ expr:fn_def_body_expr() _ ")" {
+            expr
+        }
 
     rule _ = [' ' | '\n']*
 
@@ -40,17 +44,13 @@ grammar parser() for str {
         }
 
     rule fn_call() -> Expression
-        = "(" _ id:fn_id() _ args:(fn_arg())* _ ")" {
+        = _ id:identifier() args:(fn_arg())* _ {
             let args = FnCallArgs::new(args);
             Expression::FnCall(id, Box::new(args))
         }
 
-    rule fn_id() -> Identifier
-        = operator()
-        / identifier()
-
     rule fn_arg() -> Expression
-        = _ e:expression() { e }
+        = " "+ e:expression()  { e }
 
     rule literal_exp() -> Expression
         = number_lit()
@@ -91,14 +91,14 @@ grammar parser() for str {
         }
 
     rule fn_def_body_expr() -> Expression
-        = _ expr:expression() _ {
-            expr
-        }
-        / _ "(" _ expr:expression() _ ")" _ {
-            expr
-        }
+        = fn_call()
+        / sum()
 }}
 
 pub fn parse(str: &str) -> Result<Expression, ParseError<LineCol>> {
+    parser::root_def(str)
+}
+
+pub fn parse_expr(str: &str) -> Result<Expression, ParseError<LineCol>> {
     parser::expression(str)
 }
