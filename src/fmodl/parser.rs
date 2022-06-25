@@ -13,11 +13,21 @@ grammar parser() for str {
     pub rule root_def() -> AST
         = fn_def()
 
-    pub rule expression() -> Expression
-        = fn_def_body_expr()
-        / "(" _ expr:fn_def_body_expr() _ ")" {
-            expr
+    rule fn_def() -> AST
+        = "let " _ id:identifier() _ args:(fn_def_arg())* _ "=" _ body:(expression()) {
+            AST::FnDef(id, FnDefArgs::new(args), Box::new(body))
         }
+
+    rule fn_def_arg() -> Identifier
+        = _ id:identifier() _ {
+            id
+        }
+
+    pub rule expression() -> Expression
+        = fn_call()
+        / sum()
+        / variable()
+        / number_lit()
 
     rule _ = [' ' | '\n']*
 
@@ -79,23 +89,6 @@ grammar parser() for str {
         = id:$(['+' | '-' | '*' | '/' | '>' | '<' | '=' | '!' | '^'])+ {
             String::from_iter(id)
         }
-
-
-    rule fn_def() -> AST
-        = "let " _ id:identifier() _ args:(fn_def_arg())* _ "=" _ body:(fn_def_body_expr()) {
-            AST::FnDef(id, FnDefArgs::new(args), Box::new(body))
-        }
-
-    rule fn_def_arg() -> Identifier
-        = _ id:identifier() _ {
-            id
-        }
-
-    rule fn_def_body_expr() -> Expression
-        = fn_call()
-        / sum()
-        / variable()
-        / number_lit()
 }}
 
 pub fn parse(str: &str) -> Result<AST, ParseError<LineCol>> {
