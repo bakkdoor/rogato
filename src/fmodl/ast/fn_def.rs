@@ -1,4 +1,4 @@
-use super::expression::Identifier;
+use super::Identifier;
 use std::fmt::Display;
 
 #[derive(Clone, PartialEq, Eq, Debug)]

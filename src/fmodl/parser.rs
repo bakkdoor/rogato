@@ -2,14 +2,15 @@ extern crate peg;
 
 use peg::{error::ParseError, parser, str::LineCol};
 
-use crate::fmodl::ast::expression::{Expression, FnCallArgs, FnDefArgs, Identifier, Literal};
+use crate::fmodl::ast::expression::{Expression, FnCallArgs, FnDefArgs, Literal};
+use crate::fmodl::ast::{Identifier, AST};
 
 parser! {
 /// Doc comment
 grammar parser() for str {
     /// Top level parser rule
     /// This doc comment has multiple lines to test support for that as well
-    pub rule root_def() -> Expression
+    pub rule root_def() -> AST
         = fn_def()
 
     pub rule expression() -> Expression
@@ -80,9 +81,9 @@ grammar parser() for str {
         }
 
 
-    rule fn_def() -> Expression
+    rule fn_def() -> AST
         = "let " _ id:identifier() _ args:(fn_def_arg())* _ "=" _ body:(fn_def_body_expr()) {
-            Expression::FnDef(id, FnDefArgs::new(args), Box::new(body))
+            AST::FnDef(id, FnDefArgs::new(args), Box::new(body))
         }
 
     rule fn_def_arg() -> Identifier
@@ -95,7 +96,7 @@ grammar parser() for str {
         / sum()
 }}
 
-pub fn parse(str: &str) -> Result<Expression, ParseError<LineCol>> {
+pub fn parse(str: &str) -> Result<AST, ParseError<LineCol>> {
     parser::root_def(str)
 }
 
