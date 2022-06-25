@@ -62,7 +62,7 @@ fn do_db_stuff() {
         Value::String(String::from("John Connor")),
     )
     .map(|edges| {
-        println!("Found edges: {}", edges.iter().count());
+        println!("Found edges: {}", edges.len());
         for edge in edges.iter() {
             println!("Got edge: {:?}", edge)
         }
