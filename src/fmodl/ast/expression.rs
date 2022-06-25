@@ -5,7 +5,7 @@ use std::fmt::Display;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum Expression {
-    Literal(Literal),
+    Lit(Literal),
     Sum(Box<Expression>, Box<Expression>),
     Product(Box<Expression>, Box<Expression>),
     FnCall(Identifier, Box<FnCallArgs>),
@@ -15,7 +15,7 @@ pub enum Expression {
 impl Display for Expression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Expression::Literal(lit_exp) => lit_exp.fmt(f),
+            Expression::Lit(lit_exp) => lit_exp.fmt(f),
             Expression::Sum(a, b) => f.write_fmt(format_args!("({} + {})", a, b)),
             Expression::Product(a, b) => f.write_fmt(format_args!("({} * {})", a, b)),
             Expression::FnCall(fn_ident, args) => {

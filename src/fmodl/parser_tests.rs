@@ -33,27 +33,27 @@ mod parser_tests {
     fn expressions() {
         assert_eq!(
             parse_expr("1+1"),
-            Ok(Sum(b(Literal(Int64Lit(1))), b(Literal(Int64Lit(1)))))
+            Ok(Sum(b(Lit(Int64Lit(1))), b(Lit(Int64Lit(1)))))
         );
 
         assert_eq!(
             parse_expr("5*5"),
-            Ok(Product(b(Literal(Int64Lit(5))), b(Literal(Int64Lit(5)))))
+            Ok(Product(b(Lit(Int64Lit(5))), b(Lit(Int64Lit(5)))))
         );
 
         assert_eq!(
             parse_expr("2+3*4"),
             Ok(Sum(
-                b(Literal(Int64Lit(2))),
-                b(Product(b(Literal(Int64Lit(3))), b(Literal(Int64Lit(4))))),
+                b(Lit(Int64Lit(2))),
+                b(Product(b(Lit(Int64Lit(3))), b(Lit(Int64Lit(4))))),
             ))
         );
 
         assert_eq!(
             parse_expr("(2+3) * 4"),
             Ok(Product(
-                b(Sum(b(Literal(Int64Lit(2))), b(Literal(Int64Lit(3))),)),
-                b(Literal(Int64Lit(4)))
+                b(Sum(b(Lit(Int64Lit(2))), b(Lit(Int64Lit(3))),)),
+                b(Lit(Int64Lit(4)))
             ))
         );
 
