@@ -9,6 +9,12 @@ use serde_json::Value;
 const DB_PATH: &str = "./fmodl.db";
 
 fn main() {
+    try_parse_root_defs();
+    try_parse_expressions();
+    do_db_stuff();
+}
+
+fn try_parse_root_defs() {
     for root_def in [
         "let squared x = x",
         "let add a b = 1 + b",
@@ -23,7 +29,9 @@ fn main() {
     ] {
         print_parse_result(root_def, parse(root_def))
     }
+}
 
+fn try_parse_expressions() {
     for expr_code in [
         "1",
         "1+1",
@@ -40,15 +48,6 @@ fn main() {
         "      to-upper   (  __do-something-with__         a-var        b_var      )   ",
     ] {
         print_parse_result(expr_code, parse_expr(expr_code))
-    }
-
-    do_db_stuff();
-}
-
-fn print_parse_result<T: Display, E: Display>(code: &str, result: Result<T, E>) {
-    match result {
-        Ok(expr) => println!("\n✅\t{}\n\n🧾\t{}\n\n", code, expr),
-        Err(error) => println!("\n❌\t{}\n\n🧾\t{}\n\n", code, error),
     }
 }
 
@@ -72,6 +71,13 @@ fn do_db_stuff() {
     .map_err(print_error);
 
     println!("DB Query Result: {:?}", result);
+}
+
+fn print_parse_result<T: Display, E: Display>(code: &str, result: Result<T, E>) {
+    match result {
+        Ok(expr) => println!("\n✅\t{}\n\n🧾\t{}\n\n", code, expr),
+        Err(error) => println!("\n❌\t{}\n\n🧾\t{}\n\n", code, error),
+    }
 }
 
 fn print_error<E: std::fmt::Debug>(error: E) -> E {
