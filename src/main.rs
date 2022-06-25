@@ -13,6 +13,13 @@ fn main() {
         "let squared x = x",
         "let add a b = 1 + b",
         "let addTwice a b = 2 * (a + b)",
+        "let complexMath a b c =
+            let x = 2 * (a + b * c),
+                y = y * a + b * c,
+                z = addTwice (squared (x * y)) (x * y)
+            in
+                y * z
+        ",
     ] {
         print_parse_result(root_def, parse(root_def))
     }

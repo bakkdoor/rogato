@@ -24,11 +24,11 @@ grammar parser() for str {
         }
 
     pub rule expression() -> Expression
-        = fn_call()
+        = let_exp()
+        / fn_call()
         / sum()
         / variable()
         / literal_exp()
-        / let_exp()
 
     rule _ = [' ' | '\n']*
 
@@ -70,9 +70,10 @@ grammar parser() for str {
         }
 
     rule let_bindings() -> Vec<(Identifier, Expression)>
-        = binding:let_binding() bindings:(additional_let_binding())* {
-            let mut bindings = bindings.to_owned();
+        = binding:let_binding() more_bindings:(additional_let_binding())* {
+            let mut bindings = Vec::new();
             bindings.push(binding);
+            bindings.append(&mut more_bindings.to_owned());
             bindings
         }
 

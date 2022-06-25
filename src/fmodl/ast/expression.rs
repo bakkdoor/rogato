@@ -47,7 +47,13 @@ impl Display for LetBindings {
             .bindings
             .iter()
             .map(|(ident, expr)| format!("{} = {}", ident, expr))
-            .fold(String::from(""), |acc, fmt| format!("{}, {}", acc, fmt));
+            .fold(String::from(""), |acc, fmt| {
+                if acc == "" {
+                    fmt
+                } else {
+                    format!("{} , {}", acc, fmt)
+                }
+            });
 
         f.write_fmt(format_args!("{}", fmt_str))
     }
