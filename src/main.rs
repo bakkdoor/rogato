@@ -3,7 +3,7 @@ use std::path::Path;
 
 use fmodl::ast::expression::{Expression::*, Literal::*};
 use fmodl::db;
-use fmodl::grammar::parse;
+use fmodl::parser::parse;
 use serde_json::Value;
 
 const DB_PATH: &str = "./fmodl.db";
