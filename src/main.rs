@@ -1,5 +1,6 @@
 mod fmodl;
 use std::fmt::Display;
+use std::io;
 use std::path::Path;
 
 use fmodl::db;
@@ -9,9 +10,15 @@ use serde_json::Value;
 const DB_PATH: &str = "./fmodl.db";
 
 fn main() {
-    try_parse_root_defs();
-    try_parse_expressions();
-    do_db_stuff();
+    let mut args = std::env::args();
+    if let Some(_) = args.find(|a| a.eq("test")) {
+        try_parse_root_defs();
+        try_parse_expressions();
+        do_db_stuff();
+        return;
+    }
+
+    run_repl();
 }
 
 fn try_parse_root_defs() {
@@ -83,4 +90,23 @@ fn print_parse_result<T: Display, E: Display>(code: &str, result: Result<T, E>) 
 fn print_error<E: std::fmt::Debug>(error: E) -> E {
     eprintln!("Error doing DB stuff: {:?}", error);
     error
+}
+
+fn run_repl() {
+    loop {
+        let mut buffer = String::new();
+        match io::stdin().read_line(&mut buffer) {
+            Ok(_) => match parse(buffer.as_str()) {
+                Ok(exp) => {
+                    println!("OK> {:?}", exp);
+                }
+                Err(err) => {
+                    eprintln!("Error> {:?}", err)
+                }
+            },
+            Err(err) => {
+                eprintln!("Failed to read line: {:?}", err)
+            }
+        }
+    }
 }
