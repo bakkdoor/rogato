@@ -16,13 +16,15 @@ grammar parser() for str {
         / fn_def()
 
     rule module_def() -> AST
-        = "module " _ id:identifier() _ exports:module_exports() {
+        = "module " _ id:identifier() _ exports:module_exports() _ {
             AST::ModuleDef(id, ModuleExports::new(exports))
+        }
+        / "module " _ id:identifier() _ "(" _ ")" _ {
+            AST::ModuleDef(id, ModuleExports::new(vec![]))
         }
         / "module " _ id:identifier() _ {
             AST::ModuleDef(id, ModuleExports::new(vec![]))
         }
-
     rule module_exports() -> Vec<Identifier>
         = "(" _ first_export:identifier() more_exports:(additional_module_export())* _ ")" {
             let mut exports = Vec::new();

@@ -78,6 +78,26 @@ mod parser_tests {
     fn module_defs() {
         assert_eq!(parse("module MyModule"), Ok(module_def("MyModule", vec![])));
         assert_eq!(
+            parse("module MyModule ()"),
+            Ok(module_def("MyModule", vec![]))
+        );
+        assert_eq!(
+            parse("module MyModule (    )"),
+            Ok(module_def("MyModule", vec![]))
+        );
+        assert_eq!(
+            parse("module MyModule (\n\n)"),
+            Ok(module_def("MyModule", vec![]))
+        );
+        assert_eq!(
+            parse("module MyModule (Foo_bar-baz)"),
+            Ok(module_def("MyModule", vec!["Foo_bar-baz"]))
+        );
+        assert_eq!(
+            parse("module MyModule (foo, bar)"),
+            Ok(module_def("MyModule", vec!["foo", "bar"]))
+        );
+        assert_eq!(
             parse("module MyModule ( func1, func2, func3 )"),
             Ok(module_def("MyModule", vec!["func1", "func2", "func3"]))
         );
