@@ -23,6 +23,9 @@ fn main() {
 
 fn try_parse_root_defs() {
     for root_def in [
+        "module MyModule",
+        "module MyModule ( foo, bar, baz )",
+        "module MyModule (  foo,     bar,   baz   )",
         "let squared x = x",
         "let add a b = 1 + b",
         "let addTwice a b = 2 * (a + b)",
@@ -95,17 +98,13 @@ fn print_error<E: std::fmt::Debug>(error: E) -> E {
 fn run_repl() {
     loop {
         let mut buffer = String::new();
-        match io::stdin().read_line(&mut buffer) {
-            Ok(_) => match parse(buffer.as_str()) {
-                Ok(exp) => {
-                    println!("OK> {:?}", exp);
-                }
-                Err(err) => {
-                    eprintln!("Error> {:?}", err)
-                }
-            },
+        io::stdin().read_line(&mut buffer).unwrap();
+        match parse(buffer.as_str()) {
+            Ok(exp) => {
+                println!("OK> {:?}", exp);
+            }
             Err(err) => {
-                eprintln!("Failed to read line: {:?}", err)
+                eprintln!("Error> {:?}", err)
             }
         }
     }

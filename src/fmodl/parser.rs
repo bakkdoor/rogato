@@ -3,6 +3,7 @@ extern crate peg;
 use peg::{error::ParseError, parser, str::LineCol};
 
 use crate::fmodl::ast::expression::{Expression, FnCallArgs, FnDefArgs, LetBindings, Literal};
+use crate::fmodl::ast::module_def::ModuleExports;
 use crate::fmodl::ast::{Identifier, AST};
 
 parser! {
@@ -11,7 +12,29 @@ grammar parser() for str {
     /// Top level parser rule
     /// This doc comment has multiple lines to test support for that as well
     pub rule root_def() -> AST
-        = fn_def()
+        = module_def()
+        / fn_def()
+
+    rule module_def() -> AST
+        = "module " _ id:identifier() _ exports:module_exports() {
+            AST::ModuleDef(id, ModuleExports::new(exports))
+        }
+        / "module " _ id:identifier() _ {
+            AST::ModuleDef(id, ModuleExports::new(vec![]))
+        }
+
+    rule module_exports() -> Vec<Identifier>
+        = "(" _ first_export:identifier() more_exports:(additional_module_export())* _ ")" {
+            let mut exports = Vec::new();
+            exports.push(first_export);
+            exports.append(&mut more_exports.to_owned());
+            exports
+        }
+
+    rule additional_module_export() -> Identifier
+        = _ "," _ id:identifier() {
+            id
+        }
 
     rule fn_def() -> AST
         = "let " _ id:identifier() _ args:(fn_def_arg())* _ "=" _ body:(expression()) {

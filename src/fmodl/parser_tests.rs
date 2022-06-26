@@ -1,7 +1,8 @@
 #[cfg(test)]
 mod parser_tests {
     use crate::fmodl::ast::expression::LetBindings;
-    use crate::fmodl::ast::AST::FnDef;
+    use crate::fmodl::ast::module_def::ModuleExports;
+    use crate::fmodl::ast::AST::{FnDef, ModuleDef};
     use crate::fmodl::ast::{
         expression::{
             Expression::{self, *},
@@ -46,6 +47,14 @@ mod parser_tests {
         Box::new(Let(LetBindings::new(bindings), body))
     }
 
+    fn module_def(id: &str, exports: Vec<&str>) -> AST {
+        ModuleDef(id.to_string(), module_def_exports(exports))
+    }
+
+    fn module_def_exports(exports: Vec<&str>) -> ModuleExports {
+        ModuleExports::new(Vec::from_iter(exports.iter().map(|e| e.to_string())))
+    }
+
     #[test]
     fn fn_defs() {
         assert_eq!(parse("let id x = x"), Ok(fn_def("id", vec!["x"], var("x"))));
@@ -62,6 +71,15 @@ mod parser_tests {
                 vec!["a", "b", "c"],
                 sum(var("a"), product(var("b"), product(var("c"), var("a"))))
             ))
+        );
+    }
+
+    #[test]
+    fn module_defs() {
+        assert_eq!(parse("module MyModule"), Ok(module_def("MyModule", vec![])));
+        assert_eq!(
+            parse("module MyModule ( func1, func2, func3 )"),
+            Ok(module_def("MyModule", vec!["func1", "func2", "func3"]))
         );
     }
 
