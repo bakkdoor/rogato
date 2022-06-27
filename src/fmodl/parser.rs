@@ -51,8 +51,8 @@ grammar parser() for str {
     pub rule expression() -> Expression
         = let_exp()
         / fn_call()
-        / sum()
         / op_call()
+        / sum()
         / variable()
         / literal_exp()
 

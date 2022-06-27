@@ -145,8 +145,50 @@ fn fn_calls() {
 
 #[test]
 fn op_calls() {
+    assert_parse_expr!("1 < 2", op_call("<", lit(Int64Lit(1)), lit(Int64Lit(2))));
+
+    assert_parse_expr!("1 > 2", op_call(">", lit(Int64Lit(1)), lit(Int64Lit(2))));
+
+    assert_parse_expr!("1 >> 2", op_call(">>", lit(Int64Lit(1)), lit(Int64Lit(2))));
+
     assert_parse_expr!(
-        "1 != 2",
-        op_call("!=", vec![lit(Int64Lit(1)), lit(Int64Lit(2))])
+        "1 <= (2 + 3)",
+        op_call(
+            "<=",
+            lit(Int64Lit(1)),
+            sum(lit(Int64Lit(2)), lit(Int64Lit(3)))
+        )
+    );
+
+    assert_parse_expr!(
+        "(2 + 3) <= foo",
+        op_call("<=", sum(lit(Int64Lit(2)), lit(Int64Lit(3))), var("foo"))
+    );
+
+    assert_parse_expr!(
+        "(2 + 3) <= (foo <!> (bar <=> baz))",
+        op_call(
+            "<=",
+            sum(lit(Int64Lit(2)), lit(Int64Lit(3))),
+            op_call("<!>", var("foo"), op_call("<=>", var("bar"), var("baz")))
+        )
+    );
+
+    assert_parse_expr!(
+        "(1 >> 3) != 2",
+        op_call(
+            "!=",
+            op_call(">>", lit(Int64Lit(1)), lit(Int64Lit(3))),
+            lit(Int64Lit(2))
+        )
+    );
+
+    assert_parse_expr!(
+        "(foo bar 1) != 2",
+        op_call(
+            "!=",
+            fn_call("foo", vec![var("bar"), lit(Int64Lit(1))]),
+            lit(Int64Lit(2))
+        )
     );
 }

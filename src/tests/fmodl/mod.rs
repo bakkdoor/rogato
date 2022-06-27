@@ -95,9 +95,9 @@ pub fn fn_call(id: &str, args: Vec<Box<Expression>>) -> Box<Expression> {
     ))
 }
 
-pub fn op_call(id: &str, args: Vec<Box<Expression>>) -> Box<Expression> {
+pub fn op_call(id: &str, left: Box<Expression>, right: Box<Expression>) -> Box<Expression> {
     Box::new(Expression::OpCall(
         id.to_string(),
-        Box::new(call_args(args)),
+        Box::new(call_args(vec![left, right])),
     ))
 }
