@@ -37,7 +37,7 @@ fn main() {
                                 Ok(mut file) => {
                                     let mut buf = String::new();
                                     file.read_to_string(&mut buf).unwrap();
-                                    println!("\n📂 \t{}", dir_entry.path().display());
+                                    println!("\n📂\t{}", dir_entry.path().display());
                                     print_parse_result(buf.as_str(), parse(buf.as_str()))
                                 }
                                 Err(error) => {
@@ -126,7 +126,7 @@ fn do_db_stuff() {
 
 fn print_parse_result<T: Display, E: Display>(code: &str, result: Result<T, E>) {
     match result {
-        Ok(expr) => println!("\n✅\t{}\n\n🧾{}\n\n", code, expr.indented("\t")),
+        Ok(expr) => println!("✅\t{}\n\n🧾{}\n\n", code, expr.indented("\t")),
         Err(error) => println!("\n❌\t{}\n\n🧾\t{}\n\n", code, error),
     }
 }
