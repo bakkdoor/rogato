@@ -14,7 +14,7 @@ const DB_PATH: &str = "./fmodl.db";
 mod tests;
 
 fn main() {
-    let args = std::env::args();
+    let args = std::env::args().skip(1);
     for arg in args {
         match arg.as_str() {
             "repl" => {
