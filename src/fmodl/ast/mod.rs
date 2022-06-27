@@ -1,5 +1,7 @@
 use std::fmt::Display;
 
+use indent_write::indentable::Indentable;
+
 use self::{
     expression::{Expression, FnDefArgs},
     module_def::ModuleExports,
@@ -21,9 +23,12 @@ pub enum AST {
 impl Display for AST {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            AST::FnDef(id, args, body) => {
-                f.write_fmt(format_args!("let {}{} = {}", id, args, body))
-            }
+            AST::FnDef(id, args, body) => f.write_fmt(format_args!(
+                "let {}{} =\n{}",
+                id,
+                args,
+                body.indented("    ")
+            )),
             AST::ModuleDef(id, exports) => f.write_fmt(format_args!("module {} ({})", id, exports)),
         }
     }

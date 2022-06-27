@@ -10,3 +10,4 @@ edition = "2021"
 peg = "0.8.0"
 indradb-lib = { version = "3.0.2", features = ["rocksdb-datastore"] }
 serde_json = "1.0.81"
+indent_write = "2.2.0"

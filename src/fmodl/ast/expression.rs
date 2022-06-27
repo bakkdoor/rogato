@@ -1,3 +1,5 @@
+use indent_write::indentable::Indentable;
+
 pub use super::fn_call::FnCallArgs;
 pub use super::fn_def::FnDefArgs;
 use super::Identifier;
@@ -27,9 +29,11 @@ impl Display for Expression {
                 f.write_fmt(format_args!("({}{})", op_ident, args))
             }
             Expression::Var(id) => f.write_str(id),
-            Expression::Let(bindings, body) => {
-                f.write_fmt(format_args!("let {} in {}", bindings, body))
-            }
+            Expression::Let(bindings, body) => f.write_fmt(format_args!(
+                "let\n{}\nin\n{}",
+                bindings.indented("    "),
+                body.indented("    ")
+            )),
         }
     }
 }
@@ -55,7 +59,7 @@ impl Display for LetBindings {
                 if acc == "" {
                     fmt
                 } else {
-                    format!("{} , {}", acc, fmt)
+                    format!("{}\n{}", acc, fmt)
                 }
             });
 
