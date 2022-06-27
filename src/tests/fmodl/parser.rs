@@ -12,6 +12,24 @@ use crate::fmodl::ast::{
 };
 use crate::fmodl::parser::{parse, parse_expr};
 
+fn assert_parse(code: &str, expected: AST) {
+    assert_eq!(
+        parse(code),
+        Ok(expected),
+        "Expected code to parse: {:?}",
+        code
+    )
+}
+
+fn assert_parse_expr(code: &str, expected: Box<Expression>) {
+    assert_eq!(
+        parse_expr(code),
+        Ok(expected),
+        "Expected expression code to parse: {:?}",
+        code
+    )
+}
+
 fn lit(lit: Literal) -> Box<Expression> {
     Box::new(Lit(lit))
 }
@@ -78,128 +96,107 @@ fn op_call(id: &str, args: Vec<Box<Expression>>) -> Box<Expression> {
 
 #[test]
 fn fn_defs() {
-    assert_eq!(parse("let id x = x"), Ok(fn_def("id", vec!["x"], var("x"))));
+    assert_parse("let id x = x", fn_def("id", vec!["x"], var("x")));
 
-    assert_eq!(
-        parse("let add a b = a + b"),
-        Ok(fn_def("add", vec!["a", "b"], sum(var("a"), var("b"))))
+    assert_parse(
+        "let add a b = a + b",
+        fn_def("add", vec!["a", "b"], sum(var("a"), var("b"))),
     );
 
-    assert_eq!(
-        parse("let add a b c = a + b * (c * a)"),
-        Ok(fn_def(
+    assert_parse(
+        "let add a b c = a + b * (c * a)",
+        fn_def(
             "add",
             vec!["a", "b", "c"],
-            sum(var("a"), product(var("b"), product(var("c"), var("a"))))
-        ))
+            sum(var("a"), product(var("b"), product(var("c"), var("a")))),
+        ),
     );
 
-    assert_eq!(
-        parse("let add1 a = 1 + a"),
-        Ok(fn_def("add1", vec!["a"], sum(lit(Int64Lit(1)), var("a"))))
+    assert_parse(
+        "let add1 a = 1 + a",
+        fn_def("add1", vec!["a"], sum(lit(Int64Lit(1)), var("a"))),
     );
 
-    assert_eq!(
-        parse("\nlet add1and2 = 1 + 2\n"),
-        Ok(fn_def(
-            "add1and2",
-            vec![],
-            sum(lit(Int64Lit(1)), lit(Int64Lit(2)))
-        ))
+    assert_parse(
+        "\nlet add1and2 = 1 + 2\n",
+        fn_def("add1and2", vec![], sum(lit(Int64Lit(1)), lit(Int64Lit(2)))),
     );
 
-    assert_eq!(
-        parse("let foo a b = bar a (baz 1)"),
-        Ok(fn_def(
+    assert_parse(
+        "let foo a b = bar a (baz 1)",
+        fn_def(
             "foo",
             vec!["a", "b"],
             fn_call(
                 "bar",
-                vec![var("a"), fn_call("baz", vec![lit(Int64Lit(1))])]
-            )
-        ))
+                vec![var("a"), fn_call("baz", vec![lit(Int64Lit(1))])],
+            ),
+        ),
     );
 }
 
 #[test]
 fn module_defs() {
-    assert_eq!(parse("module MyModule"), Ok(module_def("MyModule", vec![])));
-    assert_eq!(
-        parse("module MyModule ()"),
-        Ok(module_def("MyModule", vec![]))
+    assert_parse("module MyModule", module_def("MyModule", vec![]));
+    assert_parse("module MyModule ()", module_def("MyModule", vec![]));
+    assert_parse("module MyModule (    )", module_def("MyModule", vec![]));
+    assert_parse("module MyModule (\n\n)", module_def("MyModule", vec![]));
+    assert_parse(
+        "module MyModule (Foo_bar-baz)",
+        module_def("MyModule", vec!["Foo_bar-baz"]),
     );
-    assert_eq!(
-        parse("module MyModule (    )"),
-        Ok(module_def("MyModule", vec![]))
+    assert_parse(
+        "module MyModule (foo, bar)",
+        module_def("MyModule", vec!["foo", "bar"]),
     );
-    assert_eq!(
-        parse("module MyModule (\n\n)"),
-        Ok(module_def("MyModule", vec![]))
-    );
-    assert_eq!(
-        parse("module MyModule (Foo_bar-baz)"),
-        Ok(module_def("MyModule", vec!["Foo_bar-baz"]))
-    );
-    assert_eq!(
-        parse("module MyModule (foo, bar)"),
-        Ok(module_def("MyModule", vec!["foo", "bar"]))
-    );
-    assert_eq!(
-        parse("module MyModule ( func1, func2, func3 )"),
-        Ok(module_def("MyModule", vec!["func1", "func2", "func3"]))
+    assert_parse(
+        "module MyModule ( func1, func2, func3 )",
+        module_def("MyModule", vec!["func1", "func2", "func3"]),
     );
 }
 
 #[test]
 fn expressions() {
-    assert_eq!(parse_expr("1"), Ok(lit(Int64Lit(1))));
-    assert_eq!(
-        parse_expr("\"Hello, world!\""),
-        Ok(lit(StringLit("Hello, world!".to_string())))
+    assert_parse_expr("1", lit(Int64Lit(1)));
+
+    assert_parse_expr(
+        "\"Hello, world!\"",
+        lit(StringLit("Hello, world!".to_string())),
     );
 
-    assert_eq!(
-        parse_expr("1+1"),
-        Ok(sum(lit(Int64Lit(1)), lit(Int64Lit(1))))
-    );
+    assert_parse_expr("1+1", sum(lit(Int64Lit(1)), lit(Int64Lit(1))));
 
-    assert_eq!(
-        parse_expr("5*5"),
-        Ok(product(lit(Int64Lit(5)), lit(Int64Lit(5))))
-    );
+    assert_parse_expr("5*5", product(lit(Int64Lit(5)), lit(Int64Lit(5))));
 
-    assert_eq!(
-        parse_expr("2+3*4"),
-        Ok(sum(
+    assert_parse_expr(
+        "2+3*4",
+        sum(
             lit(Int64Lit(2)),
-            product(lit(Int64Lit(3)), lit(Int64Lit(4)))
-        ))
+            product(lit(Int64Lit(3)), lit(Int64Lit(4))),
+        ),
     );
 
-    assert_eq!(
-        parse_expr("(2+3) * 4"),
-        Ok(product(
-            sum(lit(Int64Lit(2)), lit(Int64Lit(3))),
-            lit(Int64Lit(4))
-        ))
+    assert_parse_expr(
+        "(2+3) * 4",
+        product(sum(lit(Int64Lit(2)), lit(Int64Lit(3))), lit(Int64Lit(4))),
     );
 
-    assert_eq!(
-        parse_expr("let x = 1, y = 2 in x + y"),
-        Ok(let_exp(
+    assert_parse_expr(
+        "let x = 1, y = 2 in x + y",
+        let_exp(
             vec![("x", lit(Int64Lit(1))), ("y", lit(Int64Lit(2)))],
-            sum(var("x"), var("y"))
-        ))
+            sum(var("x"), var("y")),
+        ),
     );
 
-    assert_eq!(
-        parse_expr("add 1 2"),
-        Ok(fn_call("add", vec![lit(Int64Lit(1)), lit(Int64Lit(2))]))
+    assert_parse_expr(
+        "add 1 2",
+        fn_call("add", vec![lit(Int64Lit(1)), lit(Int64Lit(2))]),
     );
 
-    assert_eq!(
-        parse_expr("1 != 2"),
-        Ok(op_call("!=", vec![lit(Int64Lit(1)), lit(Int64Lit(2))]))
+    assert_parse_expr(
+        "1 != 2",
+        op_call("!=", vec![lit(Int64Lit(1)), lit(Int64Lit(2))]),
     );
 
     assert!(parse_expr("(22+)+1").is_err());

@@ -72,7 +72,7 @@ grammar parser() for str {
         = variable()
         / literal_exp()
         / "(" _ v:sum() _ ")" { v }
-        / "(" _ c:fn_call() _ ")" { c }
+        / "(" _ c:(fn_call() / op_call()) _ ")" { c }
 
     rule variable() -> Expression
         = _ id:identifier() _ {
@@ -96,7 +96,7 @@ grammar parser() for str {
         }
 
     rule fn_arg() -> Expression
-        = " "+ e:expression()  { e }
+        = " "+ e:atom()  { e }
 
     rule op_arg() -> Expression
         = "(" _ expr:expression() _ ")" {
@@ -160,11 +160,15 @@ grammar parser() for str {
 
 }}
 
-pub fn parse(str: &str) -> Result<AST, ParseError<LineCol>> {
+pub type ParseResult = Result<AST, ParseError<LineCol>>;
+
+pub fn parse(str: &str) -> ParseResult {
     parser::root_def(str)
 }
 
-pub fn parse_expr(str: &str) -> Result<Box<Expression>, ParseError<LineCol>> {
+pub type ParseExprResult = Result<Box<Expression>, ParseError<LineCol>>;
+
+pub fn parse_expr(str: &str) -> ParseExprResult {
     match parser::expression(str) {
         Ok(expr) => Ok(Box::new(expr)),
         Err(err) => Err(err),
