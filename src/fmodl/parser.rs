@@ -87,12 +87,10 @@ grammar parser() for str {
 
     rule op_call() -> Expression
         = left:op_arg() " "+ id:operator() _ right:op_arg() {
-            let args = FnCallArgs::new(vec![left, right]);
-            Expression::OpCall(id, Box::new(args))
+            Expression::OpCall(id, Box::new(left), Box::new(right))
         }
         / left:op_arg() _ id:operator() " "+ right:op_arg() {
-            let args = FnCallArgs::new(vec![left, right]);
-            Expression::OpCall(id, Box::new(args))
+            Expression::OpCall(id, Box::new(left), Box::new(right))
         }
 
     rule fn_arg() -> Expression

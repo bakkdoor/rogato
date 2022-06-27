@@ -119,7 +119,7 @@ fn run_repl() {
         io::stdin().read_line(&mut buffer).unwrap();
         match parse(buffer.as_str()) {
             Ok(exp) => {
-                println!("OK> {:?}", exp);
+                println!("OK> {:?}\n{}", exp, exp);
             }
             Err(err) => {
                 eprintln!("Error> {:?}", err)
