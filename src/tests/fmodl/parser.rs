@@ -113,6 +113,31 @@ fn fn_calls() {
         "add 1 2",
         fn_call("add", vec![lit(Int64Lit(1)), lit(Int64Lit(2))]),
     );
+
+    assert_parse_expr("add 1 a", fn_call("add", vec![lit(Int64Lit(1)), var("a")]));
+    assert_parse_expr("add a 1", fn_call("add", vec![var("a"), lit(Int64Lit(1))]));
+
+    assert_parse_expr(
+        "add 1 (add 2 3)",
+        fn_call(
+            "add",
+            vec![
+                lit(Int64Lit(1)),
+                fn_call("add", vec![lit(Int64Lit(2)), lit(Int64Lit(3))]),
+            ],
+        ),
+    );
+
+    assert_parse_expr(
+        "add 1 (add a 3)",
+        fn_call(
+            "add",
+            vec![
+                lit(Int64Lit(1)),
+                fn_call("add", vec![var("a"), lit(Int64Lit(3))]),
+            ],
+        ),
+    );
 }
 
 #[test]

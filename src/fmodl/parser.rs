@@ -75,7 +75,7 @@ grammar parser() for str {
         / "(" _ c:(fn_call() / op_call()) _ ")" { c }
 
     rule variable() -> Expression
-        = _ id:identifier() _ {
+        = id:identifier() {
             Expression::Var(id)
         }
 
