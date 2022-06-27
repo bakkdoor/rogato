@@ -147,7 +147,7 @@ grammar parser() for str {
 
     rule string_lit() -> Expression
         = "\"" s:([^ '"']*) "\"" {
-            Expression::Lit(Literal::StringLit(String::from_iter(s)))
+            Expression::Lit(Literal::StringLit(Box::new(String::from_iter(s))))
         }
 
     rule identifier() -> Identifier

@@ -66,7 +66,7 @@ impl Display for LetBindings {
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum Literal {
     Int64Lit(i64),
-    StringLit(String),
+    StringLit(Box<String>),
 }
 
 impl Display for Literal {

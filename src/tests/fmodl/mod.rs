@@ -80,24 +80,21 @@ pub fn module_def_exports(exports: Vec<&str>) -> ModuleExports {
     ModuleExports::new(Vec::from_iter(exports.iter().map(|e| e.to_string())))
 }
 
-pub fn call_args(args: Vec<Box<Expression>>) -> FnCallArgs {
+pub fn call_args(args: Vec<Box<Expression>>) -> Box<FnCallArgs> {
     let mut args_unboxed = Vec::new();
     for a in args {
         args_unboxed.push(*a)
     }
-    FnCallArgs::new(args_unboxed)
+    Box::new(FnCallArgs::new(args_unboxed))
 }
 
 pub fn fn_call(id: &str, args: Vec<Box<Expression>>) -> Box<Expression> {
-    Box::new(Expression::FnCall(
-        id.to_string(),
-        Box::new(call_args(args)),
-    ))
+    Box::new(Expression::FnCall(id.to_string(), call_args(args)))
 }
 
 pub fn op_call(id: &str, left: Box<Expression>, right: Box<Expression>) -> Box<Expression> {
     Box::new(Expression::OpCall(
         id.to_string(),
-        Box::new(call_args(vec![left, right])),
+        call_args(vec![left, right]),
     ))
 }

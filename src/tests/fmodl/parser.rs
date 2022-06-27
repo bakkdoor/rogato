@@ -106,7 +106,7 @@ fn literals() {
 
     assert_parse_expr!(
         "\"Hello, world!\"",
-        lit(StringLit("Hello, world!".to_string()))
+        lit(StringLit(Box::new("Hello, world!".to_string())))
     );
 }
 
