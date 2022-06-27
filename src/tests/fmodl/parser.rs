@@ -1,22 +1,22 @@
 #[cfg(test)]
-use crate::{assert_parse, assert_parse_expr};
+use crate::{assert_parse, assert_parse_ast, assert_parse_expr};
 
 #[cfg(test)]
 use super::{
-    fn_call, fn_def, let_exp, lit, module_def, op_call, parse_expr, product, sum, var, Int64Lit,
-    StringLit,
+    fn_call, fn_def, let_exp, lit, module_def, op_call, parse_expr, product, program, sum, var,
+    Int64Lit, StringLit,
 };
 
 #[test]
 fn fn_defs() {
-    assert_parse!("let id x = x", fn_def("id", vec!["x"], var("x")));
+    assert_parse_ast!("let id x = x", fn_def("id", vec!["x"], var("x")));
 
-    assert_parse!(
+    assert_parse_ast!(
         "let add a b = a + b",
         fn_def("add", vec!["a", "b"], sum(var("a"), var("b")))
     );
 
-    assert_parse!(
+    assert_parse_ast!(
         "let add a b c = a + b * (c * a)",
         fn_def(
             "add",
@@ -25,17 +25,17 @@ fn fn_defs() {
         )
     );
 
-    assert_parse!(
+    assert_parse_ast!(
         "let add1 a = 1 + a",
         fn_def("add1", vec!["a"], sum(lit(Int64Lit(1)), var("a")))
     );
 
-    assert_parse!(
+    assert_parse_ast!(
         "\nlet add1and2 = 1 + 2\n",
         fn_def("add1and2", vec![], sum(lit(Int64Lit(1)), lit(Int64Lit(2))))
     );
 
-    assert_parse!(
+    assert_parse_ast!(
         "let foo a b = bar a (baz 1)",
         fn_def(
             "foo",
@@ -50,19 +50,19 @@ fn fn_defs() {
 
 #[test]
 fn module_defs() {
-    assert_parse!("module MyModule", module_def("MyModule", vec![]));
-    assert_parse!("module MyModule ()", module_def("MyModule", vec![]));
-    assert_parse!("module MyModule (    )", module_def("MyModule", vec![]));
-    assert_parse!("module MyModule (\n\n)", module_def("MyModule", vec![]));
-    assert_parse!(
+    assert_parse_ast!("module MyModule", module_def("MyModule", vec![]));
+    assert_parse_ast!("module MyModule ()", module_def("MyModule", vec![]));
+    assert_parse_ast!("module MyModule (    )", module_def("MyModule", vec![]));
+    assert_parse_ast!("module MyModule (\n\n)", module_def("MyModule", vec![]));
+    assert_parse_ast!(
         "module MyModule (Foo_bar-baz)",
         module_def("MyModule", vec!["Foo_bar-baz"])
     );
-    assert_parse!(
+    assert_parse_ast!(
         "module MyModule (foo, bar)",
         module_def("MyModule", vec!["foo", "bar"])
     );
-    assert_parse!(
+    assert_parse_ast!(
         "module MyModule ( func1, func2, func3 )",
         module_def("MyModule", vec!["func1", "func2", "func3"])
     );
@@ -190,5 +190,15 @@ fn op_calls() {
             fn_call("foo", vec![var("bar"), lit(Int64Lit(1))]),
             lit(Int64Lit(2))
         )
+    );
+}
+
+#[test]
+fn comments() {
+    assert_parse!("// a comment", program(vec![]));
+    assert_parse!("// a comment\n       // another comment", program(vec![]));
+    assert_parse!(
+        "// a comment\n\t // \n\n\t //what ok         \n       // another comment",
+        program(vec![])
     );
 }

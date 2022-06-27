@@ -13,6 +13,36 @@ pub mod fn_def;
 pub mod module_def;
 
 pub type Identifier = String;
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct Program {
+    nodes: Box<Vec<AST>>,
+}
+
+impl Program {
+    pub fn new(nodes: Vec<AST>) -> Self {
+        Program {
+            nodes: Box::new(nodes),
+        }
+    }
+}
+
+impl Display for Program {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let fmt_str =
+            self.nodes
+                .iter()
+                .map(|ast| format!("{}", ast))
+                .fold(String::from(""), |acc, fmt| {
+                    if acc == "" {
+                        fmt
+                    } else {
+                        format!("{}\n{}", acc, fmt)
+                    }
+                });
+
+        f.write_fmt(format_args!("{}", fmt_str))
+    }
+}
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum AST {

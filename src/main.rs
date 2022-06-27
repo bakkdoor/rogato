@@ -1,12 +1,13 @@
 mod fmodl;
 use std::fmt::Display;
-use std::io;
+use std::io::{self, Read};
 use std::path::Path;
 
 use fmodl::db;
 use fmodl::parser::{parse, parse_expr};
 use indent_write::indentable::Indentable;
 use serde_json::Value;
+use std::fs::File;
 
 const DB_PATH: &str = "./fmodl.db";
 
@@ -25,6 +26,28 @@ fn main() {
                 println!("Running parse tests");
                 try_parse_root_defs();
                 try_parse_expressions();
+            }
+            "examples" => {
+                println!("Trying to parse example files");
+                match std::fs::read_dir(Path::new("examples/")) {
+                    Ok(rd) => {
+                        for e in rd {
+                            let dir_entry = e.unwrap();
+                            match File::open(dir_entry.path()) {
+                                Ok(mut file) => {
+                                    let mut buf = String::new();
+                                    file.read_to_string(&mut buf).unwrap();
+                                    println!("\n📂 \t{}", dir_entry.path().display());
+                                    print_parse_result(buf.as_str(), parse(buf.as_str()))
+                                }
+                                Err(error) => {
+                                    println!("Could not open example source file: {:?}", error)
+                                }
+                            }
+                        }
+                    }
+                    Err(_) => {}
+                }
             }
             "db" => {
                 println!("Running db tests");

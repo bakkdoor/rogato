@@ -4,13 +4,24 @@ use peg::{error::ParseError, parser, str::LineCol};
 
 use crate::fmodl::ast::expression::{Expression, FnCallArgs, FnDefArgs, LetBindings, Literal};
 use crate::fmodl::ast::module_def::ModuleExports;
-use crate::fmodl::ast::{Identifier, AST};
+use crate::fmodl::ast::{Identifier, Program, AST};
 
 parser! {
 /// Doc comment
 grammar parser() for str {
-    /// Top level parser rule
-    /// This doc comment has multiple lines to test support for that as well
+    pub rule program() -> Program
+        = _ defs:(additional_root_def())* _ {
+            Program::new(defs)
+        }
+        / _ {
+            Program::new(vec![])
+        }
+
+    rule additional_root_def() -> AST
+        = _ def:root_def() {
+            def
+        }
+
     pub rule root_def() -> AST
         = module_def()
         / fn_def()
@@ -161,13 +172,25 @@ grammar parser() for str {
             String::from_iter(id)
         }
 
-    rule _ = [' ' | '\n']*
+    rule _
+        = ([' ' | '\n'] / comment())*
+
+    rule comment()
+        = [' ' | '\t']* "//" [^ '\n']*
 
 }}
 
-pub type ParseResult = Result<AST, ParseError<LineCol>>;
+pub type ParseResult = Result<Program, ParseError<LineCol>>;
 
 pub fn parse(str: &str) -> ParseResult {
+    parser::program(str)
+}
+
+#[cfg(test)]
+pub type ParseASTResult = Result<AST, ParseError<LineCol>>;
+
+#[cfg(test)]
+pub fn parse_ast(str: &str) -> ParseASTResult {
     parser::root_def(str)
 }
 

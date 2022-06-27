@@ -1,0 +1,13 @@
+module BasicSyntaxTest ( test, square, add )
+
+let test x =
+  "Testing " ++ (toString x)
+
+let square x =
+  x * x
+
+let add a b =
+  a + b
+
+let join a b c =
+  (a ++ b) ++ c

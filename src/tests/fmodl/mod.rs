@@ -3,6 +3,7 @@ pub mod parser;
 
 use crate::fmodl::ast::expression::{FnCallArgs, LetBindings};
 use crate::fmodl::ast::module_def::ModuleExports;
+use crate::fmodl::ast::Program;
 use crate::fmodl::ast::AST::{FnDef, ModuleDef};
 use crate::fmodl::ast::{
     expression::{
@@ -20,6 +21,18 @@ macro_rules! assert_parse {
         assert_eq!(
             crate::fmodl::parser::parse($code),
             Ok($expected),
+            "Expected program code to parse: {:?}",
+            $code
+        )
+    };
+}
+
+#[macro_export]
+macro_rules! assert_parse_ast {
+    ($code:expr, $expected:expr) => {
+        assert_eq!(
+            crate::fmodl::parser::parse_ast($code),
+            Ok($expected),
             "Expected code to parse: {:?}",
             $code
         )
@@ -36,6 +49,10 @@ macro_rules! assert_parse_expr {
             $code
         )
     };
+}
+
+pub fn program(nodes: Vec<AST>) -> Program {
+    Program::new(nodes)
 }
 
 pub fn lit(lit: Literal) -> Box<Expression> {
