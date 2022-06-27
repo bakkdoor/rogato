@@ -51,7 +51,7 @@ macro_rules! assert_parse_expr {
     };
 }
 
-pub fn program(nodes: Vec<AST>) -> Program {
+pub fn program(nodes: Vec<Box<AST>>) -> Program {
     Program::new(nodes)
 }
 
@@ -111,4 +111,12 @@ pub fn fn_call(id: &str, args: Vec<Box<Expression>>) -> Box<Expression> {
 
 pub fn op_call(id: &str, left: Box<Expression>, right: Box<Expression>) -> Box<Expression> {
     Box::new(Expression::OpCall(id.to_string(), left, right))
+}
+
+pub fn root_comment(comment: &str) -> Box<AST> {
+    Box::new(AST::RootComment(comment.to_string()))
+}
+
+pub fn commented(comment: &str, exp: Box<Expression>) -> Box<Expression> {
+    Box::new(Expression::Commented(comment.to_string(), exp))
 }

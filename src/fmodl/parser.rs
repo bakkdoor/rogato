@@ -11,7 +11,8 @@ parser! {
 grammar parser() for str {
     pub rule program() -> Program
         = _ defs:(additional_root_def())* _ {
-            Program::new(defs)
+            let nodes = Vec::from_iter(defs.iter().map(|d| Box::new(d.clone())));
+            Program::new(nodes)
         }
         / _ {
             Program::new(vec![])
@@ -25,6 +26,9 @@ grammar parser() for str {
     pub rule root_def() -> AST
         = module_def()
         / fn_def()
+        / c:comment() {
+            AST::RootComment(c)
+        }
 
     rule module_def() -> AST
         = "module " _ id:identifier() _ exports:module_exports() _ {
@@ -66,6 +70,12 @@ grammar parser() for str {
         / sum()
         / variable()
         / literal_exp()
+        / commented_exp()
+
+    rule commented_exp() -> Expression
+        = c:comment() _ e:expression() {
+            Expression::Commented(c, Box::new(e))
+        }
 
     rule sum() -> Expression
         = l:product() _ "+" _ r:product() {
@@ -134,6 +144,12 @@ grammar parser() for str {
         / sum()
         / variable()
         / literal_exp()
+        / commented_let_body()
+
+    rule commented_let_body() -> Expression
+        = c:comment() body:let_body() {
+            Expression::Commented(c, Box::new(body))
+        }
 
     rule additional_let_binding() -> (Identifier, Expression)
         = _ "," _ binding:let_binding() {
@@ -173,10 +189,12 @@ grammar parser() for str {
         }
 
     rule _
-        = ([' ' | '\n'] / comment())*
+        = ([' ' | '\n'])*
 
-    rule comment()
-        = [' ' | '\t']* "//" [^ '\n']*
+    rule comment() -> String
+        = [' ' | '\t']* "//" comment:([^ '\n'])* {
+            String::from_iter(comment)
+        }
 
 }}
 

@@ -1,3 +1,4 @@
+// top module comment
 module BasicSyntaxTest ( test, square, add )
 
 let test x =
@@ -10,4 +11,11 @@ let add a b =
   a + b
 
 let join a b c =
+  // comment above expression
+  // another comment above expression
+  // yet another comment above expression
   (a ++ b) ++ c
+
+// this is a comment
+// and another one
+let belowComment = "this function has a comment above!"

@@ -15,14 +15,12 @@ pub mod module_def;
 pub type Identifier = String;
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Program {
-    nodes: Box<Vec<AST>>,
+    nodes: Vec<Box<AST>>,
 }
 
 impl Program {
-    pub fn new(nodes: Vec<AST>) -> Self {
-        Program {
-            nodes: Box::new(nodes),
-        }
+    pub fn new(nodes: Vec<Box<AST>>) -> Self {
+        Program { nodes: nodes }
     }
 }
 
@@ -36,7 +34,7 @@ impl Display for Program {
                     if acc == "" {
                         fmt
                     } else {
-                        format!("{}\n{}", acc, fmt)
+                        format!("{}\n\n{}", acc, fmt)
                     }
                 });
 
@@ -46,6 +44,7 @@ impl Display for Program {
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum AST {
+    RootComment(String),
     FnDef(Identifier, FnDefArgs, Box<Expression>),
     ModuleDef(Identifier, ModuleExports),
 }
@@ -53,6 +52,7 @@ pub enum AST {
 impl Display for AST {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            AST::RootComment(comment) => f.write_fmt(format_args!("\n//{}", comment)),
             AST::FnDef(id, args, body) => f.write_fmt(format_args!(
                 "let {}{} =\n{}",
                 id,

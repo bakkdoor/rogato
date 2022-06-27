@@ -1,3 +1,4 @@
+use crate::tests::fmodl::{commented, root_comment};
 #[cfg(test)]
 use crate::{assert_parse, assert_parse_ast, assert_parse_expr};
 
@@ -195,10 +196,32 @@ fn op_calls() {
 
 #[test]
 fn comments() {
-    assert_parse!("// a comment", program(vec![]));
-    assert_parse!("// a comment\n       // another comment", program(vec![]));
+    assert_parse!("// a comment", program(vec![root_comment(" a comment")]));
+    assert_parse!(
+        "// a comment\n       // another comment",
+        program(vec![
+            root_comment(" a comment"),
+            root_comment(" another comment")
+        ])
+    );
     assert_parse!(
         "// a comment\n\t // \n\n\t //what ok         \n       // another comment",
-        program(vec![])
+        program(vec![
+            root_comment(" a comment"),
+            root_comment(" "),
+            root_comment("what ok         "),
+            root_comment(" another comment")
+        ])
     );
+
+    assert_parse_expr!(
+        "// a comment yo!\nlet x = 1 in x * 2",
+        commented(
+            " a comment yo!",
+            let_exp(
+                vec![("x", lit(Int64Lit(1)))],
+                product(var("x"), lit(Int64Lit(2)))
+            )
+        )
+    )
 }
