@@ -72,6 +72,20 @@ mod parser_tests {
                 sum(var("a"), product(var("b"), product(var("c"), var("a"))))
             ))
         );
+
+        assert_eq!(
+            parse("let add1 a = 1 + a"),
+            Ok(fn_def("add1", vec!["a"], sum(lit(Int64Lit(1)), var("a"))))
+        );
+
+        assert_eq!(
+            parse("\nlet add1and2 = 1 + 2\n"),
+            Ok(fn_def(
+                "add1and2",
+                vec![],
+                sum(lit(Int64Lit(1)), lit(Int64Lit(2)))
+            ))
+        );
     }
 
     #[test]

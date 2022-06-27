@@ -39,7 +39,7 @@ grammar parser() for str {
         }
 
     rule fn_def() -> AST
-        = "let " _ id:identifier() _ args:(fn_def_arg())* _ "=" _ body:(expression()) {
+        = _ "let " _ id:identifier() _ args:(fn_def_arg())* _ "=" _ body:(expression()) _ {
             AST::FnDef(id, FnDefArgs::new(args), Box::new(body))
         }
 
