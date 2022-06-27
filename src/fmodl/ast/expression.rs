@@ -59,7 +59,7 @@ impl Display for LetBindings {
                 if acc == "" {
                     fmt
                 } else {
-                    format!("{}\n{}", acc, fmt)
+                    format!("{},\n{}", acc, fmt)
                 }
             });
 
