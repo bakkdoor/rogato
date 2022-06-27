@@ -70,7 +70,7 @@ grammar parser() for str {
 
     rule atom() -> Expression
         = variable()
-        / number_lit()
+        / literal_exp()
         / "(" _ v:sum() _ ")" { v }
         / "(" _ c:fn_call() _ ")" { c }
 

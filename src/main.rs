@@ -9,6 +9,9 @@ use serde_json::Value;
 
 const DB_PATH: &str = "./fmodl.db";
 
+#[cfg(test)]
+mod tests;
+
 fn main() {
     let args = std::env::args();
     for arg in args {
