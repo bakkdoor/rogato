@@ -9,6 +9,7 @@ pub enum Expression {
     Sum(Box<Expression>, Box<Expression>),
     Product(Box<Expression>, Box<Expression>),
     FnCall(Identifier, Box<FnCallArgs>),
+    OpCall(Identifier, Box<FnCallArgs>),
     Var(Identifier),
     Let(Box<LetBindings>, Box<Expression>),
 }
@@ -21,6 +22,9 @@ impl Display for Expression {
             Expression::Product(a, b) => f.write_fmt(format_args!("({} * {})", a, b)),
             Expression::FnCall(fn_ident, args) => {
                 f.write_fmt(format_args!("({}{})", fn_ident, args))
+            }
+            Expression::OpCall(op_ident, args) => {
+                f.write_fmt(format_args!("({}{})", op_ident, args))
             }
             Expression::Var(id) => f.write_str(id),
             Expression::Let(bindings, body) => {

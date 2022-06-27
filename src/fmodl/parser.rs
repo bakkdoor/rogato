@@ -52,10 +52,9 @@ grammar parser() for str {
         = let_exp()
         / fn_call()
         / sum()
+        / op_call()
         / variable()
         / literal_exp()
-
-    rule _ = [' ' | '\n']*
 
     rule sum() -> Expression
         = l:product() _ "+" _ r:product() {
@@ -86,8 +85,26 @@ grammar parser() for str {
             Expression::FnCall(id, Box::new(args))
         }
 
+    rule op_call() -> Expression
+        = left:op_arg() " "+ id:operator() _ right:op_arg() {
+            let args = FnCallArgs::new(vec![left, right]);
+            Expression::OpCall(id, Box::new(args))
+        }
+        / left:op_arg() _ id:operator() " "+ right:op_arg() {
+            let args = FnCallArgs::new(vec![left, right]);
+            Expression::OpCall(id, Box::new(args))
+        }
+
     rule fn_arg() -> Expression
         = " "+ e:expression()  { e }
+
+    rule op_arg() -> Expression
+        = "(" _ expr:expression() _ ")" {
+            expr
+        }
+        / sum()
+        / literal_exp()
+        / variable()
 
     rule let_exp() -> Expression
         = "let " _ bindings:let_bindings() _ "in" _ body:expression() {
@@ -138,6 +155,9 @@ grammar parser() for str {
         = id:$(['+' | '-' | '*' | '/' | '>' | '<' | '=' | '!' | '^'])+ {
             String::from_iter(id)
         }
+
+    rule _ = [' ' | '\n']*
+
 }}
 
 pub fn parse(str: &str) -> Result<AST, ParseError<LineCol>> {

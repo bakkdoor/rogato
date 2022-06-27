@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod parser_tests {
-    use crate::fmodl::ast::expression::LetBindings;
+    use crate::fmodl::ast::expression::{FnCallArgs, LetBindings};
     use crate::fmodl::ast::module_def::ModuleExports;
     use crate::fmodl::ast::AST::{FnDef, ModuleDef};
     use crate::fmodl::ast::{
@@ -53,6 +53,28 @@ mod parser_tests {
 
     fn module_def_exports(exports: Vec<&str>) -> ModuleExports {
         ModuleExports::new(Vec::from_iter(exports.iter().map(|e| e.to_string())))
+    }
+
+    fn call_args(args: Vec<Box<Expression>>) -> FnCallArgs {
+        let mut args_unboxed = Vec::new();
+        for a in args {
+            args_unboxed.push(*a)
+        }
+        FnCallArgs::new(args_unboxed)
+    }
+
+    fn fn_call(id: &str, args: Vec<Box<Expression>>) -> Box<Expression> {
+        Box::new(Expression::FnCall(
+            id.to_string(),
+            Box::new(call_args(args)),
+        ))
+    }
+
+    fn op_call(id: &str, args: Vec<Box<Expression>>) -> Box<Expression> {
+        Box::new(Expression::OpCall(
+            id.to_string(),
+            Box::new(call_args(args)),
+        ))
     }
 
     #[test]
@@ -157,6 +179,16 @@ mod parser_tests {
                 vec![("x", lit(Int64Lit(1))), ("y", lit(Int64Lit(2)))],
                 sum(var("x"), var("y"))
             ))
+        );
+
+        assert_eq!(
+            parse_expr("add 1 2"),
+            Ok(fn_call("add", vec![lit(Int64Lit(1)), lit(Int64Lit(2))]))
+        );
+
+        assert_eq!(
+            parse_expr("1 != 2"),
+            Ok(op_call("!=", vec![lit(Int64Lit(1)), lit(Int64Lit(2))]))
         );
 
         assert!(parse_expr("(22+)+1").is_err());
