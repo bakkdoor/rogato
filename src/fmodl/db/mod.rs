@@ -1,5 +1,5 @@
 use indradb::{Datastore, Edge, EdgeQuery, Identifier, PropertyValueEdgeQuery, RocksdbDatastore};
-use std::path::Path;
+use std::{fmt::Debug, path::Path};
 
 type DBResult<T> = Result<T, indradb::Error>;
 
@@ -22,4 +22,10 @@ pub fn query_prop<DB: Datastore>(
             Ok(vec![])
         }
     }
+}
+
+pub fn do_stuff<DB: Datastore + Debug>(db: &DB) {
+    println!("DB: do stuff with {:?}", db);
+    let id = Identifier::new("testid").unwrap();
+    println!("ID: {:?}", id);
 }

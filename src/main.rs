@@ -10,15 +10,27 @@ use serde_json::Value;
 const DB_PATH: &str = "./fmodl.db";
 
 fn main() {
-    let mut args = std::env::args();
-    if let Some(_) = args.find(|a| a.eq("test")) {
-        try_parse_root_defs();
-        try_parse_expressions();
-        do_db_stuff();
-        return;
+    let args = std::env::args();
+    for arg in args {
+        match arg.as_str() {
+            "repl" => {
+                println!("Running REPL");
+                run_repl();
+            }
+            "parse" => {
+                println!("Running parse tests");
+                try_parse_root_defs();
+                try_parse_expressions();
+            }
+            "db" => {
+                println!("Running db tests");
+                do_db_stuff();
+            }
+            _ => {
+                println!("Unknown argument: {:?}", arg);
+            }
+        }
     }
-
-    run_repl();
 }
 
 fn try_parse_root_defs() {
@@ -81,6 +93,8 @@ fn do_db_stuff() {
     .map_err(print_error);
 
     println!("DB Query Result: {:?}", result);
+
+    db::do_stuff(&datastore);
 }
 
 fn print_parse_result<T: Display, E: Display>(code: &str, result: Result<T, E>) {
