@@ -108,6 +108,18 @@ mod parser_tests {
                 sum(lit(Int64Lit(1)), lit(Int64Lit(2)))
             ))
         );
+
+        assert_eq!(
+            parse("let foo a b = bar a (baz 1)"),
+            Ok(fn_def(
+                "foo",
+                vec!["a", "b"],
+                fn_call(
+                    "bar",
+                    vec![var("a"), fn_call("baz", vec![lit(Int64Lit(1))])]
+                )
+            ))
+        );
     }
 
     #[test]
