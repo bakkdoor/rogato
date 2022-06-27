@@ -99,7 +99,7 @@ grammar parser() for str {
         = " "+ e:atom()  { e }
 
     rule op_arg() -> Expression
-        = "(" _ expr:expression() _ ")" {
+        = "(" _ expr:atom() _ ")" {
             expr
         }
         / sum()
@@ -107,7 +107,7 @@ grammar parser() for str {
         / variable()
 
     rule let_exp() -> Expression
-        = "let " _ bindings:let_bindings() _ "in" _ body:expression() {
+        = "let " _ bindings:let_bindings() _ "in" _ body:let_body() {
             Expression::Let(LetBindings::new(bindings), Box::new(body))
         }
 
@@ -118,6 +118,13 @@ grammar parser() for str {
             bindings.append(&mut more_bindings.to_owned());
             bindings
         }
+
+    rule let_body() -> Expression
+        = fn_call()
+        / op_call()
+        / sum()
+        / variable()
+        / literal_exp()
 
     rule additional_let_binding() -> (Identifier, Expression)
         = _ "," _ binding:let_binding() {
@@ -152,7 +159,7 @@ grammar parser() for str {
         }
 
     rule operator() -> Identifier
-        = id:$(['+' | '-' | '*' | '/' | '>' | '<' | '=' | '!' | '^'])+ {
+        = id:$(['+' | '-' | '*' | '/' | '>' | '<' | '=' | '!' | '^' | '='])+ {
             String::from_iter(id)
         }
 

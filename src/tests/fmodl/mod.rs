@@ -12,24 +12,30 @@ use crate::fmodl::ast::{
     },
     AST,
 };
-use crate::fmodl::parser::{parse, parse_expr};
+pub use crate::fmodl::parser::{parse, parse_expr};
 
-pub fn assert_parse(code: &str, expected: AST) {
-    assert_eq!(
-        parse(code),
-        Ok(expected),
-        "Expected code to parse: {:?}",
-        code
-    )
+#[macro_export]
+macro_rules! assert_parse {
+    ($code:expr, $expected:expr) => {
+        assert_eq!(
+            crate::fmodl::parser::parse($code),
+            Ok($expected),
+            "Expected code to parse: {:?}",
+            $code
+        )
+    };
 }
 
-pub fn assert_parse_expr(code: &str, expected: Box<Expression>) {
-    assert_eq!(
-        parse_expr(code),
-        Ok(expected),
-        "Expected expression code to parse: {:?}",
-        code
-    )
+#[macro_export]
+macro_rules! assert_parse_expr {
+    ($code:expr, $expected:expr) => {
+        assert_eq!(
+            crate::fmodl::parser::parse_expr($code),
+            Ok($expected),
+            "Expected expression code to parse: {:?}",
+            $code
+        )
+    };
 }
 
 pub fn lit(lit: Literal) -> Box<Expression> {
