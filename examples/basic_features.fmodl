@@ -6,19 +6,19 @@ let squared x = x * x
 
 let withLarger x y f = withLarger {x, x > y} {y, x < y} f
 
-let withLarger {true, x} {false, _} f = f x
-let withLarger {false, _} {true, y} f = f y
-let withLarger {_, x} {_, y} f = f (x + y)
+// let withLarger {true, x} {false, _} f = f x
+// let withLarger {false, _} {true, y} f = f y
+// let withLarger {_, x} {_, y} f = f (x + y)
 
 // example usage within main:
-main :: [String] -> [IO]
+// main :: [String] -> [IO]
 let main args =
   [
     Display.debug [
       // true
       withLarger 10 11 (n -> n == 11),
       // true
-      withLarger 10 11 ((==) 11),
+      // withLarger 10 11 ((==) 11),
       // false
       withLarger 10 10 (n -> n == 11),
       // true

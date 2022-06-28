@@ -15,6 +15,7 @@ pub enum Expression {
     OpCall(Identifier, Box<Expression>, Box<Expression>),
     Var(Identifier),
     Let(Box<LetBindings>, Box<Expression>),
+    Lambda(Box<LambdaArgs>, Box<Expression>),
 }
 
 impl Display for Expression {
@@ -38,6 +39,7 @@ impl Display for Expression {
                 bindings.indented("    "),
                 body.indented("    ")
             )),
+            Expression::Lambda(args, body) => f.write_fmt(format_args!("({} -> {})", args, body)),
         }
     }
 }
@@ -66,6 +68,31 @@ impl Display for LetBindings {
                     format!("{},\n{}", acc, fmt)
                 }
             });
+
+        f.write_fmt(format_args!("{}", fmt_str))
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct LambdaArgs {
+    args: Vec<Identifier>,
+}
+
+impl LambdaArgs {
+    pub fn new(args: Vec<Identifier>) -> Box<LambdaArgs> {
+        Box::new(LambdaArgs { args: args })
+    }
+}
+
+impl Display for LambdaArgs {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let fmt_str = self.args.iter().fold(String::from(""), |acc, arg| {
+            if acc == "" {
+                arg.to_string()
+            } else {
+                format!("{} {}", acc, arg)
+            }
+        });
 
         f.write_fmt(format_args!("{}", fmt_str))
     }
@@ -102,10 +129,6 @@ impl TupleItems {
         for item in rest {
             items.push(Box::new(item))
         }
-        TupleItems { items: items }
-    }
-
-    pub fn from(items: Vec<Box<Expression>>) -> Self {
         TupleItems { items: items }
     }
 }

@@ -3,7 +3,7 @@ extern crate peg;
 use peg::{error::ParseError, parser, str::LineCol};
 
 use crate::fmodl::ast::expression::{
-    Expression, FnCallArgs, FnDefArgs, LetBindings, Literal, TupleItems,
+    Expression, FnCallArgs, FnDefArgs, LambdaArgs, LetBindings, Literal, TupleItems,
 };
 use crate::fmodl::ast::module_def::ModuleExports;
 use crate::fmodl::ast::{Identifier, Program, AST};
@@ -69,6 +69,7 @@ grammar parser() for str {
         = let_exp()
         / fn_call()
         / op_call()
+        / lambda()
         / sum()
         / variable()
         / literal_exp()
@@ -96,6 +97,7 @@ grammar parser() for str {
         / literal_exp()
         / "(" _ v:sum() _ ")" { v }
         / "(" _ c:(fn_call() / op_call()) _ ")" { c }
+        / "(" _ l:lambda() _ ")" { l }
 
     rule variable() -> Expression
         = id:identifier() {
@@ -143,6 +145,7 @@ grammar parser() for str {
     rule let_body() -> Expression
         = fn_call()
         / op_call()
+        / lambda()
         / sum()
         / variable()
         / literal_exp()
@@ -180,12 +183,12 @@ grammar parser() for str {
         }
 
     rule tuple_lit() -> Expression
-        = "{" _ first:tuple_item() rest:(additional_tuple_item())+ _ "}" {
+        = "{" _ first:tuple_item() rest:(additional_tuple_item())+ _ ("," _)? "}" {
             Expression::Lit(Literal::TupleLit(TupleItems::new(first, rest)))
         }
 
     rule list_lit() -> Expression
-        = "[" _ first:tuple_item() rest:(additional_tuple_item())+ _ "]" {
+        = "[" _ first:tuple_item() rest:(additional_tuple_item())+ _ ("," _)? "]" {
             Expression::Lit(Literal::ListLit(TupleItems::new(first, rest)))
         }
 
@@ -206,8 +209,13 @@ grammar parser() for str {
             item
         }
 
+    rule lambda() -> Expression
+        = id:identifier() " "+ "->" _ body:let_body() {
+            Expression::Lambda(LambdaArgs::new(vec![id]), Box::new(body))
+        }
+
     rule identifier() -> Identifier
-        = id1:$([ 'a'..='z' | 'A'..='Z' | '-' | '_']) id2:$(['a'..='z' | 'A'..='Z' | '-' | '_' | '0'..='9'])* {
+        = id1:$([ 'a'..='z' | 'A'..='Z' | '-' | '_']) id2:$(['a'..='z' | 'A'..='Z' | '-' | '_' | '0'..='9' | '.'])* {
             let mut id = String::new();
             id.push_str(id1);
             id.push_str(String::from_iter(id2).as_str());

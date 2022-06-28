@@ -52,7 +52,7 @@ pub enum AST {
 impl Display for AST {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            AST::RootComment(comment) => f.write_fmt(format_args!("\n//{}", comment)),
+            AST::RootComment(comment) => f.write_fmt(format_args!("//{}", comment)),
             AST::FnDef(id, args, body) => f.write_fmt(format_args!(
                 "let {}{} =\n{}",
                 id,
