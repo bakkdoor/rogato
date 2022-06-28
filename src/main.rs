@@ -127,7 +127,7 @@ fn do_db_stuff() {
 fn print_parse_result<T: Display, E: Display>(code: &str, result: Result<T, E>) {
     match result {
         Ok(expr) => println!("✅\t{}\n\n🧾{}\n\n", code, expr.indented("\t")),
-        Err(error) => println!("\n❌\t{}\n\n🧾\t{}\n\n", code, error),
+        Err(error) => println!("\n❌\t{}\n\n❌\t{}\n\n", code, error),
     }
 }
 

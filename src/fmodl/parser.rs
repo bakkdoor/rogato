@@ -164,6 +164,7 @@ grammar parser() for str {
     rule literal_exp() -> Expression
         = number_lit()
         / string_lit()
+        / tuple_lit()
 
     rule number_lit() -> Expression
         = n:$(['0'..='9']+) {
@@ -173,6 +174,27 @@ grammar parser() for str {
     rule string_lit() -> Expression
         = "\"" s:([^ '"']*) "\"" {
             Expression::Lit(Literal::StringLit(Box::new(String::from_iter(s))))
+        }
+
+    rule tuple_lit() -> Expression
+        = "{" _ first:tuple_item() rest:(additional_tuple_item())+ _ "}" {
+            let mut elements = Vec::new();
+            elements.push(Box::new(first));
+            for e in rest {
+                elements.push(Box::new(e))
+            }
+            Expression::Lit(Literal::TupleLit(elements))
+        }
+
+    rule tuple_item() -> Expression
+        = fn_call()
+        / op_call()
+        / sum()
+        / atom()
+
+    rule additional_tuple_item() -> Expression
+        = _ "," _ item:tuple_item() {
+            item
         }
 
     rule identifier() -> Identifier
@@ -189,7 +211,7 @@ grammar parser() for str {
         }
 
     rule _
-        = ([' ' | '\n'])*
+        = ([' ' | '\t' | '\n'])*
 
     rule comment() -> String
         = [' ' | '\t']* "//" comment:([^ '\n'])* {

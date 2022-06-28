@@ -15,12 +15,18 @@ main :: [String] -> [IO]
 let main args =
   [
     Display.debug [
-      withLarger 10 11 (n -> n == 11), // true
-      withLarger 10 11 ((==) 11),      // true
-      withLarger 10 10 (n -> n == 11), // false
-      withLarger 10 10 (n -> n == 20), // true
-      withLarger 11 10 (n -> n == 11), // true
-      withLarger 11 11 (n -> n == 22), // true
+      // true
+      withLarger 10 11 (n -> n == 11),
+      // true
+      withLarger 10 11 ((==) 11),
+      // false
+      withLarger 10 10 (n -> n == 11),
+      // true
+      withLarger 10 10 (n -> n == 20),
+      // true
+      withLarger 11 10 (n -> n == 11),
+      // true
+      withLarger 11 11 (n -> n == 22),
     ],
     Display.debug [
       "This is some output and here are the given args to main:",

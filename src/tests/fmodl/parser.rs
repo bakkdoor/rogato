@@ -4,8 +4,8 @@ use crate::{assert_parse, assert_parse_ast, assert_parse_expr};
 
 #[cfg(test)]
 use super::{
-    fn_call, fn_def, let_exp, lit, module_def, op_call, parse_expr, product, program, sum, var,
-    Int64Lit, StringLit,
+    fn_call, fn_def, int_lit, let_exp, module_def, op_call, parse_expr, product, program,
+    string_lit, sum, tuple_lit, var,
 };
 
 #[test]
@@ -28,12 +28,12 @@ fn fn_defs() {
 
     assert_parse_ast!(
         "let add1 a = 1 + a",
-        fn_def("add1", vec!["a"], sum(lit(Int64Lit(1)), var("a")))
+        fn_def("add1", vec!["a"], sum(int_lit(1), var("a")))
     );
 
     assert_parse_ast!(
         "\nlet add1and2 = 1 + 2\n",
-        fn_def("add1and2", vec![], sum(lit(Int64Lit(1)), lit(Int64Lit(2))))
+        fn_def("add1and2", vec![], sum(int_lit(1), int_lit(2)))
     );
 
     assert_parse_ast!(
@@ -41,10 +41,7 @@ fn fn_defs() {
         fn_def(
             "foo",
             vec!["a", "b"],
-            fn_call(
-                "bar",
-                vec![var("a"), fn_call("baz", vec![lit(Int64Lit(1))])]
-            ),
+            fn_call("bar", vec![var("a"), fn_call("baz", vec![int_lit(1)])]),
         )
     );
 }
@@ -71,27 +68,21 @@ fn module_defs() {
 
 #[test]
 fn arithmetic_expressions() {
-    assert_parse_expr!("1+1", sum(lit(Int64Lit(1)), lit(Int64Lit(1))));
+    assert_parse_expr!("1+1", sum(int_lit(1), int_lit(1)));
 
-    assert_parse_expr!("5*5", product(lit(Int64Lit(5)), lit(Int64Lit(5))));
+    assert_parse_expr!("5*5", product(int_lit(5), int_lit(5)));
 
-    assert_parse_expr!(
-        "2+3*4",
-        sum(
-            lit(Int64Lit(2)),
-            product(lit(Int64Lit(3)), lit(Int64Lit(4))),
-        )
-    );
+    assert_parse_expr!("2+3*4", sum(int_lit(2), product(int_lit(3), int_lit(4)),));
 
     assert_parse_expr!(
         "(2+3) * 4",
-        product(sum(lit(Int64Lit(2)), lit(Int64Lit(3))), lit(Int64Lit(4)))
+        product(sum(int_lit(2), int_lit(3)), int_lit(4))
     );
 
     assert_parse_expr!(
         "let x = 1, y = 2 in x + y",
         let_exp(
-            vec![("x", lit(Int64Lit(1))), ("y", lit(Int64Lit(2)))],
+            vec![("x", int_lit(1)), ("y", int_lit(2))],
             sum(var("x"), var("y")),
         )
     );
@@ -103,32 +94,51 @@ fn arithmetic_expressions() {
 
 #[test]
 fn literals() {
-    assert_parse_expr!("1", lit(Int64Lit(1)));
+    assert_parse_expr!("1", int_lit(1));
+
+    assert_parse_expr!("\"Hello, world!\"", string_lit("Hello, world!"));
 
     assert_parse_expr!(
-        "\"Hello, world!\"",
-        lit(StringLit(Box::new("Hello, world!".to_string())))
+        "{1,2,3}",
+        tuple_lit(vec![int_lit(1), int_lit(2), int_lit(3)])
+    );
+
+    assert_parse_expr!(
+        "{ 1, (2 + 3), 4 }",
+        tuple_lit(vec![int_lit(1), sum(int_lit(2), int_lit(3)), int_lit(4)])
+    );
+
+    assert_parse_expr!(
+        "{ 1, 2 + 3, 4 * 5 }",
+        tuple_lit(vec![
+            int_lit(1),
+            sum(int_lit(2), int_lit(3)),
+            product(int_lit(4), int_lit(5))
+        ])
+    );
+
+    assert_parse_expr!(
+        "{ 1, a + b, c * d }",
+        tuple_lit(vec![
+            int_lit(1),
+            sum(var("a"), var("b")),
+            product(var("c"), var("d"))
+        ])
     );
 }
 
 #[test]
 fn fn_calls() {
-    assert_parse_expr!(
-        "add 1 2",
-        fn_call("add", vec![lit(Int64Lit(1)), lit(Int64Lit(2))])
-    );
+    assert_parse_expr!("add 1 2", fn_call("add", vec![int_lit(1), int_lit(2)]));
 
-    assert_parse_expr!("add 1 a", fn_call("add", vec![lit(Int64Lit(1)), var("a")]));
-    assert_parse_expr!("add a 1", fn_call("add", vec![var("a"), lit(Int64Lit(1))]));
+    assert_parse_expr!("add 1 a", fn_call("add", vec![int_lit(1), var("a")]));
+    assert_parse_expr!("add a 1", fn_call("add", vec![var("a"), int_lit(1)]));
 
     assert_parse_expr!(
         "add 1 (add 2 3)",
         fn_call(
             "add",
-            vec![
-                lit(Int64Lit(1)),
-                fn_call("add", vec![lit(Int64Lit(2)), lit(Int64Lit(3))]),
-            ],
+            vec![int_lit(1), fn_call("add", vec![int_lit(2), int_lit(3)]),],
         )
     );
 
@@ -136,60 +146,49 @@ fn fn_calls() {
         "add 1 (add a 3)",
         fn_call(
             "add",
-            vec![
-                lit(Int64Lit(1)),
-                fn_call("add", vec![var("a"), lit(Int64Lit(3))]),
-            ],
+            vec![int_lit(1), fn_call("add", vec![var("a"), int_lit(3)]),],
         )
     );
 }
 
 #[test]
 fn op_calls() {
-    assert_parse_expr!("1 < 2", op_call("<", lit(Int64Lit(1)), lit(Int64Lit(2))));
+    assert_parse_expr!("1 < 2", op_call("<", int_lit(1), int_lit(2)));
 
-    assert_parse_expr!("1 > 2", op_call(">", lit(Int64Lit(1)), lit(Int64Lit(2))));
+    assert_parse_expr!("1 > 2", op_call(">", int_lit(1), int_lit(2)));
 
-    assert_parse_expr!("1 >> 2", op_call(">>", lit(Int64Lit(1)), lit(Int64Lit(2))));
+    assert_parse_expr!("1 >> 2", op_call(">>", int_lit(1), int_lit(2)));
 
     assert_parse_expr!(
         "1 <= (2 + 3)",
-        op_call(
-            "<=",
-            lit(Int64Lit(1)),
-            sum(lit(Int64Lit(2)), lit(Int64Lit(3)))
-        )
+        op_call("<=", int_lit(1), sum(int_lit(2), int_lit(3)))
     );
 
     assert_parse_expr!(
         "(2 + 3) <= foo",
-        op_call("<=", sum(lit(Int64Lit(2)), lit(Int64Lit(3))), var("foo"))
+        op_call("<=", sum(int_lit(2), int_lit(3)), var("foo"))
     );
 
     assert_parse_expr!(
         "(2 + 3) <= (foo <!> (bar <=> baz))",
         op_call(
             "<=",
-            sum(lit(Int64Lit(2)), lit(Int64Lit(3))),
+            sum(int_lit(2), int_lit(3)),
             op_call("<!>", var("foo"), op_call("<=>", var("bar"), var("baz")))
         )
     );
 
     assert_parse_expr!(
         "(1 >> 3) != 2",
-        op_call(
-            "!=",
-            op_call(">>", lit(Int64Lit(1)), lit(Int64Lit(3))),
-            lit(Int64Lit(2))
-        )
+        op_call("!=", op_call(">>", int_lit(1), int_lit(3)), int_lit(2))
     );
 
     assert_parse_expr!(
         "(foo bar 1) != 2",
         op_call(
             "!=",
-            fn_call("foo", vec![var("bar"), lit(Int64Lit(1))]),
-            lit(Int64Lit(2))
+            fn_call("foo", vec![var("bar"), int_lit(1)]),
+            int_lit(2)
         )
     );
 }
@@ -218,10 +217,7 @@ fn comments() {
         "// a comment yo!\nlet x = 1 in x * 2",
         commented(
             " a comment yo!",
-            let_exp(
-                vec![("x", lit(Int64Lit(1)))],
-                product(var("x"), lit(Int64Lit(2)))
-            )
+            let_exp(vec![("x", int_lit(1))], product(var("x"), int_lit(2)))
         )
-    )
+    );
 }

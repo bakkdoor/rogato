@@ -75,6 +75,7 @@ impl Display for LetBindings {
 pub enum Literal {
     Int64Lit(i64),
     StringLit(Box<String>),
+    TupleLit(Vec<Box<Expression>>),
 }
 
 impl Display for Literal {
@@ -82,6 +83,9 @@ impl Display for Literal {
         match self {
             Literal::Int64Lit(num) => f.write_fmt(format_args!("{}", num)),
             Literal::StringLit(string) => f.write_fmt(format_args!("{}", string)),
+            Literal::TupleLit(vals) => {
+                f.write_fmt(format_args!("{}", FnCallArgs::from(vals.clone())))
+            }
         }
     }
 }

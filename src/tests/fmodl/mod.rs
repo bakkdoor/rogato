@@ -59,6 +59,18 @@ pub fn lit(lit: Literal) -> Box<Expression> {
     Box::new(Lit(lit))
 }
 
+pub fn int_lit(val: i64) -> Box<Expression> {
+    lit(Int64Lit(val))
+}
+
+pub fn string_lit(val: &str) -> Box<Expression> {
+    lit(StringLit(Box::new(val.to_string())))
+}
+
+pub fn tuple_lit(vals: Vec<Box<Expression>>) -> Box<Expression> {
+    lit(TupleLit(vals))
+}
+
 pub fn var(id: &str) -> Box<Expression> {
     Box::new(Var(id.to_string()))
 }
