@@ -12,8 +12,7 @@ parser! {
 grammar parser() for str {
     pub rule program() -> Program
         = _ defs:(additional_root_def())* _ {
-            let nodes = Vec::from_iter(defs.iter().map(|d| Box::new(d.clone())));
-            Program::new(nodes)
+            Program::new(defs)
         }
         / _ {
             Program::new(vec![])

@@ -19,7 +19,11 @@ pub struct Program {
 }
 
 impl Program {
-    pub fn new(nodes: Vec<Box<AST>>) -> Self {
+    pub fn new(nodes: Vec<AST>) -> Self {
+        Self::from(Vec::from_iter(nodes.iter().map(|d| Box::new(d.clone()))))
+    }
+
+    pub fn from(nodes: Vec<Box<AST>>) -> Self {
         Program { nodes: nodes }
     }
 }

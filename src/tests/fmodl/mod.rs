@@ -52,7 +52,7 @@ macro_rules! assert_parse_expr {
 }
 
 pub fn program(nodes: Vec<Box<AST>>) -> Program {
-    Program::new(nodes)
+    Program::from(nodes)
 }
 
 pub fn lit(lit: Literal) -> Box<Expression> {
