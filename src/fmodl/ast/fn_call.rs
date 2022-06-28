@@ -12,11 +12,6 @@ impl FnCallArgs {
             args: Box::new(args),
         }
     }
-
-    pub fn from(args: Vec<Box<Expression>>) -> Self {
-        let unboxed_args: Vec<Expression> = Vec::from_iter(args.iter().map(|a| *(a.clone())));
-        FnCallArgs::new(unboxed_args)
-    }
 }
 
 impl Display for FnCallArgs {
