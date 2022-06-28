@@ -2,7 +2,9 @@ extern crate peg;
 
 use peg::{error::ParseError, parser, str::LineCol};
 
-use crate::fmodl::ast::expression::{Expression, FnCallArgs, FnDefArgs, LetBindings, Literal};
+use crate::fmodl::ast::expression::{
+    Expression, FnCallArgs, FnDefArgs, LetBindings, Literal, TupleItems,
+};
 use crate::fmodl::ast::module_def::ModuleExports;
 use crate::fmodl::ast::{Identifier, Program, AST};
 
@@ -157,7 +159,7 @@ grammar parser() for str {
         }
 
     rule let_binding() -> (Identifier, Expression)
-        = _ id:identifier() _ "=" _ val:expression() _ {
+        = _ id:identifier() _ "=" _ val:let_body() _ {
             (id, val)
         }
 
@@ -165,6 +167,7 @@ grammar parser() for str {
         = number_lit()
         / string_lit()
         / tuple_lit()
+        / list_lit()
 
     rule number_lit() -> Expression
         = n:$(['0'..='9']+) {
@@ -178,12 +181,12 @@ grammar parser() for str {
 
     rule tuple_lit() -> Expression
         = "{" _ first:tuple_item() rest:(additional_tuple_item())+ _ "}" {
-            let mut elements = Vec::new();
-            elements.push(Box::new(first));
-            for e in rest {
-                elements.push(Box::new(e))
-            }
-            Expression::Lit(Literal::TupleLit(elements))
+            Expression::Lit(Literal::TupleLit(TupleItems::new(first, rest)))
+        }
+
+    rule list_lit() -> Expression
+        = "[" _ first:tuple_item() rest:(additional_tuple_item())+ _ "]" {
+            Expression::Lit(Literal::ListLit(TupleItems::new(first, rest)))
         }
 
     rule tuple_item() -> Expression
@@ -191,6 +194,12 @@ grammar parser() for str {
         / op_call()
         / sum()
         / atom()
+        / commented_tuple_item()
+
+    rule commented_tuple_item() -> Expression
+        = c:comment() _ item:tuple_item() {
+            Expression::Commented(c, Box::new(item))
+        }
 
     rule additional_tuple_item() -> Expression
         = _ "," _ item:tuple_item() {

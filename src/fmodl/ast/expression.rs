@@ -75,7 +75,8 @@ impl Display for LetBindings {
 pub enum Literal {
     Int64Lit(i64),
     StringLit(Box<String>),
-    TupleLit(Vec<Box<Expression>>),
+    TupleLit(TupleItems),
+    ListLit(TupleItems),
 }
 
 impl Display for Literal {
@@ -83,9 +84,42 @@ impl Display for Literal {
         match self {
             Literal::Int64Lit(num) => f.write_fmt(format_args!("{}", num)),
             Literal::StringLit(string) => f.write_fmt(format_args!("{}", string)),
-            Literal::TupleLit(vals) => {
-                f.write_fmt(format_args!("{}", FnCallArgs::from(vals.clone())))
-            }
+            Literal::TupleLit(items) => f.write_fmt(format_args!("{{ {} }}", items)),
+            Literal::ListLit(items) => f.write_fmt(format_args!("[ {} ]", items)),
         }
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct TupleItems {
+    items: Vec<Box<Expression>>,
+}
+
+impl TupleItems {
+    pub fn new(first: Expression, rest: Vec<Expression>) -> Self {
+        let mut items = Vec::new();
+        items.push(Box::new(first));
+        for item in rest {
+            items.push(Box::new(item))
+        }
+        TupleItems { items: items }
+    }
+
+    pub fn from(items: Vec<Box<Expression>>) -> Self {
+        TupleItems { items: items }
+    }
+}
+
+impl Display for TupleItems {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let fmt_str = self.items.iter().fold(String::from(""), |acc, item| {
+            if acc == "" {
+                format!("{}", item)
+            } else {
+                format!("{}, {}", acc, item)
+            }
+        });
+
+        f.write_fmt(format_args!("{}", fmt_str))
     }
 }
