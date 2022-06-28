@@ -40,6 +40,7 @@ grammar parser() for str {
         / "module " _ id:identifier() _ {
             AST::ModuleDef(id, ModuleExports::new(vec![]))
         }
+
     rule module_exports() -> Vec<Identifier>
         = "(" _ first_export:identifier() more_exports:(additional_module_export())* _ ")" {
             let mut exports = Vec::new();
@@ -232,7 +233,6 @@ grammar parser() for str {
         = [' ' | '\t']* "//" comment:([^ '\n'])* {
             String::from_iter(comment)
         }
-
 }}
 
 pub type ParseResult = Result<Program, ParseError<LineCol>>;
