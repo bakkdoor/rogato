@@ -129,6 +129,10 @@ impl TupleItems {
         for item in rest {
             items.push(Box::new(item))
         }
+        Self::from(items)
+    }
+
+    pub fn from(items: Vec<Box<Expression>>) -> Self {
         TupleItems { items: items }
     }
 }
