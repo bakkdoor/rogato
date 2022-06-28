@@ -3,7 +3,7 @@ extern crate peg;
 use crate::fmodl::ast::{
     expression::{Expression, FnCallArgs, FnDefArgs, LambdaArgs, LetBindings, Literal, TupleItems},
     module_def::ModuleExports,
-    Identifier, Program, AST,
+    Identifier, Program, TypeExpression, AST,
 };
 use peg::{error::ParseError, parser, str::LineCol};
 
@@ -26,6 +26,7 @@ grammar parser() for str {
     pub rule root_def() -> AST
         = module_def()
         / fn_def()
+        / type_def()
         / c:comment() {
             AST::RootComment(c)
         }
@@ -62,6 +63,55 @@ grammar parser() for str {
     rule fn_def_arg() -> Identifier
         = _ id:identifier() _ {
             id
+        }
+
+    rule type_def() -> AST
+        = _ "type " _ id:identifier() _ "::" _ t_expr:type_expr() {
+            AST::TypeDef(id, Box::new(t_expr))
+        }
+
+    rule type_expr() -> TypeExpression
+        = "String" { TypeExpression::StringType }
+        / "Int" { TypeExpression::IntType }
+        / tuple_type()
+        / list_type()
+        / function_type()
+        / struct_type()
+        / id:identifier() {
+            TypeExpression::TypeRef(id)
+        }
+
+    rule tuple_type_item() -> TypeExpression
+        = type_expr()
+
+    rule additional_tuple_type_item() -> TypeExpression
+        = _ "," _ item:tuple_type_item() {
+            item
+        }
+
+    rule tuple_type() -> TypeExpression
+        = "{" _ first:tuple_type_item() rest:(additional_tuple_type_item())+ _ ("," _)? "}" {
+            TypeExpression::TupleType(TupleItems::new(first, rest))
+        }
+
+    rule list_type() -> TypeExpression
+        = "[" _ type_expr:type_expr() _ "]" {
+            TypeExpression::ListType(Box::new(type_expr))
+        }
+
+    rule function_type() -> TypeExpression
+        = "(" _ arg_types:(tuple_type_item())+ " "+ "->" return_type:type_expr() _ ")"{
+            TypeExpression::FunctionType(LambdaArgs::new(arg_types), Box::new(return_type))
+        }
+
+    rule struct_type() -> TypeExpression
+        = "{" _ properties:(struct_prop_type())+  _ "}" {
+            TypeExpression::StructType(properties)
+        }
+
+    rule struct_prop_type() -> (Identifier, Box<TypeExpression>)
+        = id:identifier() " "+ "::" _ type_expr:type_expr() [^'\n']* "\n"+ _ {
+            (id, Box::new(type_expr))
         }
 
     pub rule expression() -> Expression
@@ -214,7 +264,7 @@ grammar parser() for str {
         }
 
     rule identifier() -> Identifier
-        = id1:$([ 'a'..='z' | 'A'..='Z' | '-' | '_']) id2:$(['a'..='z' | 'A'..='Z' | '-' | '_' | '0'..='9' | '.'])* {
+        = id1:$([ 'a'..='z' | 'A'..='Z' | '-' | '_' | '@' | '$']) id2:$(['a'..='z' | 'A'..='Z' | '-' | '_' | '0'..='9' | '.' | '@' | '$'])* {
             let mut id = String::new();
             id.push_str(id1);
             id.push_str(String::from_iter(id2).as_str());

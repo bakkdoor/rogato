@@ -15,7 +15,7 @@ pub enum Expression {
     OpCall(Identifier, Box<Expression>, Box<Expression>),
     Var(Identifier),
     Let(Box<LetBindings>, Box<Expression>),
-    Lambda(Box<LambdaArgs>, Box<Expression>),
+    Lambda(Box<LambdaArgs<Identifier>>, Box<Expression>),
 }
 
 impl Display for Expression {
@@ -74,17 +74,17 @@ impl Display for LetBindings {
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub struct LambdaArgs {
-    args: Vec<Identifier>,
+pub struct LambdaArgs<A: Display> {
+    args: Vec<A>,
 }
 
-impl LambdaArgs {
-    pub fn new(args: Vec<Identifier>) -> Box<LambdaArgs> {
+impl<A: Display> LambdaArgs<A> {
+    pub fn new(args: Vec<A>) -> Box<LambdaArgs<A>> {
         Box::new(LambdaArgs { args: args })
     }
 }
 
-impl Display for LambdaArgs {
+impl<A: Display> Display for LambdaArgs<A> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let fmt_str = self.args.iter().fold(String::from(""), |acc, arg| {
             if acc == "" {
@@ -102,8 +102,8 @@ impl Display for LambdaArgs {
 pub enum Literal {
     Int64Lit(i64),
     StringLit(Box<String>),
-    TupleLit(TupleItems),
-    ListLit(TupleItems),
+    TupleLit(TupleItems<Expression>),
+    ListLit(TupleItems<Expression>),
 }
 
 impl Display for Literal {
@@ -118,12 +118,12 @@ impl Display for Literal {
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub struct TupleItems {
-    items: Vec<Box<Expression>>,
+pub struct TupleItems<I> {
+    items: Vec<Box<I>>,
 }
 
-impl TupleItems {
-    pub fn new(first: Expression, rest: Vec<Expression>) -> Self {
+impl<I: Display> TupleItems<I> {
+    pub fn new(first: I, rest: Vec<I>) -> Self {
         let mut items = Vec::new();
         items.push(Box::new(first));
         for item in rest {
@@ -132,12 +132,12 @@ impl TupleItems {
         Self::from(items)
     }
 
-    pub fn from(items: Vec<Box<Expression>>) -> Self {
+    pub fn from(items: Vec<Box<I>>) -> Self {
         TupleItems { items: items }
     }
 }
 
-impl Display for TupleItems {
+impl<I: Display> Display for TupleItems<I> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let fmt_str = self.items.iter().fold(String::from(""), |acc, item| {
             if acc == "" {
