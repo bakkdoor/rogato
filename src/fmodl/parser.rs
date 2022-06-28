@@ -1,12 +1,11 @@
 extern crate peg;
 
-use peg::{error::ParseError, parser, str::LineCol};
-
-use crate::fmodl::ast::expression::{
-    Expression, FnCallArgs, FnDefArgs, LambdaArgs, LetBindings, Literal, TupleItems,
+use crate::fmodl::ast::{
+    expression::{Expression, FnCallArgs, FnDefArgs, LambdaArgs, LetBindings, Literal, TupleItems},
+    module_def::ModuleExports,
+    Identifier, Program, AST,
 };
-use crate::fmodl::ast::module_def::ModuleExports;
-use crate::fmodl::ast::{Identifier, Program, AST};
+use peg::{error::ParseError, parser, str::LineCol};
 
 parser! {
 /// Doc comment
