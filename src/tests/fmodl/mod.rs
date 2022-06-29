@@ -12,7 +12,7 @@ use crate::fmodl::ast::{
     },
     AST,
 };
-use crate::fmodl::ast::{Program, TypeExpression};
+use crate::fmodl::ast::{type_expression::TypeExpression, Program};
 pub use crate::fmodl::parser::{parse, parse_expr};
 
 #[macro_export]

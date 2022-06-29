@@ -6,7 +6,8 @@ use crate::fmodl::ast::{
         TupleItems,
     },
     module_def::ModuleExports,
-    Identifier, Program, TypeExpression, AST,
+    type_expression::TypeExpression,
+    Identifier, Program, AST,
 };
 use peg::{error::ParseError, parser, str::LineCol};
 
