@@ -3,7 +3,6 @@ pub mod parser;
 
 use crate::fmodl::ast::expression::{FnCallArgs, LetBindings, StructProps, TupleItems};
 use crate::fmodl::ast::module_def::ModuleExports;
-use crate::fmodl::ast::Program;
 use crate::fmodl::ast::AST::{FnDef, ModuleDef};
 use crate::fmodl::ast::{
     expression::{
@@ -13,6 +12,7 @@ use crate::fmodl::ast::{
     },
     AST,
 };
+use crate::fmodl::ast::{Program, TypeExpression};
 pub use crate::fmodl::parser::{parse, parse_expr};
 
 #[macro_export]
@@ -94,8 +94,8 @@ pub fn product(a: Box<Expression>, b: Box<Expression>) -> Box<Expression> {
     Box::new(Product(a, b))
 }
 
-pub fn fn_def(id: &str, args: Vec<&str>, body: Box<Expression>) -> AST {
-    FnDef(id.to_string(), fn_def_args(args), body)
+pub fn fn_def(id: &str, args: Vec<&str>, body: Box<Expression>) -> Box<AST> {
+    Box::new(FnDef(id.to_string(), fn_def_args(args), body))
 }
 
 pub fn fn_def_args(args: Vec<&str>) -> FnDefArgs {
@@ -112,8 +112,8 @@ pub fn let_exp(bindings: Vec<(&str, Box<Expression>)>, body: Box<Expression>) ->
     Box::new(Let(LetBindings::new(bindings), body))
 }
 
-pub fn module_def(id: &str, exports: Vec<&str>) -> AST {
-    ModuleDef(id.to_string(), module_def_exports(exports))
+pub fn module_def(id: &str, exports: Vec<&str>) -> Box<AST> {
+    Box::new(ModuleDef(id.to_string(), module_def_exports(exports)))
 }
 
 pub fn module_def_exports(exports: Vec<&str>) -> ModuleExports {
@@ -142,4 +142,33 @@ pub fn root_comment(comment: &str) -> Box<AST> {
 
 pub fn commented(comment: &str, exp: Box<Expression>) -> Box<Expression> {
     Box::new(Expression::Commented(comment.to_string(), exp))
+}
+
+pub fn type_def(id: &str, type_expr: Box<TypeExpression>) -> Box<AST> {
+    Box::new(AST::TypeDef(id.to_string(), type_expr))
+}
+
+pub fn tuple_type(items: Vec<Box<TypeExpression>>) -> Box<TypeExpression> {
+    Box::new(TypeExpression::TupleType(TupleItems::from(items)))
+}
+
+pub fn struct_type(props: Vec<(&str, Box<TypeExpression>)>) -> Box<TypeExpression> {
+    let boxed_props = Vec::from_iter(
+        props
+            .iter()
+            .map(|(id, expr)| (id.to_string(), expr.clone())),
+    );
+    Box::new(TypeExpression::StructType(boxed_props))
+}
+
+pub fn int_type() -> Box<TypeExpression> {
+    Box::new(TypeExpression::IntType)
+}
+
+pub fn string_type() -> Box<TypeExpression> {
+    Box::new(TypeExpression::StringType)
+}
+
+pub fn type_ref(id: &str) -> Box<TypeExpression> {
+    Box::new(TypeExpression::TypeRef(id.to_string()))
 }

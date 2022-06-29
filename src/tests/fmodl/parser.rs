@@ -1,4 +1,7 @@
-use crate::tests::fmodl::{commented, root_comment, struct_lit};
+use crate::tests::fmodl::{
+    commented, int_type, root_comment, string_type, struct_lit, struct_type, tuple_type, type_def,
+    type_ref,
+};
 #[cfg(test)]
 use crate::{assert_parse, assert_parse_ast, assert_parse_expr};
 
@@ -231,5 +234,38 @@ fn comments() {
             " a comment yo!",
             let_exp(vec![("x", int_lit(1))], product(var("x"), int_lit(2)))
         )
+    );
+}
+
+#[test]
+fn type_defs() {
+    let person_type_def = type_def(
+        "Person",
+        struct_type(vec![
+            ("name", string_type()),
+            ("age", int_type()),
+            ("country", type_ref("Country")),
+        ]),
+    );
+
+    assert_parse_ast!(
+        "type Person :: {
+            name :: String
+            age :: Int
+            country :: Country
+        }",
+        person_type_def.to_owned()
+    );
+
+    assert_parse_ast!(
+        "type Person :: {
+            name :: String,     age :: Int,     country :: Country
+        }",
+        person_type_def.to_owned()
+    );
+
+    assert_parse_ast!(
+        "type Pair :: {A, B}",
+        type_def("Pair", tuple_type(vec![type_ref("A"), type_ref("B")]))
     );
 }

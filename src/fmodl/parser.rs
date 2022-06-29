@@ -14,16 +14,16 @@ parser! {
 /// Doc comment
 grammar parser() for str {
     pub rule program() -> Program
-        = _ defs:(additional_root_def())* _ {
-            Program::new(defs)
+        = _ defs:(program_root_def())* _ {
+            Program::from(defs)
         }
         / _ {
             Program::new(vec![])
         }
 
-    rule additional_root_def() -> AST
+    pub rule program_root_def() -> Box<AST>
         = _ def:root_def() {
-            def
+            Box::new(def)
         }
 
     pub rule root_def() -> AST
@@ -85,7 +85,7 @@ grammar parser() for str {
         = type_expr()
 
     rule additional_tuple_type_item() -> TypeExpression
-        = _ "," _ item:tuple_type_item() {
+        = " "* "," _ item:tuple_type_item() {
             item
         }
 
@@ -105,12 +105,15 @@ grammar parser() for str {
         }
 
     rule struct_type() -> TypeExpression
-        = "{" _ properties:(struct_prop_type())+  _ "}" {
+        = "{" _ properties:(struct_prop_type())+ "}" {
             TypeExpression::StructType(properties)
         }
 
     rule struct_prop_type() -> (Identifier, Box<TypeExpression>)
-        = id:identifier() " "+ "::" _ type_expr:type_expr() [^'\n']* "\n"+ _ {
+        = id:identifier() " "+ "::" _ type_expr:type_expr() " "* "," _ {
+            (id, Box::new(type_expr))
+        }
+        / id:identifier() " "+ "::" _ type_expr:type_expr() [^'\n']* "\n"+ _ {
             (id, Box::new(type_expr))
         }
 
@@ -318,11 +321,11 @@ pub fn parse(str: &str) -> ParseResult {
 }
 
 #[cfg(test)]
-pub type ParseASTResult = Result<AST, ParseError<LineCol>>;
+pub type ParseASTResult = Result<Box<AST>, ParseError<LineCol>>;
 
 #[cfg(test)]
 pub fn parse_ast(str: &str) -> ParseASTResult {
-    parser::root_def(str)
+    parser::program_root_def(str)
 }
 
 pub type ParseExprResult = Result<Box<Expression>, ParseError<LineCol>>;
