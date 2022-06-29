@@ -259,7 +259,22 @@ fn type_defs() {
 
     assert_parse_ast!(
         "type Person :: {
+            name :: String, age :: Int, country :: Country
+        }",
+        person_type_def.to_owned()
+    );
+
+    assert_parse_ast!(
+        "type Person :: {
             name :: String,     age :: Int,     country :: Country
+        }",
+        person_type_def.to_owned()
+    );
+
+    assert_parse_ast!(
+        "type Person :: {
+            name :: String,     age :: Int
+                 country :: Country
         }",
         person_type_def.to_owned()
     );
