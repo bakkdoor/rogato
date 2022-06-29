@@ -290,26 +290,17 @@ grammar parser() for str {
 
     rule struct_identifier() -> Identifier
         = id1:$([ 'A'..='Z' ]) id2:$(['a'..='z' | 'A'..='Z' | '-' | '_' | '0'..='9' | '.' | '@' | '$'])* {
-            let mut id = String::new();
-            id.push_str(id1);
-            id.push_str(String::from_iter(id2).as_str());
-            id
+            join_string(id1, id2)
         }
 
     rule variable_identifier() -> Identifier
         = id1:$([ 'a'..='z' ]) id2:$(['a'..='z' | 'A'..='Z' | '-' | '_' | '0'..='9' | '.' | '@' | '$'])* {
-            let mut id = String::new();
-            id.push_str(id1);
-            id.push_str(String::from_iter(id2).as_str());
-            id
+            join_string(id1, id2)
         }
 
     rule identifier() -> Identifier
         = id1:$([ 'a'..='z' | 'A'..='Z' | '-' | '_' | '@' | '$']) id2:$(['a'..='z' | 'A'..='Z' | '-' | '_' | '0'..='9' | '.' | '@' | '$'])* {
-            let mut id = String::new();
-            id.push_str(id1);
-            id.push_str(String::from_iter(id2).as_str());
-            id
+            join_string(id1, id2)
         }
 
     rule operator() -> Identifier
@@ -347,4 +338,11 @@ pub fn parse_expr(str: &str) -> ParseExprResult {
         Ok(expr) => Ok(Box::new(expr)),
         Err(err) => Err(err),
     }
+}
+
+fn join_string(first: &str, rest: Vec<&str>) -> String {
+    let mut s = String::new();
+    s.push_str(first);
+    s.push_str(String::from_iter(rest).as_str());
+    s
 }
