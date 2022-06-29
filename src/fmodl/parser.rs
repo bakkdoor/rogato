@@ -1,7 +1,10 @@
 extern crate peg;
 
 use crate::fmodl::ast::{
-    expression::{Expression, FnCallArgs, FnDefArgs, LambdaArgs, LetBindings, Literal, TupleItems},
+    expression::{
+        Expression, FnCallArgs, FnDefArgs, LambdaArgs, LetBindings, Literal, StructProps,
+        TupleItems,
+    },
     module_def::ModuleExports,
     Identifier, Program, TypeExpression, AST,
 };
@@ -149,7 +152,7 @@ grammar parser() for str {
         / "(" _ l:lambda() _ ")" { l }
 
     rule variable() -> Expression
-        = id:identifier() {
+        = id:variable_identifier() {
             Expression::Var(id)
         }
 
@@ -218,6 +221,7 @@ grammar parser() for str {
     rule literal_exp() -> Expression
         = number_lit()
         / string_lit()
+        / struct_lit()
         / tuple_lit()
         / list_lit()
 
@@ -258,9 +262,40 @@ grammar parser() for str {
             item
         }
 
+    rule struct_lit() -> Expression
+        = id:struct_identifier() "{" _ first:struct_prop() rest:(additional_struct_prop())*  _ ("," _)? "}" {
+            Expression::Lit(Literal::StructLit(id, Box::new(StructProps::new(first, rest))))
+        }
+
+    rule additional_struct_prop() -> (Identifier, Expression)
+        = _ "," _ prop:struct_prop() {
+            prop
+        }
+
+    rule struct_prop() -> (Identifier, Expression)
+        = id:identifier() _ ":" _ expr:(tuple_item()) {
+            (id, expr)
+        }
+
     rule lambda() -> Expression
         = id:identifier() " "+ "->" _ body:let_body() {
             Expression::Lambda(LambdaArgs::new(vec![id]), Box::new(body))
+        }
+
+    rule struct_identifier() -> Identifier
+        = id1:$([ 'A'..='Z' ]) id2:$(['a'..='z' | 'A'..='Z' | '-' | '_' | '0'..='9' | '.' | '@' | '$'])* {
+            let mut id = String::new();
+            id.push_str(id1);
+            id.push_str(String::from_iter(id2).as_str());
+            id
+        }
+
+    rule variable_identifier() -> Identifier
+        = id1:$([ 'a'..='z' ]) id2:$(['a'..='z' | 'A'..='Z' | '-' | '_' | '0'..='9' | '.' | '@' | '$'])* {
+            let mut id = String::new();
+            id.push_str(id1);
+            id.push_str(String::from_iter(id2).as_str());
+            id
         }
 
     rule identifier() -> Identifier

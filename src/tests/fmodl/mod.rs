@@ -1,7 +1,7 @@
 #[cfg(test)]
 pub mod parser;
 
-use crate::fmodl::ast::expression::{FnCallArgs, LetBindings, TupleItems};
+use crate::fmodl::ast::expression::{FnCallArgs, LetBindings, StructProps, TupleItems};
 use crate::fmodl::ast::module_def::ModuleExports;
 use crate::fmodl::ast::Program;
 use crate::fmodl::ast::AST::{FnDef, ModuleDef};
@@ -69,6 +69,17 @@ pub fn string_lit(val: &str) -> Box<Expression> {
 
 pub fn tuple_lit(vals: Vec<Box<Expression>>) -> Box<Expression> {
     lit(TupleLit(TupleItems::from(vals)))
+}
+
+pub fn struct_lit<S: ToString>(id: S, raw_props: Vec<(S, Box<Expression>)>) -> Box<Expression> {
+    let mut props = Vec::new();
+    for (id, expr) in raw_props {
+        props.push((id.to_string(), expr))
+    }
+    lit(StructLit(
+        id.to_string(),
+        Box::new(StructProps::from(props)),
+    ))
 }
 
 pub fn var(id: &str) -> Box<Expression> {

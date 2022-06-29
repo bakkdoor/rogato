@@ -104,6 +104,7 @@ pub enum Literal {
     StringLit(Box<String>),
     TupleLit(TupleItems<Expression>),
     ListLit(TupleItems<Expression>),
+    StructLit(Identifier, Box<StructProps>),
 }
 
 impl Display for Literal {
@@ -113,6 +114,7 @@ impl Display for Literal {
             Literal::StringLit(string) => f.write_fmt(format_args!("{}", string)),
             Literal::TupleLit(items) => f.write_fmt(format_args!("{{ {} }}", items)),
             Literal::ListLit(items) => f.write_fmt(format_args!("[ {} ]", items)),
+            Literal::StructLit(id, props) => f.write_fmt(format_args!("{}{{ {} }}", id, props)),
         }
     }
 }
@@ -144,6 +146,41 @@ impl<I: Display> Display for TupleItems<I> {
                 format!("{}", item)
             } else {
                 format!("{}, {}", acc, item)
+            }
+        });
+
+        f.write_fmt(format_args!("{}", fmt_str))
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct StructProps {
+    props: Vec<(Identifier, Box<Expression>)>,
+}
+
+impl StructProps {
+    pub fn new(first: (Identifier, Expression), rest: Vec<(Identifier, Expression)>) -> Self {
+        let mut boxed_props = Vec::new();
+        let (f_id, f_expr) = first;
+        boxed_props.push((f_id, Box::new(f_expr)));
+        for (id, expr) in rest {
+            boxed_props.push((id, Box::new(expr)))
+        }
+        Self::from(boxed_props)
+    }
+
+    pub fn from(props: Vec<(Identifier, Box<Expression>)>) -> Self {
+        StructProps { props: props }
+    }
+}
+
+impl Display for StructProps {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let fmt_str = self.props.iter().fold(String::from(""), |acc, (id, expr)| {
+            if acc == "" {
+                format!("{}: {}", id, expr)
+            } else {
+                format!("{}, {}: {}", acc, id, expr)
             }
         });
 

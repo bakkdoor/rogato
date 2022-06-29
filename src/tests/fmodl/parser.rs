@@ -1,4 +1,4 @@
-use crate::tests::fmodl::{commented, root_comment};
+use crate::tests::fmodl::{commented, root_comment, struct_lit};
 #[cfg(test)]
 use crate::{assert_parse, assert_parse_ast, assert_parse_expr};
 
@@ -124,6 +124,18 @@ fn literals() {
             sum(var("a"), var("b")),
             product(var("c"), var("d"))
         ])
+    );
+
+    assert_parse_expr!(
+        "Person{id: 1, age: 35, country: \"Germany\"}",
+        struct_lit(
+            "Person",
+            vec![
+                ("id", int_lit(1)),
+                ("age", int_lit(35)),
+                ("country", string_lit("Germany"))
+            ]
+        )
     );
 }
 
