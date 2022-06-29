@@ -125,9 +125,27 @@ fn do_db_stuff() {
 }
 
 fn print_parse_result<T: Display, E: Display>(code: &str, result: Result<T, E>) {
+    let lines = code.split("\n");
+    let line_count = Vec::from_iter(lines.to_owned()).len();
+    let (_, code_with_line_numbers) = lines.fold((1, String::new()), |(counter, acc), line| {
+        let mut string = format!("{}\n{:02}  {}", acc, counter, line);
+        if line_count > 100 {
+            string = format!("{}\n{:03}  {}", acc, counter, line)
+        }
+        if line_count > 1000 {
+            string = format!("{}\n{:03}  {}", acc, counter, line)
+        }
+
+        (counter + 1, string)
+    });
+
     match result {
-        Ok(expr) => println!("✅\t{}\n\n🧾 ✅\n{}\n\n", code, expr.indented("\t")),
-        Err(error) => println!("\n❌\t{}\n\n❌\t{}\n\n", code, error),
+        Ok(expr) => println!(
+            "✅\t{}\n\n🧾 ✅\n{}\n\n",
+            code_with_line_numbers,
+            expr.indented("\t")
+        ),
+        Err(error) => println!("\n❌\t{}\n\n❌\t{}\n\n", code_with_line_numbers, error),
     }
 }
 
