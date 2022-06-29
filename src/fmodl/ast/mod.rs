@@ -12,41 +12,12 @@ pub mod expression;
 pub mod fn_call;
 pub mod fn_def;
 pub mod module_def;
+pub mod program;
 pub mod type_expression;
 
 pub type Identifier = String;
-#[derive(Clone, PartialEq, Eq, Debug)]
-pub struct Program {
-    nodes: Vec<Box<AST>>,
-}
 
-impl Program {
-    pub fn new(nodes: Vec<AST>) -> Self {
-        Self::from(Vec::from_iter(nodes.iter().map(|d| Box::new(d.clone()))))
-    }
-
-    pub fn from(nodes: Vec<Box<AST>>) -> Self {
-        Program { nodes: nodes }
-    }
-}
-
-impl Display for Program {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let fmt_str =
-            self.nodes
-                .iter()
-                .map(|ast| format!("{}", ast))
-                .fold(String::from(""), |acc, fmt| {
-                    if acc == "" {
-                        fmt
-                    } else {
-                        format!("{}\n\n{}", acc, fmt)
-                    }
-                });
-
-        f.write_fmt(format_args!("{}", fmt_str))
-    }
-}
+pub use program::Program;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum AST {
