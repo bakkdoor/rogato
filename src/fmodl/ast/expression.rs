@@ -14,6 +14,7 @@ pub enum Expression {
     FnCall(Identifier, Box<FnCallArgs>),
     OpCall(Identifier, Box<Expression>, Box<Expression>),
     Var(Identifier),
+    ConstOrTypeRef(Identifier),
     Let(Box<LetBindings>, Box<Expression>),
     Lambda(Box<LambdaArgs<Identifier>>, Box<Expression>),
 }
@@ -34,6 +35,7 @@ impl Display for Expression {
                 f.write_fmt(format_args!("({} {} {})", left, op_ident, right))
             }
             Expression::Var(id) => f.write_str(id),
+            Expression::ConstOrTypeRef(id) => f.write_str(id),
             Expression::Let(bindings, body) => f.write_fmt(format_args!(
                 "let\n{}\nin\n{}",
                 bindings.indented("    "),

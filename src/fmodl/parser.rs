@@ -147,6 +147,7 @@ grammar parser() for str {
     rule atom() -> Expression
         = variable()
         / literal_exp()
+        / constant_or_type_ref()
         / "(" _ v:sum() _ ")" { v }
         / "(" _ c:(fn_call() / op_call()) _ ")" { c }
         / "(" _ l:lambda() _ ")" { l }
@@ -280,6 +281,11 @@ grammar parser() for str {
     rule lambda() -> Expression
         = id:identifier() " "+ "->" _ body:let_body() {
             Expression::Lambda(LambdaArgs::new(vec![id]), Box::new(body))
+        }
+
+    rule constant_or_type_ref() -> Expression
+        = id:struct_identifier() {
+            Expression::ConstOrTypeRef(id)
         }
 
     rule struct_identifier() -> Identifier
