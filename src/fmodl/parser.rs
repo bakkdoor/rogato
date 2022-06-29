@@ -47,10 +47,7 @@ grammar parser() for str {
 
     rule module_exports() -> Vec<Identifier>
         = "(" _ first_export:identifier() more_exports:(additional_module_export())* _ ")" {
-            let mut exports = Vec::new();
-            exports.push(first_export);
-            exports.append(&mut more_exports.to_owned());
-            exports
+            prepend_vec(first_export, &mut more_exports.to_owned())
         }
 
     rule additional_module_export() -> Identifier
@@ -189,10 +186,7 @@ grammar parser() for str {
 
     rule let_bindings() -> Vec<(Identifier, Expression)>
         = binding:let_binding() more_bindings:(additional_let_binding())* {
-            let mut bindings = Vec::new();
-            bindings.push(binding);
-            bindings.append(&mut more_bindings.to_owned());
-            bindings
+            prepend_vec(binding, &mut more_bindings.to_owned())
         }
 
     rule let_body() -> Expression
@@ -345,4 +339,11 @@ fn join_string(first: &str, rest: Vec<&str>) -> String {
     s.push_str(first);
     s.push_str(String::from_iter(rest).as_str());
     s
+}
+
+fn prepend_vec<T>(first: T, rest: &mut Vec<T>) -> Vec<T> {
+    let mut joined = Vec::new();
+    joined.push(first);
+    joined.append(rest);
+    joined
 }
