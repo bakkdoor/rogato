@@ -47,6 +47,33 @@ fn fn_defs() {
             fn_call("bar", vec![var("a"), fn_call("baz", vec![int_lit(1)])]),
         )
     );
+
+    assert_parse_ast!(
+        "let foo a b =
+            let x = a + b,
+                y = x * a,
+                z = y * b
+            in
+                {x, y, z, {x, y}}
+        ",
+        fn_def(
+            "foo",
+            vec!["a", "b"],
+            let_exp(
+                vec![
+                    ("x", sum(var("a"), var("b"))),
+                    ("y", product(var("x"), var("a"))),
+                    ("z", product(var("y"), var("b"))),
+                ],
+                tuple_lit(vec![
+                    var("x"),
+                    var("y"),
+                    var("z"),
+                    tuple_lit(vec![var("x"), var("y")])
+                ])
+            )
+        )
+    );
 }
 
 #[test]
