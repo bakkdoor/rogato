@@ -17,12 +17,14 @@ mod tests;
 fn main() {
     let args = std::env::args().skip(1);
     if args.len() == 0 {
+        println!("No arguments given, but required.");
         print_help();
         return;
     }
+    let mut help_required = false;
     for arg in args {
         match arg.as_str() {
-            "help" => print_help(),
+            "help" => help_required = true,
             "repl" => {
                 println!("Running REPL");
                 run_repl();
@@ -60,13 +62,18 @@ fn main() {
             }
             _ => {
                 println!("Unknown argument: {:?}", arg);
+                help_required = true;
             }
         }
+    }
+
+    if help_required {
+        print_help()
     }
 }
 
 fn print_help() {
-    println!("No arguments given, but required.\nPossible arguments:");
+    println!("Possible arguments:");
     println!("  help\n  repl\n  parse\n  examples\n  db");
 }
 
