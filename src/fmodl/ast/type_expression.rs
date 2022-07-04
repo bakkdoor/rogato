@@ -33,7 +33,7 @@ impl Display for TypeExpression {
                 for (id, type_expr) in property_types {
                     result = Some(f.write_fmt(format_args!("{} :: {}", id, type_expr)))
                 }
-                return result.unwrap();
+                result.unwrap()
             }
         }
     }
