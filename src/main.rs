@@ -16,8 +16,13 @@ mod tests;
 
 fn main() {
     let args = std::env::args().skip(1);
+    if args.len() == 0 {
+        print_help();
+        return;
+    }
     for arg in args {
         match arg.as_str() {
+            "help" => print_help(),
             "repl" => {
                 println!("Running REPL");
                 run_repl();
@@ -58,6 +63,11 @@ fn main() {
             }
         }
     }
+}
+
+fn print_help() {
+    println!("No arguments given, but required.\nPossible arguments:");
+    println!("  help\n  repl\n  parse\n  examples\n  db");
 }
 
 fn try_parse_root_defs() {
