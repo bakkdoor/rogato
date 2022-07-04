@@ -7,7 +7,7 @@ use crate::{assert_parse, assert_parse_ast, assert_parse_expr};
 
 #[cfg(test)]
 use super::{
-    fn_call, fn_def, int_lit, let_exp, module_def, op_call, parse_expr, product, program,
+    fn_call, fn_def, int_lit, let_expr, module_def, op_call, parse_expr, product, program,
     string_lit, sum, tuple_lit, var,
 };
 
@@ -59,7 +59,7 @@ fn fn_defs() {
         fn_def(
             "foo",
             vec!["a", "b"],
-            let_exp(
+            let_expr(
                 vec![
                     ("x", sum(var("a"), var("b"))),
                     ("y", product(var("x"), var("a"))),
@@ -111,7 +111,7 @@ fn arithmetic_expressions() {
 
     assert_parse_expr!(
         "let x = 1, y = 2 in x + y",
-        let_exp(
+        let_expr(
             vec![("x", int_lit(1)), ("y", int_lit(2))],
             sum(var("x"), var("y")),
         )
@@ -259,7 +259,7 @@ fn comments() {
         "// a comment yo!\nlet x = 1 in x * 2",
         commented(
             " a comment yo!",
-            let_exp(vec![("x", int_lit(1))], product(var("x"), int_lit(2)))
+            let_expr(vec![("x", int_lit(1))], product(var("x"), int_lit(2)))
         )
     );
 }
@@ -309,5 +309,47 @@ fn type_defs() {
     assert_parse_ast!(
         "type Pair :: {A, B}",
         type_def("Pair", tuple_type(vec![type_ref("A"), type_ref("B")]))
+    );
+}
+
+#[test]
+fn let_expressions() {
+    assert_parse_expr!(
+        "let name = \"John Connor\",
+             age = 12,
+             city = \"Los Angeles\"
+        in
+            {name, age, city}",
+        let_expr(
+            vec![
+                ("name", string_lit("John Connor")),
+                ("age", int_lit(12)),
+                ("city", string_lit("Los Angeles"))
+            ],
+            tuple_lit(vec![var("name"), var("age"), var("city")])
+        )
+    );
+
+    assert_parse_expr!(
+        "let name = \"John Connor\",
+             age = 12,
+             city = \"Los Angeles\"
+        in
+            Person{name: name, age: age, city: city}",
+        let_expr(
+            vec![
+                ("name", string_lit("John Connor")),
+                ("age", int_lit(12)),
+                ("city", string_lit("Los Angeles"))
+            ],
+            struct_lit(
+                "Person",
+                vec![
+                    ("name", var("name")),
+                    ("age", var("age")),
+                    ("city", var("city"))
+                ]
+            )
+        )
     );
 }

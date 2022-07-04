@@ -102,7 +102,7 @@ pub fn fn_def_args(args: Vec<&str>) -> FnDefArgs {
     FnDefArgs::new(Vec::from_iter(args.iter().map(|a| a.to_string())))
 }
 
-pub fn let_exp(bindings: Vec<(&str, Box<Expression>)>, body: Box<Expression>) -> Box<Expression> {
+pub fn let_expr(bindings: Vec<(&str, Box<Expression>)>, body: Box<Expression>) -> Box<Expression> {
     let bindings: Vec<(String, Expression)> = bindings
         .iter()
         .cloned()
