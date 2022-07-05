@@ -1,4 +1,7 @@
-use indradb::{Datastore, Edge, EdgeQuery, Identifier, PropertyValueEdgeQuery, RocksdbDatastore};
+use indradb::{
+    Datastore, Edge, EdgeQuery, Identifier, PropertyValueEdgeQuery, RangeVertexQuery,
+    RocksdbDatastore,
+};
 use serde_json::Number;
 use std::{fmt::Debug, path::Path};
 use uuid::Uuid;
@@ -71,4 +74,9 @@ pub fn do_stuff<DB: Datastore + Debug>(db: &DB) {
     println!("res3 {:?}", res3);
     let res4 = create_vertex(db, "testid").unwrap();
     println!("res4 {:?}", res4);
+    let vertex_type_id = Identifier::new(String::from("testid")).unwrap();
+    let res5 = db
+        .get_vertices(RangeVertexQuery::new().t(vertex_type_id).into())
+        .unwrap();
+    println!("res5 {:?}", res5);
 }
