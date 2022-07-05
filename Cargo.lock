@@ -114,6 +114,7 @@ dependencies = [
  "indradb-lib",
  "peg",
  "serde_json",
+ "uuid",
 ]
 
 [[package]]
