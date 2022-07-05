@@ -9,6 +9,8 @@ use indent_write::indentable::Indentable;
 use serde_json::Value;
 use std::fs::File;
 
+use crate::fmodl::util::print_error;
+
 const DB_PATH: &str = "./fmodl.db";
 
 #[cfg(test)]
@@ -167,11 +169,6 @@ fn print_parse_result<T: Display, E: Display>(code: &str, result: Result<T, E>) 
         ),
         Err(error) => println!("\n❌\t{}\n\n❌\t{}\n\n", code_with_line_numbers, error),
     }
-}
-
-fn print_error<E: std::fmt::Debug>(error: E) -> E {
-    eprintln!("Error doing DB stuff: {:?}", error);
-    error
 }
 
 fn run_repl() {

@@ -1,5 +1,6 @@
 use indradb::{Datastore, Edge, EdgeQuery, Identifier, PropertyValueEdgeQuery, RocksdbDatastore};
 use std::{fmt::Debug, path::Path};
+pub mod val;
 
 type DBResult<T> = Result<T, indradb::Error>;
 
@@ -44,8 +45,6 @@ fn print_error<E: Debug>(prop_name: &str, error: E) -> E {
 
 pub fn do_stuff<DB: Datastore + Debug>(db: &DB) {
     println!("DB: do stuff with {:?}", db);
-    let id = Identifier::new("testid").unwrap();
-    println!("ID: {:?}", id.to_owned());
-    let res = db.index_property(id.to_owned()).unwrap();
-    println!("do_stuff index_property result: {:?}", res)
+    index_prop(db, "testid").unwrap();
+    query_prop(db, "testid", val::string("test-id-value")).unwrap();
 }
