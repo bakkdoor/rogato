@@ -24,8 +24,28 @@ pub fn query_prop<DB: Datastore>(
     }
 }
 
+pub fn index_prop<DB: Datastore>(db: &DB, prop_name: &str) -> DBResult<()> {
+    match Identifier::new(prop_name) {
+        Ok(id) => match db.index_property(id) {
+            Ok(()) => Ok(()),
+            error => print_error(prop_name, error),
+        },
+        Err(error) => {
+            print_error(prop_name, error);
+            Err(indradb::Error::NotIndexed)
+        }
+    }
+}
+
+fn print_error<E: Debug>(prop_name: &str, error: E) -> E {
+    eprintln!("Failed to index DB property {:?} : {:?}", prop_name, error);
+    error
+}
+
 pub fn do_stuff<DB: Datastore + Debug>(db: &DB) {
     println!("DB: do stuff with {:?}", db);
     let id = Identifier::new("testid").unwrap();
-    println!("ID: {:?}", id);
+    println!("ID: {:?}", id.to_owned());
+    let res = db.index_property(id.to_owned()).unwrap();
+    println!("do_stuff index_property result: {:?}", res)
 }

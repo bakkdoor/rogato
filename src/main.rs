@@ -122,6 +122,9 @@ fn do_db_stuff() {
 
     let datastore = db::open(Path::new(DB_PATH)).map_err(print_error).unwrap();
 
+    let index_result = db::index_prop(&datastore, "name");
+    println!("index result for 'name': {:?}", index_result);
+
     let result = db::query_prop(
         &datastore,
         "name",
