@@ -6,7 +6,6 @@ use std::path::Path;
 use fmodl::db;
 use fmodl::parser::{parse, parse_expr};
 use indent_write::indentable::Indentable;
-use serde_json::Value;
 use std::fs::File;
 
 use crate::fmodl::util::print_error;
@@ -60,7 +59,9 @@ fn main() {
             }
             "db" => {
                 println!("Running db tests");
-                do_db_stuff();
+                println!("Opening DB @ {}", DB_PATH);
+                let datastore = db::open(Path::new(DB_PATH)).map_err(print_error).unwrap();
+                db::do_stuff(&datastore).unwrap();
             }
             _ => {
                 println!("Unknown argument: {:?}", arg);
@@ -117,33 +118,6 @@ fn try_parse_expressions() {
     ] {
         print_parse_result(expr_code, parse_expr(expr_code))
     }
-}
-
-fn do_db_stuff() {
-    println!("Opening DB @ {}", DB_PATH);
-
-    let datastore = db::open(Path::new(DB_PATH)).map_err(print_error).unwrap();
-
-    let index_result = db::index_prop(&datastore, "name");
-    println!("index result for 'name': {:?}", index_result);
-
-    let result = db::query_prop(
-        &datastore,
-        "name",
-        Value::String(String::from("John Connor")),
-    )
-    .map(|edges| {
-        println!("Found edges: {}", edges.len());
-        for edge in edges.iter() {
-            println!("Got edge: {:?}", edge)
-        }
-        edges
-    })
-    .map_err(print_error);
-
-    println!("DB Query Result: {:?}", result);
-
-    db::do_stuff(&datastore);
 }
 
 fn print_parse_result<T: Display, E: Display>(code: &str, result: Result<T, E>) {
