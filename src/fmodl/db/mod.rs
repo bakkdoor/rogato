@@ -95,10 +95,10 @@ pub fn do_stuff<DB: Datastore + Debug>(db: &DB) -> DBResult<()> {
 
     let vertices_with_name = db.get_vertices(indradb::VertexQuery::PropertyValue(
         PropertyValueVertexQuery::new(name_prop_id.clone(), val::string("John Connor 1")),
-    ));
+    ))?;
     println!(
-        "vertices_with_name query results:\n{:?}",
-        vertices_with_name
+        "vertices_with_name query results: {}",
+        vertices_with_name.len()
     );
 
     let vertex_props = db.get_vertex_properties(VertexPropertyQuery::new(
