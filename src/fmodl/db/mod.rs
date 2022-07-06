@@ -2,6 +2,7 @@ pub use indradb::{
     BulkInsertItem, Datastore, Edge, EdgeKey, EdgePropertyQuery, EdgeQuery, Identifier,
     PropertyValueEdgeQuery, RangeVertexQuery, RocksdbDatastore, Vertex,
 };
+#[allow(unused_imports)]
 use indradb::{
     EdgeDirection, PipePropertyPresenceEdgeQuery, PipePropertyValueEdgeQuery, PipeVertexQuery,
     PropertyPresenceEdgeQuery, PropertyPresenceVertexQuery, PropertyValueVertexQuery,
