@@ -3,7 +3,9 @@ pub use indradb::{
     PropertyValueEdgeQuery, RangeVertexQuery, RocksdbDatastore, Vertex,
 };
 use indradb::{
-    PropertyPresenceVertexQuery, PropertyValueVertexQuery, VertexPropertyQuery, VertexQuery,
+    EdgeDirection, PipePropertyPresenceEdgeQuery, PipePropertyValueEdgeQuery, PipeVertexQuery,
+    PropertyPresenceEdgeQuery, PropertyPresenceVertexQuery, PropertyValueVertexQuery,
+    VertexPropertyQuery, VertexQuery,
 };
 pub use serde_json::Number;
 use std::{fmt::Debug, path::Path, str::FromStr};
@@ -39,13 +41,19 @@ pub fn do_stuff<DB: Datastore + Debug>(db: &DB) -> DBResult<()> {
     let person_type_id = id("Person");
     let name_prop_id = id("name");
     let age_prop_id = id("name");
+    let friendship_edge_id = id("FriendShip");
+    let bff_tag_id = id("bff");
 
     db.index_property(name_prop_id.to_owned())?;
     db.index_property(age_prop_id.to_owned())?;
+    db.index_property(bff_tag_id.clone())?;
 
-    for i in 0..10000 {
+    for i in 0..1000 {
         let id1 = db.create_vertex_from_type(person_type_id.to_owned())?;
         let id2 = db.create_vertex_from_type(person_type_id.to_owned())?;
+
+        let friendship_edge_key =
+            EdgeKey::new(id1.clone(), friendship_edge_id.clone(), id2.clone());
 
         db.bulk_insert(vec![
             indradb::BulkInsertItem::VertexProperty(
@@ -67,6 +75,12 @@ pub fn do_stuff<DB: Datastore + Debug>(db: &DB) -> DBResult<()> {
                 id2.clone(),
                 age_prop_id.clone(),
                 val::number(Number::from(i * 9999)),
+            ),
+            indradb::BulkInsertItem::Edge(friendship_edge_key.clone()),
+            indradb::BulkInsertItem::EdgeProperty(
+                friendship_edge_key.clone(),
+                bff_tag_id.clone(),
+                val::bool(true),
             ),
         ])?;
     }
@@ -90,7 +104,25 @@ pub fn do_stuff<DB: Datastore + Debug>(db: &DB) -> DBResult<()> {
         VertexQuery::PropertyPresence(PropertyPresenceVertexQuery::new(age_prop_id.clone())),
         name_prop_id.clone(),
     ))?;
-    println!("vertex_props query result count: {}", vertex_props.len());
+    println!(
+        "vertex_props query (age presence) result count: {}",
+        vertex_props.len()
+    );
+
+    let edge_query =
+        EdgeQuery::PropertyPresence(PropertyPresenceEdgeQuery::new(bff_tag_id.clone()));
+
+    let vertex_props = db.get_vertex_properties(VertexPropertyQuery::new(
+        VertexQuery::Pipe(PipeVertexQuery::new(
+            Box::new(edge_query),
+            EdgeDirection::Inbound,
+        )),
+        name_prop_id.clone(),
+    ))?;
+    println!(
+        "vertex_props query (age presence, incoming Friendship edge) result count: {}",
+        vertex_props.len()
+    );
 
     Ok(())
 }
