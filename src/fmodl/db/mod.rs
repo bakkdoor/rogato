@@ -69,12 +69,12 @@ pub fn do_stuff<DB: Datastore + Debug>(db: &DB) -> DBResult<()> {
             indradb::BulkInsertItem::VertexProperty(
                 id1.clone(),
                 age_prop_id.clone(),
-                val::number(Number::from(i * 1000)),
+                val::number(i * 1000),
             ),
             indradb::BulkInsertItem::VertexProperty(
                 id2.clone(),
                 age_prop_id.clone(),
-                val::number(Number::from(i * 9999)),
+                val::number(i * 9999),
             ),
             indradb::BulkInsertItem::Edge(friendship_edge_key.clone()),
             indradb::BulkInsertItem::EdgeProperty(

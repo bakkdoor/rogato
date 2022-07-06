@@ -16,8 +16,11 @@ pub fn null() -> Value {
 }
 
 #[allow(dead_code)]
-pub fn number(n: Number) -> Value {
-    Value::Number(n)
+pub fn number<N>(n: N) -> Value
+where
+    Number: From<N>,
+{
+    Value::Number(Number::from(n))
 }
 
 #[allow(dead_code)]
