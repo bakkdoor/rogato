@@ -13,6 +13,7 @@ impl FnCallArgs {
         }
     }
 
+    #[allow(dead_code)]
     pub fn prepend_arg(&mut self, arg: Expression) {
         self.args.insert(0, arg);
     }
