@@ -1,9 +1,9 @@
 pub use indradb::{
     BulkInsertItem, Datastore, Edge, EdgeDirection, EdgeKey, EdgeProperties, EdgeProperty,
-    EdgePropertyQuery, EdgeQuery, Identifier, PipePropertyPresenceEdgeQuery,
+    EdgePropertyQuery, EdgeQuery, EdgeQueryExt, Identifier, PipePropertyPresenceEdgeQuery,
     PipePropertyValueEdgeQuery, PipeVertexQuery, PropertyPresenceEdgeQuery,
     PropertyPresenceVertexQuery, PropertyValueEdgeQuery, PropertyValueVertexQuery,
-    RangeVertexQuery, RocksdbDatastore, Vertex, VertexPropertyQuery, VertexQuery,
+    RangeVertexQuery, RocksdbDatastore, Vertex, VertexPropertyQuery, VertexQuery, VertexQueryExt,
 };
 pub use serde_json::Number;
 use std::{path::Path, str::FromStr};
@@ -21,5 +21,10 @@ pub fn open<P: AsRef<Path>>(db_path: P) -> DBResult<RocksdbDatastore> {
 }
 
 pub fn id(id: &str) -> Identifier {
-    Identifier::from_str(id).unwrap()
+    Identifier::from_str(id)
+        .map_err(|e| {
+            eprintln!("DB Identifier Error: {:?} : {}", e, id);
+            e
+        })
+        .unwrap()
 }

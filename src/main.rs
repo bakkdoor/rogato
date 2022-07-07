@@ -4,9 +4,10 @@ use std::io::{self, Read};
 use std::path::Path;
 
 use fmodl::db;
+#[allow(unused_imports)]
+use fmodl::db::{EdgeQueryExt, VertexQueryExt};
 use fmodl::parser::{parse, parse_expr};
 use indent_write::indentable::Indentable;
-use indradb::VertexQueryExt;
 use std::fs::File;
 
 use crate::fmodl::util::print_error;
@@ -162,6 +163,11 @@ fn run_repl() {
 }
 
 pub fn db_stuff<DB: db::Datastore + Debug>(db: &DB) -> db::DBResult<()> {
+    // basic_db_example(db)?;
+    complex_db_example(db)
+}
+
+pub fn basic_db_example<DB: db::Datastore + Debug>(db: &DB) -> db::DBResult<()> {
     println!("DB: do stuff with {:?}", db);
     let person_type_id = db::id("Person");
     let name_prop_id = db::id("name");
@@ -271,6 +277,33 @@ pub fn db_stuff<DB: db::Datastore + Debug>(db: &DB) -> db::DBResult<()> {
         "vertex_props query (age presence, incoming Friendship edge) result count: {}",
         vertex_props.len()
     );
+
+    Ok(())
+}
+
+pub fn complex_db_example<DB: db::Datastore + Debug>(db: &DB) -> db::DBResult<()> {
+    // example with some city and country data
+
+    // types
+    let t_city = db::id("City");
+    let t_country = db::id("Country");
+    let types = vec![t_city, t_country];
+
+    // properties
+    let p_meta_author = db::id("meta-author");
+    let properties = vec![p_meta_author.clone()];
+
+    println!("types:\n{:?}\nproperties:\n{:?}", types, properties);
+
+    db.index_property(p_meta_author.clone())?;
+
+    // add query on meta_author vertex property (json object)
+    // with the following properties:
+    // meta-author:
+    //  - name
+    //  - created_at timestamp
+    //  - updated_at timestamp
+    //  - updated_at timestamp
 
     Ok(())
 }

@@ -12,6 +12,10 @@ impl FnCallArgs {
             args: Box::new(args),
         }
     }
+
+    pub fn prepend_arg(&mut self, arg: Expression) {
+        self.args.insert(0, arg);
+    }
 }
 
 impl Display for FnCallArgs {
