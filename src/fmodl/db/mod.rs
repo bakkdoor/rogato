@@ -1,9 +1,9 @@
 pub use indradb::{
-    BulkInsertItem, Datastore, Edge, EdgeDirection, EdgeKey, EdgePropertyQuery, EdgeQuery,
-    Identifier, PipePropertyPresenceEdgeQuery, PipePropertyValueEdgeQuery, PipeVertexQuery,
-    PropertyPresenceEdgeQuery, PropertyPresenceVertexQuery, PropertyValueEdgeQuery,
-    PropertyValueVertexQuery, RangeVertexQuery, RocksdbDatastore, Vertex, VertexPropertyQuery,
-    VertexQuery,
+    BulkInsertItem, Datastore, Edge, EdgeDirection, EdgeKey, EdgeProperties, EdgeProperty,
+    EdgePropertyQuery, EdgeQuery, Identifier, PipePropertyPresenceEdgeQuery,
+    PipePropertyValueEdgeQuery, PipeVertexQuery, PropertyPresenceEdgeQuery,
+    PropertyPresenceVertexQuery, PropertyValueEdgeQuery, PropertyValueVertexQuery,
+    RangeVertexQuery, RocksdbDatastore, Vertex, VertexPropertyQuery, VertexQuery,
 };
 
 pub use serde_json::Number;

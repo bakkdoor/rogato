@@ -6,6 +6,7 @@ use std::path::Path;
 use fmodl::db;
 use fmodl::parser::{parse, parse_expr};
 use indent_write::indentable::Indentable;
+use indradb::VertexQueryExt;
 use std::fs::File;
 
 use crate::fmodl::util::print_error;
@@ -167,10 +168,12 @@ pub fn db_stuff<DB: db::Datastore + Debug>(db: &DB) -> db::DBResult<()> {
     let age_prop_id = db::id("name");
     let friendship_edge_id = db::id("FriendShip");
     let bff_tag_id = db::id("bff");
+    let nickname_prop_id = db::id("nickname");
 
     db.index_property(name_prop_id.to_owned())?;
     db.index_property(age_prop_id.to_owned())?;
     db.index_property(bff_tag_id.clone())?;
+    db.index_property(nickname_prop_id.clone())?;
 
     for i in 0..1000 {
         let id1 = db.create_vertex_from_type(person_type_id.to_owned())?;
@@ -206,8 +209,23 @@ pub fn db_stuff<DB: db::Datastore + Debug>(db: &DB) -> db::DBResult<()> {
                 bff_tag_id.clone(),
                 db::val::bool(true),
             ),
+            db::BulkInsertItem::VertexProperty(
+                id2.clone(),
+                nickname_prop_id.clone(),
+                db::val::string(format!("Johnny {}", i)),
+            ),
         ])?;
     }
+
+    let prop_val_vtx_q =
+        db::PropertyValueVertexQuery::new(nickname_prop_id.clone(), db::val::string("Johnny 101"));
+    let prop_vtx_q = prop_val_vtx_q.clone().property(nickname_prop_id.clone());
+
+    let vtx = db.get_vertices(db::VertexQuery::PropertyValue(prop_val_vtx_q));
+    let vtx_props = db.get_vertex_properties(prop_vtx_q)?;
+
+    println!("vtx: {:?}", vtx);
+    println!("vtx_props: {:?}", vtx_props);
 
     let vertices = db.get_vertices(
         db::RangeVertexQuery::new()
@@ -215,7 +233,7 @@ pub fn db_stuff<DB: db::Datastore + Debug>(db: &DB) -> db::DBResult<()> {
             .into(),
     )?;
     println!(
-        "Vertex query for type {} gave {} results",
+        "Vertex query results for type {} : {}",
         person_type_id.to_owned().as_str(),
         vertices.len()
     );
