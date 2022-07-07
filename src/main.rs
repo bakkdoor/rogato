@@ -219,10 +219,10 @@ pub fn db_stuff<DB: db::Datastore + Debug>(db: &DB) -> db::DBResult<()> {
 
     let prop_val_vtx_q =
         db::PropertyValueVertexQuery::new(nickname_prop_id.clone(), db::val::string("Johnny 101"));
-    let prop_vtx_q = prop_val_vtx_q.clone().property(nickname_prop_id.clone());
 
-    let vtx = db.get_vertices(db::VertexQuery::PropertyValue(prop_val_vtx_q));
-    let vtx_props = db.get_vertex_properties(prop_vtx_q)?;
+    let vtx = db.get_vertices(db::VertexQuery::PropertyValue(prop_val_vtx_q.clone()))?;
+    let vtx_props =
+        db.get_vertex_properties(prop_val_vtx_q.clone().property(nickname_prop_id.clone()))?;
 
     println!("vtx: {:?}", vtx);
     println!("vtx_props: {:?}", vtx_props);
