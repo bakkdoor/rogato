@@ -1,4 +1,4 @@
-use crate::tests::fmodl::{
+use crate::tests::rogato::{
     commented, int_type, root_comment, string_type, struct_lit, struct_type, tuple_type, type_def,
     type_ref,
 };

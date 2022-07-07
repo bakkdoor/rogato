@@ -1,10 +1,10 @@
 #[cfg(test)]
 pub mod parser;
 
-use crate::fmodl::ast::expression::{FnCallArgs, LetBindings, StructProps, TupleItems};
-use crate::fmodl::ast::module_def::ModuleExports;
-use crate::fmodl::ast::AST::{FnDef, ModuleDef};
-use crate::fmodl::ast::{
+use crate::rogato::ast::expression::{FnCallArgs, LetBindings, StructProps, TupleItems};
+use crate::rogato::ast::module_def::ModuleExports;
+use crate::rogato::ast::AST::{FnDef, ModuleDef};
+use crate::rogato::ast::{
     expression::{
         Expression::{self, *},
         FnDefArgs,
@@ -12,14 +12,14 @@ use crate::fmodl::ast::{
     },
     AST,
 };
-use crate::fmodl::ast::{type_expression::TypeExpression, Program};
-pub use crate::fmodl::parser::{parse, parse_expr};
+use crate::rogato::ast::{type_expression::TypeExpression, Program};
+pub use crate::rogato::parser::{parse, parse_expr};
 
 #[macro_export]
 macro_rules! assert_parse {
     ($code:expr, $expected:expr) => {
         assert_eq!(
-            crate::fmodl::parser::parse($code),
+            crate::rogato::parser::parse($code),
             Ok($expected),
             "Expected program code to parse: {:?}",
             $code
@@ -31,7 +31,7 @@ macro_rules! assert_parse {
 macro_rules! assert_parse_ast {
     ($code:expr, $expected:expr) => {
         assert_eq!(
-            crate::fmodl::parser::parse_ast($code),
+            crate::rogato::parser::parse_ast($code),
             Ok($expected),
             "Expected code to parse: {:?}",
             $code
@@ -43,7 +43,7 @@ macro_rules! assert_parse_ast {
 macro_rules! assert_parse_expr {
     ($code:expr, $expected:expr) => {
         assert_eq!(
-            crate::fmodl::parser::parse_expr($code),
+            crate::rogato::parser::parse_expr($code),
             Ok($expected),
             "Expected expression code to parse: {:?}",
             $code

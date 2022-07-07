@@ -107,18 +107,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "fmodl"
-version = "0.1.0"
-dependencies = [
- "indent_write",
- "indradb-lib",
- "peg",
- "serde",
- "serde_json",
- "uuid",
-]
-
-[[package]]
 name = "glob"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -344,6 +332,18 @@ checksum = "7a62eca5cacf2c8261128631bed9f045598d40bfbe4b29f5163f0f802f8f44a7"
 dependencies = [
  "libc",
  "librocksdb-sys",
+]
+
+[[package]]
+name = "rogato"
+version = "0.1.0"
+dependencies = [
+ "indent_write",
+ "indradb-lib",
+ "peg",
+ "serde",
+ "serde_json",
+ "uuid",
 ]
 
 [[package]]

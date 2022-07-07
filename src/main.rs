@@ -1,18 +1,18 @@
-mod fmodl;
+mod rogato;
 use std::fmt::{Debug, Display};
 use std::io::{self, Read};
 use std::path::Path;
 
-use fmodl::db;
-#[allow(unused_imports)]
-use fmodl::db::{EdgeQueryExt, VertexQueryExt};
-use fmodl::parser::{parse, parse_expr};
 use indent_write::indentable::Indentable;
+use rogato::db;
+#[allow(unused_imports)]
+use rogato::db::{EdgeQueryExt, VertexQueryExt};
+use rogato::parser::{parse, parse_expr};
 use std::fs::File;
 
-use crate::fmodl::util::print_error;
+use crate::rogato::util::print_error;
 
-const DB_PATH: &str = "./fmodl.db";
+const DB_PATH: &str = "./rogato.db";
 
 #[cfg(test)]
 mod tests;
