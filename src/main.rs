@@ -1,5 +1,5 @@
 mod fmodl;
-use std::fmt::Display;
+use std::fmt::{Debug, Display};
 use std::io::{self, Read};
 use std::path::Path;
 
@@ -61,7 +61,7 @@ fn main() {
                 println!("Running db tests");
                 println!("Opening DB @ {}", DB_PATH);
                 let datastore = db::open(Path::new(DB_PATH)).map_err(print_error).unwrap();
-                db::do_stuff(&datastore).unwrap();
+                db_stuff(&datastore).unwrap();
             }
             _ => {
                 println!("Unknown argument: {:?}", arg);
@@ -158,4 +158,101 @@ fn run_repl() {
             }
         }
     }
+}
+
+pub fn db_stuff<DB: db::Datastore + Debug>(db: &DB) -> db::DBResult<()> {
+    println!("DB: do stuff with {:?}", db);
+    let person_type_id = db::id("Person");
+    let name_prop_id = db::id("name");
+    let age_prop_id = db::id("name");
+    let friendship_edge_id = db::id("FriendShip");
+    let bff_tag_id = db::id("bff");
+
+    db.index_property(name_prop_id.to_owned())?;
+    db.index_property(age_prop_id.to_owned())?;
+    db.index_property(bff_tag_id.clone())?;
+
+    for i in 0..1000 {
+        let id1 = db.create_vertex_from_type(person_type_id.to_owned())?;
+        let id2 = db.create_vertex_from_type(person_type_id.to_owned())?;
+
+        let friendship_edge_key =
+            db::EdgeKey::new(id1.clone(), friendship_edge_id.clone(), id2.clone());
+
+        db.bulk_insert(vec![
+            db::BulkInsertItem::VertexProperty(
+                id1.clone(),
+                name_prop_id.clone(),
+                db::val::string(format!("John Connor {}", i)),
+            ),
+            db::BulkInsertItem::VertexProperty(
+                id2.clone(),
+                name_prop_id.clone(),
+                db::val::string(format!("John Connor {}", i)),
+            ),
+            db::BulkInsertItem::VertexProperty(
+                id1.clone(),
+                age_prop_id.clone(),
+                db::val::number(i * 1000),
+            ),
+            db::BulkInsertItem::VertexProperty(
+                id2.clone(),
+                age_prop_id.clone(),
+                db::val::number(i * 9999),
+            ),
+            db::BulkInsertItem::Edge(friendship_edge_key.clone()),
+            db::BulkInsertItem::EdgeProperty(
+                friendship_edge_key.clone(),
+                bff_tag_id.clone(),
+                db::val::bool(true),
+            ),
+        ])?;
+    }
+
+    let vertices = db.get_vertices(
+        db::RangeVertexQuery::new()
+            .t(person_type_id.to_owned())
+            .into(),
+    )?;
+    println!(
+        "Vertex query for type {} gave {} results",
+        person_type_id.to_owned().as_str(),
+        vertices.len()
+    );
+
+    let vertices_with_name = db.get_vertices(indradb::VertexQuery::PropertyValue(
+        db::PropertyValueVertexQuery::new(name_prop_id.clone(), db::val::string("John Connor 1")),
+    ))?;
+    println!(
+        "vertices_with_name query results: {}",
+        vertices_with_name.len()
+    );
+
+    let vertex_props = db.get_vertex_properties(db::VertexPropertyQuery::new(
+        db::VertexQuery::PropertyPresence(db::PropertyPresenceVertexQuery::new(
+            age_prop_id.clone(),
+        )),
+        name_prop_id.clone(),
+    ))?;
+    println!(
+        "vertex_props query (age presence) result count: {}",
+        vertex_props.len()
+    );
+
+    let edge_query =
+        db::EdgeQuery::PropertyPresence(db::PropertyPresenceEdgeQuery::new(bff_tag_id.clone()));
+
+    let vertex_props = db.get_vertex_properties(db::VertexPropertyQuery::new(
+        db::VertexQuery::Pipe(db::PipeVertexQuery::new(
+            Box::new(edge_query),
+            db::EdgeDirection::Inbound,
+        )),
+        name_prop_id.clone(),
+    ))?;
+    println!(
+        "vertex_props query (age presence, incoming Friendship edge) result count: {}",
+        vertex_props.len()
+    );
+
+    Ok(())
 }
