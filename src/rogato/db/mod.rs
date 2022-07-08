@@ -10,9 +10,11 @@ pub use serde_json::Number;
 use std::{path::Path, str::FromStr};
 pub use uuid::Uuid;
 
-pub mod api;
 pub mod object;
+pub mod object_storage;
 pub mod val;
+
+pub use object_storage::ObjectStorage;
 
 pub type DBResult<T> = Result<T, indradb::Error>;
 

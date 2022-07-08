@@ -283,19 +283,20 @@ pub fn basic_db_example<DB: db::Datastore + Debug>(db: &DB) -> db::DBResult<()> 
 
 pub fn complex_db_example<DB: db::Datastore + Debug>(db: &DB) -> db::DBResult<()> {
     // example with some city and country data
+    let mut os = db::ObjectStorage::new();
 
     // types
-    let t_city = db::id("City");
-    let t_country = db::id("Country");
+    let t_city = os.get_id("City");
+    let t_country = os.get_id("Country");
     let types = vec![t_city, t_country];
 
     // properties
-    let p_meta_author = db::id("meta-author");
-    let properties = vec![p_meta_author.clone()];
+    let meta_author_p = os.get_id("meta-author");
+    let properties = vec![meta_author_p.clone()];
 
     println!("types:\n{:?}\nproperties:\n{:?}", types, properties);
 
-    db.index_property(p_meta_author.clone())?;
+    db.index_property(meta_author_p.clone())?;
 
     // add query on meta_author vertex property (json object)
     // with the following properties:

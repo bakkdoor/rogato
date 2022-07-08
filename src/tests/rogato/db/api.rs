@@ -1,6 +1,6 @@
 use crate::db;
 #[allow(unused_imports)]
-use crate::db::Datastore;
+use crate::db::ObjectStorage;
 use std::path::Path;
 
 const TEST_DB_PATH: &str = "./rogato.test.db";
@@ -18,6 +18,7 @@ fn test_api() {
         ],
     );
 
-    let res = db::api::store_value(&datastore, object);
+    let mut obj_storage = ObjectStorage::new();
+    let res = obj_storage.store_object(&datastore, object);
     assert!(res.is_ok())
 }
