@@ -1,14 +1,17 @@
 pub use indradb::{
     BulkInsertItem, Datastore, Edge, EdgeDirection, EdgeKey, EdgeProperties, EdgeProperty,
-    EdgePropertyQuery, EdgeQuery, EdgeQueryExt, Identifier, PipePropertyPresenceEdgeQuery,
+    EdgePropertyQuery, EdgeQuery, EdgeQueryExt, Error, Identifier, PipePropertyPresenceEdgeQuery,
     PipePropertyValueEdgeQuery, PipeVertexQuery, PropertyPresenceEdgeQuery,
     PropertyPresenceVertexQuery, PropertyValueEdgeQuery, PropertyValueVertexQuery,
-    RangeVertexQuery, RocksdbDatastore, Vertex, VertexPropertyQuery, VertexQuery, VertexQueryExt,
+    RangeVertexQuery, RocksdbDatastore, SpecificVertexQuery, Vertex, VertexPropertyQuery,
+    VertexQuery, VertexQueryExt,
 };
 pub use serde_json::Number;
 use std::{path::Path, str::FromStr};
 pub use uuid::Uuid;
 
+pub mod api;
+pub mod object;
 pub mod val;
 
 pub type DBResult<T> = Result<T, indradb::Error>;

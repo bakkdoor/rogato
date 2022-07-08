@@ -1,4 +1,6 @@
 #[cfg(test)]
+pub mod db;
+#[cfg(test)]
 pub mod parser;
 
 use crate::rogato::ast::expression::{FnCallArgs, LetBindings, StructProps, TupleItems};
