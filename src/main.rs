@@ -163,7 +163,7 @@ fn run_repl() {
 }
 
 pub fn db_stuff<DB: db::Datastore + Debug>(db: &DB) -> db::DBResult<()> {
-    // basic_db_example(db)?;
+    basic_db_example(db)?;
     complex_db_example(db)
 }
 

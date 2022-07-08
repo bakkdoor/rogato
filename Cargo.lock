@@ -3,6 +3,15 @@
 version = 3
 
 [[package]]
+name = "atomic"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b88d82667eca772c4aa12f0f1348b3ae643424c8876448f3f7bd5787032e234c"
+dependencies = [
+ "autocfg",
+]
+
+[[package]]
 name = "autocfg"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -132,7 +141,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tempfile",
- "uuid",
+ "uuid 0.8.2",
 ]
 
 [[package]]
@@ -343,7 +352,7 @@ dependencies = [
  "peg",
  "serde",
  "serde_json",
- "uuid",
+ "uuid 1.1.2",
 ]
 
 [[package]]
@@ -443,6 +452,16 @@ version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bc5cf98d8186244414c848017f0e2676b3fcb46807f6668a97dfe67359a3c4b7"
 dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "uuid"
+version = "1.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dd6469f4314d5f1ffec476e05f17cc9a78bc7a27a6a857842170bdf8d6f98d2f"
+dependencies = [
+ "atomic",
  "serde",
 ]
 
