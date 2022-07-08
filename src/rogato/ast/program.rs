@@ -15,13 +15,16 @@ impl Program {
     pub fn from(nodes: Vec<Box<AST>>) -> Self {
         Program { nodes: nodes }
     }
+
+    pub fn iter(&self) -> std::slice::Iter<Box<AST>> {
+        self.nodes.iter()
+    }
 }
 
 impl Display for Program {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let fmt_str =
-            self.nodes
-                .iter()
+            self.iter()
                 .map(|ast| format!("{}", ast))
                 .fold(String::from(""), |acc, fmt| {
                     if acc == "" {
