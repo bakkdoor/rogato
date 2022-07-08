@@ -11,7 +11,10 @@ pub trait Visitor {
             match &**node {
                 AST::RootComment(c) => self.root_comment(&c),
                 AST::ModuleDef(id, exports) => self.module_def(&id, &exports),
-                AST::FnDef(id, args, body) => self.fn_def(&id, &args, &body),
+                AST::FnDef(id, args, body) => {
+                    self.fn_def(&id, &args, &body);
+                    self.expression(&body)
+                }
                 AST::TypeDef(id, type_expr) => self.type_def(&id, &type_expr),
             }
         }
@@ -22,7 +25,21 @@ pub trait Visitor {
     fn fn_def(&mut self, _id: &Identifier, _args: &FnDefArgs, _body: &Box<Expression>) {}
     fn type_def(&mut self, _id: &Identifier, _type_expr: &Box<TypeExpression>) {}
 
-    fn expression(&mut self, _expr: &Expression) {}
+    fn expression(&mut self, expr: &Expression) {
+        match expr {
+            Expression::Commented(c, e) => self.commented(&c, &e),
+            Expression::Lit(l) => self.lit(&l),
+            Expression::Sum(left, right) => self.sum(&left, &right),
+            Expression::Product(left, right) => self.product(&left, &right),
+            Expression::FnCall(id, args) => self.fn_call(&id, &args),
+            Expression::OpCall(id, left, right) => self.op_call(&id, &left, &right),
+            Expression::Var(id) => self.var(&id),
+            Expression::ConstOrTypeRef(id) => self.const_or_type_ref(&id),
+            Expression::Let(bindings, expr) => self.let_(&bindings, &expr),
+            Expression::Lambda(args, body) => self.lambda(&args, &body),
+        }
+    }
+
     fn commented(&mut self, _commented: &String, _expr: &Box<Expression>) {}
     fn lit(&mut self, _lit: &Literal) {}
     fn sum(&mut self, _left: &Box<Expression>, _right: &Box<Expression>) {}
