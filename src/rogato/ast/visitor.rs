@@ -1,7 +1,7 @@
 use fn_call::FnCallArgs;
 
 use super::{
-    expression::{LambdaArgs, LetBindings, Literal, QueryGuards},
+    expression::{LambdaArgs, LetBindings, Literal, QueryBinding, QueryGuards},
     *,
 };
 
@@ -11,10 +11,7 @@ pub trait Visitor {
             match &**node {
                 AST::RootComment(c) => self.root_comment(&c),
                 AST::ModuleDef(id, exports) => self.module_def(&id, &exports),
-                AST::FnDef(id, args, body) => {
-                    self.fn_def(&id, &args, &body);
-                    self.expression(&body)
-                }
+                AST::FnDef(id, args, body) => self.fn_def(&id, &args, &body),
                 AST::TypeDef(id, type_expr) => self.type_def(&id, &type_expr),
             }
         }
@@ -40,6 +37,7 @@ pub trait Visitor {
             Expression::Query(query, guards, production) => {
                 self.query(&query, &guards, &production)
             }
+            Expression::QueryBinding(binding) => self.query_binding(&binding),
         }
     }
 
@@ -54,4 +52,5 @@ pub trait Visitor {
     fn let_(&mut self, _bindings: &LetBindings, _expr: &Expression) {}
     fn lambda(&mut self, _args: &LambdaArgs<Identifier>, _body: &Expression) {}
     fn query(&mut self, _query: &Expression, _guards: &QueryGuards, _production: &Expression) {}
+    fn query_binding(&mut self, _binding: &QueryBinding) {}
 }

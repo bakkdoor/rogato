@@ -1,6 +1,6 @@
 use crate::tests::rogato::{
-    commented, int_type, root_comment, string_type, struct_lit, struct_type, tuple_type, type_def,
-    type_ref,
+    commented, int_type, query_binding, root_comment, string_type, struct_lit, struct_type,
+    tuple_type, type_def, type_ref,
 };
 #[cfg(test)]
 use crate::{assert_parse, assert_parse_ast, assert_parse_expr};
@@ -363,7 +363,7 @@ fn queries() {
         ! (isPopular p)
         !> p",
         query(
-            const_or_type_ref("Person"),
+            query_binding("p", const_or_type_ref("Person")),
             vec![
                 fn_call("isOlderThan", vec![var("p"), int_lit(42)]),
                 fn_call("isPopular", vec![var("p")])
@@ -380,9 +380,9 @@ fn queries() {
         ! (isFriendOf p p2)
         !> {p, p2}",
         query(
-            const_or_type_ref("Person"),
+            query_binding("p", const_or_type_ref("Person")),
             vec![
-                const_or_type_ref("Person"),
+                query_binding("p2", const_or_type_ref("Person")),
                 fn_call("isOlderThan", vec![var("p"), int_lit(42)]),
                 fn_call("isPopular", vec![var("p")]),
                 fn_call("isFriendOf", vec![var("p"), var("p2")])

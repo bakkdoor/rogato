@@ -4,7 +4,7 @@ pub mod db;
 pub mod parser;
 
 use crate::rogato::ast::expression::{
-    FnCallArgs, LetBindings, QueryGuards, StructProps, TupleItems,
+    FnCallArgs, LetBindings, QueryBinding, QueryGuards, StructProps, TupleItems,
 };
 use crate::rogato::ast::module_def::ModuleExports;
 use crate::rogato::ast::AST::{FnDef, ModuleDef};
@@ -192,4 +192,11 @@ pub fn query(
         Box::new(QueryGuards::new(guards)),
         production,
     ))
+}
+
+pub fn query_binding<ID: ToString>(id: ID, val: Box<Expression>) -> Box<Expression> {
+    Box::new(Expression::QueryBinding(Box::new(QueryBinding::new(
+        id.to_string(),
+        val,
+    ))))
 }

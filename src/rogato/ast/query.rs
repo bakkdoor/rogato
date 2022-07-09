@@ -34,3 +34,21 @@ impl Display for QueryGuards {
         f.write_fmt(format_args!("{}", fmt_str))
     }
 }
+
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct QueryBinding {
+    pub id: String,
+    pub val: Box<Expression>,
+}
+
+impl QueryBinding {
+    pub fn new(id: String, val: Box<Expression>) -> Self {
+        QueryBinding { id: id, val: val }
+    }
+}
+
+impl Display for QueryBinding {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("{} <- {}", self.id, self.val))
+    }
+}

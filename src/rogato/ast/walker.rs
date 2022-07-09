@@ -65,5 +65,9 @@ pub(crate) fn walk_expr<V: Visitor>(v: &mut V, expr: &Expression) {
             }
             walk_expr(v, &production);
         }
+        Expression::QueryBinding(binding) => {
+            v.query_binding(&binding);
+            walk_expr(v, &binding.val);
+        }
     }
 }
