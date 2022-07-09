@@ -160,25 +160,19 @@ grammar parser() for str {
         }
 
     rule query() -> Expression
-        = bindings:query_bindings() guards:query_guards() _ prod:query_production() {
-            Expression::Query(Box::new(bindings), Box::new(QueryGuards::new(guards)), Box::new(prod))
+        = bindings:query_binding()+ guards:query_guards() _ prod:query_production() {
+            Expression::Query(
+                Box::new(QueryBindings::new(Box::new(bindings))),
+                Box::new(QueryGuards::new(guards)),
+                Box::new(prod)
+            )
         }
 
     rule query_expr() -> Expression
         = atom()
 
-    rule query_bindings() -> QueryBindings
-        = binding:query_binding() more_bindings:(additional_query_binding())* {
-            QueryBindings::new(Box::new(prepend_vec(binding, &mut more_bindings.to_owned())))
-        }
-
-    rule additional_query_binding() -> QueryBinding
-        = _ binding:query_binding() {
-            binding
-        }
-
     rule query_binding() -> QueryBinding
-        = "?" _ var:variable_identifier() _ "<-" _ expr:query_expr() {
+        = _ "?" _ var:variable_identifier() _ "<-" _ expr:query_expr() {
             QueryBinding::new(var, Box::new(expr))
         }
 
