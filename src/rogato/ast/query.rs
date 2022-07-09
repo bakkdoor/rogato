@@ -21,6 +21,10 @@ impl QueryGuards {
     pub fn iter(&self) -> std::slice::Iter<Expression> {
         self.guards.iter()
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.guards.is_empty()
+    }
 }
 
 impl Display for QueryGuards {
@@ -77,7 +81,13 @@ impl Display for QueryBindings {
             .bindings
             .iter()
             .map(|binding| format!("? {}", binding))
-            .fold(String::from(""), |acc, fmt| format!("{}\n{}", acc, fmt));
+            .fold(String::from(""), |acc, fmt| {
+                if acc == "" {
+                    fmt
+                } else {
+                    format!("{}\n{}", acc, fmt)
+                }
+            });
 
         f.write_fmt(format_args!("{}", fmt_str))
     }

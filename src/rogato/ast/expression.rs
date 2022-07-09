@@ -45,7 +45,11 @@ impl Display for Expression {
             )),
             Expression::Lambda(args, body) => f.write_fmt(format_args!("({} -> {})", args, body)),
             Expression::Query(query, guards, production) => {
-                f.write_fmt(format_args!("? {}\n{}\n!> {}", query, guards, production))
+                if guards.is_empty() {
+                    f.write_fmt(format_args!("{}\n!> {}", query, production))
+                } else {
+                    f.write_fmt(format_args!("{}\n{}\n!> {}", query, guards, production))
+                }
             }
         }
     }
