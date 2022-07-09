@@ -2,8 +2,8 @@ extern crate peg;
 
 use crate::rogato::ast::{
     expression::{
-        Expression, FnCallArgs, FnDefArgs, LambdaArgs, LetBindings, Literal, StructProps,
-        TupleItems,
+        Expression, FnCallArgs, FnDefArgs, LambdaArgs, LetBindings, Literal, QueryGuards,
+        StructProps, TupleItems,
     },
     module_def::ModuleExports,
     type_expression::TypeExpression,
@@ -120,6 +120,7 @@ grammar parser() for str {
 
     pub rule expression() -> Expression
         = let_exp()
+        / query()
         / fn_call()
         / op_call()
         / lambda()
@@ -156,6 +157,49 @@ grammar parser() for str {
     rule variable() -> Expression
         = id:variable_identifier() {
             Expression::Var(id)
+        }
+
+    rule query() -> Expression
+        = "?" _ exp:query_expr() guards:query_guards() _ prod:query_production() {
+            Expression::Query(Box::new(exp), Box::new(QueryGuards::new(guards)), Box::new(prod))
+        }
+
+    rule query_expr() -> Expression
+        = query_binding()
+        / variable()
+        / literal_exp()
+        / constant_or_type_ref()
+        / "(" _ v:sum() _ ")" { v }
+        / "(" _ c:(fn_call() / op_call()) _ ")" { c }
+        / "(" _ l:lambda() _ ")" { l }
+
+    rule query_binding() -> Expression
+        = var:variable() _ "<-" _ expr:atom() {
+            //(var,expr)
+            expr
+        }
+
+    rule query_guards() -> Vec<Expression>
+        = guard:query_guard() more_guards:(additional_query_guard())* {
+            prepend_vec(guard, &mut more_guards.to_owned())
+        }
+
+    rule query_guard() -> Expression
+        = _ c:comment() _ g:query_guard() {
+            Expression::Commented(c, Box::new(g))
+        }
+        / _ "! " _ expr:query_expr() {
+            expr
+        }
+
+    rule additional_query_guard() -> Expression
+        = _ g:query_guard() {
+            g
+        }
+
+    rule query_production() -> Expression
+        = "!> " _ expr:query_expr() {
+            expr
         }
 
     rule fn_call() -> Expression
@@ -201,9 +245,10 @@ grammar parser() for str {
         / variable()
         / literal_exp()
         / commented_let_body()
+        / query()
 
     rule commented_let_body() -> Expression
-        = c:comment() body:let_body() {
+        = c:comment() _ body:let_body() {
             Expression::Commented(c, Box::new(body))
         }
 

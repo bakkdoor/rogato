@@ -57,5 +57,13 @@ pub(crate) fn walk_expr<V: Visitor>(v: &mut V, expr: &Expression) {
             v.lambda(&args, &body);
             walk_expr(v, &body);
         }
+        Expression::Query(query, guards, production) => {
+            v.query(&query, &guards, &production);
+            walk_expr(v, &query);
+            for g in guards.iter() {
+                walk_expr(v, &g);
+            }
+            walk_expr(v, &production);
+        }
     }
 }

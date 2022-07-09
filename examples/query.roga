@@ -21,7 +21,6 @@ let ageGroup decade =
   ! age < ((decade + 1) * 10)
   !> p
 
-
 let friendsOfAgeGroup decade =
   ? p <- ageGroup decade
   ! f <- p#Friend

@@ -3,7 +3,9 @@ pub mod db;
 #[cfg(test)]
 pub mod parser;
 
-use crate::rogato::ast::expression::{FnCallArgs, LetBindings, StructProps, TupleItems};
+use crate::rogato::ast::expression::{
+    FnCallArgs, LetBindings, QueryGuards, StructProps, TupleItems,
+};
 use crate::rogato::ast::module_def::ModuleExports;
 use crate::rogato::ast::AST::{FnDef, ModuleDef};
 use crate::rogato::ast::{
@@ -86,6 +88,10 @@ pub fn struct_lit<S: ToString>(id: S, raw_props: Vec<(S, Box<Expression>)>) -> B
 
 pub fn var(id: &str) -> Box<Expression> {
     Box::new(Var(id.to_string()))
+}
+
+pub fn const_or_type_ref(id: &str) -> Box<Expression> {
+    Box::new(ConstOrTypeRef(id.to_string()))
 }
 
 pub fn sum(a: Box<Expression>, b: Box<Expression>) -> Box<Expression> {
@@ -173,4 +179,17 @@ pub fn string_type() -> Box<TypeExpression> {
 
 pub fn type_ref(id: &str) -> Box<TypeExpression> {
     Box::new(TypeExpression::TypeRef(id.to_string()))
+}
+
+pub fn query(
+    query: Box<Expression>,
+    guards: Vec<Box<Expression>>,
+    production: Box<Expression>,
+) -> Box<Expression> {
+    let guards: Vec<Expression> = Vec::from_iter(guards.iter().map(|g| *g.clone()));
+    Box::new(Expression::Query(
+        query,
+        Box::new(QueryGuards::new(guards)),
+        production,
+    ))
 }

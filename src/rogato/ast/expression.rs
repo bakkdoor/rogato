@@ -2,6 +2,7 @@ use indent_write::indentable::Indentable;
 
 pub use super::fn_call::FnCallArgs;
 pub use super::fn_def::FnDefArgs;
+pub use super::query::QueryGuards;
 use super::Identifier;
 use std::fmt::Display;
 
@@ -17,6 +18,7 @@ pub enum Expression {
     ConstOrTypeRef(Identifier),
     Let(Box<LetBindings>, Box<Expression>),
     Lambda(Box<LambdaArgs<Identifier>>, Box<Expression>),
+    Query(Box<Expression>, Box<QueryGuards>, Box<Expression>),
 }
 
 impl Display for Expression {
@@ -42,6 +44,9 @@ impl Display for Expression {
                 body.indented("    ")
             )),
             Expression::Lambda(args, body) => f.write_fmt(format_args!("({} -> {})", args, body)),
+            Expression::Query(query, guards, production) => {
+                f.write_fmt(format_args!("? {}\n{}\n!> {}", query, guards, production))
+            }
         }
     }
 }

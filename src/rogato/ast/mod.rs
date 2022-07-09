@@ -13,6 +13,7 @@ pub mod fn_call;
 pub mod fn_def;
 pub mod module_def;
 pub mod program;
+pub mod query;
 pub mod type_expression;
 pub mod visitor;
 pub mod walker;

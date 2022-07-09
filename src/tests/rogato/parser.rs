@@ -5,6 +5,7 @@ use crate::tests::rogato::{
 #[cfg(test)]
 use crate::{assert_parse, assert_parse_ast, assert_parse_expr};
 
+use super::{const_or_type_ref, query};
 #[cfg(test)]
 use super::{
     fn_call, fn_def, int_lit, let_expr, module_def, op_call, parse_expr, product, program,
@@ -350,6 +351,24 @@ fn let_expressions() {
                     ("city", var("city"))
                 ]
             )
+        )
+    );
+}
+
+#[test]
+fn queries() {
+    assert_parse_expr!(
+        "? p <- Person
+        ! (isOlderThan p 42)
+        ! (isPopular p)
+        !> p",
+        query(
+            const_or_type_ref("Person"),
+            vec![
+                fn_call("isOlderThan", vec![var("p"), int_lit(42)]),
+                fn_call("isPopular", vec![var("p")])
+            ],
+            var("p")
         )
     );
 }
