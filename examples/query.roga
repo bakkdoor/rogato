@@ -23,7 +23,7 @@ let ageGroup decade =
 
 let friendsOfAgeGroup decade =
   ? p <- ageGroup decade
-  ! f <- p#Friend
+  ? f <- p#Friend
   ! not (f <- (teens | tweens))
   !> f
 

@@ -3,7 +3,7 @@ extern crate peg;
 use crate::rogato::ast::{
     expression::{
         Expression, FnCallArgs, FnDefArgs, LambdaArgs, LetBindings, Literal, QueryBinding,
-        QueryGuards, StructProps, TupleItems,
+        QueryBindings, QueryGuards, StructProps, TupleItems,
     },
     module_def::ModuleExports,
     type_expression::TypeExpression,
@@ -160,22 +160,26 @@ grammar parser() for str {
         }
 
     rule query() -> Expression
-        = "?" _ exp:query_expr() guards:query_guards() _ prod:query_production() {
-            Expression::Query(Box::new(exp), Box::new(QueryGuards::new(guards)), Box::new(prod))
+        = "?" _ bindings:query_bindings() guards:query_guards() _ prod:query_production() {
+            Expression::Query(Box::new(bindings), Box::new(QueryGuards::new(guards)), Box::new(prod))
         }
 
     rule query_expr() -> Expression
-        = query_binding()
-        / variable()
-        / literal_exp()
-        / constant_or_type_ref()
-        / "(" _ v:sum() _ ")" { v }
-        / "(" _ c:(fn_call() / op_call()) _ ")" { c }
-        / "(" _ l:lambda() _ ")" { l }
+        = atom()
 
-    rule query_binding() -> Expression
-        = var:variable_identifier() _ "<-" _ expr:atom() {
-            Expression::QueryBinding(Box::new(QueryBinding::new(var, Box::new(expr))))
+    rule query_bindings() -> QueryBindings
+        = binding:query_binding() more_bindings:(additional_query_binding())* {
+            QueryBindings::new(Box::new(prepend_vec(binding, &mut more_bindings.to_owned())))
+        }
+
+    rule additional_query_binding() -> QueryBinding
+        = _ "?" _ binding:query_binding() {
+            binding
+        }
+
+    rule query_binding() -> QueryBinding
+        = var:variable_identifier() _ "<-" _ expr:query_expr() {
+            QueryBinding::new(var, Box::new(expr))
         }
 
     rule query_guards() -> Vec<Expression>

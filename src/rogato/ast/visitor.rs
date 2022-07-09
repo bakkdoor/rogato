@@ -1,7 +1,7 @@
 use fn_call::FnCallArgs;
 
 use super::{
-    expression::{LambdaArgs, LetBindings, Literal, QueryBinding, QueryGuards},
+    expression::{LambdaArgs, LetBindings, Literal, QueryBindings, QueryGuards},
     *,
 };
 
@@ -37,7 +37,6 @@ pub trait Visitor {
             Expression::Query(query, guards, production) => {
                 self.query(&query, &guards, &production)
             }
-            Expression::QueryBinding(binding) => self.query_binding(&binding),
         }
     }
 
@@ -51,6 +50,11 @@ pub trait Visitor {
     fn const_or_type_ref(&mut self, _id: &Identifier) {}
     fn let_(&mut self, _bindings: &LetBindings, _expr: &Expression) {}
     fn lambda(&mut self, _args: &LambdaArgs<Identifier>, _body: &Expression) {}
-    fn query(&mut self, _query: &Expression, _guards: &QueryGuards, _production: &Expression) {}
-    fn query_binding(&mut self, _binding: &QueryBinding) {}
+    fn query(
+        &mut self,
+        _bindings: &QueryBindings,
+        _guards: &QueryGuards,
+        _production: &Expression,
+    ) {
+    }
 }

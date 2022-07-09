@@ -4,7 +4,7 @@ pub mod db;
 pub mod parser;
 
 use crate::rogato::ast::expression::{
-    FnCallArgs, LetBindings, QueryBinding, QueryGuards, StructProps, TupleItems,
+    FnCallArgs, LetBindings, QueryBinding, QueryBindings, QueryGuards, StructProps, TupleItems,
 };
 use crate::rogato::ast::module_def::ModuleExports;
 use crate::rogato::ast::AST::{FnDef, ModuleDef};
@@ -182,21 +182,19 @@ pub fn type_ref(id: &str) -> Box<TypeExpression> {
 }
 
 pub fn query(
-    query: Box<Expression>,
+    bindings: Vec<(&str, Box<Expression>)>,
     guards: Vec<Box<Expression>>,
     production: Box<Expression>,
 ) -> Box<Expression> {
     let guards: Vec<Expression> = Vec::from_iter(guards.iter().map(|g| *g.clone()));
+    let qbs = Vec::from_iter(
+        bindings
+            .iter()
+            .map(|(id, expr)| QueryBinding::new(id.to_string(), expr.clone())),
+    );
     Box::new(Expression::Query(
-        query,
+        Box::new(QueryBindings::new(Box::new(qbs))),
         Box::new(QueryGuards::new(guards)),
         production,
     ))
-}
-
-pub fn query_binding<ID: ToString>(id: ID, val: Box<Expression>) -> Box<Expression> {
-    Box::new(Expression::QueryBinding(Box::new(QueryBinding::new(
-        id.to_string(),
-        val,
-    ))))
 }

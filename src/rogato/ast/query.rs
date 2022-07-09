@@ -55,3 +55,30 @@ impl Display for QueryBinding {
         f.write_fmt(format_args!("{} <- {}", self.id, self.val))
     }
 }
+
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct QueryBindings {
+    bindings: Box<Vec<QueryBinding>>,
+}
+
+impl QueryBindings {
+    pub fn new(bindings: Box<Vec<QueryBinding>>) -> Self {
+        Self { bindings: bindings }
+    }
+
+    pub fn iter(&self) -> std::slice::Iter<QueryBinding> {
+        self.bindings.iter()
+    }
+}
+
+impl Display for QueryBindings {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let fmt_str = self
+            .bindings
+            .iter()
+            .map(|binding| format!("? {}", binding))
+            .fold(String::from(""), |acc, fmt| format!("{}\n{}", acc, fmt));
+
+        f.write_fmt(format_args!("{}", fmt_str))
+    }
+}
