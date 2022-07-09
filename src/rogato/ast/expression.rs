@@ -55,6 +55,10 @@ impl LetBindings {
     pub fn new(bindings: Vec<(Identifier, Expression)>) -> Box<LetBindings> {
         Box::new(LetBindings { bindings: bindings })
     }
+
+    pub fn iter(&self) -> std::slice::Iter<(String, Expression)> {
+        self.bindings.iter()
+    }
 }
 
 impl Display for LetBindings {

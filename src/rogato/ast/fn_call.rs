@@ -17,6 +17,10 @@ impl FnCallArgs {
     pub fn prepend_arg(&mut self, arg: Expression) {
         self.args.insert(0, arg);
     }
+
+    pub fn iter(&self) -> std::slice::Iter<Expression> {
+        self.args.iter()
+    }
 }
 
 impl Display for FnCallArgs {

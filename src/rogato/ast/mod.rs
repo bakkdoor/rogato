@@ -15,6 +15,7 @@ pub mod module_def;
 pub mod program;
 pub mod type_expression;
 pub mod visitor;
+pub mod walker;
 
 pub type Identifier = String;
 

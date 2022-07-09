@@ -22,8 +22,8 @@ pub trait Visitor {
 
     fn root_comment(&mut self, _comment: &String) {}
     fn module_def(&mut self, _id: &Identifier, _exports: &ModuleExports) {}
-    fn fn_def(&mut self, _id: &Identifier, _args: &FnDefArgs, _body: &Box<Expression>) {}
-    fn type_def(&mut self, _id: &Identifier, _type_expr: &Box<TypeExpression>) {}
+    fn fn_def(&mut self, _id: &Identifier, _args: &FnDefArgs, _body: &Expression) {}
+    fn type_def(&mut self, _id: &Identifier, _type_expr: &TypeExpression) {}
 
     fn expression(&mut self, expr: &Expression) {
         match expr {
@@ -40,14 +40,14 @@ pub trait Visitor {
         }
     }
 
-    fn commented(&mut self, _commented: &String, _expr: &Box<Expression>) {}
+    fn commented(&mut self, _commented: &String, _expr: &Expression) {}
     fn lit(&mut self, _lit: &Literal) {}
-    fn sum(&mut self, _left: &Box<Expression>, _right: &Box<Expression>) {}
-    fn product(&mut self, _left: &Box<Expression>, _right: &Box<Expression>) {}
-    fn fn_call(&mut self, _id: &Identifier, _args: &Box<FnCallArgs>) {}
-    fn op_call(&mut self, _id: &Identifier, _left: &Box<Expression>, _right: &Box<Expression>) {}
+    fn sum(&mut self, _left: &Expression, _right: &Expression) {}
+    fn product(&mut self, _left: &Expression, _right: &Expression) {}
+    fn fn_call(&mut self, _id: &Identifier, _args: &FnCallArgs) {}
+    fn op_call(&mut self, _id: &Identifier, _left: &Expression, _right: &Expression) {}
     fn var(&mut self, _id: &Identifier) {}
     fn const_or_type_ref(&mut self, _id: &Identifier) {}
-    fn let_(&mut self, _bindings: &Box<LetBindings>, _expr: &Box<Expression>) {}
-    fn lambda(&mut self, _args: &Box<LambdaArgs<Identifier>>, _body: &Box<Expression>) {}
+    fn let_(&mut self, _bindings: &LetBindings, _expr: &Expression) {}
+    fn lambda(&mut self, _args: &LambdaArgs<Identifier>, _body: &Expression) {}
 }
