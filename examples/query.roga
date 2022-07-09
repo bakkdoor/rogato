@@ -1,0 +1,29 @@
+type Person :: {
+  name :: String
+  age :: Uint
+}
+
+let teens =
+  ? p <- Person
+  ! p.age >= 10
+  ! p.age < 20
+  !> p
+
+let tweens =
+  ? p#{age} <- Person
+  ! age >= 20
+  ! age < 30
+  !> p
+
+let ageGroup decade =
+  ? p#{age} <- Person
+  ! age >= (decade * 10)
+  ! age < ((decade + 1) * 10)
+  !> p
+
+
+let friendsOfAgeGroup decade =
+  ? p <- ageGroup decade
+  ! p#{Friend: f}
+  ! not (f <- (teens | tweens))
+  !> f
