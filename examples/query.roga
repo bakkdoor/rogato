@@ -24,6 +24,14 @@ let ageGroup decade =
 
 let friendsOfAgeGroup decade =
   ? p <- ageGroup decade
-  ! p#{Friend: f}
+  ! f <- p#Friend
   ! not (f <- (teens | tweens))
+  !> f
+
+// return all shared friends in people
+// a shared friend is a friend of at least 2 different people
+let sharedFriends (people = Person) =
+  ? p1, p2 <- people
+  ! f <- p1#Friend
+  ! f <- p2#Friend
   !> f
