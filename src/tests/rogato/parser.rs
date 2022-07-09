@@ -371,4 +371,23 @@ fn queries() {
             var("p")
         )
     );
+
+    assert_parse_expr!(
+        "? p <- Person
+        ! p2 <- Person
+        ! (isOlderThan p 42)
+        ! (isPopular p)
+        ! (isFriendOf p p2)
+        !> {p, p2}",
+        query(
+            const_or_type_ref("Person"),
+            vec![
+                const_or_type_ref("Person"),
+                fn_call("isOlderThan", vec![var("p"), int_lit(42)]),
+                fn_call("isPopular", vec![var("p")]),
+                fn_call("isFriendOf", vec![var("p"), var("p2")])
+            ],
+            tuple_lit(vec![var("p"), var("p2")])
+        )
+    );
 }
