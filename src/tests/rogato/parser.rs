@@ -390,4 +390,23 @@ fn queries() {
             tuple_lit(vec![var("p"), var("p2")])
         )
     );
+
+    assert_parse_expr!(
+        "? p <- Person
+        ! p2 <- Person
+        ! ((age p) == ((age p2) + 1))
+        !> {p, p2}",
+        query(
+            query_binding("p", const_or_type_ref("Person")),
+            vec![
+                query_binding("p2", const_or_type_ref("Person")),
+                op_call(
+                    "==",
+                    fn_call("age", vec![var("p")]),
+                    sum(fn_call("age", vec![var("p2")]), int_lit(1))
+                ),
+            ],
+            tuple_lit(vec![var("p"), var("p2")])
+        )
+    );
 }
