@@ -160,7 +160,7 @@ grammar parser() for str {
         }
 
     rule query() -> Expression
-        = bindings:query_binding()+ guards:query_guards() _ prod:query_production() {
+        = bindings:query_binding()+ guards:query_guard()* _ prod:query_production() {
             Expression::Query(
                 Box::new(QueryBindings::new(Box::new(bindings))),
                 Box::new(QueryGuards::new(guards)),
@@ -176,22 +176,12 @@ grammar parser() for str {
             QueryBinding::new(var, Box::new(expr))
         }
 
-    rule query_guards() -> Vec<Expression>
-        = guard:query_guard() more_guards:(additional_query_guard())* {
-            prepend_vec(guard, &mut more_guards.to_owned())
-        }
-
     rule query_guard() -> Expression
         = _ c:comment() _ g:query_guard() {
             Expression::Commented(c, Box::new(g))
         }
         / _ "! " _ expr:query_expr() {
             expr
-        }
-
-    rule additional_query_guard() -> Expression
-        = _ g:query_guard() {
-            g
         }
 
     rule query_production() -> Expression

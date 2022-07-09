@@ -411,4 +411,22 @@ fn queries() {
             tuple_lit(vec![var("p"), var("p2")])
         )
     );
+
+    assert_parse_expr!(
+        "? p1 <- people
+         ? p2 <- people
+         ? f <- (friends p1)
+         ? f <- (friends p2)
+         !> f",
+        query(
+            vec![
+                ("p1", var("people")),
+                ("p2", var("people")),
+                ("f", fn_call("friends", vec![var("p1")])),
+                ("f", fn_call("friends", vec![var("p2")])),
+            ],
+            vec![],
+            var("f")
+        )
+    );
 }
