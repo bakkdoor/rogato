@@ -37,13 +37,16 @@ impl Display for QueryGuards {
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct QueryBinding {
-    pub id: String,
-    pub val: Box<Expression>,
+    id: String,
+    val: Box<Expression>,
 }
 
 impl QueryBinding {
     pub fn new(id: String, val: Box<Expression>) -> Self {
         QueryBinding { id: id, val: val }
+    }
+    pub fn value<'a>(&'a self) -> &'a Expression {
+        &self.val
     }
 }
 
