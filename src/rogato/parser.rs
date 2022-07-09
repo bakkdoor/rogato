@@ -160,7 +160,7 @@ grammar parser() for str {
         }
 
     rule query() -> Expression
-        = "?" _ bindings:query_bindings() guards:query_guards() _ prod:query_production() {
+        = bindings:query_bindings() guards:query_guards() _ prod:query_production() {
             Expression::Query(Box::new(bindings), Box::new(QueryGuards::new(guards)), Box::new(prod))
         }
 
@@ -173,12 +173,12 @@ grammar parser() for str {
         }
 
     rule additional_query_binding() -> QueryBinding
-        = _ "?" _ binding:query_binding() {
+        = _ binding:query_binding() {
             binding
         }
 
     rule query_binding() -> QueryBinding
-        = var:variable_identifier() _ "<-" _ expr:query_expr() {
+        = "?" _ var:variable_identifier() _ "<-" _ expr:query_expr() {
             QueryBinding::new(var, Box::new(expr))
         }
 
