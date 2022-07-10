@@ -368,6 +368,28 @@ fn let_expressions() {
             )
         )
     );
+
+    assert_parse_expr!(
+        "let
+            friendsOfFriends = [],
+            friendsNames =
+                (List.map friendsOfFriends name)
+         in
+            {friends, List.count friends}",
+        let_expr(
+            vec![
+                ("friendsOfFriends", list_lit(vec![])),
+                (
+                    "friendsNames",
+                    fn_call("List.map", vec![var("friendsOfFriends"), var("name")])
+                )
+            ],
+            tuple_lit(vec![
+                var("friends"),
+                fn_call("List.count", vec![var("friends")])
+            ])
+        )
+    );
 }
 
 #[test]

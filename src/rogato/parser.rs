@@ -119,17 +119,17 @@ grammar parser() for str {
         }
 
     pub rule expression() -> Expression
-        = let_exp()
+        = let_expr()
         / query()
         / fn_call()
         / op_call()
         / lambda()
         / sum()
         / variable()
-        / literal_exp()
-        / commented_exp()
+        / literal_expr()
+        / commented_expr()
 
-    rule commented_exp() -> Expression
+    rule commented_expr() -> Expression
         = c:comment() _ e:expression() {
             Expression::Commented(c, Box::new(e))
         }
@@ -148,7 +148,7 @@ grammar parser() for str {
 
     rule atom() -> Expression
         = variable()
-        / literal_exp()
+        / literal_expr()
         / constant_or_type_ref()
         / "(" _ v:sum() _ ")" { v }
         / "(" _ c:(fn_call() / op_call()) _ ")" { c }
@@ -221,11 +221,11 @@ grammar parser() for str {
             expr
         }
         / sum()
-        / literal_exp()
+        / literal_expr()
         / variable()
 
-    rule let_exp() -> Expression
-        = "let " _ bindings:let_bindings() _ "in" _ body:let_body() {
+    rule let_expr() -> Expression
+        = "let" _ bindings:let_bindings() _ "in" _ body:let_body() {
             Expression::Let(LetBindings::new(bindings), Box::new(body))
         }
 
@@ -240,7 +240,7 @@ grammar parser() for str {
         / lambda()
         / sum()
         / variable()
-        / literal_exp()
+        / literal_expr()
         / commented_let_body()
         / query()
 
@@ -259,7 +259,7 @@ grammar parser() for str {
             (id, val)
         }
 
-    rule literal_exp() -> Expression
+    rule literal_expr() -> Expression
         = number_lit()
         / string_lit()
         / struct_lit()
