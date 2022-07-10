@@ -42,18 +42,7 @@ fn main() {
                 match std::fs::read_dir(Path::new("examples/")) {
                     Ok(rd) => {
                         for e in rd {
-                            let dir_entry = e.unwrap();
-                            match File::open(dir_entry.path()) {
-                                Ok(mut file) => {
-                                    let mut buf = String::new();
-                                    file.read_to_string(&mut buf).unwrap();
-                                    println!("\n📂\t{}", dir_entry.path().display());
-                                    print_parse_result(buf.as_str(), parse(buf.as_str()));
-                                }
-                                Err(error) => {
-                                    println!("Could not open example source file: {:?}", error)
-                                }
-                            }
+                            read_parse_file(e.unwrap().path().as_path());
                         }
                     }
                     Err(_) => {}
@@ -65,15 +54,31 @@ fn main() {
                 let datastore = db::open(Path::new(DB_PATH)).map_err(print_error).unwrap();
                 db_stuff(&datastore).unwrap();
             }
-            _ => {
-                println!("Unknown argument: {:?}", arg);
-                help_required = true;
+            file => {
+                println!("Attempting file parse: {}", file);
+                let file_path = Path::new(file);
+                read_parse_file(file_path);
             }
         }
     }
 
     if help_required {
         print_help()
+    }
+}
+
+fn read_parse_file(file_path: &Path) {
+    match File::open(file_path) {
+        Ok(mut file) => {
+            let mut buf = String::new();
+            file.read_to_string(&mut buf).unwrap();
+            println!("\n📂\t{}", file_path.display());
+            let parse_result = parse(buf.as_str());
+            print_parse_result(buf.as_str(), &parse_result);
+        }
+        Err(error) => {
+            println!("Could not open example source file: {:?}", error);
+        }
     }
 }
 
@@ -98,7 +103,7 @@ fn try_parse_root_defs() {
                 y * z
         ",
     ] {
-        print_parse_result(root_def, parse(root_def))
+        print_parse_result(root_def, &parse(root_def))
     }
 }
 
@@ -118,11 +123,11 @@ fn try_parse_expressions() {
         "to-upper a b",
         "      to-upper   (  __do-something-with__         a-var        b_var      )   ",
     ] {
-        print_parse_result(expr_code, parse_expr(expr_code))
+        print_parse_result(expr_code, &parse_expr(expr_code))
     }
 }
 
-fn print_parse_result<T: Display, E: Display>(code: &str, result: Result<T, E>) {
+fn print_parse_result<T: Display, E: Display>(code: &str, result: &Result<T, E>) {
     let lines = code.split("\n");
     let line_count = Vec::from_iter(lines.to_owned()).len();
     let (_, code_with_line_numbers) = lines.fold((1, String::new()), |(counter, acc), line| {
