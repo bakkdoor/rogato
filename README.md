@@ -16,6 +16,7 @@ For some example source code and syntax ideas (still WIP), check out the code ex
 * Direct native access to built-in graph database
 * First-class query manipulation support against graph db
 * Symbolic language capabilities for easy knowledge graph construction and querying
+* Easy importing of data from various data formats, ideally provided by std lib
 
 ### Q&A
 
