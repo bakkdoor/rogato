@@ -8,3 +8,9 @@ The syntax is inspired mostly by languages like Elm, F#, Haskell and Elixir. The
 More information will follow here as the language matures.
 For some example source code and syntax ideas (still WIP), check out the code examples under [examples/](examples/).
 
+### Language design goals
+
+* Simple, typed, functional core language for data processing
+* Direct native access to built-in graph database
+* First-class query manipulation support against graph db
+* Symbolic language capabilities for easy knowledge graph construction and querying
