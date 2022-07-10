@@ -371,14 +371,29 @@ fn let_expressions() {
 
     assert_parse_expr!(
         "let
-            friendsOfFriends = [],
+            friendsOfFriends =
+                ? f1, f2 <- people
+                ? f1 <- (friends person)
+                ? f2 <- (friends f1)
+                !> f2,
             friendsNames =
                 (List.map friendsOfFriends name)
          in
             {friends, List.count friends}",
         let_expr(
             vec![
-                ("friendsOfFriends", list_lit(vec![])),
+                (
+                    "friendsOfFriends",
+                    query(
+                        vec![
+                            (vec!["f1", "f2"], var("people")),
+                            (vec!["f1"], fn_call("friends", vec![var("person")])),
+                            (vec!["f2"], fn_call("friends", vec![var("f1")]))
+                        ],
+                        vec![],
+                        var("f2")
+                    )
+                ),
                 (
                     "friendsNames",
                     fn_call("List.map", vec![var("friendsOfFriends"), var("name")])
