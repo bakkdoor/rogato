@@ -1,7 +1,9 @@
 # rogātō 📜 🏷
-## Functional, declarative query language with integrated graph database.
+## A functional, declarative query language with an integrated graph database.
 
-**rogātō** provides a simple yet powerful functional programming interface to a built-in graph database, powered by [indradb](https://github.com/indradb/indradb).
+(Still WIP)
+
+**rogātō** aims to provide a simple yet powerful functional programming interface to a built-in graph database, powered by [indradb](https://github.com/indradb/indradb).
 
 The syntax is inspired mostly by languages like Elm, F#, Haskell and Elixir. The goal is to provide a basic standard library for common tasks. A package manager should also follow, but the language is still at a very early stage, so all of that is still missing.
 
