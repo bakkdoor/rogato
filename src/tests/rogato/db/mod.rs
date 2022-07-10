@@ -1,2 +1,2 @@
 #[cfg(test)]
-pub mod api;
+pub mod object_storage;

@@ -6,7 +6,7 @@ use std::path::Path;
 const TEST_DB_PATH: &str = "./rogato.test.db";
 
 #[test]
-fn test_api() {
+fn store_object() {
     let datastore = db::open(Path::new(TEST_DB_PATH)).unwrap();
     let person_t = db::id("Person");
 
