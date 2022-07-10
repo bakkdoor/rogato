@@ -16,6 +16,7 @@ pub enum Expression {
     OpCall(Identifier, Box<Expression>, Box<Expression>),
     Var(Identifier),
     ConstOrTypeRef(Identifier),
+    EdgeProp(Box<Expression>, Identifier),
     Let(Box<LetBindings>, Box<Expression>),
     Lambda(Box<LambdaArgs<Identifier>>, Box<Expression>),
     Query(Box<QueryBindings>, Box<QueryGuards>, Box<Expression>),
@@ -38,6 +39,7 @@ impl Display for Expression {
             }
             Expression::Var(id) => f.write_str(id),
             Expression::ConstOrTypeRef(id) => f.write_str(id),
+            Expression::EdgeProp(id, edge) => f.write_fmt(format_args!("{}#{}", id, edge)),
             Expression::Let(bindings, body) => f.write_fmt(format_args!(
                 "let\n{}\nin\n{}",
                 bindings.indented("    "),

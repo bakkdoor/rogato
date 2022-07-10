@@ -204,3 +204,7 @@ pub fn query(
         production,
     ))
 }
+
+pub fn edge_prop(expr: Box<Expression>, edge: &str) -> Box<Expression> {
+    Box::new(Expression::EdgeProp(expr, edge.to_string()))
+}

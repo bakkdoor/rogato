@@ -168,9 +168,6 @@ grammar parser() for str {
             )
         }
 
-    rule query_expr() -> Expression
-        = atom()
-
     rule query_binding() -> QueryBinding
         = _ "?" _ vars:query_binding_vars() _ "<-" _ expr:query_expr() {
             QueryBinding::new(vars, Box::new(expr))
@@ -185,6 +182,18 @@ grammar parser() for str {
         = _ "," _ var:variable_identifier() {
             var
         }
+
+    rule query_expr() -> Expression
+        = edge_prop()
+        / atom()
+
+    rule edge_prop() -> Expression
+        = expr:edge_prop_expr() "#" edge:struct_identifier() {
+            Expression::EdgeProp(Box::new(expr), edge)
+        }
+
+    rule edge_prop_expr() -> Expression
+        = variable()
 
     rule query_guard() -> Expression
         = _ c:comment() _ g:query_guard() {
