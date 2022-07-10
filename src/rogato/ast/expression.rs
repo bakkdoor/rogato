@@ -2,7 +2,7 @@ use indent_write::indentable::Indentable;
 
 pub use super::fn_call::FnCallArgs;
 pub use super::fn_def::FnDefArgs;
-pub use super::query::{QueryBinding, QueryBindings, QueryGuards};
+pub use super::query::{Query, QueryBinding, QueryBindings, QueryGuards};
 use super::Identifier;
 use std::fmt::Display;
 
@@ -19,7 +19,7 @@ pub enum Expression {
     EdgeProp(Box<Expression>, Identifier),
     Let(Box<LetBindings>, Box<Expression>),
     Lambda(Box<LambdaArgs<Identifier>>, Box<Expression>),
-    Query(Box<QueryBindings>, Box<QueryGuards>, Box<Expression>),
+    Query(Box<Query>),
 }
 
 impl Display for Expression {
@@ -46,11 +46,20 @@ impl Display for Expression {
                 body.indented("    ")
             )),
             Expression::Lambda(args, body) => f.write_fmt(format_args!("({} -> {})", args, body)),
-            Expression::Query(query, guards, production) => {
-                if guards.is_empty() {
-                    f.write_fmt(format_args!("{}\n!> {}", query, production))
+            Expression::Query(query) => {
+                if query.guards().is_empty() {
+                    f.write_fmt(format_args!(
+                        "{}\n!> {}",
+                        query.bindings(),
+                        query.production()
+                    ))
                 } else {
-                    f.write_fmt(format_args!("{}\n{}\n!> {}", query, guards, production))
+                    f.write_fmt(format_args!(
+                        "{}\n{}\n!> {}",
+                        query.bindings(),
+                        query.guards(),
+                        query.production()
+                    ))
                 }
             }
         }

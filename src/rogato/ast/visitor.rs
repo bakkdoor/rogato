@@ -1,7 +1,7 @@
 use fn_call::FnCallArgs;
 
 use super::{
-    expression::{LambdaArgs, LetBindings, Literal, QueryBindings, QueryGuards},
+    expression::{LambdaArgs, LetBindings, Literal, Query},
     *,
 };
 
@@ -22,11 +22,5 @@ pub trait Visitor {
     fn edge_prop(&mut self, _expr: &Expression, _edge: &Identifier) {}
     fn let_(&mut self, _bindings: &LetBindings, _expr: &Expression) {}
     fn lambda(&mut self, _args: &LambdaArgs<Identifier>, _body: &Expression) {}
-    fn query(
-        &mut self,
-        _bindings: &QueryBindings,
-        _guards: &QueryGuards,
-        _production: &Expression,
-    ) {
-    }
+    fn query(&mut self, _query: &Query) {}
 }

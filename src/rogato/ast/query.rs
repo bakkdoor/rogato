@@ -2,6 +2,39 @@ use super::expression::Expression;
 use std::fmt::Display;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
+pub struct Query {
+    bindings: Box<QueryBindings>,
+    guards: Box<QueryGuards>,
+    production: Box<Expression>,
+}
+
+impl Query {
+    pub fn new(
+        bindings: Box<QueryBindings>,
+        guards: Box<QueryGuards>,
+        production: Box<Expression>,
+    ) -> Self {
+        Self {
+            bindings: bindings,
+            guards: guards,
+            production: production,
+        }
+    }
+
+    pub fn bindings<'a>(&'a self) -> &'a QueryBindings {
+        &self.bindings
+    }
+
+    pub fn guards<'a>(&'a self) -> &'a QueryGuards {
+        &self.guards
+    }
+
+    pub fn production<'a>(&'a self) -> &'a Expression {
+        &self.production
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub struct QueryGuards {
     guards: Box<Vec<Expression>>,
 }
