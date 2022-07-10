@@ -12,6 +12,11 @@ impl FnDefArgs {
             args: Box::new(args),
         }
     }
+
+    #[allow(dead_code)]
+    pub fn len(&self) -> usize {
+        self.args.len()
+    }
 }
 
 impl Display for FnDefArgs {
