@@ -17,6 +17,15 @@ For some example source code and syntax ideas (still WIP), check out the code ex
 * First-class query manipulation support against graph db
 * Symbolic language capabilities for easy knowledge graph construction and querying
 
-### Why?
+### Q&A
+
+#### Why?
 
 I needed a project to learn Rust with. I always have been interested in graph databases and their applications to data problems and have been fascinated by what declarative, logic based programming can do for simplicity in querying large data sets. **rogātō** aims to unify some of those ideas and properties into something new and cohesive that is fun and productive to use and can aid in discovering interesting facts about large data sets.
+
+#### What does the name mean?
+
+**rogātō** is the ablative form of the Latin perfect passive participle of [*rogātus*](https://en.wiktionary.org/wiki/rogatus#Latin) (having been enquired / asked / requested / invited).
+
+###### How is it pronounced?
+<sub>The a and final o (marked with macrons) are pronounced twice as long.</sub>
