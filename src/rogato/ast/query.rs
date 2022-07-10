@@ -29,11 +29,17 @@ impl QueryGuards {
 
 impl Display for QueryGuards {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let fmt_str = self
-            .guards
-            .iter()
-            .map(|g| format!("! {}", g))
-            .fold(String::from(""), |acc, fmt| format!("{}\n{}", acc, fmt));
+        let fmt_str =
+            self.guards
+                .iter()
+                .map(|g| format!("! {}", g))
+                .fold(String::from(""), |acc, fmt| {
+                    if acc == "" {
+                        fmt
+                    } else {
+                        format!("{}\n{}", acc, fmt)
+                    }
+                });
 
         f.write_fmt(format_args!("{}", fmt_str))
     }
