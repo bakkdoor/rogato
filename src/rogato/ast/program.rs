@@ -16,6 +16,11 @@ impl Program {
         Program { nodes: nodes }
     }
 
+    #[allow(dead_code)]
+    pub fn len(&self) -> usize {
+        self.nodes.len()
+    }
+
     pub fn iter(&self) -> std::slice::Iter<Box<AST>> {
         self.nodes.iter()
     }

@@ -12,6 +12,16 @@ impl ModuleExports {
             exports: Box::new(exports),
         }
     }
+
+    #[allow(dead_code)]
+    pub fn len(&self) -> usize {
+        self.exports.len()
+    }
+
+    #[allow(dead_code)]
+    pub fn iter(&self) -> std::slice::Iter<String> {
+        self.exports.iter()
+    }
 }
 
 impl Display for ModuleExports {

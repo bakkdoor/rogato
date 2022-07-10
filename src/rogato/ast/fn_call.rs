@@ -18,6 +18,11 @@ impl FnCallArgs {
         self.args.insert(0, arg);
     }
 
+    #[allow(dead_code)]
+    pub fn len(&self) -> usize {
+        self.args.len()
+    }
+
     pub fn iter(&self) -> std::slice::Iter<Expression> {
         self.args.iter()
     }

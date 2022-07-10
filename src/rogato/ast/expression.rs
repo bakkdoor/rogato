@@ -154,6 +154,16 @@ impl<I: Display> TupleItems<I> {
     pub fn from(items: Vec<Box<I>>) -> Self {
         TupleItems { items: items }
     }
+
+    #[allow(dead_code)]
+    pub fn len(&self) -> usize {
+        self.items.len()
+    }
+
+    #[allow(dead_code)]
+    pub fn iter(&self) -> std::slice::Iter<Box<I>> {
+        self.items.iter()
+    }
 }
 
 impl<I: Display> Display for TupleItems<I> {
@@ -188,6 +198,16 @@ impl StructProps {
 
     pub fn from(props: Vec<(Identifier, Box<Expression>)>) -> Self {
         StructProps { props: props }
+    }
+
+    #[allow(dead_code)]
+    pub fn len(&self) -> usize {
+        self.props.len()
+    }
+
+    #[allow(dead_code)]
+    pub fn iter(&self) -> std::slice::Iter<(String, Box<Expression>)> {
+        self.props.iter()
     }
 }
 

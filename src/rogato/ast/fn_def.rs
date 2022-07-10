@@ -17,6 +17,11 @@ impl FnDefArgs {
     pub fn len(&self) -> usize {
         self.args.len()
     }
+
+    #[allow(dead_code)]
+    pub fn iter(&self) -> std::slice::Iter<String> {
+        self.args.iter()
+    }
 }
 
 impl Display for FnDefArgs {

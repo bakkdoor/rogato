@@ -18,6 +18,11 @@ impl QueryGuards {
         self.guards.insert(0, arg);
     }
 
+    #[allow(dead_code)]
+    pub fn len(&self) -> usize {
+        self.guards.len()
+    }
+
     pub fn iter(&self) -> std::slice::Iter<Expression> {
         self.guards.iter()
     }
@@ -86,6 +91,11 @@ pub struct QueryBindings {
 impl QueryBindings {
     pub fn new(bindings: Box<Vec<QueryBinding>>) -> Self {
         Self { bindings: bindings }
+    }
+
+    #[allow(dead_code)]
+    pub fn len(&self) -> usize {
+        self.bindings.len()
     }
 
     pub fn iter(&self) -> std::slice::Iter<QueryBinding> {
