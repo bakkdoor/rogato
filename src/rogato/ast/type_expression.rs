@@ -1,5 +1,7 @@
 use std::fmt::Display;
 
+use crate::rogato::util::indent;
+
 use self::super::expression::{LambdaArgs, TupleItems};
 
 use super::Identifier;
@@ -29,11 +31,18 @@ impl Display for TypeExpression {
             }
             TypeExpression::ListType(type_expr) => f.write_fmt(format_args!("[ {} ]", type_expr)),
             TypeExpression::StructType(property_types) => {
-                let mut result: Option<std::fmt::Result> = None;
-                for (id, type_expr) in property_types {
-                    result = Some(f.write_fmt(format_args!("{} :: {}", id, type_expr)))
-                }
-                result.unwrap()
+                let fmt_str = property_types
+                    .iter()
+                    .map(|(id, expr)| format!("{} :: {}", id, expr))
+                    .fold(String::from(""), |acc, fmt| {
+                        if acc == "" {
+                            fmt
+                        } else {
+                            format!("{}\n{}", acc, fmt)
+                        }
+                    });
+
+                f.write_fmt(format_args!("{{\n{}\n}}", indent(fmt_str)))
             }
         }
     }
