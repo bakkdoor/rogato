@@ -44,6 +44,7 @@ pub(crate) fn walk_expr<V: Visitor>(v: &mut V, expr: &Expression) {
         }
         Expression::Var(id) => v.var(id),
         Expression::ConstOrTypeRef(id) => v.const_or_type_ref(id),
+        Expression::PropFnRef(id) => v.prop_fn_ref(id),
         Expression::EdgeProp(id, edge) => v.edge_prop(id, edge),
         Expression::Let(bindings, body) => {
             v.let_(bindings, body);

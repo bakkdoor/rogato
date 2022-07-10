@@ -158,6 +158,9 @@ grammar parser() for str {
         = id:variable_identifier() {
             Expression::Var(id)
         }
+        / "." id:variable_identifier() {
+            Expression::PropFnRef(id)
+        }
 
     rule query() -> Expression
         = bindings:query_binding()+ guards:query_guard()* _ prod:query_production() {

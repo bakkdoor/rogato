@@ -99,6 +99,10 @@ pub fn const_or_type_ref(id: &str) -> Box<Expression> {
     Box::new(ConstOrTypeRef(id.to_string()))
 }
 
+pub fn prop_fn_ref(id: &str) -> Box<Expression> {
+    Box::new(PropFnRef(id.to_string()))
+}
+
 pub fn sum(a: Box<Expression>, b: Box<Expression>) -> Box<Expression> {
     Box::new(Sum(a, b))
 }

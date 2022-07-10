@@ -19,6 +19,7 @@ pub trait Visitor {
     fn op_call(&mut self, _id: &Identifier, _left: &Expression, _right: &Expression) {}
     fn var(&mut self, _id: &Identifier) {}
     fn const_or_type_ref(&mut self, _id: &Identifier) {}
+    fn prop_fn_ref(&mut self, _id: &Identifier) {}
     fn edge_prop(&mut self, _expr: &Expression, _edge: &Identifier) {}
     fn let_(&mut self, _bindings: &LetBindings, _expr: &Expression) {}
     fn lambda(&mut self, _args: &LambdaArgs<Identifier>, _body: &Expression) {}

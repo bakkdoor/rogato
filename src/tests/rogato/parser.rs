@@ -1,6 +1,6 @@
 use crate::tests::rogato::{
-    commented, edge_prop, int_type, list_lit, root_comment, string_type, struct_lit, struct_type,
-    tuple_type, type_def, type_ref,
+    commented, edge_prop, int_type, list_lit, prop_fn_ref, root_comment, string_type, struct_lit,
+    struct_type, tuple_type, type_def, type_ref,
 };
 #[cfg(test)]
 use crate::{assert_parse, assert_parse_ast, assert_parse_expr};
@@ -539,5 +539,16 @@ fn queries() {
             vec![],
             tuple_lit(vec![var("bob"), var("joe")])
         )
+    );
+}
+
+#[test]
+fn variables() {
+    assert_parse_expr!("foo", var("foo"));
+    assert_parse_expr!(".foo", prop_fn_ref("foo"));
+    assert_parse_expr!("Foo", const_or_type_ref("Foo"));
+    assert_parse_expr!(
+        "{.foo, .bar}",
+        tuple_lit(vec![prop_fn_ref("foo"), prop_fn_ref("bar")])
     );
 }
