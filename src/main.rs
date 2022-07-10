@@ -48,7 +48,7 @@ fn main() {
                                     let mut buf = String::new();
                                     file.read_to_string(&mut buf).unwrap();
                                     println!("\n📂\t{}", dir_entry.path().display());
-                                    print_parse_result(buf.as_str(), parse(buf.as_str()))
+                                    print_parse_result(buf.as_str(), parse(buf.as_str()));
                                 }
                                 Err(error) => {
                                     println!("Could not open example source file: {:?}", error)

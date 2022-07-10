@@ -34,3 +34,23 @@ let sharedFriends people =
   ? f <- p1#Friend
   ? f <- p2#Friend
   !> f
+
+let friendsAndFamilyWithin people person =
+  let
+    family =
+      ? p <- people
+      ? p <- person#Related
+      !> p,
+
+    friends =
+      ? f <- people
+      ? f <- person#Friend
+      !> f,
+
+    friendsOfFriends =
+      ? p, f <- people
+      ? p <- person#Friend
+      ? f <- p#Friend
+      !> f
+  in
+    {person, [{"family",family}, {"friends",friends}, {"friendsOfFriends",friendsOfFriends}]}
