@@ -363,7 +363,7 @@ fn queries() {
         ! (isPopular p)
         !> p",
         query(
-            vec![("p", const_or_type_ref("Person"))],
+            vec![(vec!["p"], const_or_type_ref("Person"))],
             vec![
                 fn_call("isOlderThan", vec![var("p"), int_lit(42)]),
                 fn_call("isPopular", vec![var("p")])
@@ -381,8 +381,8 @@ fn queries() {
         !> {p, p2}",
         query(
             vec![
-                ("p", const_or_type_ref("Person")),
-                ("p2", const_or_type_ref("Person"))
+                (vec!["p"], const_or_type_ref("Person")),
+                (vec!["p2"], const_or_type_ref("Person"))
             ],
             vec![
                 fn_call("isOlderThan", vec![var("p"), int_lit(42)]),
@@ -400,8 +400,8 @@ fn queries() {
         !> {p, p2}",
         query(
             vec![
-                ("p", const_or_type_ref("Person")),
-                ("p2", const_or_type_ref("Person"))
+                (vec!["p"], const_or_type_ref("Person")),
+                (vec!["p2"], const_or_type_ref("Person"))
             ],
             vec![op_call(
                 "==",
@@ -420,13 +420,29 @@ fn queries() {
          !> f",
         query(
             vec![
-                ("p1", var("people")),
-                ("p2", var("people")),
-                ("f", fn_call("friends", vec![var("p1")])),
-                ("f", fn_call("friends", vec![var("p2")])),
+                (vec!["p1"], var("people")),
+                (vec!["p2"], var("people")),
+                (vec!["f"], fn_call("friends", vec![var("p1")])),
+                (vec!["f"], fn_call("friends", vec![var("p2")])),
             ],
             vec![],
-            var("f")
+            var("f"),
+        )
+    );
+
+    assert_parse_expr!(
+        "? p1, p2 <- people
+         ? f <- (friends p1)
+         ? f <- (friends p2)
+         !> f",
+        query(
+            vec![
+                (vec!["p1", "p2"], var("people")),
+                (vec!["f"], fn_call("friends", vec![var("p1")])),
+                (vec!["f"], fn_call("friends", vec![var("p2")])),
+            ],
+            vec![],
+            var("f"),
         )
     );
 }

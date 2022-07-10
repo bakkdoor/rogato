@@ -41,14 +41,15 @@ impl Display for QueryGuards {
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct QueryBinding {
-    id: String,
+    ids: Vec<String>,
     val: Box<Expression>,
 }
 
 impl QueryBinding {
-    pub fn new(id: String, val: Box<Expression>) -> Self {
-        QueryBinding { id: id, val: val }
+    pub fn new(ids: Vec<String>, val: Box<Expression>) -> Self {
+        QueryBinding { ids: ids, val: val }
     }
+
     pub fn value<'a>(&'a self) -> &'a Expression {
         &self.val
     }
@@ -56,7 +57,18 @@ impl QueryBinding {
 
 impl Display for QueryBinding {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!("{} <- {}", self.id, self.val))
+        let fmt_str =
+            self.ids
+                .iter()
+                .map(|id| format!("{}", id))
+                .fold(String::from(""), |acc, fmt| {
+                    if acc == "" {
+                        fmt
+                    } else {
+                        format!("{}, {}", acc, fmt)
+                    }
+                });
+        f.write_fmt(format_args!("{} <- {}", fmt_str, self.val))
     }
 }
 

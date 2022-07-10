@@ -172,8 +172,18 @@ grammar parser() for str {
         = atom()
 
     rule query_binding() -> QueryBinding
-        = _ "?" _ var:variable_identifier() _ "<-" _ expr:query_expr() {
-            QueryBinding::new(var, Box::new(expr))
+        = _ "?" _ vars:query_binding_vars() _ "<-" _ expr:query_expr() {
+            QueryBinding::new(vars, Box::new(expr))
+        }
+
+    rule query_binding_vars() -> Vec<Identifier>
+        = var:variable_identifier() more_vars:(additional_query_binding_vars())* {
+            prepend_vec(var, &mut more_vars.to_owned())
+        }
+
+    rule additional_query_binding_vars() -> Identifier
+        = "," _ var:variable_identifier() {
+            var
         }
 
     rule query_guard() -> Expression
