@@ -363,7 +363,7 @@ grammar parser() for str {
         }
 
     rule operator() -> Identifier
-        = id:$(['+' | '-' | '*' | '/' | '>' | '<' | '=' | '!' | '^' | '='])+ {
+        = id:$(['+' | '-' | '*' | '/' | '>' | '<' | '=' | '!' | '^' | '=' | '|'])+ {
             String::from_iter(id)
         }
 
