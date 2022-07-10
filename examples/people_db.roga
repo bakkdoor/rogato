@@ -25,22 +25,21 @@ type @Cities :: [City]
 
 // query from graph db
 let oldestPeopleNear loc =
-  from @People
-  |> where (p -> Location.isNear p.location loc)
-  |> orderBy ascending(.age)
+  ? p <- Person
+  ! (Location.isNear p.location loc)
+  !> (orderBy (ascending .age))
   // same as:
-  |> orderBy (.age |> ascending)
-  // .age is syntax sugar for: let .age p = p.age
-  // same as:
-  |> orderBy ((p -> p.age) |> ascending)
-  // same as:
-  |> orderBy ((p1 p2 -> p1.age <=> p2.age) |> ascending)
-
+  // !> (orderBy (.age |> ascending))
+  // // .age is syntax sugar for: let .age p = p.age
+  // // same as:
+  // !> (orderBy ((p -> p.age) |> ascending))
+  // // same as:
+  // !> (orderBy ((p1 p2 -> p1.age <=> p2.age) |> ascending))
 
 let oldestPeopleNear loc personLimit =
-  from (oldestPeopleNear loc)
-  |> limit personLimit
-
+  ? p <- (oldestPeopleNear loc)
+  ! (limit personLimit)
+  !> p
 
 // add some locations
 let Germany = Country{name: "Germany"}
