@@ -204,9 +204,13 @@ grammar parser() for str {
         }
 
     rule query_production() -> Expression
-        = "!> " _ expr:query_expr() {
+        = c:comment() _ qp:query_production() {
+            Expression::Commented(c, Box::new(qp))
+        }
+        / "!> " _ expr:query_expr() {
             expr
         }
+
 
     rule fn_call() -> Expression
         = _ id:identifier() args:(fn_arg())+ _ {
