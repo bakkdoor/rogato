@@ -1,6 +1,6 @@
 use crate::tests::rogato::{
-    commented, int_type, root_comment, string_type, struct_lit, struct_type, tuple_type, type_def,
-    type_ref,
+    commented, int_type, list_lit, root_comment, string_type, struct_lit, struct_type, tuple_type,
+    type_def, type_ref,
 };
 #[cfg(test)]
 use crate::{assert_parse, assert_parse_ast, assert_parse_expr};
@@ -167,6 +167,21 @@ fn literals() {
                 ("country", string_lit("Germany"))
             ]
         )
+    );
+
+    assert_parse_expr!("[]", list_lit(vec![]));
+    assert_parse_expr!("[1]", list_lit(vec![int_lit(1)]));
+    assert_parse_expr!(
+        "[1, \"foo\"]",
+        list_lit(vec![int_lit(1), string_lit("foo")])
+    );
+    assert_parse_expr!(
+        "[1, \"foo\", {2, \"bar\"}]",
+        list_lit(vec![
+            int_lit(1),
+            string_lit("foo"),
+            tuple_lit(vec![int_lit(2), string_lit("bar")])
+        ])
     );
 }
 

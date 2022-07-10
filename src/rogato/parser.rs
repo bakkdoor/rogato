@@ -285,6 +285,12 @@ grammar parser() for str {
         = "[" _ first:tuple_item() rest:(additional_tuple_item())+ _ ("," _)? "]" {
             Expression::Lit(Literal::ListLit(TupleItems::new(first, rest)))
         }
+        / "[" _ item:tuple_item() _ "]" {
+            Expression::Lit(Literal::ListLit(TupleItems::new(item, vec![])))
+        }
+        / "[" _ "]" {
+            Expression::Lit(Literal::ListLit(TupleItems::from(vec![])))
+        }
 
     rule tuple_item() -> Expression
         = fn_call()

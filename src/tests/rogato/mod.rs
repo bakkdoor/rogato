@@ -75,6 +75,10 @@ pub fn tuple_lit(vals: Vec<Box<Expression>>) -> Box<Expression> {
     lit(TupleLit(TupleItems::from(vals)))
 }
 
+pub fn list_lit(vals: Vec<Box<Expression>>) -> Box<Expression> {
+    lit(ListLit(TupleItems::from(vals)))
+}
+
 pub fn struct_lit<S: ToString>(id: S, raw_props: Vec<(S, Box<Expression>)>) -> Box<Expression> {
     let mut props = Vec::new();
     for (id, expr) in raw_props {
