@@ -1,7 +1,5 @@
 use std::fmt::Display;
 
-use indent_write::indentable::Indentable;
-
 use self::{
     expression::{Expression, FnDefArgs},
     module_def::ModuleExports,
@@ -22,6 +20,8 @@ pub type Identifier = String;
 
 pub use program::Program;
 
+use super::util::indent;
+
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum AST {
     RootComment(String),
@@ -34,12 +34,9 @@ impl Display for AST {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             AST::RootComment(comment) => f.write_fmt(format_args!("//{}", comment)),
-            AST::FnDef(id, args, body) => f.write_fmt(format_args!(
-                "let {}{} =\n{}",
-                id,
-                args,
-                body.indented("    ")
-            )),
+            AST::FnDef(id, args, body) => {
+                f.write_fmt(format_args!("let {}{} =\n{}", id, args, indent(body)))
+            }
             AST::ModuleDef(id, exports) => f.write_fmt(format_args!("module {} ({})", id, exports)),
             AST::TypeDef(id, type_expr) => {
                 f.write_fmt(format_args!("type {} :: {}", id, type_expr))

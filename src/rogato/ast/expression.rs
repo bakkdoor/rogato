@@ -1,4 +1,4 @@
-use indent_write::indentable::Indentable;
+use crate::rogato::util::indent;
 
 pub use super::fn_call::FnCallArgs;
 pub use super::fn_def::FnDefArgs;
@@ -42,8 +42,8 @@ impl Display for Expression {
             Expression::EdgeProp(id, edge) => f.write_fmt(format_args!("{}#{}", id, edge)),
             Expression::Let(bindings, body) => f.write_fmt(format_args!(
                 "let\n{}\nin\n{}",
-                bindings.indented("    "),
-                body.indented("    ")
+                indent(bindings),
+                indent(body)
             )),
             Expression::Lambda(args, body) => f.write_fmt(format_args!("({} -> {})", args, body)),
             Expression::Query(query) => {
@@ -86,7 +86,7 @@ impl Display for LetBindings {
         let fmt_str = self
             .bindings
             .iter()
-            .map(|(ident, expr)| format!("{} =\n{}", ident, expr.indented("    ")))
+            .map(|(ident, expr)| format!("{} =\n{}", ident, indent(expr)))
             .fold(String::from(""), |acc, fmt| {
                 if acc == "" {
                     fmt
