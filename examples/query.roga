@@ -5,31 +5,31 @@ type Person :: {
 
 let teens =
   ? p <- Person
-  ! p.age >= 10
-  ! p.age < 20
+  ! (p.age >= 10)
+  ! (p.age < 20)
   !> p
 
 let tweens =
-  ? p#{age} <- Person
-  ! age >= 20
-  ! age < 30
+  ? p <- Person
+  ! (p.age >= 20)
+  ! (p.age < 30)
   !> p
 
 let ageGroup decade =
-  ? p#{age} <- Person
-  ! age >= (decade * 10)
-  ! age < ((decade + 1) * 10)
+  ? p <- Person
+  ! (p.age >= (decade * 10))
+  ! (p.age < ((decade + 1) * 10))
   !> p
 
 let friendsOfAgeGroup decade =
-  ? p <- ageGroup decade
+  ? p <- (ageGroup decade)
   ? f <- p#Friend
-  ! not (f <- (teens | tweens))
+  ! (not (f <- (teens | tweens)))
   !> f
 
 // return all shared friends in people
 // a shared friend is a friend of at least 2 different people
-let sharedFriends (people = Person) =
+let sharedFriends people =
   ? p1, p2 <- people
   ? f <- p1#Friend
   ? f <- p2#Friend
