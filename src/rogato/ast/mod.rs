@@ -37,7 +37,9 @@ impl Display for AST {
             AST::FnDef(id, args, body) => {
                 f.write_fmt(format_args!("let {}{} =\n{}", id, args, indent(body)))
             }
-            AST::ModuleDef(id, exports) => f.write_fmt(format_args!("module {} ({})", id, exports)),
+            AST::ModuleDef(id, exports) => {
+                f.write_fmt(format_args!("module {} {{ {} }}", id, exports))
+            }
             AST::TypeDef(id, type_expr) => {
                 f.write_fmt(format_args!("type {} :: {}", id, type_expr))
             }

@@ -1,5 +1,5 @@
 // top module comment
-module BasicSyntaxTest ( test, square, add )
+module BasicSyntaxTest { test, square, add }
 
 let test x =
   "Testing " ++ (toString x)

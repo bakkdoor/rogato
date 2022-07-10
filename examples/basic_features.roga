@@ -1,4 +1,4 @@
-module BasicFeatures ( doubled, tripled, squared, withLarger )
+module BasicFeatures { doubled, tripled, squared, withLarger }
 
 let doubled x = x + x
 let tripled x = x + x + x

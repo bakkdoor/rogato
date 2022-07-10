@@ -39,7 +39,7 @@ grammar parser() for str {
         = "module " _ id:identifier() _ exports:module_exports() _ {
             AST::ModuleDef(id, ModuleExports::new(exports))
         }
-        / "module " _ id:identifier() _ "(" _ ")" _ {
+        / "module " _ id:identifier() _ "{" _ "}" _ {
             AST::ModuleDef(id, ModuleExports::new(vec![]))
         }
         / "module " _ id:identifier() _ {
@@ -47,7 +47,7 @@ grammar parser() for str {
         }
 
     rule module_exports() -> Vec<Identifier>
-        = "(" _ first_export:identifier() more_exports:(additional_module_export())* _ ")" {
+        = "{" _ first_export:identifier() more_exports:(additional_module_export())* _ "}" {
             prepend_vec(first_export, &mut more_exports.to_owned())
         }
 

@@ -80,19 +80,19 @@ fn fn_defs() {
 #[test]
 fn module_defs() {
     assert_parse_ast!("module MyModule", module_def("MyModule", vec![]));
-    assert_parse_ast!("module MyModule ()", module_def("MyModule", vec![]));
-    assert_parse_ast!("module MyModule (    )", module_def("MyModule", vec![]));
-    assert_parse_ast!("module MyModule (\n\n)", module_def("MyModule", vec![]));
+    assert_parse_ast!("module MyModule {}", module_def("MyModule", vec![]));
+    assert_parse_ast!("module MyModule {    }", module_def("MyModule", vec![]));
+    assert_parse_ast!("module MyModule {\n\n}", module_def("MyModule", vec![]));
     assert_parse_ast!(
-        "module MyModule (Foo_bar-baz)",
+        "module MyModule {Foo_bar-baz}",
         module_def("MyModule", vec!["Foo_bar-baz"])
     );
     assert_parse_ast!(
-        "module MyModule (foo, bar)",
+        "module MyModule {foo, bar}",
         module_def("MyModule", vec!["foo", "bar"])
     );
     assert_parse_ast!(
-        "module MyModule ( func1, func2, func3 )",
+        "module MyModule { func1, func2, func3 }",
         module_def("MyModule", vec!["func1", "func2", "func3"])
     );
 }

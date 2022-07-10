@@ -1,4 +1,4 @@
-module People ( @People, Person, Location, oldestPeopleNear )
+module People { @People, Person, Location, oldestPeopleNear }
 
 type @People :: [Person]
 

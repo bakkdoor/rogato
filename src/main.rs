@@ -85,8 +85,8 @@ fn print_help() {
 fn try_parse_root_defs() {
     for root_def in [
         "module MyModule",
-        "module MyModule ( foo, bar, baz )",
-        "module MyModule (  foo,     bar,   baz   )",
+        "module MyModule { foo, bar, baz }",
+        "module MyModule {  foo,     bar,   baz   }",
         "let squared x = x",
         "let add a b = 1 + b",
         "let addTwice a b = 2 * (a + b)",
