@@ -191,16 +191,20 @@ pub fn type_ref(id: &str) -> Box<TypeExpression> {
 }
 
 pub fn query(
-    bindings: Vec<(Vec<&str>, Box<Expression>)>,
+    bindings: Vec<(Vec<&str>, Box<Expression>, bool)>,
     guards: Vec<Box<Expression>>,
     production: Box<Expression>,
 ) -> Box<Expression> {
     let guards: Vec<Expression> = Vec::from_iter(guards.iter().map(|g| *g.clone()));
     let query_bindings = bindings
         .iter()
-        .map(|(ids, expr)| {
+        .map(|(ids, expr, is_negated)| {
             let qb_ids = ids.iter().map(|id| id.to_string()).collect();
-            QueryBinding::new(qb_ids, expr.clone())
+            if *is_negated {
+                QueryBinding::new_negated(qb_ids, expr.clone())
+            } else {
+                QueryBinding::new(qb_ids, expr.clone())
+            }
         })
         .collect();
     Box::new(Expression::Query(Box::new(Query::new(

@@ -386,9 +386,9 @@ fn let_expressions() {
                     "friendsOfFriends",
                     query(
                         vec![
-                            (vec!["f1", "f2"], var("people")),
-                            (vec!["f1"], fn_call("friends", vec![var("person")])),
-                            (vec!["f2"], fn_call("friends", vec![var("f1")]))
+                            (vec!["f1", "f2"], var("people"), false),
+                            (vec!["f1"], fn_call("friends", vec![var("person")]), false),
+                            (vec!["f2"], fn_call("friends", vec![var("f1")]), false)
                         ],
                         vec![],
                         var("f2")
@@ -415,7 +415,7 @@ fn queries() {
         ! (isPopular p)
         !> p",
         query(
-            vec![(vec!["p"], const_or_type_ref("Person"))],
+            vec![(vec!["p"], const_or_type_ref("Person"), false)],
             vec![
                 fn_call("isOlderThan", vec![var("p"), int_lit(42)]),
                 fn_call("isPopular", vec![var("p")])
@@ -433,8 +433,8 @@ fn queries() {
         !> {p, p2}",
         query(
             vec![
-                (vec!["p"], const_or_type_ref("Person")),
-                (vec!["p2"], const_or_type_ref("Person"))
+                (vec!["p"], const_or_type_ref("Person"), false),
+                (vec!["p2"], const_or_type_ref("Person"), false)
             ],
             vec![
                 fn_call("isOlderThan", vec![var("p"), int_lit(42)]),
@@ -452,8 +452,8 @@ fn queries() {
         !> {p, p2}",
         query(
             vec![
-                (vec!["p"], const_or_type_ref("Person")),
-                (vec!["p2"], const_or_type_ref("Person"))
+                (vec!["p"], const_or_type_ref("Person"), false),
+                (vec!["p2"], const_or_type_ref("Person"), false)
             ],
             vec![op_call(
                 "==",
@@ -472,10 +472,10 @@ fn queries() {
          !> f",
         query(
             vec![
-                (vec!["p1"], var("people")),
-                (vec!["p2"], var("people")),
-                (vec!["f"], fn_call("friends", vec![var("p1")])),
-                (vec!["f"], fn_call("friends", vec![var("p2")])),
+                (vec!["p1"], var("people"), false),
+                (vec!["p2"], var("people"), false),
+                (vec!["f"], fn_call("friends", vec![var("p1")]), false),
+                (vec!["f"], fn_call("friends", vec![var("p2")]), false),
             ],
             vec![],
             var("f"),
@@ -489,9 +489,9 @@ fn queries() {
          !> f",
         query(
             vec![
-                (vec!["p1", "p2"], var("people")),
-                (vec!["f"], fn_call("friends", vec![var("p1")])),
-                (vec!["f"], fn_call("friends", vec![var("p2")])),
+                (vec!["p1", "p2"], var("people"), false),
+                (vec!["f"], fn_call("friends", vec![var("p1")]), false),
+                (vec!["f"], fn_call("friends", vec![var("p2")]), false),
             ],
             vec![],
             var("f"),
@@ -507,10 +507,11 @@ fn queries() {
          !> {diff, {a, b, c}}",
         query(
             vec![
-                (vec!["a", "b", "c"], const_or_type_ref("Data")),
+                (vec!["a", "b", "c"], const_or_type_ref("Data"), false),
                 (
                     vec!["diff"],
-                    fn_call("dataDiff", vec![var("a"), var("b"), var("c")])
+                    fn_call("dataDiff", vec![var("a"), var("b"), var("c")]),
+                    false
                 )
             ],
             vec![op_call(
@@ -532,12 +533,26 @@ fn queries() {
          !> {bob, joe}",
         query(
             vec![
-                (vec!["bob"], const_or_type_ref("Person")),
-                (vec!["joe"], const_or_type_ref("Person")),
-                (vec!["bob"], edge_prop(var("job"), "Friend"))
+                (vec!["bob"], const_or_type_ref("Person"), false),
+                (vec!["joe"], const_or_type_ref("Person"), false),
+                (vec!["bob"], edge_prop(var("job"), "Friend"), false)
             ],
             vec![],
             tuple_lit(vec![var("bob"), var("joe")])
+        )
+    );
+
+    assert_parse_expr!(
+        "? p <- Person
+         ?! p <- oldPeople
+         !> p",
+        query(
+            vec![
+                (vec!["p"], const_or_type_ref("Person"), false),
+                (vec!["p"], var("oldPeople"), true)
+            ],
+            vec![],
+            var("p")
         )
     );
 }

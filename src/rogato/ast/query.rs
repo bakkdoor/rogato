@@ -87,11 +87,24 @@ impl Display for QueryGuards {
 pub struct QueryBinding {
     ids: Vec<String>,
     val: Box<Expression>,
+    is_negated: bool,
 }
 
 impl QueryBinding {
     pub fn new(ids: Vec<String>, val: Box<Expression>) -> Self {
-        QueryBinding { ids: ids, val: val }
+        QueryBinding {
+            ids: ids,
+            val: val,
+            is_negated: false,
+        }
+    }
+
+    pub fn new_negated(ids: Vec<String>, val: Box<Expression>) -> Self {
+        QueryBinding {
+            ids: ids,
+            val: val,
+            is_negated: true,
+        }
     }
 
     pub fn value<'a>(&'a self) -> &'a Expression {
@@ -112,7 +125,12 @@ impl Display for QueryBinding {
                         format!("{}, {}", acc, fmt)
                     }
                 });
-        f.write_fmt(format_args!("{} <- {}", fmt_str, self.val))
+
+        if self.is_negated {
+            f.write_fmt(format_args!("?! {} <- {}", fmt_str, self.val))
+        } else {
+            f.write_fmt(format_args!("? {} <- {}", fmt_str, self.val))
+        }
     }
 }
 
@@ -141,7 +159,7 @@ impl Display for QueryBindings {
         let fmt_str = self
             .bindings
             .iter()
-            .map(|binding| format!("? {}", binding))
+            .map(|binding| format!("{}", binding))
             .fold(String::from(""), |acc, fmt| {
                 if acc == "" {
                     fmt
