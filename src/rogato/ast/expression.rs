@@ -86,12 +86,12 @@ impl Display for LetBindings {
         let fmt_str = self
             .bindings
             .iter()
-            .map(|(ident, expr)| format!("{} = {}", ident, expr))
+            .map(|(ident, expr)| format!("{} =\n{}", ident, expr.indented("    ")))
             .fold(String::from(""), |acc, fmt| {
                 if acc == "" {
                     fmt
                 } else {
-                    format!("{},\n{}", acc, fmt)
+                    format!("{},\n\n{}", acc, fmt)
                 }
             });
 
