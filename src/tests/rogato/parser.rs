@@ -445,4 +445,31 @@ fn queries() {
             var("f"),
         )
     );
+
+    assert_parse_expr!(
+        "? a,
+           b
+           ,c <- Data
+         ? diff <- (dataDiff a b c)
+         ! (0 < (a + (b + c)))
+         !> {diff, {a, b, c}}",
+        query(
+            vec![
+                (vec!["a", "b", "c"], const_or_type_ref("Data")),
+                (
+                    vec!["diff"],
+                    fn_call("dataDiff", vec![var("a"), var("b"), var("c")])
+                )
+            ],
+            vec![op_call(
+                "<",
+                int_lit(0),
+                sum(var("a"), sum(var("b"), var("c")))
+            )],
+            tuple_lit(vec![
+                var("diff"),
+                tuple_lit(vec![var("a"), var("b"), var("c")])
+            ]),
+        )
+    )
 }

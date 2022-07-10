@@ -182,7 +182,7 @@ grammar parser() for str {
         }
 
     rule additional_query_binding_vars() -> Identifier
-        = "," _ var:variable_identifier() {
+        = _ "," _ var:variable_identifier() {
             var
         }
 
