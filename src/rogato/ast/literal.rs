@@ -1,5 +1,5 @@
 use super::{expression::Expression, Identifier};
-use crate::rogato::{db::val, interpreter::Evaluate, util::prepend_vec};
+use crate::rogato::{db::val, interpreter::Evaluate};
 use serde_json::Value;
 use std::fmt::Display;
 
@@ -29,13 +29,14 @@ impl<'a> Evaluate<'a, Value> for Literal {
         match self {
             Literal::Int64Lit(number) => val::number(*number),
             Literal::StringLit(string) => val::string(string),
-            Literal::TupleLit(items) => val::array(prepend_vec(
-                val::string(format!("rogato.Tuple.{}", items.len())),
-                &mut items
+            Literal::TupleLit(items) => {
+                let mut values = items
                     .iter()
                     .map(|i| i.evaluate(context))
-                    .collect::<Vec<Value>>(),
-            )),
+                    .collect::<Vec<Value>>();
+                values.insert(0, val::string(format!("rogato.Tuple.{}", items.len())));
+                val::array(values)
+            }
             Literal::ListLit(items) => {
                 val::array(items.iter().map(|i| i.evaluate(context)).collect())
             }

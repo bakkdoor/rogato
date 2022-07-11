@@ -10,7 +10,6 @@ use crate::rogato::ast::{
     type_expression::{TypeDef, TypeExpression},
     Identifier, Program, AST,
 };
-use crate::rogato::util::prepend_vec;
 use peg::{error::ParseError, parser, str::LineCol};
 
 parser! {
@@ -50,7 +49,9 @@ grammar parser() for str {
 
     rule module_exports() -> Vec<Identifier>
         = "{" _ first_export:identifier() more_exports:(additional_module_export())* _ "}" {
-            prepend_vec(first_export, &mut more_exports.to_owned())
+            let mut exports = more_exports;
+            exports.insert(0, first_export);
+            exports
         }
 
     rule additional_module_export() -> Identifier
@@ -185,7 +186,9 @@ grammar parser() for str {
 
     rule query_binding_vars() -> Vec<Identifier>
         = var:variable_identifier() more_vars:(additional_query_binding_vars())* {
-            prepend_vec(var, &mut more_vars.to_owned())
+            let mut vars = more_vars;
+            vars.insert(0, var);
+            vars
         }
 
     rule additional_query_binding_vars() -> Identifier
@@ -265,7 +268,9 @@ grammar parser() for str {
 
     rule let_bindings() -> Vec<(Identifier, Expression)>
         = binding:let_binding() more_bindings:(additional_let_binding())* {
-            prepend_vec(binding, &mut more_bindings.to_owned())
+            let mut bindings = more_bindings;
+            bindings.insert(0, binding);
+            bindings
         }
 
     rule let_body() -> Expression
