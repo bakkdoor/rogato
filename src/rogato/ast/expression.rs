@@ -1,3 +1,8 @@
+use serde_json::Value;
+
+use crate::rogato::db::val;
+use crate::rogato::interpreter::Evaluate;
+
 pub use super::fn_call::FnCallArgs;
 pub use super::fn_def::FnDefArgs;
 pub use super::lambda::{Lambda, LambdaArgs};
@@ -46,6 +51,36 @@ impl Display for Expression {
             Expression::Let(let_expr) => let_expr.fmt(f),
             Expression::Lambda(lambda) => lambda.fmt(f),
             Expression::Query(query) => query.fmt(f),
+        }
+    }
+}
+
+impl<'a> Evaluate<'a, Value> for Expression {
+    fn evaluate(&self, context: &mut crate::rogato::interpreter::EvalContext<'a>) -> Value {
+        match self {
+            Expression::Commented(_c, e) => e.evaluate(context),
+            Expression::Lit(lit_exp) => lit_exp.evaluate(context),
+            Expression::Sum(a, b) => val::number(
+                a.evaluate(context).as_i64().unwrap() + b.evaluate(context).as_i64().unwrap(),
+            ),
+            Expression::Product(a, b) => val::number(
+                a.evaluate(context).as_i64().unwrap() * b.evaluate(context).as_i64().unwrap(),
+            ),
+            Expression::FnCall(_fn_ident, _args) => todo!("eval fn call"),
+            Expression::OpCall(_op_ident, _left, _right) => todo!("eval op call"),
+            Expression::Var(id) => match context.env().lookup_var(id) {
+                Some(var) => var.evaluate(&mut context.to_owned()),
+                None => {
+                    eprintln!("Var not found: {}", id);
+                    val::null()
+                }
+            },
+            Expression::ConstOrTypeRef(_id) => todo!("eval const or type ref"),
+            Expression::PropFnRef(_id) => todo!("eval prop fn ref"),
+            Expression::EdgeProp(_id, _edge) => todo!("eval edge prop"),
+            Expression::Let(_let_expr) => todo!("eval let expr"),
+            Expression::Lambda(_lambda) => todo!("eval lambda"),
+            Expression::Query(_query) => todo!("eval query"),
         }
     }
 }

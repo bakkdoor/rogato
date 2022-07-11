@@ -10,6 +10,7 @@ use crate::rogato::ast::{
     type_expression::{TypeDef, TypeExpression},
     Identifier, Program, AST,
 };
+use crate::rogato::util::prepend_vec;
 use peg::{error::ParseError, parser, str::LineCol};
 
 parser! {
@@ -431,11 +432,4 @@ fn join_string(first: &str, rest: Vec<&str>) -> String {
     s.push_str(first);
     s.push_str(String::from_iter(rest).as_str());
     s
-}
-
-fn prepend_vec<T>(first: T, rest: &mut Vec<T>) -> Vec<T> {
-    let mut joined = Vec::new();
-    joined.push(first);
-    joined.append(rest);
-    joined
 }

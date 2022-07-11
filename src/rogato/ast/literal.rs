@@ -1,4 +1,6 @@
 use super::{expression::Expression, Identifier};
+use crate::rogato::{db::val, interpreter::Evaluate, util::prepend_vec};
+use serde_json::Value;
 use std::fmt::Display;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -18,6 +20,31 @@ impl Display for Literal {
             Literal::TupleLit(items) => f.write_fmt(format_args!("{{ {} }}", items)),
             Literal::ListLit(items) => f.write_fmt(format_args!("[ {} ]", items)),
             Literal::StructLit(id, props) => f.write_fmt(format_args!("{}{{ {} }}", id, props)),
+        }
+    }
+}
+
+impl<'a> Evaluate<'a, Value> for Literal {
+    fn evaluate(&self, context: &mut crate::rogato::interpreter::EvalContext<'a>) -> Value {
+        match self {
+            Literal::Int64Lit(number) => val::number(*number),
+            Literal::StringLit(string) => val::string(string),
+            Literal::TupleLit(items) => val::array(prepend_vec(
+                val::string(format!("rogato.Tuple.{}", items.len())),
+                &mut items
+                    .iter()
+                    .map(|i| i.evaluate(context))
+                    .collect::<Vec<Value>>(),
+            )),
+            Literal::ListLit(items) => {
+                val::array(items.iter().map(|i| i.evaluate(context)).collect())
+            }
+            Literal::StructLit(_struct_id, props) => val::object(
+                props
+                    .iter()
+                    .map(|(id, p)| (id.clone(), p.evaluate(context)))
+                    .collect::<_>(),
+            ),
         }
     }
 }

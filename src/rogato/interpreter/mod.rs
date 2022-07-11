@@ -22,6 +22,10 @@ impl<'a> EvalContext<'a> {
     pub fn from_env(env: &Environment<'a>) -> EvalContext<'a> {
         EvalContext { env: env.clone() }
     }
+
+    pub fn env(&'a self) -> &'a Environment<'a> {
+        &self.env
+    }
 }
 
 pub trait Evaluate<'a, T> {
