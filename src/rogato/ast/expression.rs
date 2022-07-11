@@ -43,9 +43,9 @@ impl Display for Expression {
             Expression::ConstOrTypeRef(id) => f.write_str(id),
             Expression::PropFnRef(id) => f.write_fmt(format_args!(".{}", id)),
             Expression::EdgeProp(id, edge) => f.write_fmt(format_args!("{}#{}", id, edge)),
-            Expression::Let(let_expr) => f.write_fmt(format_args!("{}", let_expr)),
-            Expression::Lambda(lambda) => f.write_fmt(format_args!("{}", lambda)),
-            Expression::Query(query) => f.write_fmt(format_args!("{}", query)),
+            Expression::Let(let_expr) => let_expr.fmt(f),
+            Expression::Lambda(lambda) => lambda.fmt(f),
+            Expression::Query(query) => query.fmt(f),
         }
     }
 }
