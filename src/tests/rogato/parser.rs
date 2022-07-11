@@ -617,4 +617,18 @@ fn lambdas() {
             )
         )
     );
+
+    assert_parse_expr!(
+        "w x -> y -> z -> {w, x, y, z}",
+        lambda(
+            vec!["w", "x"],
+            lambda(
+                vec!["y"],
+                lambda(
+                    vec!["z"],
+                    tuple_lit(vec![var("w"), var("x"), var("y"), var("z")])
+                )
+            )
+        )
+    );
 }
