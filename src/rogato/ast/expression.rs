@@ -13,15 +13,15 @@ pub enum Expression {
     Lit(Literal),
     Sum(Box<Expression>, Box<Expression>),
     Product(Box<Expression>, Box<Expression>),
-    FnCall(Identifier, Box<FnCallArgs>),
+    FnCall(Identifier, FnCallArgs),
     OpCall(Identifier, Box<Expression>, Box<Expression>),
     Var(Identifier),
     ConstOrTypeRef(Identifier),
     PropFnRef(Identifier),
     EdgeProp(Box<Expression>, Identifier),
-    Let(Box<LetExpression>),
-    Lambda(Box<Lambda>),
-    Query(Box<Query>),
+    Let(LetExpression),
+    Lambda(Lambda),
+    Query(Query),
 }
 
 impl Display for Expression {

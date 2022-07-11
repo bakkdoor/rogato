@@ -4,8 +4,8 @@ pub mod db;
 pub mod parser;
 
 use crate::rogato::ast::expression::{
-    FnCallArgs, LetBindings, Query, QueryBinding, QueryBindings, QueryGuards, StructProps,
-    TupleItems, LetExpression,
+    FnCallArgs, LetBindings, LetExpression, Query, QueryBinding, QueryBindings, QueryGuards,
+    StructProps, TupleItems,
 };
 use crate::rogato::ast::fn_def::FnDef;
 use crate::rogato::ast::module_def::{ModuleDef, ModuleExports};
@@ -131,10 +131,7 @@ pub fn let_expr(bindings: Vec<(&str, Box<Expression>)>, body: Box<Expression>) -
         .map(|(name, expr)| (name.to_string(), *expr))
         .collect();
 
-    Box::new(Let(Box::new(LetExpression::new(
-        LetBindings::new(bindings),
-        body,
-    ))))
+    Box::new(Let(LetExpression::new(LetBindings::new(bindings), body)))
 }
 
 pub fn module_def(id: &str, exports: Vec<&str>) -> Box<AST> {
@@ -148,12 +145,12 @@ pub fn module_def_exports(exports: Vec<&str>) -> ModuleExports {
     ModuleExports::new(Vec::from_iter(exports.iter().map(|e| e.to_string())))
 }
 
-pub fn call_args(args: Vec<Box<Expression>>) -> Box<FnCallArgs> {
+pub fn call_args(args: Vec<Box<Expression>>) -> FnCallArgs {
     let mut args_unboxed = Vec::new();
     for a in args {
         args_unboxed.push(*a)
     }
-    Box::new(FnCallArgs::new(args_unboxed))
+    FnCallArgs::new(args_unboxed)
 }
 
 pub fn fn_call(id: &str, args: Vec<Box<Expression>>) -> Box<Expression> {
@@ -218,11 +215,11 @@ pub fn query(
             }
         })
         .collect();
-    Box::new(Expression::Query(Box::new(Query::new(
-        Box::new(QueryBindings::new(Box::new(query_bindings))),
-        Box::new(QueryGuards::new(guards)),
+    Box::new(Expression::Query(Query::new(
+        QueryBindings::new(query_bindings),
+        QueryGuards::new(guards),
         production,
-    ))))
+    )))
 }
 
 pub fn edge_prop(expr: Box<Expression>, edge: &str) -> Box<Expression> {

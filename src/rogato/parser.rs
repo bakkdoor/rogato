@@ -166,11 +166,11 @@ grammar parser() for str {
     rule query() -> Expression
         = bindings:query_binding()+ guards:query_guard()* _ prod:query_production() {
             Expression::Query(
-                Box::new(Query::new(
-                    Box::new(QueryBindings::new(Box::new(bindings))),
-                    Box::new(QueryGuards::new(guards)),
+                Query::new(
+                    QueryBindings::new(bindings),
+                    QueryGuards::new(guards),
                     Box::new(prod)
-                ))
+                )
             )
         }
 
@@ -233,7 +233,7 @@ grammar parser() for str {
     rule fn_call() -> Expression
         = _ id:identifier() args:(fn_arg())+ _ {
             let args = FnCallArgs::new(args);
-            Expression::FnCall(id, Box::new(args))
+            Expression::FnCall(id, args)
         }
 
     rule op_call() -> Expression
@@ -257,9 +257,9 @@ grammar parser() for str {
 
     rule let_expr() -> Expression
         = "let" _ bindings:let_bindings() _ "in" _ body:let_body() {
-            Expression::Let(Box::new(
+            Expression::Let(
                 LetExpression::new(LetBindings::new(bindings), Box::new(body))
-            ))
+            )
         }
 
     rule let_bindings() -> Vec<(Identifier, Expression)>
@@ -359,7 +359,7 @@ grammar parser() for str {
 
     rule lambda() -> Expression
         = id:identifier() " "+ "->" _ body:let_body() {
-            Expression::Lambda(Box::new(Lambda::new(LambdaArgs::new(vec![id]), Box::new(body))))
+            Expression::Lambda(Lambda::new(LambdaArgs::new(vec![id]), Box::new(body)))
         }
 
     rule constant_or_type_ref() -> Expression

@@ -3,17 +3,13 @@ use std::fmt::Display;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Query {
-    bindings: Box<QueryBindings>,
-    guards: Box<QueryGuards>,
+    bindings: QueryBindings,
+    guards: QueryGuards,
     production: Box<Expression>,
 }
 
 impl Query {
-    pub fn new(
-        bindings: Box<QueryBindings>,
-        guards: Box<QueryGuards>,
-        production: Box<Expression>,
-    ) -> Self {
+    pub fn new(bindings: QueryBindings, guards: QueryGuards, production: Box<Expression>) -> Self {
         Self {
             bindings: bindings,
             guards: guards,
@@ -50,14 +46,12 @@ impl Walk for Query {
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct QueryGuards {
-    guards: Box<Vec<Expression>>,
+    guards: Vec<Expression>,
 }
 
 impl QueryGuards {
     pub fn new(guards: Vec<Expression>) -> Self {
-        QueryGuards {
-            guards: Box::new(guards),
-        }
+        QueryGuards { guards: guards }
     }
 
     #[allow(dead_code)]
@@ -146,11 +140,11 @@ impl Display for QueryBinding {
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct QueryBindings {
-    bindings: Box<Vec<QueryBinding>>,
+    bindings: Vec<QueryBinding>,
 }
 
 impl QueryBindings {
-    pub fn new(bindings: Box<Vec<QueryBinding>>) -> Self {
+    pub fn new(bindings: Vec<QueryBinding>) -> Self {
         Self { bindings: bindings }
     }
 
