@@ -43,7 +43,7 @@ impl<'a> Evaluate<'a, Value> for Literal {
                 props
                     .iter()
                     .map(|(id, p)| (id.clone(), p.evaluate(context)))
-                    .collect::<_>(),
+                    .collect(),
             ),
         }
     }
