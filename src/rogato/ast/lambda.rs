@@ -1,5 +1,7 @@
 use std::fmt::Display;
 
+use crate::rogato::util::indent;
+
 use super::{expression::Expression, walker::Walk, Identifier};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -19,7 +21,11 @@ impl Lambda {
 
 impl Display for Lambda {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!("({} -> {})", self.args, self.body))
+        f.write_fmt(format_args!(
+            "({} ->\n{})",
+            self.args,
+            indent(self.body.clone())
+        ))
     }
 }
 

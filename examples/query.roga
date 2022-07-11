@@ -42,9 +42,9 @@ let friendsAndFamilyWithin people person =
       ? p <- person#Related
       !> p,
 
-    friends =
+    friends = p ->
       ? f <- people
-      ? f <- person#Friend
+      ? f <- p#Friend
       !> f,
 
     friendsOfFriends =
@@ -58,4 +58,4 @@ let friendsAndFamilyWithin people person =
       ?! p <- family
       !> p
   in
-    {person, [{"family",family}, {"friends",friends}, {"friendsOfFriends",friendsOfFriends}]}
+    {person, [{"family",family}, {"friends",friends person}, {"friendsOfFriends",friendsOfFriends}]}
