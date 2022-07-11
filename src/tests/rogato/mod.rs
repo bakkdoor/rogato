@@ -4,8 +4,8 @@ pub mod db;
 pub mod parser;
 
 use crate::rogato::ast::expression::{
-    FnCallArgs, LetBindings, LetExpression, Query, QueryBinding, QueryBindings, QueryGuards,
-    StructProps, TupleItems,
+    FnCallArgs, Lambda, LambdaArgs, LetBindings, LetExpression, Query, QueryBinding, QueryBindings,
+    QueryGuards, StructProps, TupleItems,
 };
 use crate::rogato::ast::fn_def::FnDef;
 use crate::rogato::ast::module_def::{ModuleDef, ModuleExports};
@@ -224,4 +224,9 @@ pub fn query(
 
 pub fn edge_prop(expr: Box<Expression>, edge: &str) -> Box<Expression> {
     Box::new(Expression::EdgeProp(expr, edge.to_string()))
+}
+
+pub fn lambda(args: Vec<&str>, body: Box<Expression>) -> Box<Expression> {
+    let args = args.iter().map(|a| a.to_string()).collect();
+    Box::new(Expression::Lambda(Lambda::new(LambdaArgs::new(args), body)))
 }

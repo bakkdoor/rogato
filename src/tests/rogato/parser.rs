@@ -5,7 +5,7 @@ use crate::tests::rogato::{
 #[cfg(test)]
 use crate::{assert_parse, assert_parse_ast, assert_parse_expr};
 
-use super::{const_or_type_ref, query};
+use super::{const_or_type_ref, lambda, query};
 #[cfg(test)]
 use super::{
     fn_call, fn_def, int_lit, let_expr, module_def, op_call, parse_expr, product, program,
@@ -585,5 +585,34 @@ fn variables() {
     assert_parse_expr!(
         "{.foo, .bar}",
         tuple_lit(vec![prop_fn_ref("foo"), prop_fn_ref("bar")])
+    );
+}
+
+#[test]
+fn lambdas() {
+    assert_parse_expr!("x -> x + 1", lambda(vec!["x"], sum(var("x"), int_lit(1))));
+    assert_parse_expr!(
+        "x y -> x + y",
+        lambda(vec!["x", "y"], sum(var("x"), var("y")))
+    );
+    assert_parse_expr!(
+        "x y -> inspect (z -> {x * (y * z), {x, y, z}}) x y",
+        lambda(
+            vec!["x", "y"],
+            fn_call(
+                "inspect",
+                vec![
+                    lambda(
+                        vec!["z"],
+                        tuple_lit(vec![
+                            product(var("x"), product(var("y"), var("z"))),
+                            tuple_lit(vec![var("x"), var("y"), var("z")])
+                        ])
+                    ),
+                    var("x"),
+                    var("y")
+                ]
+            )
+        )
     );
 }

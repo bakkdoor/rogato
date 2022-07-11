@@ -124,8 +124,8 @@ grammar parser() for str {
     pub rule expression() -> Expression
         = let_expr()
         / query()
-        / fn_call()
         / lambda()
+        / fn_call()
         / op_call()
         / sum()
         / variable()
@@ -203,8 +203,8 @@ grammar parser() for str {
         / "(" _ c:(fn_call() / op_call()) _ ")" { c }
         / fn_call()
         / constant_or_type_ref()
-        / variable()
         / lambda()
+        / variable()
         / op_call()
         / sum()
         / literal_expr()
@@ -274,8 +274,8 @@ grammar parser() for str {
         }
 
     rule let_body() -> Expression
-        = fn_call()
-        / lambda()
+        = lambda()
+        / fn_call()
         / op_call()
         / sum()
         / variable()
@@ -364,8 +364,20 @@ grammar parser() for str {
         }
 
     rule lambda() -> Expression
-        = id:identifier() " "+ "->" _ body:let_body() {
-            Expression::Lambda(Lambda::new(LambdaArgs::new(vec![id]), Box::new(body)))
+        = args:lambda_args() " "+ "->" _ body:let_body() {
+            Expression::Lambda(Lambda::new(LambdaArgs::new(args), Box::new(body)))
+        }
+
+    rule lambda_args() -> Vec<Identifier>
+        = arg:variable_identifier() rest:(additional_lambda_arg())* {
+            let mut args = rest;
+            args.insert(0, arg);
+            args
+        }
+
+    rule additional_lambda_arg() -> Identifier
+        = " "+ arg:variable_identifier() {
+            arg
         }
 
     rule constant_or_type_ref() -> Expression
