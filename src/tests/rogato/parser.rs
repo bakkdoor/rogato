@@ -591,10 +591,12 @@ fn variables() {
 #[test]
 fn lambdas() {
     assert_parse_expr!("x -> x + 1", lambda(vec!["x"], sum(var("x"), int_lit(1))));
+
     assert_parse_expr!(
         "x y -> x + y",
         lambda(vec!["x", "y"], sum(var("x"), var("y")))
     );
+
     assert_parse_expr!(
         "x y -> inspect (z -> {x * (y * z), {x, y, z}}) x y",
         lambda(
