@@ -34,6 +34,19 @@ impl Query {
     }
 }
 
+impl Display for Query {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.guards.is_empty() {
+            f.write_fmt(format_args!("{}\n!> {}", self.bindings, self.production))
+        } else {
+            f.write_fmt(format_args!(
+                "{}\n{}\n!> {}",
+                self.bindings, self.guards, self.production
+            ))
+        }
+    }
+}
+
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct QueryGuards {
     guards: Box<Vec<Expression>>,

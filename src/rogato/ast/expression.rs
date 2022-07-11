@@ -2,6 +2,7 @@ use crate::rogato::util::indent;
 
 pub use super::fn_call::FnCallArgs;
 pub use super::fn_def::FnDefArgs;
+pub use super::lambda::{Lambda, LambdaArgs};
 pub use super::query::{Query, QueryBinding, QueryBindings, QueryGuards};
 use super::Identifier;
 use std::fmt::Display;
@@ -19,7 +20,7 @@ pub enum Expression {
     PropFnRef(Identifier),
     EdgeProp(Box<Expression>, Identifier),
     Let(Box<LetBindings>, Box<Expression>),
-    Lambda(Box<LambdaArgs<Identifier>>, Box<Expression>),
+    Lambda(Box<Lambda>),
     Query(Box<Query>),
 }
 
@@ -47,23 +48,8 @@ impl Display for Expression {
                 indent(bindings),
                 indent(body)
             )),
-            Expression::Lambda(args, body) => f.write_fmt(format_args!("({} -> {})", args, body)),
-            Expression::Query(query) => {
-                if query.guards().is_empty() {
-                    f.write_fmt(format_args!(
-                        "{}\n!> {}",
-                        query.bindings(),
-                        query.production()
-                    ))
-                } else {
-                    f.write_fmt(format_args!(
-                        "{}\n{}\n!> {}",
-                        query.bindings(),
-                        query.guards(),
-                        query.production()
-                    ))
-                }
-            }
+            Expression::Lambda(lambda) => f.write_fmt(format_args!("{}", lambda)),
+            Expression::Query(query) => f.write_fmt(format_args!("{}", query)),
         }
     }
 }
@@ -96,31 +82,6 @@ impl Display for LetBindings {
                     format!("{},\n\n{}", acc, fmt)
                 }
             });
-
-        f.write_fmt(format_args!("{}", fmt_str))
-    }
-}
-
-#[derive(Clone, PartialEq, Eq, Debug)]
-pub struct LambdaArgs<A: Display> {
-    args: Vec<A>,
-}
-
-impl<A: Display> LambdaArgs<A> {
-    pub fn new(args: Vec<A>) -> Box<LambdaArgs<A>> {
-        Box::new(LambdaArgs { args: args })
-    }
-}
-
-impl<A: Display> Display for LambdaArgs<A> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let fmt_str = self.args.iter().fold(String::from(""), |acc, arg| {
-            if acc == "" {
-                arg.to_string()
-            } else {
-                format!("{} {}", acc, arg)
-            }
-        });
 
         f.write_fmt(format_args!("{}", fmt_str))
     }

@@ -32,7 +32,7 @@ pub enum TypeExpression {
     IntType,
     StringType,
     TypeRef(Identifier),
-    FunctionType(Box<LambdaArgs<TypeExpression>>, Box<TypeExpression>), // args & return type
+    FunctionType(LambdaArgs<TypeExpression>, Box<TypeExpression>), // args & return type
     TupleType(TupleItems<TypeExpression>),
     ListType(Box<TypeExpression>),
     StructType(Vec<(Identifier, Box<TypeExpression>)>),

@@ -53,9 +53,9 @@ pub(crate) fn walk_expr<V: Visitor>(v: &mut V, expr: &Expression) {
                 walk_expr(v, val);
             }
         }
-        Expression::Lambda(args, body) => {
-            v.lambda(args, body);
-            walk_expr(v, body);
+        Expression::Lambda(lambda) => {
+            v.lambda(lambda);
+            walk_expr(v, lambda.body());
         }
         Expression::Query(query) => {
             v.query(query);
