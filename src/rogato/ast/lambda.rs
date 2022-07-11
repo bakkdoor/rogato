@@ -36,6 +36,16 @@ impl<A: Display> LambdaArgs<A> {
     pub fn new(args: Vec<A>) -> LambdaArgs<A> {
         LambdaArgs { args: args }
     }
+
+    #[allow(dead_code)]
+    pub fn len(&self) -> usize {
+        self.args.len()
+    }
+
+    #[allow(dead_code)]
+    pub fn iter(&self) -> std::slice::Iter<A> {
+        self.args.iter()
+    }
 }
 
 impl<A: Display> Display for LambdaArgs<A> {
