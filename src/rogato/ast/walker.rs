@@ -4,12 +4,12 @@ use super::{expression::Expression, visitor::Visitor, AST};
 pub(crate) fn walk<V: Visitor>(v: &mut V, ast: &AST) {
     match ast {
         AST::RootComment(c) => v.root_comment(c),
-        AST::ModuleDef(id, exports) => v.module_def(id, exports),
-        AST::FnDef(id, args, body) => {
-            v.fn_def(id, args, body);
-            walk_expr(v, body);
+        AST::ModuleDef(mod_def) => v.module_def(mod_def),
+        AST::FnDef(fn_def) => {
+            v.fn_def(fn_def);
+            walk_expr(v, fn_def.body());
         }
-        AST::TypeDef(id, type_expr) => v.type_def(id, type_expr),
+        AST::TypeDef(type_def) => v.type_def(type_def),
     }
 }
 

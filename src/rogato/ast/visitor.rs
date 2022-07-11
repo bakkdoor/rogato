@@ -7,9 +7,9 @@ use super::{
 
 pub trait Visitor {
     fn root_comment(&mut self, _comment: &String) {}
-    fn module_def(&mut self, _id: &Identifier, _exports: &ModuleExports) {}
-    fn fn_def(&mut self, _id: &Identifier, _args: &FnDefArgs, _body: &Expression) {}
-    fn type_def(&mut self, _id: &Identifier, _type_expr: &TypeExpression) {}
+    fn module_def(&mut self, _mod_def: &ModuleDef) {}
+    fn fn_def(&mut self, _fn_def: &FnDef) {}
+    fn type_def(&mut self, _type_def: &TypeDef) {}
 
     fn commented(&mut self, _commented: &String, _expr: &Expression) {}
     fn lit(&mut self, _lit: &Literal) {}

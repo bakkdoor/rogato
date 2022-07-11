@@ -1,5 +1,39 @@
-use super::Identifier;
+use crate::rogato::util::indent;
+
+use super::{expression::Expression, Identifier};
 use std::fmt::Display;
+
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct FnDef {
+    id: Identifier,
+    args: FnDefArgs,
+    body: Box<Expression>,
+}
+
+impl FnDef {
+    pub fn new(id: Identifier, args: FnDefArgs, body: Box<Expression>) -> FnDef {
+        FnDef {
+            id: id,
+            args: args,
+            body: body,
+        }
+    }
+
+    pub fn body<'a>(&'a self) -> &'a Expression {
+        &self.body
+    }
+}
+
+impl Display for FnDef {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!(
+            "let {}{} =\n{}",
+            self.id,
+            self.args,
+            indent(self.body.to_owned())
+        ))
+    }
+}
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct FnDefArgs {

@@ -1,9 +1,7 @@
 use std::fmt::Display;
 
 use self::{
-    expression::{Expression, FnDefArgs},
-    module_def::ModuleExports,
-    type_expression::TypeExpression,
+    expression::Expression, fn_def::FnDef, module_def::ModuleDef, type_expression::TypeDef,
 };
 
 pub mod expression;
@@ -20,29 +18,21 @@ pub type Identifier = String;
 
 pub use program::Program;
 
-use super::util::indent;
-
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum AST {
     RootComment(String),
-    FnDef(Identifier, FnDefArgs, Box<Expression>),
-    ModuleDef(Identifier, ModuleExports),
-    TypeDef(Identifier, Box<TypeExpression>),
+    FnDef(FnDef),
+    ModuleDef(ModuleDef),
+    TypeDef(TypeDef),
 }
 
 impl Display for AST {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             AST::RootComment(comment) => f.write_fmt(format_args!("//{}", comment)),
-            AST::FnDef(id, args, body) => {
-                f.write_fmt(format_args!("let {}{} =\n{}", id, args, indent(body)))
-            }
-            AST::ModuleDef(id, exports) => {
-                f.write_fmt(format_args!("module {} {{ {} }}", id, exports))
-            }
-            AST::TypeDef(id, type_expr) => {
-                f.write_fmt(format_args!("type {} :: {}", id, type_expr))
-            }
+            AST::FnDef(fn_def) => f.write_fmt(format_args!("{}", fn_def)),
+            AST::ModuleDef(mod_def) => f.write_fmt(format_args!("{}", mod_def)),
+            AST::TypeDef(type_def) => f.write_fmt(format_args!("{}", type_def)),
         }
     }
 }

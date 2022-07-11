@@ -7,6 +7,27 @@ use self::super::expression::{LambdaArgs, TupleItems};
 use super::Identifier;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
+pub struct TypeDef {
+    id: Identifier,
+    type_expr: Box<TypeExpression>,
+}
+
+impl TypeDef {
+    pub fn new(id: Identifier, type_expr: Box<TypeExpression>) -> TypeDef {
+        TypeDef {
+            id: id,
+            type_expr: type_expr,
+        }
+    }
+}
+
+impl Display for TypeDef {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("type {} :: {}", self.id, self.type_expr))
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub enum TypeExpression {
     IntType,
     StringType,

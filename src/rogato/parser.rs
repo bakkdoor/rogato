@@ -5,8 +5,9 @@ use crate::rogato::ast::{
         Expression, FnCallArgs, FnDefArgs, LambdaArgs, LetBindings, Literal, Query, QueryBinding,
         QueryBindings, QueryGuards, StructProps, TupleItems,
     },
-    module_def::ModuleExports,
-    type_expression::TypeExpression,
+    fn_def::FnDef,
+    module_def::{ModuleDef, ModuleExports},
+    type_expression::{TypeDef, TypeExpression},
     Identifier, Program, AST,
 };
 use peg::{error::ParseError, parser, str::LineCol};
@@ -37,13 +38,13 @@ grammar parser() for str {
 
     rule module_def() -> AST
         = "module " _ id:identifier() _ exports:module_exports() _ {
-            AST::ModuleDef(id, ModuleExports::new(exports))
+            AST::ModuleDef(ModuleDef::new(id, ModuleExports::new(exports)))
         }
         / "module " _ id:identifier() _ "{" _ "}" _ {
-            AST::ModuleDef(id, ModuleExports::new(vec![]))
+            AST::ModuleDef(ModuleDef::new(id, ModuleExports::new(vec![])))
         }
         / "module " _ id:identifier() _ {
-            AST::ModuleDef(id, ModuleExports::new(vec![]))
+            AST::ModuleDef(ModuleDef::new(id, ModuleExports::new(vec![])))
         }
 
     rule module_exports() -> Vec<Identifier>
@@ -58,7 +59,7 @@ grammar parser() for str {
 
     rule fn_def() -> AST
         = _ "let " _ id:identifier() _ args:(fn_def_arg())* _ "=" _ body:(expression()) _ {
-            AST::FnDef(id, FnDefArgs::new(args), Box::new(body))
+            AST::FnDef(FnDef::new(id, FnDefArgs::new(args), Box::new(body)))
         }
 
     rule fn_def_arg() -> Identifier
@@ -68,7 +69,7 @@ grammar parser() for str {
 
     rule type_def() -> AST
         = _ "type " _ id:identifier() _ "::" _ t_expr:type_expr() {
-            AST::TypeDef(id, Box::new(t_expr))
+            AST::TypeDef(TypeDef::new(id, Box::new(t_expr)))
         }
 
     rule type_expr() -> TypeExpression

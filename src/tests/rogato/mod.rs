@@ -7,8 +7,9 @@ use crate::rogato::ast::expression::{
     FnCallArgs, LetBindings, Query, QueryBinding, QueryBindings, QueryGuards, StructProps,
     TupleItems,
 };
-use crate::rogato::ast::module_def::ModuleExports;
-use crate::rogato::ast::AST::{FnDef, ModuleDef};
+use crate::rogato::ast::fn_def::FnDef;
+use crate::rogato::ast::module_def::{ModuleDef, ModuleExports};
+use crate::rogato::ast::type_expression::TypeDef;
 use crate::rogato::ast::{
     expression::{
         Expression::{self, *},
@@ -112,7 +113,11 @@ pub fn product(a: Box<Expression>, b: Box<Expression>) -> Box<Expression> {
 }
 
 pub fn fn_def(id: &str, args: Vec<&str>, body: Box<Expression>) -> Box<AST> {
-    Box::new(FnDef(id.to_string(), fn_def_args(args), body))
+    Box::new(AST::FnDef(FnDef::new(
+        id.to_string(),
+        fn_def_args(args),
+        body,
+    )))
 }
 
 pub fn fn_def_args(args: Vec<&str>) -> FnDefArgs {
@@ -130,7 +135,10 @@ pub fn let_expr(bindings: Vec<(&str, Box<Expression>)>, body: Box<Expression>) -
 }
 
 pub fn module_def(id: &str, exports: Vec<&str>) -> Box<AST> {
-    Box::new(ModuleDef(id.to_string(), module_def_exports(exports)))
+    Box::new(AST::ModuleDef(ModuleDef::new(
+        id.to_string(),
+        module_def_exports(exports),
+    )))
 }
 
 pub fn module_def_exports(exports: Vec<&str>) -> ModuleExports {
@@ -162,7 +170,7 @@ pub fn commented(comment: &str, exp: Box<Expression>) -> Box<Expression> {
 }
 
 pub fn type_def(id: &str, type_expr: Box<TypeExpression>) -> Box<AST> {
-    Box::new(AST::TypeDef(id.to_string(), type_expr))
+    Box::new(AST::TypeDef(TypeDef::new(id.to_string(), type_expr)))
 }
 
 pub fn tuple_type(items: Vec<Box<TypeExpression>>) -> Box<TypeExpression> {
