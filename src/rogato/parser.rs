@@ -2,8 +2,8 @@ extern crate peg;
 
 use crate::rogato::ast::{
     expression::{
-        Expression, FnCallArgs, FnDefArgs, Lambda, LambdaArgs, LetBindings, Literal, Query,
-        QueryBinding, QueryBindings, QueryGuards, StructProps, TupleItems,
+        Expression, FnCallArgs, FnDefArgs, Lambda, LambdaArgs, LetBindings, LetExpression, Literal,
+        Query, QueryBinding, QueryBindings, QueryGuards, StructProps, TupleItems,
     },
     fn_def::FnDef,
     module_def::{ModuleDef, ModuleExports},
@@ -257,7 +257,9 @@ grammar parser() for str {
 
     rule let_expr() -> Expression
         = "let" _ bindings:let_bindings() _ "in" _ body:let_body() {
-            Expression::Let(LetBindings::new(bindings), Box::new(body))
+            Expression::Let(Box::new(
+                LetExpression::new(LetBindings::new(bindings), Box::new(body))
+            ))
         }
 
     rule let_bindings() -> Vec<(Identifier, Expression)>

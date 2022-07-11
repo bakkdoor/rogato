@@ -8,6 +8,7 @@ pub mod expression;
 pub mod fn_call;
 pub mod fn_def;
 pub mod lambda;
+pub mod let_expression;
 pub mod module_def;
 pub mod program;
 pub mod query;

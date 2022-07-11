@@ -1,4 +1,4 @@
-use super::expression::Expression;
+use super::{expression::Expression, walker::Walk};
 use std::fmt::Display;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -20,18 +20,6 @@ impl Query {
             production: production,
         }
     }
-
-    pub fn bindings<'a>(&'a self) -> &'a QueryBindings {
-        &self.bindings
-    }
-
-    pub fn guards<'a>(&'a self) -> &'a QueryGuards {
-        &self.guards
-    }
-
-    pub fn production<'a>(&'a self) -> &'a Expression {
-        &self.production
-    }
 }
 
 impl Display for Query {
@@ -44,6 +32,19 @@ impl Display for Query {
                 self.bindings, self.guards, self.production
             ))
         }
+    }
+}
+
+impl Walk for Query {
+    fn walk<V: super::visitor::Visitor>(&self, v: &mut V) {
+        v.query(self);
+        for binding in self.bindings.iter() {
+            binding.val.walk(v);
+        }
+        for g in self.guards.iter() {
+            g.walk(v);
+        }
+        self.production.walk(v);
     }
 }
 
@@ -118,10 +119,6 @@ impl QueryBinding {
             val: val,
             is_negated: true,
         }
-    }
-
-    pub fn value<'a>(&'a self) -> &'a Expression {
-        &self.val
     }
 }
 

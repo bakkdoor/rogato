@@ -5,7 +5,7 @@ pub mod parser;
 
 use crate::rogato::ast::expression::{
     FnCallArgs, LetBindings, Query, QueryBinding, QueryBindings, QueryGuards, StructProps,
-    TupleItems,
+    TupleItems, LetExpression,
 };
 use crate::rogato::ast::fn_def::FnDef;
 use crate::rogato::ast::module_def::{ModuleDef, ModuleExports};
@@ -131,7 +131,10 @@ pub fn let_expr(bindings: Vec<(&str, Box<Expression>)>, body: Box<Expression>) -
         .map(|(name, expr)| (name.to_string(), *expr))
         .collect();
 
-    Box::new(Let(LetBindings::new(bindings), body))
+    Box::new(Let(Box::new(LetExpression::new(
+        LetBindings::new(bindings),
+        body,
+    ))))
 }
 
 pub fn module_def(id: &str, exports: Vec<&str>) -> Box<AST> {

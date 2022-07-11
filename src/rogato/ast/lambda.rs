@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use super::{expression::Expression, Identifier};
+use super::{expression::Expression, walker::Walk, Identifier};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Lambda {
@@ -15,15 +15,18 @@ impl Lambda {
             body: body,
         }
     }
-
-    pub fn body<'a>(&'a self) -> &'a Expression {
-        &self.body
-    }
 }
 
 impl Display for Lambda {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_fmt(format_args!("({} -> {})", self.args, self.body))
+    }
+}
+
+impl Walk for Lambda {
+    fn walk<V: super::visitor::Visitor>(&self, v: &mut V) {
+        v.lambda(self);
+        self.body.walk(v);
     }
 }
 

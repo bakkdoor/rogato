@@ -1,8 +1,7 @@
-use crate::rogato::util::indent;
-
 pub use super::fn_call::FnCallArgs;
 pub use super::fn_def::FnDefArgs;
 pub use super::lambda::{Lambda, LambdaArgs};
+pub use super::let_expression::{LetBindings, LetExpression};
 pub use super::query::{Query, QueryBinding, QueryBindings, QueryGuards};
 use super::Identifier;
 use std::fmt::Display;
@@ -19,7 +18,7 @@ pub enum Expression {
     ConstOrTypeRef(Identifier),
     PropFnRef(Identifier),
     EdgeProp(Box<Expression>, Identifier),
-    Let(Box<LetBindings>, Box<Expression>),
+    Let(Box<LetExpression>),
     Lambda(Box<Lambda>),
     Query(Box<Query>),
 }
@@ -43,47 +42,10 @@ impl Display for Expression {
             Expression::ConstOrTypeRef(id) => f.write_str(id),
             Expression::PropFnRef(id) => f.write_fmt(format_args!(".{}", id)),
             Expression::EdgeProp(id, edge) => f.write_fmt(format_args!("{}#{}", id, edge)),
-            Expression::Let(bindings, body) => f.write_fmt(format_args!(
-                "let\n{}\nin\n{}",
-                indent(bindings),
-                indent(body)
-            )),
+            Expression::Let(let_expr) => f.write_fmt(format_args!("{}", let_expr)),
             Expression::Lambda(lambda) => f.write_fmt(format_args!("{}", lambda)),
             Expression::Query(query) => f.write_fmt(format_args!("{}", query)),
         }
-    }
-}
-
-#[derive(Clone, PartialEq, Eq, Debug)]
-pub struct LetBindings {
-    bindings: Vec<(Identifier, Expression)>,
-}
-
-impl LetBindings {
-    pub fn new(bindings: Vec<(Identifier, Expression)>) -> Box<LetBindings> {
-        Box::new(LetBindings { bindings: bindings })
-    }
-
-    pub fn iter(&self) -> std::slice::Iter<(String, Expression)> {
-        self.bindings.iter()
-    }
-}
-
-impl Display for LetBindings {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let fmt_str = self
-            .bindings
-            .iter()
-            .map(|(ident, expr)| format!("{} =\n{}", ident, indent(expr)))
-            .fold(String::from(""), |acc, fmt| {
-                if acc == "" {
-                    fmt
-                } else {
-                    format!("{},\n\n{}", acc, fmt)
-                }
-            });
-
-        f.write_fmt(format_args!("{}", fmt_str))
     }
 }
 

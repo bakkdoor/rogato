@@ -51,27 +51,9 @@ impl Walk for Expression {
             Expression::ConstOrTypeRef(id) => v.const_or_type_ref(id),
             Expression::PropFnRef(id) => v.prop_fn_ref(id),
             Expression::EdgeProp(id, edge) => v.edge_prop(id, edge),
-            Expression::Let(bindings, body) => {
-                v.let_(bindings, body);
-                body.walk(v);
-                for (_id, val) in bindings.iter() {
-                    val.walk(v);
-                }
-            }
-            Expression::Lambda(lambda) => {
-                v.lambda(lambda);
-                lambda.body().walk(v);
-            }
-            Expression::Query(query) => {
-                v.query(query);
-                for binding in query.bindings().iter() {
-                    binding.value().walk(v);
-                }
-                for g in query.guards().iter() {
-                    g.walk(v);
-                }
-                query.production().walk(v);
-            }
+            Expression::Let(let_expr) => let_expr.walk(v),
+            Expression::Lambda(lambda) => lambda.walk(v),
+            Expression::Query(query) => query.walk(v),
         }
     }
 }
