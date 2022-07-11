@@ -174,10 +174,10 @@ grammar parser() for str {
         }
 
     rule query_binding() -> QueryBinding
-        = _ "?!" _ vars:query_binding_vars() _ "<-" _ expr:query_expr() {
+        = _ "?!" _ vars:query_binding_vars() _ "<-" _ expr:query_expr() _ {
             QueryBinding::new_negated(vars, Box::new(expr))
         }
-        / _ "?" _ vars:query_binding_vars() _ "<-" _ expr:query_expr() {
+        / _ "?" _ vars:query_binding_vars() _ "<-" _ expr:query_expr() _ {
             QueryBinding::new(vars, Box::new(expr))
         }
 
@@ -193,7 +193,16 @@ grammar parser() for str {
 
     rule query_expr() -> Expression
         = edge_prop()
-        / atom()
+        / "(" _ v:sum() _ ")" { v }
+        / "(" _ c:(fn_call() / op_call()) _ ")" { c }
+        / "(" _ l:lambda() _ ")" { l }
+        / fn_call()
+        / constant_or_type_ref()
+        / variable()
+        / op_call()
+        / lambda()
+        / sum()
+        / literal_expr()
 
     rule edge_prop() -> Expression
         = expr:edge_prop_expr() "#" edge:struct_identifier() {
@@ -215,7 +224,7 @@ grammar parser() for str {
         = c:comment() _ qp:query_production() {
             Expression::Commented(c, Box::new(qp))
         }
-        / "!> " _ expr:query_expr() {
+        / "!> " _ expr:query_expr() _ {
             expr
         }
 
@@ -371,12 +380,19 @@ grammar parser() for str {
         }
 
     rule operator() -> Identifier
-        = id:$(['+' | '-' | '*' | '/' | '>' | '<' | '=' | '!' | '^' | '=' | '|'])+ {
-            String::from_iter(id)
+        = "!" id:$(['+' | '-' | '*' | '/' | '>' | '<' | '=' | '!' | '^' | '=' | '|'])+ {
+            join_string("!", id)
         }
+        / id:$(['+' | '-' | '*' | '/' | '>' | '<' | '=' | '^' | '=' | '|'])+ id2:$(['+' | '-' | '*' | '/' | '>' | '<' | '=' | '!' | '^' | '=' | '|'])* {
+            join_string(String::from_iter(id).as_str(), id2)
+        }
+
 
     rule _
         = ([' ' | '\t' | '\n'])*
+
+    rule ws()
+        = ([' ' | '\t' | '\n'])+
 
     rule comment() -> String
         = [' ' | '\t']* "//" comment:([^ '\n'])* {

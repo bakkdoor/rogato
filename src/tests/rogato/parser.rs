@@ -373,8 +373,8 @@ fn let_expressions() {
         "let
             friendsOfFriends =
                 ? f1, f2 <- people
-                ? f1 <- (friends person)
-                ? f2 <- (friends f1)
+                ? f1 <- friends person
+                ? f2 <- friends f1
                 !> f2,
             friendsNames =
                 (List.map friendsOfFriends name)
@@ -411,8 +411,8 @@ fn let_expressions() {
 fn queries() {
     assert_parse_expr!(
         "? p <- Person
-        ! (isOlderThan p 42)
-        ! (isPopular p)
+        ! isOlderThan p 42
+        ! isPopular p
         !> p",
         query(
             vec![(vec!["p"], const_or_type_ref("Person"), false)],
@@ -427,9 +427,9 @@ fn queries() {
     assert_parse_expr!(
         "? p <- Person
         ? p2 <- Person
-        ! (isOlderThan p 42)
-        ! (isPopular p)
-        ! (isFriendOf p p2)
+        ! isOlderThan p 42
+        ! isPopular p
+        ! isFriendOf p p2
         !> {p, p2}",
         query(
             vec![
@@ -467,8 +467,8 @@ fn queries() {
     assert_parse_expr!(
         "? p1 <- people
          ? p2 <- people
-         ? f <- (friends p1)
-         ? f <- (friends p2)
+         ? f <- friends p1
+         ? f <- friends p2
          !> f",
         query(
             vec![
@@ -484,8 +484,8 @@ fn queries() {
 
     assert_parse_expr!(
         "? p1, p2 <- people
-         ? f <- (friends p1)
-         ? f <- (friends p2)
+         ? f <- friends p1
+         ? f <- friends p2
          !> f",
         query(
             vec![
@@ -502,8 +502,8 @@ fn queries() {
         "? a,
            b
            ,c <- Data
-         ? diff <- (dataDiff a b c)
-         ! (0 < (a + (b + c)))
+         ? diff <- dataDiff a b c
+         ! 0 < (a + (b + c))
          !> {diff, {a, b, c}}",
         query(
             vec![
@@ -553,6 +553,26 @@ fn queries() {
             ],
             vec![],
             var("p")
+        )
+    );
+
+    assert_parse_expr!(
+        "? p <- Person
+         ? p <- hello 1 2
+         ?! p <- (a + b)
+         !> inspect p",
+        query(
+            vec![
+                (vec!["p"], const_or_type_ref("Person"), false),
+                (
+                    vec!["p"],
+                    fn_call("hello", vec![int_lit(1), int_lit(2)]),
+                    false
+                ),
+                (vec!["p"], sum(var("a"), var("b")), true)
+            ],
+            vec![],
+            fn_call("inspect", vec![var("p")])
         )
     );
 }
