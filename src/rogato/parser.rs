@@ -273,6 +273,16 @@ grammar parser() for str {
             bindings
         }
 
+    rule additional_let_binding() -> (Identifier, Expression)
+        = _ "," _ binding:let_binding() {
+            binding
+        }
+
+    rule let_binding() -> (Identifier, Expression)
+        = _ id:identifier() _ "=" _ val:let_body() _ {
+            (id, val)
+        }
+
     rule let_body() -> Expression
         = lambda()
         / fn_call()
@@ -286,16 +296,6 @@ grammar parser() for str {
     rule commented_let_body() -> Expression
         = c:comment() _ body:let_body() {
             Expression::Commented(c, Box::new(body))
-        }
-
-    rule additional_let_binding() -> (Identifier, Expression)
-        = _ "," _ binding:let_binding() {
-            binding
-        }
-
-    rule let_binding() -> (Identifier, Expression)
-        = _ id:identifier() _ "=" _ val:let_body() _ {
-            (id, val)
         }
 
     rule literal_expr() -> Expression
