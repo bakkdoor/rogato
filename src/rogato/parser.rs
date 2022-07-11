@@ -123,8 +123,8 @@ grammar parser() for str {
         = let_expr()
         / query()
         / fn_call()
-        / op_call()
         / lambda()
+        / op_call()
         / sum()
         / variable()
         / literal_expr()
@@ -152,8 +152,8 @@ grammar parser() for str {
         / literal_expr()
         / constant_or_type_ref()
         / "(" _ v:sum() _ ")" { v }
-        / "(" _ c:(fn_call() / op_call()) _ ")" { c }
         / "(" _ l:lambda() _ ")" { l }
+        / "(" _ c:(fn_call() / op_call()) _ ")" { c }
 
     rule variable() -> Expression
         = id:variable_identifier() {
@@ -195,13 +195,13 @@ grammar parser() for str {
     rule query_expr() -> Expression
         = edge_prop()
         / "(" _ v:sum() _ ")" { v }
-        / "(" _ c:(fn_call() / op_call()) _ ")" { c }
         / "(" _ l:lambda() _ ")" { l }
+        / "(" _ c:(fn_call() / op_call()) _ ")" { c }
         / fn_call()
         / constant_or_type_ref()
         / variable()
-        / op_call()
         / lambda()
+        / op_call()
         / sum()
         / literal_expr()
 
@@ -269,8 +269,8 @@ grammar parser() for str {
 
     rule let_body() -> Expression
         = fn_call()
-        / op_call()
         / lambda()
+        / op_call()
         / sum()
         / variable()
         / literal_expr()
