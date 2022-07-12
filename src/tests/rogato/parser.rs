@@ -174,6 +174,17 @@ fn literals() {
     );
 
     assert_parse_expr!("[]", list_lit(vec![]));
+    assert_parse_expr!(
+        "[
+        ]",
+        list_lit(vec![])
+    );
+    assert_parse_expr!(
+        "[
+            // empty with comment
+        ]",
+        list_lit(vec![])
+    );
     assert_parse_expr!("[1]", list_lit(vec![int_lit(1)]));
     assert_parse_expr!(
         "[1, \"foo\"]",
