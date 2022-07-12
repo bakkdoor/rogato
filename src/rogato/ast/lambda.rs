@@ -21,11 +21,15 @@ impl Lambda {
 
 impl Display for Lambda {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!(
-            "({} ->\n{})",
-            self.args,
-            indent(self.body.clone())
-        ))
+        if self.ast_depth() > 5 {
+            f.write_fmt(format_args!(
+                "({} ->\n{})",
+                self.args,
+                indent(self.body.clone())
+            ))
+        } else {
+            f.write_fmt(format_args!("({} -> {})", self.args, self.body))
+        }
     }
 }
 
