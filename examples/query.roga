@@ -40,18 +40,18 @@ let friendsAndFamilyWithin people person =
     family =
       ? p <- people
       ? p <- person#Related
-      !> p,
+      !> p
 
     friends = p ->
       ? f <- people
       ? f <- p#Friend
-      !> f,
+      !> f
 
     friendsOfFriends =
       ? p, f <- people
       ? p <- person#Friend
       ? f <- p#Friend
-      !> f,
+      !> f
 
     friendsOfFriendsWithoutFamily =
       ? p <- friendsOfFriends

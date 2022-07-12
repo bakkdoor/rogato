@@ -274,12 +274,16 @@ grammar parser() for str {
         }
 
     rule additional_let_binding() -> (Identifier, Expression)
-        = _ "," _ binding:let_binding() {
+        = let_binding_sep()* binding:let_binding() {
             binding
         }
 
+    rule let_binding_sep()
+        = " "* "\n"+
+        / ","
+
     rule let_binding() -> (Identifier, Expression)
-        = _ id:identifier() _ "=" _ val:let_body() _ {
+        = _ id:identifier() _ "=" _ val:let_body() {
             (id, val)
         }
 

@@ -51,8 +51,12 @@ fn fn_defs() {
 
     assert_parse_ast!(
         "let foo a b =
-            let x = a + b,
-                y = x * a,
+            let
+                x = (
+                    a + b
+                )
+                y = x *
+                    a
                 z = y * b
             in
                 {x, y, z, {x, y}}
@@ -331,8 +335,8 @@ fn type_defs() {
 #[test]
 fn let_expressions() {
     assert_parse_expr!(
-        "let name = \"John Connor\",
-             age = 12,
+        "let name = \"John Connor\"
+             age = 12
              city = \"Los Angeles\"
         in
             {name, age, city}",
