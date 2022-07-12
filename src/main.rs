@@ -1,4 +1,5 @@
 mod rogato;
+use regex::Regex;
 use std::fmt::{Debug, Display};
 use std::io::{self, Read};
 use std::path::Path;
@@ -105,7 +106,12 @@ fn print_parse_result<T: Display, E: Display>(code: &str, result: &Result<T, E>)
 fn run_repl() {
     loop {
         let mut buffer = String::new();
-        io::stdin().read_line(&mut buffer).unwrap();
+        let has_more_lines = Regex::new(r"(\\\s*)$").unwrap();
+        while buffer.len() == 0 || has_more_lines.is_match(buffer.as_str()) {
+            let replaced_buff = has_more_lines.replace(buffer.as_str(), "\n");
+            buffer = replaced_buff.to_string();
+            io::stdin().read_line(&mut buffer).unwrap();
+        }
         match parse(buffer.as_str()) {
             Ok(exp) => {
                 println!("OK> {:?}\n{}", exp, exp);
