@@ -180,7 +180,8 @@ grammar parser() for str {
         / atom()
 
     rule atom() -> Expression
-        = variable()
+        = edge_prop()
+        / variable()
         / literal_expr()
         / constant_or_type_ref()
         / "(" _ v:sum() _ ")" { v }
@@ -288,6 +289,7 @@ grammar parser() for str {
         }
         / sum()
         / literal_expr()
+        / edge_prop()
         / variable()
 
     rule let_expr() -> Expression
