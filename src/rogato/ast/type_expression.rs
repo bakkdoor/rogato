@@ -4,7 +4,7 @@ use crate::rogato::util::indent;
 
 use self::super::expression::{LambdaArgs, TupleItems};
 
-use super::Identifier;
+use super::{ASTDepth, Identifier};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct TypeDef {
@@ -24,6 +24,12 @@ impl TypeDef {
 impl Display for TypeDef {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_fmt(format_args!("type {} :: {}", self.id, self.type_expr))
+    }
+}
+
+impl ASTDepth for TypeDef {
+    fn ast_depth(&self) -> usize {
+        1 + self.type_expr.ast_depth()
     }
 }
 
@@ -64,6 +70,29 @@ impl Display for TypeExpression {
                     });
 
                 f.write_fmt(format_args!("{{\n{}\n}}", indent(fmt_str)))
+            }
+        }
+    }
+}
+
+impl ASTDepth for TypeExpression {
+    fn ast_depth(&self) -> usize {
+        match self {
+            TypeExpression::IntType => 1,
+            TypeExpression::StringType => 1,
+            TypeExpression::TypeRef(_) => 1,
+            TypeExpression::FunctionType(arg_types, return_type) => {
+                1 + arg_types.ast_depth() + return_type.ast_depth()
+            }
+            TypeExpression::TupleType(el_types) => {
+                1 + el_types.iter().map(|t| t.ast_depth()).sum::<usize>()
+            }
+            TypeExpression::ListType(type_expr) => 1 + type_expr.ast_depth(),
+            TypeExpression::StructType(prop_types) => {
+                1 + prop_types
+                    .iter()
+                    .map(|(_id, type_expr)| type_expr.ast_depth())
+                    .sum::<usize>()
             }
         }
     }

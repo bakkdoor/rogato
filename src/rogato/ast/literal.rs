@@ -1,4 +1,4 @@
-use super::{expression::Expression, Identifier};
+use super::{expression::Expression, ASTDepth, Identifier};
 use crate::rogato::{db::val, interpreter::Evaluate};
 use serde_json::Value;
 use std::fmt::Display;
@@ -20,6 +20,23 @@ impl Display for Literal {
             Literal::TupleLit(items) => f.write_fmt(format_args!("{{ {} }}", items)),
             Literal::ListLit(items) => f.write_fmt(format_args!("[ {} ]", items)),
             Literal::StructLit(id, props) => f.write_fmt(format_args!("{}{{ {} }}", id, props)),
+        }
+    }
+}
+
+impl ASTDepth for Literal {
+    fn ast_depth(&self) -> usize {
+        match self {
+            Literal::Int64Lit(_) => 1,
+            Literal::StringLit(_) => 1,
+            Literal::TupleLit(items) => 1 + items.iter().map(|i| i.ast_depth()).sum::<usize>(),
+            Literal::ListLit(items) => 1 + items.iter().map(|i| i.ast_depth()).sum::<usize>(),
+            Literal::StructLit(_id, props) => {
+                1 + props
+                    .iter()
+                    .map(|(_name, val)| val.ast_depth())
+                    .sum::<usize>()
+            }
         }
     }
 }

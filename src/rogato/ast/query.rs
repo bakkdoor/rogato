@@ -1,4 +1,4 @@
-use super::{expression::Expression, walker::Walk};
+use super::{expression::Expression, walker::Walk, ASTDepth};
 use std::fmt::Display;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -28,6 +28,15 @@ impl Display for Query {
                 self.bindings, self.guards, self.production
             ))
         }
+    }
+}
+
+impl ASTDepth for Query {
+    fn ast_depth(&self) -> usize {
+        self.bindings.ast_depth()
+            + self.guards.iter().map(|g| g.ast_depth()).sum::<usize>()
+            + self.production.ast_depth()
+            + 1
     }
 }
 
@@ -158,6 +167,12 @@ impl QueryBindings {
     }
 }
 
+impl ASTDepth for QueryBinding {
+    fn ast_depth(&self) -> usize {
+        1 + self.val.ast_depth()
+    }
+}
+
 impl Display for QueryBindings {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let fmt_str = self
@@ -173,5 +188,11 @@ impl Display for QueryBindings {
             });
 
         f.write_fmt(format_args!("{}", fmt_str))
+    }
+}
+
+impl ASTDepth for QueryBindings {
+    fn ast_depth(&self) -> usize {
+        1 + self.bindings.iter().map(|b| b.ast_depth()).sum::<usize>()
     }
 }

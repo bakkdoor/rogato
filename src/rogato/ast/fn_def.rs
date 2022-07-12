@@ -1,6 +1,6 @@
 use crate::rogato::util::indent;
 
-use super::{expression::Expression, Identifier};
+use super::{expression::Expression, ASTDepth, Identifier};
 use std::fmt::Display;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -32,6 +32,12 @@ impl Display for FnDef {
             self.args,
             indent(self.body.to_owned())
         ))
+    }
+}
+
+impl ASTDepth for FnDef {
+    fn ast_depth(&self) -> usize {
+        1 + self.args.len() + self.body.ast_depth()
     }
 }
 

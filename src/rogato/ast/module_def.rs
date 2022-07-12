@@ -1,4 +1,4 @@
-use super::Identifier;
+use super::{ASTDepth, Identifier};
 use std::fmt::Display;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -19,6 +19,12 @@ impl ModuleDef {
 impl Display for ModuleDef {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_fmt(format_args!("module {} {{ {} }}", self.id, self.exports))
+    }
+}
+
+impl ASTDepth for ModuleDef {
+    fn ast_depth(&self) -> usize {
+        1 + self.exports.ast_depth()
     }
 }
 
@@ -60,5 +66,11 @@ impl Display for ModuleExports {
                 });
 
         f.write_fmt(format_args!("{}", fmt_str))
+    }
+}
+
+impl ASTDepth for ModuleExports {
+    fn ast_depth(&self) -> usize {
+        self.exports.len()
     }
 }

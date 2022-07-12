@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use crate::rogato::util::indent;
 
-use super::{expression::Expression, visitor::Visitor, walker::Walk, Identifier};
+use super::{expression::Expression, visitor::Visitor, walker::Walk, ASTDepth, Identifier};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct LetExpression {
@@ -26,6 +26,12 @@ impl Display for LetExpression {
             indent(self.bindings.clone()),
             indent(self.body.clone())
         ))
+    }
+}
+
+impl ASTDepth for LetExpression {
+    fn ast_depth(&self) -> usize {
+        1 + self.bindings.ast_depth() + self.body.ast_depth()
     }
 }
 
@@ -69,5 +75,15 @@ impl Display for LetBindings {
             });
 
         f.write_fmt(format_args!("{}", fmt_str))
+    }
+}
+
+impl ASTDepth for LetBindings {
+    fn ast_depth(&self) -> usize {
+        1 + self
+            .bindings
+            .iter()
+            .map(|(_id, expr)| expr.ast_depth())
+            .sum::<usize>()
     }
 }

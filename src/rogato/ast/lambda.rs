@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use crate::rogato::util::indent;
 
-use super::{expression::Expression, walker::Walk, Identifier};
+use super::{expression::Expression, walker::Walk, ASTDepth, Identifier};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Lambda {
@@ -29,6 +29,12 @@ impl Display for Lambda {
     }
 }
 
+impl ASTDepth for Lambda {
+    fn ast_depth(&self) -> usize {
+        1 + self.args.len() + self.body.ast_depth()
+    }
+}
+
 impl Walk for Lambda {
     fn walk<V: super::visitor::Visitor>(&self, v: &mut V) {
         v.lambda(self);
@@ -41,7 +47,13 @@ pub struct LambdaArgs<A: Display> {
     args: Vec<A>,
 }
 
-impl<A: Display> LambdaArgs<A> {
+impl ASTDepth for String {
+    fn ast_depth(&self) -> usize {
+        1
+    }
+}
+
+impl<A: Display + ASTDepth> LambdaArgs<A> {
     pub fn new(args: Vec<A>) -> LambdaArgs<A> {
         LambdaArgs { args: args }
     }
@@ -57,7 +69,7 @@ impl<A: Display> LambdaArgs<A> {
     }
 }
 
-impl<A: Display> Display for LambdaArgs<A> {
+impl<A: Display + ASTDepth> Display for LambdaArgs<A> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let fmt_str = self.args.iter().fold(String::from(""), |acc, arg| {
             if acc == "" {
@@ -68,5 +80,11 @@ impl<A: Display> Display for LambdaArgs<A> {
         });
 
         f.write_fmt(format_args!("{}", fmt_str))
+    }
+}
+
+impl<A: Display + ASTDepth> ASTDepth for LambdaArgs<A> {
+    fn ast_depth(&self) -> usize {
+        self.args.iter().map(|a| a.ast_depth()).sum::<usize>()
     }
 }

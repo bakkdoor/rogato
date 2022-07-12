@@ -9,7 +9,7 @@ pub use super::lambda::{Lambda, LambdaArgs};
 pub use super::let_expression::{LetBindings, LetExpression};
 pub use super::literal::*;
 pub use super::query::{Query, QueryBinding, QueryBindings, QueryGuards};
-use super::Identifier;
+use super::{ASTDepth, Identifier};
 use std::fmt::Display;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -27,6 +27,26 @@ pub enum Expression {
     Let(LetExpression),
     Lambda(Lambda),
     Query(Query),
+}
+
+impl ASTDepth for Expression {
+    fn ast_depth(&self) -> usize {
+        match self {
+            Expression::Commented(_, e) => 1 + e.ast_depth(),
+            Expression::Lit(lit_exp) => lit_exp.ast_depth(),
+            Expression::Sum(a, b) => a.ast_depth() + b.ast_depth(),
+            Expression::Product(a, b) => a.ast_depth() + b.ast_depth(),
+            Expression::FnCall(_id, args) => args.iter().map(|a| a.ast_depth()).sum(),
+            Expression::OpCall(_id, left, right) => left.ast_depth() + right.ast_depth(),
+            Expression::Var(_id) => 1,
+            Expression::ConstOrTypeRef(_id) => 1,
+            Expression::PropFnRef(_id) => 1,
+            Expression::EdgeProp(expr, _edge) => 1 + expr.ast_depth(),
+            Expression::Let(let_expr) => let_expr.ast_depth(),
+            Expression::Lambda(lambda) => lambda.ast_depth(),
+            Expression::Query(query) => query.ast_depth(),
+        }
+    }
 }
 
 impl Display for Expression {
