@@ -7,7 +7,7 @@ use indent_write::indentable::Indentable;
 use rogato::db;
 #[allow(unused_imports)]
 use rogato::db::{EdgeQueryExt, VertexQueryExt};
-use rogato::parser::{parse, parse_expr};
+use rogato::parser::parse;
 use std::fs::File;
 
 use crate::rogato::util::print_error;
@@ -32,22 +32,6 @@ fn main() {
                 println!("Running REPL");
                 run_repl();
             }
-            "parse" => {
-                println!("Running parse tests");
-                try_parse_root_defs();
-                try_parse_expressions();
-            }
-            "examples" => {
-                println!("Trying to parse example files");
-                match std::fs::read_dir(Path::new("examples/")) {
-                    Ok(rd) => {
-                        for e in rd {
-                            read_parse_file(e.unwrap().path().as_path());
-                        }
-                    }
-                    Err(_) => {}
-                }
-            }
             "db" => {
                 println!("Running db tests");
                 println!("Opening DB @ {}", DB_PATH);
@@ -57,7 +41,13 @@ fn main() {
             file => {
                 println!("Attempting file parse: {}", file);
                 let file_path = Path::new(file);
-                read_parse_file(file_path);
+                if file_path.exists() {
+                    read_parse_file(file_path);
+                } else {
+                    eprintln!("File not found: {:?}. Aborting.", file);
+                    help_required = true;
+                    break;
+                }
             }
         }
     }
@@ -85,46 +75,6 @@ fn read_parse_file(file_path: &Path) {
 fn print_help() {
     println!("Possible arguments:");
     println!("  help\n  repl\n  parse\n  examples\n  db");
-}
-
-fn try_parse_root_defs() {
-    for root_def in [
-        "module MyModule",
-        "module MyModule { foo, bar, baz }",
-        "module MyModule {  foo,     bar,   baz   }",
-        "let squared x = x",
-        "let add a b = 1 + b",
-        "let addTwice a b = 2 * (a + b)",
-        "let complexMath a b c =
-            let x = 2 * (a + b * c),
-                y = y * a + b * c,
-                z = addTwice (squared (x * y)) (x * y)
-            in
-                y * z
-        ",
-    ] {
-        print_parse_result(root_def, &parse(root_def))
-    }
-}
-
-fn try_parse_expressions() {
-    for expr_code in [
-        "1",
-        "1+1",
-        "2+(3+4)",
-        "1*2",
-        "(2*3)*(3+5)",
-        "2 * 3 + 4 * 8",
-        "3 + (4 * 5)",
-        "myFunction 2 3",
-        "foo (bar 1)",
-        "foo (bar 1) 2 3",
-        "foo (bar (baz (3 * ((4 * 5) * (6 + 7)))))",
-        "to-upper a b",
-        "      to-upper   (  __do-something-with__         a-var        b_var      )   ",
-    ] {
-        print_parse_result(expr_code, &parse_expr(expr_code))
-    }
 }
 
 fn print_parse_result<T: Display, E: Display>(code: &str, result: &Result<T, E>) {
