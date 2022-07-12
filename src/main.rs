@@ -67,14 +67,14 @@ fn read_parse_file(file_path: &Path) {
             print_parse_result(buf.as_str(), &parse_result);
         }
         Err(error) => {
-            println!("Could not open example source file: {:?}", error);
+            println!("Could not open source file: {:?}", error);
         }
     }
 }
 
 fn print_help() {
     println!("Possible arguments:");
-    println!("  help\n  repl\n  parse\n  examples\n  db");
+    println!("  help\n  repl\n  db\n  <source file path>");
 }
 
 fn print_parse_result<T: Display, E: Display>(code: &str, result: &Result<T, E>) {
