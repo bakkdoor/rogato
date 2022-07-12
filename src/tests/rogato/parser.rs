@@ -84,17 +84,23 @@ fn fn_defs() {
 #[test]
 fn module_defs() {
     assert_parse_ast!("module MyModule", module_def("MyModule", vec![]));
+
     assert_parse_ast!("module MyModule {}", module_def("MyModule", vec![]));
+
     assert_parse_ast!("module MyModule {    }", module_def("MyModule", vec![]));
+
     assert_parse_ast!("module MyModule {\n\n}", module_def("MyModule", vec![]));
+
     assert_parse_ast!(
         "module MyModule {Foo_bar-baz}",
         module_def("MyModule", vec!["Foo_bar-baz"])
     );
+
     assert_parse_ast!(
         "module MyModule {foo, bar}",
         module_def("MyModule", vec!["foo", "bar"])
     );
+
     assert_parse_ast!(
         "module MyModule { func1, func2, func3 }",
         module_def("MyModule", vec!["func1", "func2", "func3"])
@@ -123,7 +129,9 @@ fn arithmetic_expressions() {
     );
 
     assert!(parse_expr("(22+)+1").is_err());
+
     assert!(parse_expr("1++1").is_err());
+
     assert!(parse_expr("3)+1").is_err());
 }
 
@@ -174,22 +182,27 @@ fn literals() {
     );
 
     assert_parse_expr!("[]", list_lit(vec![]));
+
     assert_parse_expr!(
         "[
         ]",
         list_lit(vec![])
     );
+
     assert_parse_expr!(
         "[
             // empty with comment
         ]",
         list_lit(vec![])
     );
+
     assert_parse_expr!("[1]", list_lit(vec![int_lit(1)]));
+
     assert_parse_expr!(
         "[1, \"foo\"]",
         list_lit(vec![int_lit(1), string_lit("foo")])
     );
+
     assert_parse_expr!(
         "[1, \"foo\", {2, \"bar\"}]",
         list_lit(vec![
@@ -205,6 +218,7 @@ fn fn_calls() {
     assert_parse_expr!("add 1 2", fn_call("add", vec![int_lit(1), int_lit(2)]));
 
     assert_parse_expr!("add 1 a", fn_call("add", vec![int_lit(1), var("a")]));
+
     assert_parse_expr!("add a 1", fn_call("add", vec![var("a"), int_lit(1)]));
 
     assert_parse_expr!(
@@ -269,6 +283,7 @@ fn op_calls() {
 #[test]
 fn comments() {
     assert_parse!("// a comment", program(vec![root_comment(" a comment")]));
+
     assert_parse!(
         "// a comment\n       // another comment",
         program(vec![
@@ -276,6 +291,7 @@ fn comments() {
             root_comment(" another comment")
         ])
     );
+
     assert_parse!(
         "// a comment\n\t // \n\n\t //what ok         \n       // another comment",
         program(vec![
@@ -595,8 +611,11 @@ fn queries() {
 #[test]
 fn variables() {
     assert_parse_expr!("foo", var("foo"));
+
     assert_parse_expr!(".foo", prop_fn_ref("foo"));
+
     assert_parse_expr!("Foo", const_or_type_ref("Foo"));
+
     assert_parse_expr!(
         "{.foo, .bar}",
         tuple_lit(vec![prop_fn_ref("foo"), prop_fn_ref("bar")])

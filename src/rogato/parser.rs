@@ -366,7 +366,7 @@ grammar parser() for str {
         / "[" _ "]" {
             Expression::Lit(Literal::ListLit(TupleItems::from(vec![])))
         }
-        / "[" _ c:comment() _ "]" {
+        / "[" _ comment() _ "]" {
             Expression::Lit(Literal::ListLit(TupleItems::from(vec![])))
         }
 
