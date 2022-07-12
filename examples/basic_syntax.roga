@@ -19,3 +19,8 @@ let join a b c =
 // this is a comment
 // and another one
 let belowComment = "this function has a comment above!"
+
+let foo x =
+  x
+  |> inspect
+  |> repeat 10

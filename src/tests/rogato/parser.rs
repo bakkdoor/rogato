@@ -636,3 +636,40 @@ fn lambdas() {
         )
     );
 }
+
+#[test]
+fn fn_pipes() {
+    assert_parse_expr!(
+        "2 |> inspect |> repeat 10",
+        fn_call(
+            "repeat",
+            vec![fn_call("inspect", vec![int_lit(2)]), int_lit(10)]
+        )
+    );
+
+    assert_parse_expr!(
+        "2
+         |> joinWith {1,2,3}
+         |> select (x -> isHappy x)
+         |> sumBy (delta 1)",
+        fn_call(
+            "sumBy",
+            vec![
+                fn_call(
+                    "select",
+                    vec![
+                        fn_call(
+                            "joinWith",
+                            vec![
+                                int_lit(2),
+                                tuple_lit(vec![int_lit(1), int_lit(2), int_lit(3)])
+                            ]
+                        ),
+                        lambda(vec!["x"], fn_call("isHappy", vec![var("x")]))
+                    ]
+                ),
+                fn_call("delta", vec![int_lit(1)])
+            ]
+        )
+    );
+}

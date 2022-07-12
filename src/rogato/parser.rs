@@ -123,6 +123,7 @@ grammar parser() for str {
 
     pub rule expression() -> Expression
         = let_expr()
+        / fn_pipe()
         / query()
         / lambda()
         / fn_call()
@@ -131,6 +132,35 @@ grammar parser() for str {
         / variable()
         / literal_expr()
         / commented_expr()
+
+    rule fn_pipe() -> Expression
+        = a:fn_pipe_arg() calls:(fn_pipe_call())+ {
+            let call = calls.iter().fold(a, |acc, call|{
+                if let Expression::FnCall(id, args) = call {
+                    let mut args = args.clone();
+                    args.prepend_arg(acc);
+                    return Expression::FnCall(id.clone(), args)
+                }
+                panic!("Failed to create fn call pipeline")
+            });
+
+            call
+        }
+
+    rule fn_pipe_arg() -> Expression
+        = lambda()
+        / sum()
+        / fn_call()
+        / op_call()
+        / atom()
+
+    rule fn_pipe_call() -> Expression
+        = _ "|>" _ fc:fn_call() {
+            fc
+        }
+        / _ "|>" _ id:variable_identifier() {
+            Expression::FnCall(id, FnCallArgs::new(vec![]))
+        }
 
     rule commented_expr() -> Expression
         = c:comment() _ e:expression() {
@@ -155,7 +185,8 @@ grammar parser() for str {
         / constant_or_type_ref()
         / "(" _ v:sum() _ ")" { v }
         / "(" _ l:lambda() _ ")" { l }
-        / "(" _ c:(fn_call() / op_call()) _ ")" { c }
+        / "(" _ c:(fn_pipe() / fn_call() / op_call()) _ ")" { c }
+
 
     rule variable() -> Expression
         = id:variable_identifier() {
@@ -200,7 +231,7 @@ grammar parser() for str {
         = edge_prop()
         / "(" _ v:sum() _ ")" { v }
         / "(" _ l:lambda() _ ")" { l }
-        / "(" _ c:(fn_call() / op_call()) _ ")" { c }
+        / "(" _ c:(fn_pipe() / fn_call() / op_call()) _ ")" { c }
         / fn_call()
         / constant_or_type_ref()
         / lambda()
@@ -289,6 +320,7 @@ grammar parser() for str {
 
     rule let_body() -> Expression
         = lambda()
+        / fn_pipe()
         / fn_call()
         / op_call()
         / sum()
@@ -336,7 +368,8 @@ grammar parser() for str {
         }
 
     rule tuple_item() -> Expression
-        = fn_call()
+        = fn_pipe()
+        / fn_call()
         / op_call()
         / sum()
         / atom()
