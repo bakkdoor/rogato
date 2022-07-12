@@ -16,7 +16,7 @@ impl Display for Literal {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Literal::Int64Lit(num) => f.write_fmt(format_args!("{}", num)),
-            Literal::StringLit(string) => f.write_fmt(format_args!("{}", string)),
+            Literal::StringLit(string) => f.write_fmt(format_args!("\"{}\"", string)),
             Literal::TupleLit(items) => f.write_fmt(format_args!("{{ {} }}", items)),
             Literal::ListLit(items) => f.write_fmt(format_args!("[ {} ]", items)),
             Literal::StructLit(id, props) => f.write_fmt(format_args!("{}{{ {} }}", id, props)),
