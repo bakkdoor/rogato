@@ -12,12 +12,21 @@ use rogato::parser::{parse, parse_expr};
 use std::fs::File;
 
 use crate::rogato::interpreter::{EvalContext, Evaluate};
+use clap::Parser;
+
 use crate::rogato::util::print_error;
 
 const DB_PATH: &str = "./rogato.db";
 
 #[cfg(test)]
 mod tests;
+
+#[derive(Parser, Debug)]
+#[clap(author,version,about,long_about=None)]
+struct CLIArgs {
+    #[clap(short, long, value_parser)]
+    name: String,
+}
 
 fn main() {
     let args = std::env::args().skip(1);
