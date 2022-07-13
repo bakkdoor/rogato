@@ -346,6 +346,7 @@ grammar parser() for str {
 
     rule let_body() -> Expression
         = lambda()
+        / query()
         / fn_pipe()
         / fn_call()
         / op_call()
@@ -354,7 +355,6 @@ grammar parser() for str {
         / quoted_expr()
         / literal_expr()
         / commented_let_body()
-        / query()
 
     rule commented_let_body() -> Expression
         = c:comment() _ body:let_body() {
