@@ -3,6 +3,8 @@
 
 🛠 (Still WIP) 🛠
 
+[![CI](https://github.com/bakkdoor/rogato/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/bakkdoor/rogato/actions/workflows/ci.yml)
+
 **rogātō** aims to provide a simple yet powerful functional programming interface to a built-in graph database, powered by [indradb](https://github.com/indradb/indradb).
 
 The syntax is inspired mostly by languages like Elm, F#, Haskell and Elixir. The goal is to provide a basic standard library for common tasks. The language is still at a very early stage, so a lot is still missing.
