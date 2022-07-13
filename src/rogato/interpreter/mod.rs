@@ -1,6 +1,6 @@
 use self::environment::Environment;
 
-use super::db::ObjectStorage;
+use super::db::{val, ObjectStorage, Value};
 
 pub mod environment;
 pub mod module;
@@ -32,6 +32,11 @@ impl<'a> EvalContext<'a> {
 
     pub fn env(&'a self) -> &'a Environment<'a> {
         &self.env
+    }
+
+    pub fn call_function(&self, id: &str, args: Vec<Value>) -> Value {
+        // TODO
+        val::string(format!("call function {}({:?})", id, args))
     }
 }
 

@@ -78,13 +78,23 @@ impl<'a> Evaluate<'a, Value> for Expression {
         match self {
             Expression::Commented(_c, e) => e.evaluate(context),
             Expression::Lit(lit_exp) => lit_exp.evaluate(context),
-            Expression::Sum(a, b) => val::number(
-                a.evaluate(context).as_i64().unwrap() + b.evaluate(context).as_i64().unwrap(),
-            ),
+            Expression::Sum(a, b) => {
+                match (a.evaluate(context), b.evaluate(context)) {
+                    (Value::Number(n1), Value::Number(n2)) => {
+                        // todo: add support for other number types
+                        let num = n1.as_i64().unwrap() + n2.as_i64().unwrap();
+                        val::number(num)
+                    }
+                    (val1, val2) => context.call_function("+", vec![val1, val2]),
+                }
+            }
             Expression::Product(a, b) => val::number(
                 a.evaluate(context).as_i64().unwrap() * b.evaluate(context).as_i64().unwrap(),
             ),
-            Expression::FnCall(fn_ident, args) => val::string(format!("{}({})", fn_ident, args)),
+            Expression::FnCall(fn_ident, args) => {
+                let call_args = args.iter().map(|a| a.evaluate(context)).collect();
+                context.call_function(fn_ident, call_args)
+            }
             Expression::OpCall(op_ident, left, right) => {
                 val::string(format!("{} {} {}", op_ident, left, right))
             }
