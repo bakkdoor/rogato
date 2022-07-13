@@ -236,3 +236,7 @@ pub fn symbol(id: &str) -> Box<Expression> {
 pub fn quoted(expr: Box<Expression>) -> Box<Expression> {
     Box::new(Expression::Quoted(expr))
 }
+
+pub fn unquoted(expr: Box<Expression>) -> Box<Expression> {
+    Box::new(Expression::Unquoted(expr))
+}

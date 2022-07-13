@@ -27,4 +27,5 @@ pub trait Visitor {
     fn query(&mut self, _query: &Query) {}
     fn symbol(&mut self, _id: &Identifier) {}
     fn quoted(&mut self, _expr: &Expression) {}
+    fn unquoted(&mut self, _expr: &Expression) {}
 }

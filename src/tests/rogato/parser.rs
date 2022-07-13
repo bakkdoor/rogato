@@ -1,6 +1,6 @@
 use crate::tests::rogato::{
     commented, edge_prop, int_type, list_lit, prop_fn_ref, quoted, root_comment, string_type,
-    struct_lit, struct_type, symbol, tuple_type, type_def, type_ref,
+    struct_lit, struct_type, symbol, tuple_type, type_def, type_ref, unquoted,
 };
 #[cfg(test)]
 use crate::{assert_parse, assert_parse_ast, assert_parse_expr};
@@ -210,29 +210,6 @@ fn literals() {
             string_lit("foo"),
             tuple_lit(vec![int_lit(2), string_lit("bar")])
         ])
-    );
-
-    assert_parse_expr!("^symbol", symbol("symbol"));
-
-    assert_parse_expr!("^AnotherSymbol", symbol("AnotherSymbol"));
-
-    assert_parse_expr!(
-        "^(quoted expression)",
-        quoted(fn_call("quoted", vec![var("expression")]))
-    );
-
-    assert_parse_expr!(
-        "^(quoted (expression \"in quotes\" {1, 2, 3}))",
-        quoted(fn_call(
-            "quoted",
-            vec![fn_call(
-                "expression",
-                vec![
-                    string_lit("in quotes"),
-                    tuple_lit(vec![int_lit(1), int_lit(2), int_lit(3)])
-                ]
-            )]
-        ))
     );
 }
 
@@ -724,5 +701,60 @@ fn fn_pipes() {
                 fn_call("delta", vec![int_lit(1)])
             ]
         )
+    );
+}
+
+#[test]
+fn symbols_and_quotes() {
+    assert_parse_expr!("^symbol", symbol("symbol"));
+
+    assert_parse_expr!("^AnotherSymbol", symbol("AnotherSymbol"));
+
+    assert_parse_expr!(
+        "^(quoted expression)",
+        quoted(fn_call("quoted", vec![var("expression")]))
+    );
+
+    assert_parse_expr!(
+        "^(quoted (expression \"in quotes\" {1, 2, 3}))",
+        quoted(fn_call(
+            "quoted",
+            vec![fn_call(
+                "expression",
+                vec![
+                    string_lit("in quotes"),
+                    tuple_lit(vec![int_lit(1), int_lit(2), int_lit(3)])
+                ]
+            )]
+        ))
+    );
+
+    assert_parse_expr!(
+        "^(quoted ~var in ~var2)",
+        quoted(fn_call(
+            "quoted",
+            vec![unquoted(var("var")), var("in"), unquoted(var("var2"))]
+        ))
+    );
+
+    assert_parse_expr!(
+        "^(quoted ~(var {~var2, 123, ~var3, ^Cool}))",
+        quoted(fn_call(
+            "quoted",
+            vec![unquoted(fn_call(
+                "var",
+                vec![tuple_lit(vec![
+                    unquoted(var("var2")),
+                    int_lit(123),
+                    unquoted(var("var3")),
+                    symbol("Cool")
+                ])]
+            ))]
+        ))
+    );
+
+    assert_parse_expr!(
+        "^(quoted ^Cool)",
+        quoted(fn_call("quoted", vec![symbol("Cool")]))
     );
 }

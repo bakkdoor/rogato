@@ -56,6 +56,7 @@ impl Walk for Expression {
             Expression::Query(query) => query.walk(v),
             Expression::Symbol(id) => v.symbol(id),
             Expression::Quoted(expr) => v.quoted(expr),
+            Expression::Unquoted(expr) => v.unquoted(expr),
         }
     }
 }

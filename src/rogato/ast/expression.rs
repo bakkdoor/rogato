@@ -27,6 +27,7 @@ pub enum Expression {
     Query(Query),
     Symbol(Identifier),
     Quoted(Box<Expression>),
+    Unquoted(Box<Expression>),
 }
 
 impl ASTDepth for Expression {
@@ -47,6 +48,7 @@ impl ASTDepth for Expression {
             Expression::Query(query) => query.ast_depth(),
             Expression::Symbol(_id) => 1,
             Expression::Quoted(expr) => 1 + expr.ast_depth(),
+            Expression::Unquoted(expr) => 1 + expr.ast_depth(),
         }
     }
 }
@@ -80,6 +82,14 @@ impl Display for Expression {
                     f.write_fmt(format_args!("^{}", expr_fmt))
                 } else {
                     f.write_fmt(format_args!("^({})", expr_fmt))
+                }
+            }
+            Expression::Unquoted(expr) => {
+                let expr_fmt = format!("{}", expr);
+                if expr_fmt.starts_with("(") && expr_fmt.ends_with(")") {
+                    f.write_fmt(format_args!("~{}", expr_fmt))
+                } else {
+                    f.write_fmt(format_args!("~({})", expr_fmt))
                 }
             }
         }
@@ -126,6 +136,7 @@ impl<'a> Evaluate<'a, Value> for Expression {
             Expression::Query(_query) => val::string("eval query"),
             Expression::Symbol(id) => val::string(format!("Symbol ^{}", id)), // likely need custom value types besides just json values to properly support symbols
             Expression::Quoted(expr) => val::string(format!("^({})", expr)),
+            Expression::Unquoted(expr) => val::string(format!("~({})", expr)),
         }
     }
 }

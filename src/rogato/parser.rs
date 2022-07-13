@@ -130,8 +130,7 @@ grammar parser() for str {
         / op_call()
         / sum()
         / variable()
-        / quoted_expression()
-        / symbol()
+        / quoted_expr()
         / literal_expr()
         / commented_expr()
 
@@ -184,8 +183,7 @@ grammar parser() for str {
     rule atom() -> Expression
         = edge_prop()
         / variable()
-        / quoted_expression()
-        / symbol()
+        / quoted_expr()
         / literal_expr()
         / constant_or_type_ref()
         / "(" _ v:sum() _ ")" { v }
@@ -201,9 +199,19 @@ grammar parser() for str {
             Expression::PropFnRef(id)
         }
 
-    rule quoted_expression() -> Expression
+    rule quoted_expr() -> Expression
         = "^" "(" expr:expression() ")" {
             Expression::Quoted(Box::new(expr))
+        }
+        / symbol()
+        / unquoted_expr()
+
+    rule unquoted_expr() -> Expression
+        = "~" "(" expr:expression() ")" {
+            Expression::Unquoted(Box::new(expr))
+        }
+        / "~" var:variable() {
+            Expression::Unquoted(Box::new(var))
         }
 
     rule symbol() -> Expression
@@ -251,8 +259,7 @@ grammar parser() for str {
         / constant_or_type_ref()
         / lambda()
         / variable()
-        / quoted_expression()
-        / symbol()
+        / quoted_expr()
         / op_call()
         / sum()
         / literal_expr()
@@ -307,8 +314,7 @@ grammar parser() for str {
         / literal_expr()
         / edge_prop()
         / variable()
-        / quoted_expression()
-        / symbol()
+        / quoted_expr()
 
     rule let_expr() -> Expression
         = "let" _ bindings:let_bindings() _ "in" _ body:let_body() {
@@ -345,8 +351,7 @@ grammar parser() for str {
         / op_call()
         / sum()
         / variable()
-        / quoted_expression()
-        / symbol()
+        / quoted_expr()
         / literal_expr()
         / commented_let_body()
         / query()
@@ -458,9 +463,9 @@ grammar parser() for str {
         }
 
     rule symbol_identifier() -> Identifier
-        = id:([^ ' ']+) {
-            String::from_iter(id)
-        }
+        = variable_identifier()
+        / struct_identifier()
+        / identifier()
 
     rule identifier() -> Identifier
         = id1:$([ 'a'..='z' | 'A'..='Z' | '-' | '_' | '@' | '$']) id2:$(['a'..='z' | 'A'..='Z' | '-' | '_' | '0'..='9' | '.' | '@' | '$'])* {
