@@ -25,4 +25,6 @@ pub trait Visitor {
     fn let_(&mut self, _let_expr: &LetExpression) {}
     fn lambda(&mut self, _lambda: &Lambda) {}
     fn query(&mut self, _query: &Query) {}
+    fn symbol(&mut self, _id: &Identifier) {}
+    fn quoted(&mut self, _expr: &Expression) {}
 }

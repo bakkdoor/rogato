@@ -1,6 +1,6 @@
 use crate::tests::rogato::{
-    commented, edge_prop, int_type, list_lit, prop_fn_ref, root_comment, string_type, struct_lit,
-    struct_type, tuple_type, type_def, type_ref,
+    commented, edge_prop, int_type, list_lit, prop_fn_ref, quoted, root_comment, string_type,
+    struct_lit, struct_type, symbol, tuple_type, type_def, type_ref,
 };
 #[cfg(test)]
 use crate::{assert_parse, assert_parse_ast, assert_parse_expr};
@@ -210,6 +210,29 @@ fn literals() {
             string_lit("foo"),
             tuple_lit(vec![int_lit(2), string_lit("bar")])
         ])
+    );
+
+    assert_parse_expr!("^symbol", symbol("symbol"));
+
+    assert_parse_expr!("^AnotherSymbol", symbol("AnotherSymbol"));
+
+    assert_parse_expr!(
+        "^(quoted expression)",
+        quoted(fn_call("quoted", vec![var("expression")]))
+    );
+
+    assert_parse_expr!(
+        "^(quoted (expression \"in quotes\" {1, 2, 3}))",
+        quoted(fn_call(
+            "quoted",
+            vec![fn_call(
+                "expression",
+                vec![
+                    string_lit("in quotes"),
+                    tuple_lit(vec![int_lit(1), int_lit(2), int_lit(3)])
+                ]
+            )]
+        ))
     );
 }
 

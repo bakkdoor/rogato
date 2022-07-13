@@ -130,6 +130,8 @@ grammar parser() for str {
         / op_call()
         / sum()
         / variable()
+        / quoted_expression()
+        / symbol()
         / literal_expr()
         / commented_expr()
 
@@ -182,6 +184,8 @@ grammar parser() for str {
     rule atom() -> Expression
         = edge_prop()
         / variable()
+        / quoted_expression()
+        / symbol()
         / literal_expr()
         / constant_or_type_ref()
         / "(" _ v:sum() _ ")" { v }
@@ -195,6 +199,16 @@ grammar parser() for str {
         }
         / "." id:variable_identifier() {
             Expression::PropFnRef(id)
+        }
+
+    rule quoted_expression() -> Expression
+        = "^" "(" expr:expression() ")" {
+            Expression::Quoted(Box::new(expr))
+        }
+
+    rule symbol() -> Expression
+        = "^" id:symbol_identifier() {
+            Expression::Symbol(id)
         }
 
     rule query() -> Expression
@@ -237,6 +251,8 @@ grammar parser() for str {
         / constant_or_type_ref()
         / lambda()
         / variable()
+        / quoted_expression()
+        / symbol()
         / op_call()
         / sum()
         / literal_expr()
@@ -291,6 +307,8 @@ grammar parser() for str {
         / literal_expr()
         / edge_prop()
         / variable()
+        / quoted_expression()
+        / symbol()
 
     rule let_expr() -> Expression
         = "let" _ bindings:let_bindings() _ "in" _ body:let_body() {
@@ -327,6 +345,8 @@ grammar parser() for str {
         / op_call()
         / sum()
         / variable()
+        / quoted_expression()
+        / symbol()
         / literal_expr()
         / commented_let_body()
         / query()
@@ -435,6 +455,11 @@ grammar parser() for str {
     rule variable_identifier() -> Identifier
         = id1:$([ 'a'..='z' ]) id2:$(['a'..='z' | 'A'..='Z' | '-' | '_' | '0'..='9' | '.' | '@' | '$'])* {
             join_string(id1, id2)
+        }
+
+    rule symbol_identifier() -> Identifier
+        = id:([^ ' ']+) {
+            String::from_iter(id)
         }
 
     rule identifier() -> Identifier

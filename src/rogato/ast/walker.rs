@@ -54,6 +54,8 @@ impl Walk for Expression {
             Expression::Let(let_expr) => let_expr.walk(v),
             Expression::Lambda(lambda) => lambda.walk(v),
             Expression::Query(query) => query.walk(v),
+            Expression::Symbol(id) => v.symbol(id),
+            Expression::Quoted(expr) => v.quoted(expr),
         }
     }
 }

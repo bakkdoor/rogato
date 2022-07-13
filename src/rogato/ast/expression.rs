@@ -25,6 +25,8 @@ pub enum Expression {
     Let(LetExpression),
     Lambda(Lambda),
     Query(Query),
+    Symbol(Identifier),
+    Quoted(Box<Expression>),
 }
 
 impl ASTDepth for Expression {
@@ -43,6 +45,8 @@ impl ASTDepth for Expression {
             Expression::Let(let_expr) => let_expr.ast_depth(),
             Expression::Lambda(lambda) => lambda.ast_depth(),
             Expression::Query(query) => query.ast_depth(),
+            Expression::Symbol(_id) => 1,
+            Expression::Quoted(expr) => 1 + expr.ast_depth(),
         }
     }
 }
@@ -69,6 +73,8 @@ impl Display for Expression {
             Expression::Let(let_expr) => let_expr.fmt(f),
             Expression::Lambda(lambda) => lambda.fmt(f),
             Expression::Query(query) => query.fmt(f),
+            Expression::Symbol(id) => f.write_fmt(format_args!("^{}", id)),
+            Expression::Quoted(expr) => f.write_fmt(format_args!("{}", expr)),
         }
     }
 }
@@ -111,6 +117,8 @@ impl<'a> Evaluate<'a, Value> for Expression {
             Expression::Let(_let_expr) => val::string("eval let expr"),
             Expression::Lambda(_lambda) => val::string("eval lambda"),
             Expression::Query(_query) => val::string("eval query"),
+            Expression::Symbol(id) => val::string(format!("Symbol ^{}", id)), // likely need custom value types besides just json values to properly support symbols
+            Expression::Quoted(expr) => val::string(format!("^({})", expr)),
         }
     }
 }

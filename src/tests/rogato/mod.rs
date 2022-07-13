@@ -228,3 +228,11 @@ pub fn lambda(args: Vec<&str>, body: Box<Expression>) -> Box<Expression> {
     let args = args.iter().map(|a| a.to_string()).collect();
     Box::new(Expression::Lambda(Lambda::new(LambdaArgs::new(args), body)))
 }
+
+pub fn symbol(id: &str) -> Box<Expression> {
+    Box::new(Expression::Symbol(id.to_string()))
+}
+
+pub fn quoted(expr: Box<Expression>) -> Box<Expression> {
+    Box::new(Expression::Quoted(expr))
+}

@@ -24,3 +24,15 @@ let foo x =
   x
   |> inspect
   |> repeat 10
+
+let fooWithSymbol =
+  [1,2,3]
+  |> List.map (x -> (^Hello, x))
+  // => [(^Hello, 1), (^Hello, 2), (^Hello, 3)]
+
+let codegen fnName args =
+  // ^ = quote (ideally hygenic, scheme-style macros) in front of expressions
+  // ~ = unquote within quoted expressions
+  ^(let ~fnName ~args =
+      IO.println "calling function {} with {}" [~fnName, ~args]
+   )
