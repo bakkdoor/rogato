@@ -11,6 +11,7 @@ use rogato::db::{EdgeQueryExt, VertexQueryExt};
 use rogato::parser::parse;
 use std::fs::File;
 
+use crate::rogato::interpreter::{EvalContext, Evaluate};
 use crate::rogato::util::print_error;
 
 const DB_PATH: &str = "./rogato.db";
@@ -113,8 +114,10 @@ fn run_repl() {
             io::stdin().read_line(&mut buffer).unwrap();
         }
         match parse(buffer.as_str()) {
-            Ok(exp) => {
-                println!("OK> {:?}\n{}", exp, exp);
+            Ok(ast) => {
+                println!("OK> {:?}\n{}", ast, ast);
+                let mut context = EvalContext::new();
+                println!("EVAL> {}", ast.evaluate(&mut context));
             }
             Err(err) => {
                 eprintln!("Error> {:?}", err)
