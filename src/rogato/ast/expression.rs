@@ -74,7 +74,14 @@ impl Display for Expression {
             Expression::Lambda(lambda) => lambda.fmt(f),
             Expression::Query(query) => query.fmt(f),
             Expression::Symbol(id) => f.write_fmt(format_args!("^{}", id)),
-            Expression::Quoted(expr) => f.write_fmt(format_args!("{}", expr)),
+            Expression::Quoted(expr) => {
+                let expr_fmt = format!("{}", expr);
+                if expr_fmt.starts_with("(") && expr_fmt.ends_with(")") {
+                    f.write_fmt(format_args!("^{}", expr_fmt))
+                } else {
+                    f.write_fmt(format_args!("^({})", expr_fmt))
+                }
+            }
         }
     }
 }
