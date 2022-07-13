@@ -44,7 +44,7 @@ impl ASTDepth for Literal {
 }
 
 impl<'a> Evaluate<'a, Value> for Literal {
-    fn evaluate(&self, context: &mut crate::rogato::interpreter::EvalContext<'a>) -> Value {
+    fn evaluate(&self, context: &mut EvalContext<'a>) -> Value {
         match self {
             Literal::Int64(number) => val::number(*number),
             Literal::String(string) => val::string(string),

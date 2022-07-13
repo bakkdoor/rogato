@@ -1,5 +1,5 @@
 use crate::rogato::db::{val, Value};
-use crate::rogato::interpreter::Evaluate;
+use crate::rogato::interpreter::{Evaluate, EvalContext};
 
 pub use super::fn_call::FnCallArgs;
 pub use super::fn_def::FnDefArgs;
@@ -74,7 +74,7 @@ impl Display for Expression {
 }
 
 impl<'a> Evaluate<'a, Value> for Expression {
-    fn evaluate(&self, context: &mut crate::rogato::interpreter::EvalContext<'a>) -> Value {
+    fn evaluate(&self, context: &mut EvalContext<'a>) -> Value {
         match self {
             Expression::Commented(_c, e) => e.evaluate(context),
             Expression::Lit(lit_exp) => lit_exp.evaluate(context),
