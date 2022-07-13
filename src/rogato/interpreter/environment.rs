@@ -45,4 +45,21 @@ impl<'a> Environment<'a> {
             },
         }
     }
+
+    #[allow(dead_code)]
+    pub fn define_module(&'a mut self, id: &Identifier, module: Module) -> &'a mut Self {
+        self.modules.insert(id.clone(), module);
+        self
+    }
+
+    #[allow(dead_code)]
+    pub fn lookup_module(&'a self, id: &Identifier) -> Option<&'a Module> {
+        match self.modules.get(id) {
+            Some(module) => Some(module),
+            None => match self.parent {
+                Some(parent_env) => parent_env.lookup_module(id),
+                None => None,
+            },
+        }
+    }
 }
