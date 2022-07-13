@@ -1,9 +1,7 @@
 use std::fmt::Display;
 
-use serde_json::Value;
-
 use crate::rogato::{
-    db::val,
+    db::{val, Value},
     interpreter::{EvalContext, Evaluate},
     util::indent,
 };

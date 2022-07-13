@@ -1,4 +1,4 @@
-use serde_json::{Map, Number, Value};
+pub use serde_json::{Map, Number, Value};
 
 #[allow(dead_code)]
 pub fn array(vec: Vec<Value>) -> Value {
@@ -24,8 +24,8 @@ where
 }
 
 #[allow(dead_code)]
-pub fn object(props: Map<String, Value>) -> Value {
-    Value::Object(props)
+pub fn object(props: Vec<(String, Value)>) -> Value {
+    Value::Object(Map::from_iter(props))
 }
 
 #[allow(dead_code)]

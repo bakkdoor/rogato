@@ -20,8 +20,8 @@ pub mod walker;
 pub type Identifier = String;
 
 pub use program::Program;
-use serde_json::Value;
 
+use super::db::{val, Value};
 use super::interpreter::{EvalContext, Evaluate};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -61,7 +61,7 @@ impl ASTDepth for AST {
 impl<'a> Evaluate<'a, Value> for AST {
     fn evaluate(&self, context: &mut EvalContext<'a>) -> Value {
         match self {
-            AST::RootComment(_) => Value::Null,
+            AST::RootComment(_) => val::null(),
             AST::FnDef(fn_def) => fn_def.evaluate(context),
             AST::ModuleDef(mod_def) => mod_def.evaluate(context),
             AST::TypeDef(type_def) => type_def.evaluate(context),

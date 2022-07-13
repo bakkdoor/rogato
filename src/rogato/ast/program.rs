@@ -1,10 +1,7 @@
-use std::fmt::Display;
-
-use serde_json::Value;
-
-use crate::rogato::interpreter::{EvalContext, Evaluate};
-
 use super::AST;
+use crate::rogato::db::Value;
+use crate::rogato::interpreter::{EvalContext, Evaluate};
+use std::fmt::Display;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Program {

@@ -1,6 +1,4 @@
-use serde_json::Value;
-
-use crate::rogato::db::val;
+use crate::rogato::db::{val, Value};
 use crate::rogato::interpreter::Evaluate;
 
 pub use super::fn_call::FnCallArgs;

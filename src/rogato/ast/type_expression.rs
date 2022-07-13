@@ -1,9 +1,7 @@
 use std::fmt::Display;
 
-use serde_json::{Map, Value};
-
 use crate::rogato::{
-    db::val,
+    db::{val, Value},
     interpreter::{EvalContext, Evaluate},
     util::indent,
 };
@@ -38,11 +36,11 @@ impl ASTDepth for TypeDef {
 
 impl<'a> Evaluate<'a, Value> for TypeDef {
     fn evaluate(&self, context: &mut EvalContext<'a>) -> Value {
-        val::object(Map::from_iter(vec![
+        val::object(vec![
             ("type".to_string(), val::string("TypeDef")),
             ("name".to_string(), val::string(self.id.to_string())),
             ("type_expr".to_string(), self.type_expr.evaluate(context)),
-        ]))
+        ])
     }
 }
 
@@ -112,10 +110,10 @@ impl ASTDepth for TypeExpression {
 }
 
 fn type_ref<ID: ToString>(id: ID) -> Value {
-    val::object(Map::from_iter(vec![
+    val::object(vec![
         ("type".to_string(), val::string("TypeRef")),
         ("name".to_string(), val::string(id.to_string())),
-    ]))
+    ])
 }
 
 impl<'a> Evaluate<'a, Value> for TypeExpression {
@@ -124,25 +122,23 @@ impl<'a> Evaluate<'a, Value> for TypeExpression {
             TypeExpression::IntType => type_ref("Int"),
             TypeExpression::StringType => type_ref("String"),
             TypeExpression::TypeRef(id) => type_ref(id),
-            TypeExpression::FunctionType(arg_types, return_type) => {
-                val::object(Map::from_iter(vec![
-                    ("type".to_string(), val::string("FunctionType")),
-                    ("args".to_string(), arg_types.evaluate(context)),
-                    ("return_type".to_string(), return_type.evaluate(context)),
-                ]))
-            }
-            TypeExpression::TupleType(el_types) => val::object(Map::from_iter(vec![
+            TypeExpression::FunctionType(arg_types, return_type) => val::object(vec![
+                ("type".to_string(), val::string("FunctionType")),
+                ("args".to_string(), arg_types.evaluate(context)),
+                ("return_type".to_string(), return_type.evaluate(context)),
+            ]),
+            TypeExpression::TupleType(el_types) => val::object(vec![
                 ("type".to_string(), val::string("TupleType")),
                 ("el_types".to_string(), el_types.evaluate(context)),
-            ])),
-            TypeExpression::ListType(type_expr) => val::object(Map::from_iter(vec![
+            ]),
+            TypeExpression::ListType(type_expr) => val::object(vec![
                 ("type".to_string(), val::string("ListType")),
                 ("type_expr".to_string(), type_expr.evaluate(context)),
-            ])),
-            TypeExpression::StructType(prop_types) => val::object(Map::from_iter(vec![
+            ]),
+            TypeExpression::StructType(prop_types) => val::object(vec![
                 ("type".to_string(), val::string("StructType")),
                 ("props".to_string(), prop_types.evaluate(context)),
-            ])),
+            ]),
         }
     }
 }

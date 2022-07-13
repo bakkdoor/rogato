@@ -1,9 +1,8 @@
 use super::{expression::Expression, ASTDepth, Identifier};
 use crate::rogato::{
-    db::val,
+    db::{val, Value},
     interpreter::{EvalContext, Evaluate},
 };
-use serde_json::Value;
 use std::fmt::Display;
 
 #[derive(Clone, PartialEq, Eq, Debug)]

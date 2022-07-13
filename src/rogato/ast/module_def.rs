@@ -1,5 +1,3 @@
-use serde_json::Map;
-
 use crate::rogato::{
     db::{val, Value},
     interpreter::{EvalContext, Evaluate},
@@ -34,7 +32,7 @@ impl ASTDepth for ModuleDef {
 
 impl<'a> Evaluate<'a, Value> for ModuleDef {
     fn evaluate(&self, _context: &mut EvalContext<'a>) -> Value {
-        val::object(Map::from_iter(vec![
+        val::object(vec![
             ("type".to_string(), Value::String("Module".to_string())),
             ("name".to_string(), Value::String(self.id.to_string())),
             (
@@ -46,7 +44,7 @@ impl<'a> Evaluate<'a, Value> for ModuleDef {
                         .collect::<Vec<Value>>(),
                 ),
             ),
-        ]))
+        ])
     }
 }
 

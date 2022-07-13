@@ -1,7 +1,6 @@
-use serde_json::{Map, Value};
-
 use crate::rogato::{
     db::val,
+    db::val::Value,
     interpreter::{EvalContext, Evaluate},
     util::indent,
 };
@@ -45,7 +44,7 @@ impl ASTDepth for FnDef {
 
 impl<'a> Evaluate<'a, Value> for FnDef {
     fn evaluate(&self, context: &mut EvalContext<'a>) -> Value {
-        val::object(Map::from_iter(vec![
+        val::object(vec![
             ("type".to_string(), val::string("Fn")),
             ("name".to_string(), val::string(self.id.to_string())),
             (
@@ -53,7 +52,7 @@ impl<'a> Evaluate<'a, Value> for FnDef {
                 Value::Array(self.args.iter().map(val::string).collect::<Vec<Value>>()),
             ),
             ("body".to_string(), self.body.evaluate(context)),
-        ]))
+        ])
     }
 }
 
