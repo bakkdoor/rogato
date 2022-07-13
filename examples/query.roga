@@ -24,7 +24,7 @@ let ageGroup decade =
 let friendsOfAgeGroup decade =
   ? p <- ageGroup decade
   ? f <- p#Friend
-  ?! f <- (teens | tweens)
+  ? f <!- (teens | tweens)
   !> f
 
 // return all shared friends in people
@@ -55,7 +55,7 @@ let friendsAndFamilyWithin people person =
 
     friendsOfFriendsWithoutFamily =
       ? p <- friendsOfFriends
-      ?! p <- family
+      ? p <!- family
       !> p
   in
     {person, [{"family",family}, {"friends",friends person}, {"friendsOfFriends",friendsOfFriends}]}

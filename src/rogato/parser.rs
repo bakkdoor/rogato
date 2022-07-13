@@ -209,7 +209,7 @@ grammar parser() for str {
         }
 
     rule query_binding() -> QueryBinding
-        = _ "?!" _ vars:query_binding_vars() _ "<-" _ expr:query_expr() _ {
+        = _ "?" _ vars:query_binding_vars() _ "<!-" _ expr:query_expr() _ {
             QueryBinding::new_negated(vars, Box::new(expr))
         }
         / _ "?" _ vars:query_binding_vars() _ "<-" _ expr:query_expr() _ {

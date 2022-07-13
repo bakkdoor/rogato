@@ -136,7 +136,7 @@ impl Display for QueryBinding {
         });
 
         if self.is_negated {
-            f.write_fmt(format_args!("?! {} <- {}", fmt_str, self.val))
+            f.write_fmt(format_args!("? {} <!- {}", fmt_str, self.val))
         } else {
             f.write_fmt(format_args!("? {} <- {}", fmt_str, self.val))
         }

@@ -575,7 +575,7 @@ fn queries() {
 
     assert_parse_expr!(
         "? p <- Person
-         ?! p <- oldPeople
+         ? p <!- oldPeople
          !> p",
         query(
             vec![
@@ -590,7 +590,7 @@ fn queries() {
     assert_parse_expr!(
         "? p <- Person
          ? p <- hello 1 2
-         ?! p <- (a + b)
+         ? p <!- (a + b)
          !> inspect p",
         query(
             vec![
