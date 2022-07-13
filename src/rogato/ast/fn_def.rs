@@ -12,14 +12,10 @@ pub struct FnDef {
 
 impl FnDef {
     pub fn new(id: Identifier, args: FnDefArgs, body: Box<Expression>) -> FnDef {
-        FnDef {
-            id: id,
-            args: args,
-            body: body,
-        }
+        FnDef { id, args, body }
     }
 
-    pub fn body<'a>(&'a self) -> &'a Expression {
+    pub fn body(&self) -> &Expression {
         &self.body
     }
 }
@@ -43,14 +39,12 @@ impl ASTDepth for FnDef {
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct FnDefArgs {
-    args: Box<Vec<Identifier>>,
+    args: Vec<Identifier>,
 }
 
 impl FnDefArgs {
     pub fn new(args: Vec<Identifier>) -> Self {
-        FnDefArgs {
-            args: Box::new(args),
-        }
+        FnDefArgs { args }
     }
 
     #[allow(dead_code)]
@@ -69,7 +63,7 @@ impl Display for FnDefArgs {
         let fmt_str = self
             .args
             .iter()
-            .map(|arg| format!("{}", arg))
+            .map(|arg| arg.to_string())
             .fold(String::from(""), |acc, fmt| format!("{} {}", acc, fmt));
 
         f.write_fmt(format_args!("{}", fmt_str))

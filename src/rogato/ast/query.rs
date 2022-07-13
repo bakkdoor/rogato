@@ -11,9 +11,9 @@ pub struct Query {
 impl Query {
     pub fn new(bindings: QueryBindings, guards: QueryGuards, production: Box<Expression>) -> Self {
         Self {
-            bindings: bindings,
-            guards: guards,
-            production: production,
+            bindings,
+            guards,
+            production,
         }
     }
 }
@@ -60,7 +60,7 @@ pub struct QueryGuards {
 
 impl QueryGuards {
     pub fn new(guards: Vec<Expression>) -> Self {
-        QueryGuards { guards: guards }
+        QueryGuards { guards }
     }
 
     #[allow(dead_code)]
@@ -89,7 +89,7 @@ impl Display for QueryGuards {
                 .iter()
                 .map(|g| format!("! {}", g))
                 .fold(String::from(""), |acc, fmt| {
-                    if acc == "" {
+                    if acc.is_empty() {
                         fmt
                     } else {
                         format!("{}\n{}", acc, fmt)
@@ -110,16 +110,16 @@ pub struct QueryBinding {
 impl QueryBinding {
     pub fn new(ids: Vec<String>, val: Box<Expression>) -> Self {
         QueryBinding {
-            ids: ids,
-            val: val,
+            ids,
+            val,
             is_negated: false,
         }
     }
 
     pub fn new_negated(ids: Vec<String>, val: Box<Expression>) -> Self {
         QueryBinding {
-            ids: ids,
-            val: val,
+            ids,
+            val,
             is_negated: true,
         }
     }
@@ -127,17 +127,13 @@ impl QueryBinding {
 
 impl Display for QueryBinding {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let fmt_str =
-            self.ids
-                .iter()
-                .map(|id| format!("{}", id))
-                .fold(String::from(""), |acc, fmt| {
-                    if acc == "" {
-                        fmt
-                    } else {
-                        format!("{}, {}", acc, fmt)
-                    }
-                });
+        let fmt_str = self.ids.iter().fold(String::from(""), |acc, id| {
+            if acc.is_empty() {
+                id.to_string()
+            } else {
+                format!("{}, {}", acc, id)
+            }
+        });
 
         if self.is_negated {
             f.write_fmt(format_args!("?! {} <- {}", fmt_str, self.val))
@@ -154,7 +150,7 @@ pub struct QueryBindings {
 
 impl QueryBindings {
     pub fn new(bindings: Vec<QueryBinding>) -> Self {
-        Self { bindings: bindings }
+        Self { bindings }
     }
 
     #[allow(dead_code)]
@@ -180,7 +176,7 @@ impl Display for QueryBindings {
             .iter()
             .map(|binding| format!("{}", binding))
             .fold(String::from(""), |acc, fmt| {
-                if acc == "" {
+                if acc.is_empty() {
                     fmt
                 } else {
                     format!("{}\n{}", acc, fmt)

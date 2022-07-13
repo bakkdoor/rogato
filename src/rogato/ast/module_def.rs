@@ -9,10 +9,7 @@ pub struct ModuleDef {
 
 impl ModuleDef {
     pub fn new(id: Identifier, exports: ModuleExports) -> ModuleDef {
-        ModuleDef {
-            id: id,
-            exports: exports,
-        }
+        ModuleDef { id, exports }
     }
 }
 
@@ -30,14 +27,12 @@ impl ASTDepth for ModuleDef {
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct ModuleExports {
-    exports: Box<Vec<Identifier>>,
+    exports: Vec<Identifier>,
 }
 
 impl ModuleExports {
     pub fn new(exports: Vec<Identifier>) -> Self {
-        ModuleExports {
-            exports: Box::new(exports),
-        }
+        ModuleExports { exports }
     }
 
     #[allow(dead_code)]
@@ -56,9 +51,9 @@ impl Display for ModuleExports {
         let fmt_str =
             self.exports
                 .iter()
-                .map(|e| format!("{}", e))
+                .map(|e| e.to_string())
                 .fold(String::from(""), |acc, fmt| {
-                    if acc == "" {
+                    if acc.is_empty() {
                         fmt
                     } else {
                         format!("{}, {}", acc, fmt)

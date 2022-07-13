@@ -3,14 +3,12 @@ use std::fmt::Display;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct FnCallArgs {
-    args: Box<Vec<Expression>>,
+    args: Vec<Expression>,
 }
 
 impl FnCallArgs {
     pub fn new(args: Vec<Expression>) -> Self {
-        FnCallArgs {
-            args: Box::new(args),
-        }
+        FnCallArgs { args }
     }
 
     #[allow(dead_code)]

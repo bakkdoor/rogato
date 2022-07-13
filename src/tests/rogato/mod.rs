@@ -20,6 +20,7 @@ use crate::rogato::ast::{
 };
 use crate::rogato::ast::{type_expression::TypeExpression, Program};
 pub use crate::rogato::parser::{parse, parse_expr};
+use std::string::String;
 
 #[macro_export]
 macro_rules! assert_parse {
@@ -58,7 +59,7 @@ macro_rules! assert_parse_expr {
 }
 
 pub fn program(nodes: Vec<Box<AST>>) -> Program {
-    Program::from(nodes)
+    Program::from_boxed(nodes)
 }
 
 pub fn lit(lit: Literal) -> Box<Expression> {
@@ -66,19 +67,19 @@ pub fn lit(lit: Literal) -> Box<Expression> {
 }
 
 pub fn int_lit(val: i64) -> Box<Expression> {
-    lit(Int64Lit(val))
+    lit(Int64(val))
 }
 
 pub fn string_lit(val: &str) -> Box<Expression> {
-    lit(StringLit(Box::new(val.to_string())))
+    lit(String(val.to_string()))
 }
 
 pub fn tuple_lit(vals: Vec<Box<Expression>>) -> Box<Expression> {
-    lit(TupleLit(TupleItems::from(vals)))
+    lit(Tuple(TupleItems::from(vals)))
 }
 
 pub fn list_lit(vals: Vec<Box<Expression>>) -> Box<Expression> {
-    lit(ListLit(TupleItems::from(vals)))
+    lit(List(TupleItems::from(vals)))
 }
 
 pub fn struct_lit<S: ToString>(id: S, raw_props: Vec<(S, Box<Expression>)>) -> Box<Expression> {
@@ -86,10 +87,7 @@ pub fn struct_lit<S: ToString>(id: S, raw_props: Vec<(S, Box<Expression>)>) -> B
     for (id, expr) in raw_props {
         props.push((id.to_string(), expr))
     }
-    lit(StructLit(
-        id.to_string(),
-        Box::new(StructProps::from(props)),
-    ))
+    lit(Struct(id.to_string(), Box::new(StructProps::from(props))))
 }
 
 pub fn var(id: &str) -> Box<Expression> {

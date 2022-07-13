@@ -12,10 +12,7 @@ pub struct LetExpression {
 
 impl LetExpression {
     pub fn new(bindings: LetBindings, body: Box<Expression>) -> LetExpression {
-        LetExpression {
-            bindings: bindings,
-            body: body,
-        }
+        LetExpression { bindings, body }
     }
 }
 
@@ -52,7 +49,7 @@ pub struct LetBindings {
 
 impl LetBindings {
     pub fn new(bindings: Vec<(Identifier, Expression)>) -> LetBindings {
-        LetBindings { bindings: bindings }
+        LetBindings { bindings }
     }
 
     pub fn iter(&self) -> std::slice::Iter<(String, Expression)> {
@@ -67,7 +64,7 @@ impl Display for LetBindings {
             .iter()
             .map(|(ident, expr)| format!("{} =\n{}", ident, indent(expr)))
             .fold(String::from(""), |acc, fmt| {
-                if acc == "" {
+                if acc.is_empty() {
                     fmt
                 } else {
                     format!("{}\n\n{}", acc, fmt)

@@ -5,21 +5,21 @@ use std::fmt::Display;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum Literal {
-    Int64Lit(i64),
-    StringLit(Box<String>),
-    TupleLit(TupleItems<Expression>),
-    ListLit(TupleItems<Expression>),
-    StructLit(Identifier, Box<StructProps>),
+    Int64(i64),
+    String(String),
+    Tuple(TupleItems<Expression>),
+    List(TupleItems<Expression>),
+    Struct(Identifier, Box<StructProps>),
 }
 
 impl Display for Literal {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Literal::Int64Lit(num) => f.write_fmt(format_args!("{}", num)),
-            Literal::StringLit(string) => f.write_fmt(format_args!("\"{}\"", string)),
-            Literal::TupleLit(items) => f.write_fmt(format_args!("{{ {} }}", items)),
-            Literal::ListLit(items) => f.write_fmt(format_args!("[ {} ]", items)),
-            Literal::StructLit(id, props) => f.write_fmt(format_args!("{}{{ {} }}", id, props)),
+            Literal::Int64(num) => f.write_fmt(format_args!("{}", num)),
+            Literal::String(string) => f.write_fmt(format_args!("\"{}\"", string)),
+            Literal::Tuple(items) => f.write_fmt(format_args!("{{ {} }}", items)),
+            Literal::List(items) => f.write_fmt(format_args!("[ {} ]", items)),
+            Literal::Struct(id, props) => f.write_fmt(format_args!("{}{{ {} }}", id, props)),
         }
     }
 }
@@ -27,11 +27,11 @@ impl Display for Literal {
 impl ASTDepth for Literal {
     fn ast_depth(&self) -> usize {
         match self {
-            Literal::Int64Lit(_) => 1,
-            Literal::StringLit(_) => 1,
-            Literal::TupleLit(items) => 1 + items.iter().map(|i| i.ast_depth()).sum::<usize>(),
-            Literal::ListLit(items) => 1 + items.iter().map(|i| i.ast_depth()).sum::<usize>(),
-            Literal::StructLit(_id, props) => {
+            Literal::Int64(_) => 1,
+            Literal::String(_) => 1,
+            Literal::Tuple(items) => 1 + items.iter().map(|i| i.ast_depth()).sum::<usize>(),
+            Literal::List(items) => 1 + items.iter().map(|i| i.ast_depth()).sum::<usize>(),
+            Literal::Struct(_id, props) => {
                 1 + props
                     .iter()
                     .map(|(_name, val)| val.ast_depth())
@@ -44,9 +44,9 @@ impl ASTDepth for Literal {
 impl<'a> Evaluate<'a, Value> for Literal {
     fn evaluate(&self, context: &mut crate::rogato::interpreter::EvalContext<'a>) -> Value {
         match self {
-            Literal::Int64Lit(number) => val::number(*number),
-            Literal::StringLit(string) => val::string(string),
-            Literal::TupleLit(items) => {
+            Literal::Int64(number) => val::number(*number),
+            Literal::String(string) => val::string(string),
+            Literal::Tuple(items) => {
                 let mut values = items
                     .iter()
                     .map(|i| i.evaluate(context))
@@ -54,10 +54,8 @@ impl<'a> Evaluate<'a, Value> for Literal {
                 values.insert(0, val::string(format!("rogato.Tuple.{}", items.len())));
                 val::array(values)
             }
-            Literal::ListLit(items) => {
-                val::array(items.iter().map(|i| i.evaluate(context)).collect())
-            }
-            Literal::StructLit(_struct_id, props) => val::object(
+            Literal::List(items) => val::array(items.iter().map(|i| i.evaluate(context)).collect()),
+            Literal::Struct(_struct_id, props) => val::object(
                 props
                     .iter()
                     .map(|(id, p)| (id.clone(), p.evaluate(context)))
@@ -74,8 +72,7 @@ pub struct TupleItems<I> {
 
 impl<I: Display> TupleItems<I> {
     pub fn new(first: I, rest: Vec<I>) -> Self {
-        let mut items = Vec::new();
-        items.push(Box::new(first));
+        let mut items = vec![Box::new(first)];
         for item in rest {
             items.push(Box::new(item))
         }
@@ -83,7 +80,7 @@ impl<I: Display> TupleItems<I> {
     }
 
     pub fn from(items: Vec<Box<I>>) -> Self {
-        TupleItems { items: items }
+        TupleItems { items }
     }
 
     #[allow(dead_code)]
@@ -100,7 +97,7 @@ impl<I: Display> TupleItems<I> {
 impl<I: Display> Display for TupleItems<I> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let fmt_str = self.items.iter().fold(String::from(""), |acc, item| {
-            if acc == "" {
+            if acc.is_empty() {
                 format!("{}", item)
             } else {
                 format!("{}, {}", acc, item)
@@ -128,7 +125,7 @@ impl StructProps {
     }
 
     pub fn from(props: Vec<(Identifier, Box<Expression>)>) -> Self {
-        StructProps { props: props }
+        StructProps { props }
     }
 
     #[allow(dead_code)]
@@ -145,7 +142,7 @@ impl StructProps {
 impl Display for StructProps {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let fmt_str = self.props.iter().fold(String::from(""), |acc, (id, expr)| {
-            if acc == "" {
+            if acc.is_empty() {
                 format!("{}: {}", id, expr)
             } else {
                 format!("{}, {}: {}", acc, id, expr)

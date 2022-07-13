@@ -4,16 +4,19 @@ use super::AST;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Program {
-    nodes: Vec<Box<AST>>,
+    nodes: Vec<AST>,
 }
 
 impl Program {
     pub fn new(nodes: Vec<AST>) -> Self {
-        Self::from(Vec::from_iter(nodes.iter().map(|d| Box::new(d.clone()))))
+        Program { nodes }
     }
 
-    pub fn from(nodes: Vec<Box<AST>>) -> Self {
-        Program { nodes: nodes }
+    #[cfg(test)]
+    pub fn from_boxed(nodes: Vec<Box<AST>>) -> Self {
+        Program {
+            nodes: Vec::from_iter(nodes.iter().map(|d| *d.clone())),
+        }
     }
 
     #[allow(dead_code)]
@@ -21,7 +24,7 @@ impl Program {
         self.nodes.len()
     }
 
-    pub fn iter(&self) -> std::slice::Iter<Box<AST>> {
+    pub fn iter(&self) -> std::slice::Iter<AST> {
         self.nodes.iter()
     }
 }
@@ -32,7 +35,7 @@ impl Display for Program {
             self.iter()
                 .map(|ast| format!("{}", ast))
                 .fold(String::from(""), |acc, fmt| {
-                    if acc == "" {
+                    if acc.is_empty() {
                         fmt
                     } else {
                         format!("{}\n\n{}", acc, fmt)

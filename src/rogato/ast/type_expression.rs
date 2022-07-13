@@ -14,10 +14,7 @@ pub struct TypeDef {
 
 impl TypeDef {
     pub fn new(id: Identifier, type_expr: Box<TypeExpression>) -> TypeDef {
-        TypeDef {
-            id: id,
-            type_expr: type_expr,
-        }
+        TypeDef { id, type_expr }
     }
 }
 
@@ -62,7 +59,7 @@ impl Display for TypeExpression {
                     .iter()
                     .map(|(id, expr)| format!("{} :: {}", id, expr))
                     .fold(String::from(""), |acc, fmt| {
-                        if acc == "" {
+                        if acc.is_empty() {
                             fmt
                         } else {
                             format!("{}\n{}", acc, fmt)

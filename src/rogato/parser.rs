@@ -17,15 +17,15 @@ parser! {
 grammar parser() for str {
     pub rule program() -> Program
         = _ defs:(program_root_def())* _ {
-            Program::from(defs)
+            Program::new(defs)
         }
         / _ {
             Program::new(vec![])
         }
 
-    pub rule program_root_def() -> Box<AST>
+    pub rule program_root_def() -> AST
         = _ def:root_def() {
-            Box::new(def)
+            def
         }
 
     pub rule root_def() -> AST
@@ -345,31 +345,31 @@ grammar parser() for str {
 
     rule number_lit() -> Expression
         = n:$(['0'..='9']+) {
-            Expression::Lit(Literal::Int64Lit(n.parse().unwrap()))
+            Expression::Lit(Literal::Int64(n.parse().unwrap()))
         }
 
     rule string_lit() -> Expression
         = "\"" s:([^ '"']*) "\"" {
-            Expression::Lit(Literal::StringLit(Box::new(String::from_iter(s))))
+            Expression::Lit(Literal::String(String::from_iter(s)))
         }
 
     rule tuple_lit() -> Expression
         = "{" _ first:tuple_item() rest:(additional_tuple_item())+ _ ("," _)? "}" {
-            Expression::Lit(Literal::TupleLit(TupleItems::new(first, rest)))
+            Expression::Lit(Literal::Tuple(TupleItems::new(first, rest)))
         }
 
     rule list_lit() -> Expression
         = "[" _ first:tuple_item() rest:(additional_tuple_item())+ _ ("," _)? "]" {
-            Expression::Lit(Literal::ListLit(TupleItems::new(first, rest)))
+            Expression::Lit(Literal::List(TupleItems::new(first, rest)))
         }
         / "[" _ item:tuple_item() _ "]" {
-            Expression::Lit(Literal::ListLit(TupleItems::new(item, vec![])))
+            Expression::Lit(Literal::List(TupleItems::new(item, vec![])))
         }
         / "[" _ "]" {
-            Expression::Lit(Literal::ListLit(TupleItems::from(vec![])))
+            Expression::Lit(Literal::List(TupleItems::from(vec![])))
         }
         / "[" _ comment() _ "]" {
-            Expression::Lit(Literal::ListLit(TupleItems::from(vec![])))
+            Expression::Lit(Literal::List(TupleItems::from(vec![])))
         }
 
     rule tuple_item() -> Expression
@@ -392,7 +392,7 @@ grammar parser() for str {
 
     rule struct_lit() -> Expression
         = id:struct_identifier() "{" _ first:struct_prop() rest:(additional_struct_prop())*  _ ("," _)? "}" {
-            Expression::Lit(Literal::StructLit(id, Box::new(StructProps::new(first, rest))))
+            Expression::Lit(Literal::Struct(id, Box::new(StructProps::new(first, rest))))
         }
 
     rule additional_struct_prop() -> (Identifier, Expression)
@@ -474,7 +474,10 @@ pub type ParseASTResult = Result<Box<AST>, ParseError<LineCol>>;
 
 #[cfg(test)]
 pub fn parse_ast(str: &str) -> ParseASTResult {
-    parser::program_root_def(str)
+    match parser::program_root_def(str) {
+        Ok(program) => Ok(Box::new(program)),
+        Err(e) => Err(e),
+    }
 }
 
 #[cfg(test)]

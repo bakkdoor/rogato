@@ -23,7 +23,7 @@ impl<'a> Environment<'a> {
     #[allow(dead_code)]
     pub fn child(&'a self) -> Environment<'a> {
         Environment {
-            parent: Some(&self),
+            parent: Some(self),
             variables: HashMap::new(),
             modules: HashMap::new(),
         }

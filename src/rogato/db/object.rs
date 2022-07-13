@@ -14,7 +14,7 @@ impl Object {
         props: Props,
     ) -> Self {
         Self {
-            type_id: type_id,
+            type_id,
             props: Map::from_iter(props),
         }
     }
@@ -63,7 +63,7 @@ impl PartialEq for Object {
             }
         }
 
-        return true;
+        true
     }
 }
 
@@ -75,10 +75,7 @@ pub struct PersistedObject {
 
 impl PersistedObject {
     pub fn new(vertex: Vertex, object: Box<Object>) -> PersistedObject {
-        PersistedObject {
-            vertex: vertex,
-            object: object,
-        }
+        PersistedObject { vertex, object }
     }
     pub fn new_boxed(vertex: Vertex, object: Box<Object>) -> Box<PersistedObject> {
         Box::new(Self::new(vertex, object))

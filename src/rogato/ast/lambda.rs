@@ -12,10 +12,7 @@ pub struct Lambda {
 
 impl Lambda {
     pub fn new(args: LambdaArgs<Identifier>, body: Box<Expression>) -> Lambda {
-        Lambda {
-            args: args,
-            body: body,
-        }
+        Lambda { args, body }
     }
 }
 
@@ -59,7 +56,7 @@ impl ASTDepth for String {
 
 impl<A: Display + ASTDepth> LambdaArgs<A> {
     pub fn new(args: Vec<A>) -> LambdaArgs<A> {
-        LambdaArgs { args: args }
+        LambdaArgs { args }
     }
 
     #[allow(dead_code)]
@@ -76,7 +73,7 @@ impl<A: Display + ASTDepth> LambdaArgs<A> {
 impl<A: Display + ASTDepth> Display for LambdaArgs<A> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let fmt_str = self.args.iter().fold(String::from(""), |acc, arg| {
-            if acc == "" {
+            if acc.is_empty() {
                 arg.to_string()
             } else {
                 format!("{} {}", acc, arg)

@@ -79,7 +79,7 @@ fn print_help() {
 }
 
 fn print_parse_result<T: Display, E: Display>(code: &str, result: &Result<T, E>) {
-    let lines = code.split("\n");
+    let lines = code.split('\n');
     let line_count = Vec::from_iter(lines.to_owned()).len();
     let (_, code_with_line_numbers) = lines.fold((1, String::new()), |(counter, acc), line| {
         let mut string = format!("{}\n{:02}  {}", acc, counter, line);
@@ -107,7 +107,7 @@ fn run_repl() {
     loop {
         let mut buffer = String::new();
         let has_more_lines = Regex::new(r"(\\\s*)$").unwrap();
-        while buffer.len() == 0 || has_more_lines.is_match(buffer.as_str()) {
+        while buffer.is_empty() || has_more_lines.is_match(buffer.as_str()) {
             let replaced_buff = has_more_lines.replace(buffer.as_str(), "\n");
             buffer = replaced_buff.to_string();
             io::stdin().read_line(&mut buffer).unwrap();
@@ -146,30 +146,21 @@ pub fn basic_db_example<DB: db::Datastore + Debug>(db: &DB) -> db::DBResult<()> 
         let id1 = db.create_vertex_from_type(person_type_id.to_owned())?;
         let id2 = db.create_vertex_from_type(person_type_id.to_owned())?;
 
-        let friendship_edge_key =
-            db::EdgeKey::new(id1.clone(), friendship_edge_id.clone(), id2.clone());
+        let friendship_edge_key = db::EdgeKey::new(id1, friendship_edge_id.clone(), id2);
 
         db.bulk_insert(vec![
             db::BulkInsertItem::VertexProperty(
-                id1.clone(),
+                id1,
                 name_prop_id.clone(),
                 db::val::string(format!("John Connor {}", i)),
             ),
             db::BulkInsertItem::VertexProperty(
-                id2.clone(),
+                id2,
                 name_prop_id.clone(),
                 db::val::string(format!("John Connor {}", i)),
             ),
-            db::BulkInsertItem::VertexProperty(
-                id1.clone(),
-                age_prop_id.clone(),
-                db::val::number(i * 1000),
-            ),
-            db::BulkInsertItem::VertexProperty(
-                id2.clone(),
-                age_prop_id.clone(),
-                db::val::number(i * 9999),
-            ),
+            db::BulkInsertItem::VertexProperty(id1, age_prop_id.clone(), db::val::number(i * 1000)),
+            db::BulkInsertItem::VertexProperty(id2, age_prop_id.clone(), db::val::number(i * 9999)),
             db::BulkInsertItem::Edge(friendship_edge_key.clone()),
             db::BulkInsertItem::EdgeProperty(
                 friendship_edge_key.clone(),
@@ -177,7 +168,7 @@ pub fn basic_db_example<DB: db::Datastore + Debug>(db: &DB) -> db::DBResult<()> 
                 db::val::bool(true),
             ),
             db::BulkInsertItem::VertexProperty(
-                id2.clone(),
+                id2,
                 nickname_prop_id.clone(),
                 db::val::string(format!("Johnny {}", i)),
             ),
@@ -188,8 +179,7 @@ pub fn basic_db_example<DB: db::Datastore + Debug>(db: &DB) -> db::DBResult<()> 
         db::PropertyValueVertexQuery::new(nickname_prop_id.clone(), db::val::string("Johnny 101"));
 
     let vtx = db.get_vertices(db::VertexQuery::PropertyValue(prop_val_vtx_q.clone()))?;
-    let vtx_props =
-        db.get_vertex_properties(prop_val_vtx_q.clone().property(nickname_prop_id.clone()))?;
+    let vtx_props = db.get_vertex_properties(prop_val_vtx_q.property(nickname_prop_id))?;
 
     println!("vtx: {:?}", vtx);
     println!("vtx_props: {:?}", vtx_props);
@@ -201,7 +191,7 @@ pub fn basic_db_example<DB: db::Datastore + Debug>(db: &DB) -> db::DBResult<()> 
     )?;
     println!(
         "Vertex query results for type {} : {}",
-        person_type_id.to_owned().as_str(),
+        person_type_id.as_str(),
         vertices.len()
     );
 
@@ -214,9 +204,7 @@ pub fn basic_db_example<DB: db::Datastore + Debug>(db: &DB) -> db::DBResult<()> 
     );
 
     let vertex_props = db.get_vertex_properties(db::VertexPropertyQuery::new(
-        db::VertexQuery::PropertyPresence(db::PropertyPresenceVertexQuery::new(
-            age_prop_id.clone(),
-        )),
+        db::VertexQuery::PropertyPresence(db::PropertyPresenceVertexQuery::new(age_prop_id)),
         name_prop_id.clone(),
     ))?;
     println!(
@@ -225,14 +213,14 @@ pub fn basic_db_example<DB: db::Datastore + Debug>(db: &DB) -> db::DBResult<()> 
     );
 
     let edge_query =
-        db::EdgeQuery::PropertyPresence(db::PropertyPresenceEdgeQuery::new(bff_tag_id.clone()));
+        db::EdgeQuery::PropertyPresence(db::PropertyPresenceEdgeQuery::new(bff_tag_id));
 
     let vertex_props = db.get_vertex_properties(db::VertexPropertyQuery::new(
         db::VertexQuery::Pipe(db::PipeVertexQuery::new(
             Box::new(edge_query),
             db::EdgeDirection::Inbound,
         )),
-        name_prop_id.clone(),
+        name_prop_id,
     ))?;
     println!(
         "vertex_props query (age presence, incoming Friendship edge) result count: {}",
@@ -257,7 +245,7 @@ pub fn complex_db_example<DB: db::Datastore + Debug>(db: &DB) -> db::DBResult<()
 
     println!("types:\n{:?}\nproperties:\n{:?}", types, properties);
 
-    db.index_property(meta_author_p.clone())?;
+    db.index_property(meta_author_p)?;
 
     // add query on meta_author vertex property (json object)
     // with the following properties:
