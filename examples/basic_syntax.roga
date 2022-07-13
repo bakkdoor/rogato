@@ -27,7 +27,7 @@ let foo x =
 
 let fooWithSymbol =
   [1,2,3]
-  |> List.map (x -> (^Hello, x))
+  |> List.map (x -> {^Hello, x})
   // => [(^Hello, 1), (^Hello, 2), (^Hello, 3)]
 
 let codegen fnName args =
