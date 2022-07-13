@@ -1,6 +1,12 @@
 use std::fmt::Display;
 
-use crate::rogato::util::indent;
+use serde_json::Value;
+
+use crate::rogato::{
+    db::val,
+    interpreter::{EvalContext, Evaluate},
+    util::indent,
+};
 
 use super::{expression::Expression, walker::Walk, ASTDepth, Identifier};
 
@@ -87,5 +93,15 @@ impl<A: Display + ASTDepth> Display for LambdaArgs<A> {
 impl<A: Display + ASTDepth> ASTDepth for LambdaArgs<A> {
     fn ast_depth(&self) -> usize {
         self.args.iter().map(|a| a.ast_depth()).sum::<usize>()
+    }
+}
+
+impl<'a, A: Display + ASTDepth + Evaluate<'a, Value>> Evaluate<'a, Value> for LambdaArgs<A> {
+    fn evaluate(&self, context: &mut EvalContext<'a>) -> Value {
+        let mut vec = Vec::new();
+        for arg in self.args.iter() {
+            vec.push(arg.evaluate(context))
+        }
+        val::array(vec)
     }
 }

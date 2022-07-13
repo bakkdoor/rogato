@@ -1,3 +1,10 @@
+use serde_json::Map;
+
+use crate::rogato::{
+    db::{val, Value},
+    interpreter::{EvalContext, Evaluate},
+};
+
 use super::{ASTDepth, Identifier};
 use std::fmt::Display;
 
@@ -22,6 +29,24 @@ impl Display for ModuleDef {
 impl ASTDepth for ModuleDef {
     fn ast_depth(&self) -> usize {
         1 + self.exports.ast_depth()
+    }
+}
+
+impl<'a> Evaluate<'a, Value> for ModuleDef {
+    fn evaluate(&self, _context: &mut EvalContext<'a>) -> Value {
+        val::object(Map::from_iter(vec![
+            ("type".to_string(), Value::String("Module".to_string())),
+            ("name".to_string(), Value::String(self.id.to_string())),
+            (
+                "exports".to_string(),
+                Value::Array(
+                    self.exports
+                        .iter()
+                        .map(|e| Value::String(e.to_string()))
+                        .collect::<Vec<Value>>(),
+                ),
+            ),
+        ]))
     }
 }
 

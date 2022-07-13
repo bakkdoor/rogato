@@ -1,6 +1,12 @@
 use std::fmt::Display;
 
-use crate::rogato::util::indent;
+use serde_json::{Map, Value};
+
+use crate::rogato::{
+    db::val,
+    interpreter::{EvalContext, Evaluate},
+    util::indent,
+};
 
 use self::super::expression::{LambdaArgs, TupleItems};
 
@@ -27,6 +33,16 @@ impl Display for TypeDef {
 impl ASTDepth for TypeDef {
     fn ast_depth(&self) -> usize {
         1 + self.type_expr.ast_depth()
+    }
+}
+
+impl<'a> Evaluate<'a, Value> for TypeDef {
+    fn evaluate(&self, context: &mut EvalContext<'a>) -> Value {
+        val::object(Map::from_iter(vec![
+            ("type".to_string(), val::string("TypeDef")),
+            ("name".to_string(), val::string(self.id.to_string())),
+            ("type_expr".to_string(), self.type_expr.evaluate(context)),
+        ]))
     }
 }
 
@@ -92,5 +108,51 @@ impl ASTDepth for TypeExpression {
                     .sum::<usize>()
             }
         }
+    }
+}
+
+fn type_ref<ID: ToString>(id: ID) -> Value {
+    val::object(Map::from_iter(vec![
+        ("type".to_string(), val::string("TypeRef")),
+        ("name".to_string(), val::string(id.to_string())),
+    ]))
+}
+
+impl<'a> Evaluate<'a, Value> for TypeExpression {
+    fn evaluate(&self, context: &mut EvalContext<'a>) -> Value {
+        match self {
+            TypeExpression::IntType => type_ref("Int"),
+            TypeExpression::StringType => type_ref("String"),
+            TypeExpression::TypeRef(id) => type_ref(id),
+            TypeExpression::FunctionType(arg_types, return_type) => {
+                val::object(Map::from_iter(vec![
+                    ("type".to_string(), val::string("FunctionType")),
+                    ("args".to_string(), arg_types.evaluate(context)),
+                    ("return_type".to_string(), return_type.evaluate(context)),
+                ]))
+            }
+            TypeExpression::TupleType(el_types) => val::object(Map::from_iter(vec![
+                ("type".to_string(), val::string("TupleType")),
+                ("el_types".to_string(), el_types.evaluate(context)),
+            ])),
+            TypeExpression::ListType(type_expr) => val::object(Map::from_iter(vec![
+                ("type".to_string(), val::string("ListType")),
+                ("type_expr".to_string(), type_expr.evaluate(context)),
+            ])),
+            TypeExpression::StructType(prop_types) => val::object(Map::from_iter(vec![
+                ("type".to_string(), val::string("StructType")),
+                ("props".to_string(), prop_types.evaluate(context)),
+            ])),
+        }
+    }
+}
+
+impl<'a> Evaluate<'a, Value> for Vec<(Identifier, Box<TypeExpression>)> {
+    fn evaluate(&self, context: &mut EvalContext<'a>) -> Value {
+        let mut vec = Vec::new();
+        for (_id, type_expr) in self.iter() {
+            vec.push(type_expr.evaluate(context))
+        }
+        val::array(vec)
     }
 }

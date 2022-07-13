@@ -1,4 +1,10 @@
-use crate::rogato::util::indent;
+use serde_json::{Map, Value};
+
+use crate::rogato::{
+    db::val,
+    interpreter::{EvalContext, Evaluate},
+    util::indent,
+};
 
 use super::{expression::Expression, ASTDepth, Identifier};
 use std::fmt::Display;
@@ -34,6 +40,20 @@ impl Display for FnDef {
 impl ASTDepth for FnDef {
     fn ast_depth(&self) -> usize {
         1 + self.args.len() + self.body.ast_depth()
+    }
+}
+
+impl<'a> Evaluate<'a, Value> for FnDef {
+    fn evaluate(&self, context: &mut EvalContext<'a>) -> Value {
+        val::object(Map::from_iter(vec![
+            ("type".to_string(), val::string("Fn")),
+            ("name".to_string(), val::string(self.id.to_string())),
+            (
+                "args".to_string(),
+                Value::Array(self.args.iter().map(val::string).collect::<Vec<Value>>()),
+            ),
+            ("body".to_string(), self.body.evaluate(context)),
+        ]))
     }
 }
 

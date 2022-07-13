@@ -1,5 +1,8 @@
 use super::{expression::Expression, ASTDepth, Identifier};
-use crate::rogato::{db::val, interpreter::Evaluate};
+use crate::rogato::{
+    db::val,
+    interpreter::{EvalContext, Evaluate},
+};
 use serde_json::Value;
 use std::fmt::Display;
 
@@ -105,6 +108,12 @@ impl<I: Display> Display for TupleItems<I> {
         });
 
         f.write_fmt(format_args!("{}", fmt_str))
+    }
+}
+
+impl<'a, T: Evaluate<'a, Value>> Evaluate<'a, Value> for TupleItems<T> {
+    fn evaluate(&self, context: &mut EvalContext<'a>) -> Value {
+        val::array(self.items.iter().map(|i| i.evaluate(context)).collect())
     }
 }
 

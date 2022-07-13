@@ -6,7 +6,7 @@ pub use indradb::{
     RangeVertexQuery, RocksdbDatastore, SpecificVertexQuery, Vertex, VertexPropertyQuery,
     VertexQuery, VertexQueryExt,
 };
-pub use serde_json::Number;
+pub use serde_json::{Number, Value};
 use std::path::Path;
 pub use uuid::Uuid;
 

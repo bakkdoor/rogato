@@ -1,5 +1,9 @@
 use std::fmt::Display;
 
+use serde_json::Value;
+
+use crate::rogato::interpreter::{EvalContext, Evaluate};
+
 use super::AST;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -43,5 +47,11 @@ impl Display for Program {
                 });
 
         f.write_fmt(format_args!("{}", fmt_str))
+    }
+}
+
+impl<'a> Evaluate<'a, Value> for Program {
+    fn evaluate(&self, context: &mut EvalContext<'a>) -> Value {
+        Value::Array(self.iter().map(|ast| ast.evaluate(context)).collect())
     }
 }
