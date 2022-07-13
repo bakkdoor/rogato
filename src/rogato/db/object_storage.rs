@@ -9,6 +9,7 @@ use super::{
     DBResult, Datastore, Identifier, SpecificVertexQuery, VertexQuery,
 };
 
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub struct ObjectStorage {
     ids: HashMap<String, Identifier>,
 }
