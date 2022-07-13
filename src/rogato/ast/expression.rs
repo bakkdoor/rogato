@@ -1,5 +1,5 @@
 use crate::rogato::db::{val, Value};
-use crate::rogato::interpreter::{Evaluate, EvalContext};
+use crate::rogato::interpreter::{EvalContext, Evaluate};
 
 pub use super::fn_call::FnCallArgs;
 pub use super::fn_def::FnDefArgs;
@@ -84,8 +84,10 @@ impl<'a> Evaluate<'a, Value> for Expression {
             Expression::Product(a, b) => val::number(
                 a.evaluate(context).as_i64().unwrap() * b.evaluate(context).as_i64().unwrap(),
             ),
-            Expression::FnCall(_fn_ident, _args) => todo!("eval fn call"),
-            Expression::OpCall(_op_ident, _left, _right) => todo!("eval op call"),
+            Expression::FnCall(fn_ident, args) => val::string(format!("{}({})", fn_ident, args)),
+            Expression::OpCall(op_ident, left, right) => {
+                val::string(format!("{} {} {}", op_ident, left, right))
+            }
             Expression::Var(id) => match context.env().lookup_var(id) {
                 Some(var) => var.evaluate(&mut context.to_owned()),
                 None => {
@@ -93,12 +95,12 @@ impl<'a> Evaluate<'a, Value> for Expression {
                     val::null()
                 }
             },
-            Expression::ConstOrTypeRef(_id) => todo!("eval const or type ref"),
-            Expression::PropFnRef(_id) => todo!("eval prop fn ref"),
-            Expression::EdgeProp(_id, _edge) => todo!("eval edge prop"),
-            Expression::Let(_let_expr) => todo!("eval let expr"),
-            Expression::Lambda(_lambda) => todo!("eval lambda"),
-            Expression::Query(_query) => todo!("eval query"),
+            Expression::ConstOrTypeRef(_id) => val::string("eval const or type ref"),
+            Expression::PropFnRef(_id) => val::string("eval prop fn ref"),
+            Expression::EdgeProp(_id, _edge) => val::string("eval edge prop"),
+            Expression::Let(_let_expr) => val::string("eval let expr"),
+            Expression::Lambda(_lambda) => val::string("eval lambda"),
+            Expression::Query(_query) => val::string("eval query"),
         }
     }
 }
