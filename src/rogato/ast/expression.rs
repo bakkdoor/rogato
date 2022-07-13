@@ -78,7 +78,7 @@ impl Display for Expression {
             Expression::Symbol(id) => f.write_fmt(format_args!("^{}", id)),
             Expression::Quoted(expr) => {
                 let expr_fmt = format!("{}", expr);
-                if expr_fmt.starts_with("(") && expr_fmt.ends_with(")") {
+                if expr_fmt.starts_with('(') && expr_fmt.ends_with(')') {
                     f.write_fmt(format_args!("^{}", expr_fmt))
                 } else {
                     f.write_fmt(format_args!("^({})", expr_fmt))
@@ -86,7 +86,7 @@ impl Display for Expression {
             }
             Expression::Unquoted(expr) => {
                 let expr_fmt = format!("{}", expr);
-                if expr_fmt.starts_with("(") && expr_fmt.ends_with(")") {
+                if expr_fmt.starts_with('(') && expr_fmt.ends_with(')') {
                     f.write_fmt(format_args!("~{}", expr_fmt))
                 } else {
                     f.write_fmt(format_args!("~({})", expr_fmt))
