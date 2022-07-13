@@ -1,6 +1,10 @@
 use std::fmt::Display;
 
-use crate::rogato::util::indent;
+use crate::rogato::{
+    db::Value,
+    interpreter::{EvalContext, Evaluate},
+    util::indent,
+};
 
 use super::{expression::Expression, visitor::Visitor, walker::Walk, ASTDepth, Identifier};
 
@@ -42,6 +46,16 @@ impl Walk for LetExpression {
     }
 }
 
+impl<'a> Evaluate<'a, Value> for LetExpression {
+    fn evaluate(&self, context: &mut EvalContext<'a>) -> Value {
+        for (id, expr) in self.bindings.iter() {
+            let val = expr.evaluate(context);
+            context.define_var(id, val)
+        }
+        self.body.evaluate(context)
+    }
+}
+
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct LetBindings {
     bindings: Vec<(Identifier, Expression)>,
@@ -62,7 +76,13 @@ impl Display for LetBindings {
         let fmt_str = self
             .bindings
             .iter()
-            .map(|(ident, expr)| format!("{} =\n{}", ident, indent(expr)))
+            .map(|(ident, expr)| {
+                if expr.ast_depth() > 5 {
+                    format!("{} =\n{}", ident, indent(expr))
+                } else {
+                    format!("{} = {}", ident, expr)
+                }
+            })
             .fold(String::from(""), |acc, fmt| {
                 if acc.is_empty() {
                     fmt

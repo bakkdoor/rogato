@@ -121,8 +121,8 @@ impl<'a> Evaluate<'a, Value> for Expression {
             Expression::OpCall(op_ident, left, right) => {
                 val::string(format!("{} {} {}", op_ident, left, right))
             }
-            Expression::Var(id) => match context.env().lookup_var(id) {
-                Some(var) => var.evaluate(&mut context.to_owned()),
+            Expression::Var(id) => match context.lookup_var(id) {
+                Some(var) => var.to_owned(),
                 None => {
                     eprintln!("Var not found: {}", id);
                     val::null()
@@ -131,7 +131,7 @@ impl<'a> Evaluate<'a, Value> for Expression {
             Expression::ConstOrTypeRef(_id) => val::string("eval const or type ref"),
             Expression::PropFnRef(_id) => val::string("eval prop fn ref"),
             Expression::EdgeProp(_id, _edge) => val::string("eval edge prop"),
-            Expression::Let(_let_expr) => val::string("eval let expr"),
+            Expression::Let(let_expr) => let_expr.evaluate(context),
             Expression::Lambda(_lambda) => val::string("eval lambda"),
             Expression::Query(_query) => val::string("eval query"),
             Expression::Symbol(id) => val::string(format!("Symbol ^{}", id)), // likely need custom value types besides just json values to properly support symbols

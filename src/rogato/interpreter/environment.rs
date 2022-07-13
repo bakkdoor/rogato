@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 
 use super::{module::Module, Identifier};
-use crate::rogato::ast::expression::Expression;
+use crate::rogato::db::Value;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Environment<'a> {
     parent: Option<&'a Environment<'a>>,
-    variables: HashMap<Identifier, Box<Expression>>,
+    variables: HashMap<Identifier, Value>,
     modules: HashMap<Identifier, Module>,
 }
 
@@ -30,13 +30,12 @@ impl<'a> Environment<'a> {
     }
 
     #[allow(dead_code)]
-    pub fn define_var(&'a mut self, id: &Identifier, val: Box<Expression>) -> &'a mut Self {
+    pub fn define_var(&mut self, id: &Identifier, val: Value) {
         self.variables.insert(id.clone(), val);
-        self
     }
 
     #[allow(dead_code)]
-    pub fn lookup_var(&'a self, id: &Identifier) -> Option<&'a Expression> {
+    pub fn lookup_var(&'a self, id: &str) -> Option<&'a Value> {
         match self.variables.get(id) {
             Some(expr) => Some(expr),
             None => match self.parent {

@@ -1,4 +1,4 @@
-use self::environment::Environment;
+use self::{environment::Environment, module::Module};
 
 use super::db::{val, ObjectStorage, Value};
 
@@ -30,13 +30,27 @@ impl<'a> EvalContext<'a> {
         }
     }
 
-    pub fn env(&'a self) -> &'a Environment<'a> {
-        &self.env
-    }
-
     pub fn call_function(&self, id: &str, args: Vec<Value>) -> Value {
         // TODO
         val::string(format!("call function {}({:?})", id, args))
+    }
+
+    pub fn define_var(&'_ mut self, id: &Identifier, val: Value) {
+        self.env.define_var(id, val);
+    }
+
+    pub fn lookup_var(&'a self, id: &str) -> Option<&'a Value> {
+        self.env.lookup_var(id)
+    }
+
+    #[allow(dead_code)]
+    pub fn define_module(&'a mut self, id: &Identifier, module: Module) {
+        self.env.define_module(id, module);
+    }
+
+    #[allow(dead_code)]
+    pub fn lookup_module(&'a self, id: &Identifier) -> Option<&'a Module> {
+        self.env.lookup_module(id)
     }
 }
 
