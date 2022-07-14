@@ -7,7 +7,7 @@ pub use super::lambda::{Lambda, LambdaArgs};
 pub use super::let_expression::{LetBindings, LetExpression};
 pub use super::literal::*;
 pub use super::query::{Query, QueryBinding, QueryBindings, QueryGuards};
-use super::{ASTDepth, Identifier};
+use super::{ASTDepth, Identifier, AST};
 use std::fmt::Display;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -27,7 +27,9 @@ pub enum Expression {
     Query(Query),
     Symbol(Identifier),
     Quoted(Box<Expression>),
+    QuotedAST(Box<AST>),
     Unquoted(Box<Expression>),
+    UnquotedAST(Box<AST>),
 }
 
 impl ASTDepth for Expression {
@@ -48,7 +50,9 @@ impl ASTDepth for Expression {
             Expression::Query(query) => query.ast_depth(),
             Expression::Symbol(_id) => 1,
             Expression::Quoted(expr) => 1 + expr.ast_depth(),
+            Expression::QuotedAST(expr) => 1 + expr.ast_depth(),
             Expression::Unquoted(expr) => 1 + expr.ast_depth(),
+            Expression::UnquotedAST(expr) => 1 + expr.ast_depth(),
         }
     }
 }
@@ -76,23 +80,35 @@ impl Display for Expression {
             Expression::Lambda(lambda) => lambda.fmt(f),
             Expression::Query(query) => query.fmt(f),
             Expression::Symbol(id) => f.write_fmt(format_args!("^{}", id)),
-            Expression::Quoted(expr) => {
-                let expr_fmt = format!("{}", expr);
-                if expr_fmt.starts_with('(') && expr_fmt.ends_with(')') {
-                    f.write_fmt(format_args!("^{}", expr_fmt))
-                } else {
-                    f.write_fmt(format_args!("^({})", expr_fmt))
-                }
-            }
-            Expression::Unquoted(expr) => {
-                let expr_fmt = format!("{}", expr);
-                if expr_fmt.starts_with('(') && expr_fmt.ends_with(')') {
-                    f.write_fmt(format_args!("~{}", expr_fmt))
-                } else {
-                    f.write_fmt(format_args!("~({})", expr_fmt))
-                }
-            }
+            Expression::Quoted(expr) => display_quoted(f, expr),
+            Expression::QuotedAST(ast) => display_quoted(f, ast),
+            Expression::Unquoted(expr) => display_unquoted(f, expr),
+            Expression::UnquotedAST(ast) => display_unquoted(f, ast),
         }
+    }
+}
+
+fn display_quoted<Expr: Display>(
+    f: &mut std::fmt::Formatter<'_>,
+    expr: &Box<Expr>,
+) -> std::fmt::Result {
+    let expr_fmt = format!("{}", expr);
+    if expr_fmt.starts_with('(') && expr_fmt.ends_with(')') {
+        f.write_fmt(format_args!("^{}", expr_fmt))
+    } else {
+        f.write_fmt(format_args!("^({})", expr_fmt))
+    }
+}
+
+fn display_unquoted<Expr: Display>(
+    f: &mut std::fmt::Formatter<'_>,
+    expr: &Box<Expr>,
+) -> std::fmt::Result {
+    let expr_fmt = format!("{}", expr);
+    if expr_fmt.starts_with('(') && expr_fmt.ends_with(')') {
+        f.write_fmt(format_args!("~{}", expr_fmt))
+    } else {
+        f.write_fmt(format_args!("~({})", expr_fmt))
     }
 }
 
@@ -136,7 +152,9 @@ impl<'a> Evaluate<'a, Value> for Expression {
             Expression::Query(_query) => val::string("eval query"),
             Expression::Symbol(id) => val::string(format!("Symbol ^{}", id)), // likely need custom value types besides just json values to properly support symbols
             Expression::Quoted(expr) => val::string(format!("^({})", expr)),
+            Expression::QuotedAST(ast) => val::string(format!("^({})", ast)),
             Expression::Unquoted(expr) => val::string(format!("~({})", expr)),
+            Expression::UnquotedAST(ast) => val::string(format!("~({})", ast)),
         }
     }
 }

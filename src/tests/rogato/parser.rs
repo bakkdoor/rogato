@@ -1,6 +1,7 @@
 use crate::tests::rogato::{
-    commented, edge_prop, int_type, list_lit, prop_fn_ref, quoted, root_comment, string_type,
-    struct_lit, struct_type, symbol, tuple_type, type_def, type_ref, unquoted,
+    commented, edge_prop, int_type, list_lit, prop_fn_ref, quoted, quoted_ast, root_comment,
+    string_type, struct_lit, struct_type, symbol, tuple_type, type_def, type_ref, unquoted,
+    unquoted_ast,
 };
 #[cfg(test)]
 use crate::{assert_parse, assert_parse_ast, assert_parse_expr};
@@ -756,5 +757,15 @@ fn symbols_and_quotes() {
     assert_parse_expr!(
         "^(quoted ^Cool)",
         quoted(fn_call("quoted", vec![symbol("Cool")]))
+    );
+
+    assert_parse_expr!(
+        "^(let f x = x + 1)",
+        quoted_ast(fn_def("f", vec!["x"], sum(var("x"), int_lit(1))))
+    );
+
+    assert_parse_expr!(
+        "~(let f x = x + 1)",
+        unquoted_ast(fn_def("f", vec!["x"], sum(var("x"), int_lit(1))))
     );
 }

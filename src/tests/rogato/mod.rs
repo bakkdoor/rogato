@@ -237,6 +237,14 @@ pub fn quoted(expr: Box<Expression>) -> Box<Expression> {
     Box::new(Expression::Quoted(expr))
 }
 
+pub fn quoted_ast(ast: Box<AST>) -> Box<Expression> {
+    Box::new(Expression::QuotedAST(ast))
+}
+
 pub fn unquoted(expr: Box<Expression>) -> Box<Expression> {
     Box::new(Expression::Unquoted(expr))
+}
+
+pub fn unquoted_ast(ast: Box<AST>) -> Box<Expression> {
+    Box::new(Expression::UnquotedAST(ast))
 }

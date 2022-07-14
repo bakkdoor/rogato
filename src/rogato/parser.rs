@@ -203,12 +203,18 @@ grammar parser() for str {
         = "^" "(" expr:expression() ")" {
             Expression::Quoted(Box::new(expr))
         }
+        / "^" "(" ast:root_def() ")" {
+            Expression::QuotedAST(Box::new(ast))
+        }
         / symbol()
         / unquoted_expr()
 
     rule unquoted_expr() -> Expression
         = "~" "(" expr:expression() ")" {
             Expression::Unquoted(Box::new(expr))
+        }
+        / "~" "(" ast:root_def() ")" {
+            Expression::UnquotedAST(Box::new(ast))
         }
         / "~" var:variable() {
             Expression::Unquoted(Box::new(var))
