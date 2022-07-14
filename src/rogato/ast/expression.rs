@@ -88,10 +88,7 @@ impl Display for Expression {
     }
 }
 
-fn display_quoted<Expr: Display>(
-    f: &mut std::fmt::Formatter<'_>,
-    expr: &Box<Expr>,
-) -> std::fmt::Result {
+fn display_quoted<Expr: Display>(f: &mut std::fmt::Formatter<'_>, expr: &Expr) -> std::fmt::Result {
     let expr_fmt = format!("{}", expr);
     if expr_fmt.starts_with('(') && expr_fmt.ends_with(')') {
         f.write_fmt(format_args!("^{}", expr_fmt))
@@ -102,7 +99,7 @@ fn display_quoted<Expr: Display>(
 
 fn display_unquoted<Expr: Display>(
     f: &mut std::fmt::Formatter<'_>,
-    expr: &Box<Expr>,
+    expr: &Expr,
 ) -> std::fmt::Result {
     let expr_fmt = format!("{}", expr);
     if expr_fmt.starts_with('(') && expr_fmt.ends_with(')') {
