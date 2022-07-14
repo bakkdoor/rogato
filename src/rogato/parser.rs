@@ -15,6 +15,20 @@ use peg::{error::ParseError, parser, str::LineCol};
 parser! {
 /// Doc comment
 grammar parser() for str {
+    rule traced<T>(e: rule<T>) -> T =
+    &(input:$([_]*) {
+        #[cfg(feature = "trace")]
+        println!("[PEG_INPUT_START]\n{}\n[PEG_TRACE_START]", input);
+    })
+    e:e()? {?
+        #[cfg(feature = "trace")]
+        println!("[PEG_TRACE_STOP]");
+        e.ok_or("")
+    }
+
+    pub rule traced_program() -> Program
+        = traced(<program()>)
+
     pub rule program() -> Program
         = _ defs:(program_root_def())* _ {
             Program::new(defs)
