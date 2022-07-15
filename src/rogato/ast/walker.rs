@@ -9,6 +9,7 @@ impl Walk for AST {
         match self {
             AST::RootComment(c) => v.root_comment(c),
             AST::ModuleDef(mod_def) => v.module_def(mod_def),
+            AST::Use(id) => v.use_stmt(id),
             AST::FnDef(fn_def) => {
                 v.fn_def(fn_def);
                 fn_def.body().walk(v)

@@ -46,6 +46,7 @@ grammar parser() for str {
         = fn_def()
         / type_def()
         / module_def()
+        / use_stmt()
         / c:comment() {
             AST::RootComment(c)
         }
@@ -71,6 +72,11 @@ grammar parser() for str {
     rule additional_module_export() -> Identifier
         = _ "," _ id:identifier() {
             id
+        }
+
+    rule use_stmt() -> AST
+        = "use " id:constant_or_type_ref() {
+            AST::Use(id.to_string())
         }
 
     rule fn_def() -> AST

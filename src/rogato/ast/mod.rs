@@ -29,6 +29,7 @@ pub enum AST {
     RootComment(String),
     FnDef(FnDef),
     ModuleDef(ModuleDef),
+    Use(Identifier),
     TypeDef(TypeDef),
 }
 
@@ -42,6 +43,7 @@ impl Display for AST {
             AST::RootComment(comment) => f.write_fmt(format_args!("//{}", comment)),
             AST::FnDef(fn_def) => f.write_fmt(format_args!("{}", fn_def)),
             AST::ModuleDef(mod_def) => f.write_fmt(format_args!("{}", mod_def)),
+            AST::Use(id) => f.write_fmt(format_args!("use {}", id)),
             AST::TypeDef(type_def) => f.write_fmt(format_args!("{}", type_def)),
         }
     }
@@ -53,6 +55,7 @@ impl ASTDepth for AST {
             AST::RootComment(_) => 1,
             AST::FnDef(fn_def) => fn_def.ast_depth(),
             AST::ModuleDef(mod_def) => mod_def.ast_depth(),
+            AST::Use(_) => 1,
             AST::TypeDef(type_def) => type_def.ast_depth(),
         }
     }
@@ -64,6 +67,7 @@ impl<'a> Evaluate<'a, Value> for AST {
             AST::RootComment(_) => val::null(),
             AST::FnDef(fn_def) => fn_def.evaluate(context),
             AST::ModuleDef(mod_def) => mod_def.evaluate(context),
+            AST::Use(_id) => val::null(),
             AST::TypeDef(type_def) => type_def.evaluate(context),
         }
     }

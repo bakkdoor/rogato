@@ -9,6 +9,7 @@ use super::{
 pub trait Visitor {
     fn root_comment(&mut self, _comment: &str) {}
     fn module_def(&mut self, _mod_def: &ModuleDef) {}
+    fn use_stmt(&mut self, _mod_def: &Identifier) {}
     fn fn_def(&mut self, _fn_def: &FnDef) {}
     fn type_def(&mut self, _type_def: &TypeDef) {}
 

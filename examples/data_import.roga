@@ -1,0 +1,33 @@
+module Examples.DataImport { importData }
+
+use Std.Import
+use Std.File
+
+let importData fileName =
+  importData fileName Import.csv
+
+let importData fileName importer =
+  fileName
+  |> File.read
+  |> importer
+
+
+// example usage:
+let doStuff =
+  let
+    people =
+      importData "people.csv"
+
+    friendships =
+      ? p1, p2 <- people
+      ? p1 <- p2#Friend
+      ? p2 <- p1#Friend
+      !> {p1, p2}
+
+    partnersWithCommonFriends =
+      ? p1, p2, f <- people
+      ? p1 <- p2#MarriedTo
+      ? f <- (p1#Friend | p2#Friend)
+      !> {{p1, p2}, f}
+  in
+    "ok"
