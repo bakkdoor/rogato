@@ -679,7 +679,7 @@ fn fn_pipes() {
     );
 
     assert_parse_expr!(
-        "2
+        "[1, 2]
          |> joinWith {1,2,3}
          |> select (x -> isHappy x)
          |> sumBy (delta 1)",
@@ -692,7 +692,7 @@ fn fn_pipes() {
                         fn_call(
                             "joinWith",
                             vec![
-                                int_lit(2),
+                                list_lit(vec![int_lit(1), int_lit(2)]),
                                 tuple_lit(vec![int_lit(1), int_lit(2), int_lit(3)])
                             ]
                         ),

@@ -136,10 +136,10 @@ grammar parser() for str {
         }
 
     pub rule expression() -> Expression
-        = tuple_lit()
+        = fn_pipe()
+        / tuple_lit()
         / list_lit()
         / let_expr()
-        / fn_pipe()
         / query()
         / lambda()
         / fn_call()
