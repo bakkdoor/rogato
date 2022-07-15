@@ -703,6 +703,17 @@ fn lambdas() {
 #[test]
 fn fn_pipes() {
     assert_parse_expr!(
+        "2 |> inspect |> MyMod.doStuff |> repeat",
+        fn_call(
+            "repeat",
+            vec![fn_call(
+                "MyMod.doStuff",
+                vec![fn_call("inspect", vec![int_lit(2)])]
+            )]
+        )
+    );
+
+    assert_parse_expr!(
         "2 |> inspect |> repeat 10",
         fn_call(
             "repeat",

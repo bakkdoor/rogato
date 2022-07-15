@@ -170,7 +170,7 @@ grammar parser() for str {
         = _ "|>" _ fc:fn_call() {
             fc
         }
-        / _ "|>" _ id:variable_identifier() {
+        / _ "|>" _ id:identifier() {
             Expression::FnCall(id, FnCallArgs::new(vec![]))
         }
 
