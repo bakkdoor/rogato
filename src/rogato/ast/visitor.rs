@@ -14,8 +14,6 @@ pub trait Visitor {
 
     fn commented(&mut self, _commented: &str, _expr: &Expression) {}
     fn lit(&mut self, _lit: &Literal) {}
-    fn sum(&mut self, _left: &Expression, _right: &Expression) {}
-    fn product(&mut self, _left: &Expression, _right: &Expression) {}
     fn fn_call(&mut self, _id: &Identifier, _args: &FnCallArgs) {}
     fn op_call(&mut self, _id: &Identifier, _left: &Expression, _right: &Expression) {}
     fn var(&mut self, _id: &Identifier) {}

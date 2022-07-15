@@ -144,10 +144,7 @@ grammar parser() for str {
         / lambda()
         / fn_call()
         / op_call()
-        / sum()
-        / literal_expr()
-        / variable()
-        / quoted_expr()
+        / atom()
         / commented_expr()
 
     rule fn_pipe() -> Expression
@@ -166,9 +163,7 @@ grammar parser() for str {
 
     rule fn_pipe_arg() -> Expression
         = lambda()
-        / sum()
         / fn_call()
-        / op_call()
         / atom()
 
     rule fn_pipe_call() -> Expression
@@ -184,25 +179,12 @@ grammar parser() for str {
             Expression::Commented(c, Box::new(e))
         }
 
-    rule sum() -> Expression
-        = l:product() _ "+" _ r:product() {
-            Expression::Sum(Box::new(l), Box::new(r))
-        }
-        / product()
-
-    rule product() -> Expression
-        = l:atom() _ "*" _ r:atom() {
-            Expression::Product(Box::new(l), Box::new(r))
-        }
-        / atom()
-
     rule atom() -> Expression
         = literal_expr()
         / edge_prop()
         / variable()
         / constant_or_type_ref()
         / quoted_expr()
-        / "(" _ v:sum() _ ")" { v }
         / "(" _ l:lambda() _ ")" { l }
         / "(" _ c:(fn_pipe() / fn_call() / op_call()) _ ")" { c }
 
@@ -274,16 +256,15 @@ grammar parser() for str {
 
     rule query_expr() -> Expression
         = edge_prop()
-        / "(" _ v:sum() _ ")" { v }
         / "(" _ l:lambda() _ ")" { l }
         / "(" _ c:(fn_pipe() / fn_call() / op_call()) _ ")" { c }
+        / fn_pipe()
         / fn_call()
         / constant_or_type_ref()
         / lambda()
         / variable()
         / quoted_expr()
         / op_call()
-        / sum()
         / literal_expr()
 
     rule edge_prop() -> Expression
@@ -332,11 +313,7 @@ grammar parser() for str {
         = "(" _ expr:atom() _ ")" {
             expr
         }
-        / sum()
-        / literal_expr()
-        / edge_prop()
-        / variable()
-        / quoted_expr()
+        / atom()
 
     rule let_expr() -> Expression
         = "let" _ bindings:let_bindings() _ "in" _ body:let_body() {
@@ -372,10 +349,7 @@ grammar parser() for str {
         / fn_pipe()
         / fn_call()
         / op_call()
-        / sum()
-        / variable()
-        / quoted_expr()
-        / literal_expr()
+        / atom()
         / commented_let_body()
 
     rule commented_let_body() -> Expression
@@ -421,9 +395,8 @@ grammar parser() for str {
 
     rule tuple_item() -> Expression
         = fn_call()
-        / op_call()
-        / sum()
         / fn_pipe()
+        / op_call()
         / atom()
         / commented_tuple_item()
 

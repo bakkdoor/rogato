@@ -9,8 +9,8 @@ use crate::{assert_parse, assert_parse_ast, assert_parse_expr};
 use super::{const_or_type_ref, lambda, query};
 #[cfg(test)]
 use super::{
-    fn_call, fn_def, int_lit, let_expr, module_def, op_call, parse_expr, product, program,
-    string_lit, sum, tuple_lit, var,
+    fn_call, fn_def, int_lit, let_expr, module_def, op_call, parse_expr, program, string_lit,
+    tuple_lit, var,
 };
 
 #[test]
@@ -19,26 +19,30 @@ fn fn_defs() {
 
     assert_parse_ast!(
         "let add a b = a + b",
-        fn_def("add", vec!["a", "b"], sum(var("a"), var("b")))
+        fn_def("add", vec!["a", "b"], op_call("+", var("a"), var("b")))
     );
 
     assert_parse_ast!(
-        "let add a b c = a + b * (c * a)",
+        "let add a b c = (a + b) * (c * a)",
         fn_def(
             "add",
             vec!["a", "b", "c"],
-            sum(var("a"), product(var("b"), product(var("c"), var("a"))))
+            op_call(
+                "*",
+                op_call("+", var("a"), var("b")),
+                op_call("*", var("c"), var("a"))
+            )
         )
     );
 
     assert_parse_ast!(
         "let add1 a = 1 + a",
-        fn_def("add1", vec!["a"], sum(int_lit(1), var("a")))
+        fn_def("add1", vec!["a"], op_call("+", int_lit(1), var("a")))
     );
 
     assert_parse_ast!(
         "\nlet add1and2 = 1 + 2\n",
-        fn_def("add1and2", vec![], sum(int_lit(1), int_lit(2)))
+        fn_def("add1and2", vec![], op_call("+", int_lit(1), int_lit(2)))
     );
 
     assert_parse_ast!(
@@ -67,9 +71,9 @@ fn fn_defs() {
             vec!["a", "b"],
             let_expr(
                 vec![
-                    ("x", sum(var("a"), var("b"))),
-                    ("y", product(var("x"), var("a"))),
-                    ("z", product(var("y"), var("b"))),
+                    ("x", op_call("+", var("a"), var("b"))),
+                    ("y", op_call("*", var("x"), var("a"))),
+                    ("z", op_call("*", var("y"), var("b"))),
                 ],
                 tuple_lit(vec![
                     var("x"),
@@ -110,22 +114,25 @@ fn module_defs() {
 
 #[test]
 fn arithmetic_expressions() {
-    assert_parse_expr!("1+1", sum(int_lit(1), int_lit(1)));
+    assert_parse_expr!("1 + 1", op_call("+", int_lit(1), int_lit(1)));
 
-    assert_parse_expr!("5*5", product(int_lit(5), int_lit(5)));
-
-    assert_parse_expr!("2+3*4", sum(int_lit(2), product(int_lit(3), int_lit(4)),));
+    assert_parse_expr!("5 * 5", op_call("*", int_lit(5), int_lit(5)));
 
     assert_parse_expr!(
-        "(2+3) * 4",
-        product(sum(int_lit(2), int_lit(3)), int_lit(4))
+        "2 + (3 * 4)",
+        op_call("+", int_lit(2), op_call("*", int_lit(3), int_lit(4)),)
+    );
+
+    assert_parse_expr!(
+        "(2 + 3) * 4",
+        op_call("*", op_call("+", int_lit(2), int_lit(3)), int_lit(4))
     );
 
     assert_parse_expr!(
         "let x = 1, y = 2 in x + y",
         let_expr(
             vec![("x", int_lit(1)), ("y", int_lit(2))],
-            sum(var("x"), var("y")),
+            op_call("+", var("x"), var("y")),
         )
     );
 
@@ -149,15 +156,19 @@ fn literals() {
 
     assert_parse_expr!(
         "{ 1, (2 + 3), 4 }",
-        tuple_lit(vec![int_lit(1), sum(int_lit(2), int_lit(3)), int_lit(4)])
+        tuple_lit(vec![
+            int_lit(1),
+            op_call("+", int_lit(2), int_lit(3)),
+            int_lit(4)
+        ])
     );
 
     assert_parse_expr!(
         "{ 1, 2 + 3, 4 * 5 }",
         tuple_lit(vec![
             int_lit(1),
-            sum(int_lit(2), int_lit(3)),
-            product(int_lit(4), int_lit(5))
+            op_call("+", int_lit(2), int_lit(3)),
+            op_call("*", int_lit(4), int_lit(5))
         ])
     );
 
@@ -165,8 +176,17 @@ fn literals() {
         "{ 1, a + b, c * d }",
         tuple_lit(vec![
             int_lit(1),
-            sum(var("a"), var("b")),
-            product(var("c"), var("d"))
+            op_call("+", var("a"), var("b")),
+            op_call("*", var("c"), var("d"))
+        ])
+    );
+
+    assert_parse_expr!(
+        "{{x, x > y}, x == 0, x + y}",
+        tuple_lit(vec![
+            tuple_lit(vec![var("x"), op_call(">", var("x"), var("y"))]),
+            op_call("==", var("x"), int_lit(0)),
+            op_call("+", var("x"), var("y"))
         ])
     );
 
@@ -212,6 +232,15 @@ fn literals() {
             tuple_lit(vec![int_lit(2), string_lit("bar")])
         ])
     );
+
+    assert_parse_expr!(
+        "[[x, x > y], x == 0, x + y]",
+        list_lit(vec![
+            list_lit(vec![var("x"), op_call(">", var("x"), var("y"))]),
+            op_call("==", var("x"), int_lit(0)),
+            op_call("+", var("x"), var("y"))
+        ])
+    );
 }
 
 #[test]
@@ -249,19 +278,19 @@ fn op_calls() {
 
     assert_parse_expr!(
         "1 <= (2 + 3)",
-        op_call("<=", int_lit(1), sum(int_lit(2), int_lit(3)))
+        op_call("<=", int_lit(1), op_call("+", int_lit(2), int_lit(3)))
     );
 
     assert_parse_expr!(
         "(2 + 3) <= foo",
-        op_call("<=", sum(int_lit(2), int_lit(3)), var("foo"))
+        op_call("<=", op_call("+", int_lit(2), int_lit(3)), var("foo"))
     );
 
     assert_parse_expr!(
         "(2 + 3) <= (foo <!> (bar <=> baz))",
         op_call(
             "<=",
-            sum(int_lit(2), int_lit(3)),
+            op_call("+", int_lit(2), int_lit(3)),
             op_call("<!>", var("foo"), op_call("<=>", var("bar"), var("baz")))
         )
     );
@@ -307,7 +336,7 @@ fn comments() {
         "// a comment yo!\nlet x = 1 in x * 2",
         commented(
             " a comment yo!",
-            let_expr(vec![("x", int_lit(1))], product(var("x"), int_lit(2)))
+            let_expr(vec![("x", int_lit(1))], op_call("*", var("x"), int_lit(2)))
         )
     );
 }
@@ -490,7 +519,7 @@ fn queries() {
             vec![op_call(
                 "==",
                 fn_call("age", vec![var("p")]),
-                sum(fn_call("age", vec![var("p2")]), int_lit(1))
+                op_call("+", fn_call("age", vec![var("p2")]), int_lit(1))
             ),],
             tuple_lit(vec![var("p"), var("p2")])
         )
@@ -549,7 +578,7 @@ fn queries() {
             vec![op_call(
                 "<",
                 int_lit(0),
-                sum(var("a"), sum(var("b"), var("c")))
+                op_call("+", var("a"), op_call("+", var("b"), var("c")))
             )],
             tuple_lit(vec![
                 var("diff"),
@@ -601,7 +630,7 @@ fn queries() {
                     fn_call("hello", vec![int_lit(1), int_lit(2)]),
                     false
                 ),
-                (vec!["p"], sum(var("a"), var("b")), true)
+                (vec!["p"], op_call("+", var("a"), var("b")), true)
             ],
             vec![],
             fn_call("inspect", vec![var("p")])
@@ -625,11 +654,14 @@ fn variables() {
 
 #[test]
 fn lambdas() {
-    assert_parse_expr!("x -> x + 1", lambda(vec!["x"], sum(var("x"), int_lit(1))));
+    assert_parse_expr!(
+        "x -> x + 1",
+        lambda(vec!["x"], op_call("+", var("x"), int_lit(1)))
+    );
 
     assert_parse_expr!(
         "x y -> x + y",
-        lambda(vec!["x", "y"], sum(var("x"), var("y")))
+        lambda(vec!["x", "y"], op_call("+", var("x"), var("y")))
     );
 
     assert_parse_expr!(
@@ -642,7 +674,7 @@ fn lambdas() {
                     lambda(
                         vec!["z"],
                         tuple_lit(vec![
-                            product(var("x"), product(var("y"), var("z"))),
+                            op_call("*", var("x"), op_call("*", var("y"), var("z"))),
                             tuple_lit(vec![var("x"), var("y"), var("z")])
                         ])
                     ),
@@ -729,7 +761,8 @@ fn fn_pipes() {
                         ),
                         lambda(
                             vec!["y"],
-                            sum(
+                            op_call(
+                                "+",
                                 var("x"),
                                 fn_call(
                                     "join",
@@ -804,11 +837,11 @@ fn symbols_and_quotes() {
 
     assert_parse_expr!(
         "^(let f x = x + 1)",
-        quoted_ast(fn_def("f", vec!["x"], sum(var("x"), int_lit(1))))
+        quoted_ast(fn_def("f", vec!["x"], op_call("+", var("x"), int_lit(1))))
     );
 
     assert_parse_expr!(
         "~(let f x = x + 1)",
-        unquoted_ast(fn_def("f", vec!["x"], sum(var("x"), int_lit(1))))
+        unquoted_ast(fn_def("f", vec!["x"], op_call("+", var("x"), int_lit(1))))
     );
 }

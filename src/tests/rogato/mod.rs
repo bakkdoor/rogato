@@ -102,14 +102,6 @@ pub fn prop_fn_ref(id: &str) -> Box<Expression> {
     Box::new(PropFnRef(id.to_string()))
 }
 
-pub fn sum(a: Box<Expression>, b: Box<Expression>) -> Box<Expression> {
-    Box::new(Sum(a, b))
-}
-
-pub fn product(a: Box<Expression>, b: Box<Expression>) -> Box<Expression> {
-    Box::new(Product(a, b))
-}
-
 pub fn fn_def(id: &str, args: Vec<&str>, body: Box<Expression>) -> Box<AST> {
     Box::new(AST::FnDef(FnDef::new(
         id.to_string(),

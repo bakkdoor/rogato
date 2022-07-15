@@ -26,16 +26,6 @@ impl Walk for Expression {
                 expr.walk(v);
             }
             Expression::Lit(lit_exp) => v.lit(lit_exp),
-            Expression::Sum(a, b) => {
-                v.sum(a, b);
-                a.walk(v);
-                b.walk(v);
-            }
-            Expression::Product(a, b) => {
-                v.product(a, b);
-                a.walk(v);
-                b.walk(v);
-            }
             Expression::FnCall(id, args) => {
                 v.fn_call(id, args);
                 for a in args.iter() {

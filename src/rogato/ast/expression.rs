@@ -14,8 +14,6 @@ use std::fmt::Display;
 pub enum Expression {
     Commented(String, Box<Expression>),
     Lit(Literal),
-    Sum(Box<Expression>, Box<Expression>),
-    Product(Box<Expression>, Box<Expression>),
     FnCall(Identifier, FnCallArgs),
     OpCall(Identifier, Box<Expression>, Box<Expression>),
     Var(Identifier),
@@ -37,8 +35,6 @@ impl ASTDepth for Expression {
         match self {
             Expression::Commented(_, e) => 1 + e.ast_depth(),
             Expression::Lit(lit_exp) => lit_exp.ast_depth(),
-            Expression::Sum(a, b) => a.ast_depth() + b.ast_depth(),
-            Expression::Product(a, b) => a.ast_depth() + b.ast_depth(),
             Expression::FnCall(_id, args) => args.iter().map(|a| a.ast_depth()).sum(),
             Expression::OpCall(_id, left, right) => left.ast_depth() + right.ast_depth(),
             Expression::Var(_id) => 1,
@@ -64,8 +60,6 @@ impl Display for Expression {
                 f.write_fmt(format_args!("//{}\n{}", comment, exp))
             }
             Expression::Lit(lit_exp) => lit_exp.fmt(f),
-            Expression::Sum(a, b) => f.write_fmt(format_args!("({} + {})", a, b)),
-            Expression::Product(a, b) => f.write_fmt(format_args!("({} * {})", a, b)),
             Expression::FnCall(fn_ident, args) => {
                 f.write_fmt(format_args!("({}{})", fn_ident, args))
             }
@@ -114,19 +108,6 @@ impl<'a> Evaluate<'a, Value> for Expression {
         match self {
             Expression::Commented(_c, e) => e.evaluate(context),
             Expression::Lit(lit_exp) => lit_exp.evaluate(context),
-            Expression::Sum(a, b) => {
-                match (a.evaluate(context), b.evaluate(context)) {
-                    (Value::Number(n1), Value::Number(n2)) => {
-                        // todo: add support for other number types
-                        let num = n1.as_i64().unwrap() + n2.as_i64().unwrap();
-                        val::number(num)
-                    }
-                    (val1, val2) => context.call_function("+", vec![val1, val2]),
-                }
-            }
-            Expression::Product(a, b) => val::number(
-                a.evaluate(context).as_i64().unwrap() * b.evaluate(context).as_i64().unwrap(),
-            ),
             Expression::FnCall(fn_ident, args) => {
                 let call_args = args.iter().map(|a| a.evaluate(context)).collect();
                 context.call_function(fn_ident, call_args)

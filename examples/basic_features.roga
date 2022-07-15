@@ -1,7 +1,7 @@
 module BasicFeatures { doubled, tripled, squared, withLarger }
 
 let doubled x = x + x
-let tripled x = x + x + x
+let tripled x = x + (x + x)
 let squared x = x * x
 
 let withLarger x y f = withLarger {x, x > y} {y, x < y} f
