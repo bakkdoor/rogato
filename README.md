@@ -31,4 +31,5 @@ I needed a project to learn Rust with. I always have been interested in graph da
 **rogātō** is the ablative case of the Latin perfect passive participle of [***rogātus***](https://en.wiktionary.org/wiki/rogatus#Latin) (having been enquired / asked / requested / invited).
 
 ###### How is it pronounced?
-<sub>The a and final o (marked with macrons) are pronounced twice as long as the first o.</sub>
+###### <sup>The a and final o (marked with macrons) are pronounced twice as long as the first o.</sup>
+
