@@ -411,7 +411,7 @@ fn let_expressions() {
             friendsNames =
                 (List.map friendsOfFriends name)
          in
-            {friends, List.count friends}",
+            { friends, List.count friends }",
         let_expr(
             vec![
                 (
@@ -701,6 +701,49 @@ fn fn_pipes() {
                 ),
                 fn_call("delta", vec![int_lit(1)])
             ]
+        )
+    );
+
+    assert_parse_ast!(
+        "let f x =
+            ? p <- Person
+            ! (x
+                |> doStuff {2, 3, 4}
+                |> thenDo (y -> x + (y |> toString |> join {1,2,3}))
+            )
+            !> p",
+        fn_def(
+            "f",
+            vec!["x"],
+            query(
+                vec![(vec!["p"], const_or_type_ref("Person"), false)],
+                vec![fn_call(
+                    "thenDo",
+                    vec![
+                        fn_call(
+                            "doStuff",
+                            vec![
+                                var("x"),
+                                tuple_lit(vec![int_lit(2), int_lit(3), int_lit(4)])
+                            ]
+                        ),
+                        lambda(
+                            vec!["y"],
+                            sum(
+                                var("x"),
+                                fn_call(
+                                    "join",
+                                    vec![
+                                        fn_call("toString", vec![var("y")],),
+                                        tuple_lit(vec![int_lit(1), int_lit(2), int_lit(3)])
+                                    ]
+                                )
+                            )
+                        )
+                    ]
+                )],
+                var("p")
+            )
         )
     );
 }
