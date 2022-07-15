@@ -421,9 +421,9 @@ grammar parser() for str {
 
     rule tuple_item() -> Expression
         = fn_call()
+        / op_call()
         / sum()
         / fn_pipe()
-        / op_call()
         / atom()
         / commented_tuple_item()
 
