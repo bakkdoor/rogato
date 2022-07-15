@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Display};
 
 use crate::rogato::ast::{fn_def::FnDef, type_expression::TypeDef};
 
@@ -47,5 +47,11 @@ impl Module {
             Some(f) => Some(f),
             None => None,
         }
+    }
+}
+
+impl Display for Module {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("Module {{ id: {:?} }}", self.id))
     }
 }
