@@ -1,4 +1,4 @@
-module Std.List { map count isEmpty }
+module Std.List { map, count, isEmpty }
 
 let map [] f = []
 let map [x] f = [f x]
