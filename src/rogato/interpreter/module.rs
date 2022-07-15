@@ -6,14 +6,16 @@ use super::Identifier;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Module {
+    id: Identifier,
     fn_defs: HashMap<Identifier, Box<FnDef>>,
     type_defs: HashMap<Identifier, Box<TypeDef>>,
 }
 
 impl Module {
     #[allow(dead_code)]
-    pub fn new() -> Module {
+    pub fn new(id: Identifier) -> Module {
         Module {
+            id,
             fn_defs: HashMap::new(),
             type_defs: HashMap::new(),
         }
