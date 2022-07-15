@@ -43,9 +43,9 @@ grammar parser() for str {
         }
 
     pub rule root_def() -> AST
-        = module_def()
-        / fn_def()
+        = fn_def()
         / type_def()
+        / module_def()
         / c:comment() {
             AST::RootComment(c)
         }
@@ -136,16 +136,18 @@ grammar parser() for str {
         }
 
     pub rule expression() -> Expression
-        = let_expr()
+        = tuple_lit()
+        / list_lit()
+        / let_expr()
         / fn_pipe()
         / query()
         / lambda()
         / fn_call()
         / op_call()
         / sum()
+        / literal_expr()
         / variable()
         / quoted_expr()
-        / literal_expr()
         / commented_expr()
 
     rule fn_pipe() -> Expression
@@ -195,11 +197,11 @@ grammar parser() for str {
         / atom()
 
     rule atom() -> Expression
-        = edge_prop()
+        = literal_expr()
+        / edge_prop()
         / variable()
-        / quoted_expr()
-        / literal_expr()
         / constant_or_type_ref()
+        / quoted_expr()
         / "(" _ v:sum() _ ")" { v }
         / "(" _ l:lambda() _ ")" { l }
         / "(" _ c:(fn_pipe() / fn_call() / op_call()) _ ")" { c }
@@ -418,10 +420,10 @@ grammar parser() for str {
         }
 
     rule tuple_item() -> Expression
-        = fn_pipe()
-        / fn_call()
-        / op_call()
+        = fn_call()
         / sum()
+        / fn_pipe()
+        / op_call()
         / atom()
         / commented_tuple_item()
 
@@ -517,6 +519,11 @@ pub type ParseResult = Result<Program, ParseError<LineCol>>;
 
 pub fn parse(str: &str) -> ParseResult {
     parser::program(str)
+}
+
+#[allow(dead_code)]
+pub fn parse_traced(str: &str) -> ParseResult {
+    parser::traced_program(str)
 }
 
 #[cfg(test)]
