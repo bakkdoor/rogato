@@ -14,7 +14,7 @@ For some example source code and syntax ideas (still WIP), check out the code ex
 
 ### Language design goals
 
-* Simple, typed, functional core language for data processing
+* Simple, typed, memory-safe functional core language for data processing
 * Direct native access to built-in graph database
 * First-class query manipulation support against graph db
 * Symbolic language capabilities for easy knowledge graph construction and querying
