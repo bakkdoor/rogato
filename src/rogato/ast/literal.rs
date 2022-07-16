@@ -26,7 +26,7 @@ impl Display for Literal {
                     if items_str.split('\n').count() == 1 {
                         f.write_fmt(format_args!("{{ {} }}", items))
                     } else {
-                        f.write_fmt(format_args!("\n{{\n{}\n}}", indent(items)))
+                        f.write_fmt(format_args!("{{\n{}\n}}", indent(items)))
                     }
                 } else {
                     f.write_fmt(format_args!("{{ {} }}", items))
@@ -38,7 +38,7 @@ impl Display for Literal {
                     if items_str.split('\n').count() == 1 {
                         f.write_fmt(format_args!("[ {} ]", items))
                     } else {
-                        f.write_fmt(format_args!("\n[\n{}\n]", indent(items)))
+                        f.write_fmt(format_args!("[\n{}\n]", indent(items)))
                     }
                 } else {
                     f.write_fmt(format_args!("[ {} ]", items))
