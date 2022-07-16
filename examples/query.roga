@@ -58,4 +58,12 @@ let friendsAndFamilyWithin people person =
       ? p <!- family
       !> p
   in
-    {person, [{"family",family}, {"friends",friends person}, {"friendsOfFriends",friendsOfFriends}]}
+    {
+      person,
+      [
+        {"family", family},
+        {"friends", friends person},
+        {"friendsOfFriends", friendsOfFriends},
+        {"friendsOfFriendsWithoutFamily", friendsOfFriendsWithoutFamily},
+      ],
+    }
