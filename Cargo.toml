@@ -7,13 +7,14 @@ edition = "2021"
 
 [dependencies]
 
+anyhow = "1.0.13"
 indent_write = "2.2.0"
 indradb-lib = { version = "3.0.2", features = ["rocksdb-datastore"] }
 peg = "0.8.0"
+regex = "1"
 serde = "1.0.138"
 serde_json = "1.0.82"
 uuid = { version = "~1.1.2", features = ["v1", "serde"] }
-regex = "1"
 
 [features]
 trace = ["peg/trace"]
