@@ -2,6 +2,7 @@ use super::{expression::Expression, ASTDepth, Identifier};
 use crate::rogato::{
     db::{val, Value},
     interpreter::{EvalContext, Evaluate},
+    util::indent,
 };
 use std::fmt::Display;
 
@@ -19,8 +20,30 @@ impl Display for Literal {
         match self {
             Literal::Int64(num) => f.write_fmt(format_args!("{}", num)),
             Literal::String(string) => f.write_fmt(format_args!("\"{}\"", string)),
-            Literal::Tuple(items) => f.write_fmt(format_args!("{{ {} }}", items)),
-            Literal::List(items) => f.write_fmt(format_args!("[ {} ]", items)),
+            Literal::Tuple(items) => {
+                if items.ast_depth() > 6 {
+                    let items_str = format!("{}", items);
+                    if items_str.split('\n').count() == 1 {
+                        f.write_fmt(format_args!("{{ {} }}", items))
+                    } else {
+                        f.write_fmt(format_args!("\n{{\n{}\n}}", indent(items)))
+                    }
+                } else {
+                    f.write_fmt(format_args!("{{ {} }}", items))
+                }
+            }
+            Literal::List(items) => {
+                if items.ast_depth() > 6 {
+                    let items_str = format!("{}", items);
+                    if items_str.split('\n').count() == 1 {
+                        f.write_fmt(format_args!("[ {} ]", items))
+                    } else {
+                        f.write_fmt(format_args!("\n[\n{}\n]", indent(items)))
+                    }
+                } else {
+                    f.write_fmt(format_args!("[ {} ]", items))
+                }
+            }
             Literal::Struct(id, props) => f.write_fmt(format_args!("{}{{ {} }}", id, props)),
         }
     }
@@ -96,17 +119,26 @@ impl<I: Display> TupleItems<I> {
     }
 }
 
-impl<I: Display> Display for TupleItems<I> {
+impl<I: Display + ASTDepth> Display for TupleItems<I> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let indent_items = self.items.iter().any(|i| i.ast_depth() > 6);
         let fmt_str = self.items.iter().fold(String::from(""), |acc, item| {
             if acc.is_empty() {
                 format!("{}", item)
+            } else if indent_items {
+                format!("{},\n{}", acc, item)
             } else {
                 format!("{}, {}", acc, item)
             }
         });
 
         f.write_fmt(format_args!("{}", fmt_str))
+    }
+}
+
+impl<I: ASTDepth> ASTDepth for TupleItems<I> {
+    fn ast_depth(&self) -> usize {
+        1 + self.items.iter().map(|i| i.ast_depth()).sum::<usize>()
     }
 }
 
