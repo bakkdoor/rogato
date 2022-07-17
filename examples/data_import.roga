@@ -27,7 +27,7 @@ let doStuff =
     partnersWithCommonFriends =
       ? p1, p2, f <- people
       ? p1 <- p2#MarriedTo
-      ? f <- (p1#Friend | p2#Friend)
+      ? f <- (p1 | p2)#Friend
       !> {{p1, p2}, f}
   in
     "ok"

@@ -620,7 +620,7 @@ fn queries() {
     assert_parse_expr!(
         "? p <- Person
          ? p <- hello 1 2
-         ? p <!- (a + b)
+         ? p <!- (a | b)#Friend
          !> inspect p",
         query(
             vec![
@@ -630,7 +630,11 @@ fn queries() {
                     fn_call("hello", vec![int_lit(1), int_lit(2)]),
                     false
                 ),
-                (vec!["p"], op_call("+", var("a"), var("b")), true)
+                (
+                    vec!["p"],
+                    edge_prop(op_call("|", var("a"), var("b")), "Friend"),
+                    true
+                )
             ],
             vec![],
             fn_call("inspect", vec![var("p")])

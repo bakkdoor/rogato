@@ -280,6 +280,7 @@ grammar parser() for str {
 
     rule edge_prop_expr() -> Expression
         = variable()
+        / "(" _ c:(fn_pipe() / fn_call() / op_call()) _ ")" { c }
 
     rule query_guard() -> Expression
         = _ c:comment() _ g:query_guard() {
