@@ -1,6 +1,9 @@
 use self::{environment::Environment, module::Module};
 
-use super::db::{val, ObjectStorage, Value};
+use super::{
+    ast::type_expression::TypeDef,
+    db::{val, ObjectStorage, Value},
+};
 
 pub mod environment;
 pub mod module;
@@ -51,6 +54,14 @@ impl<'a> EvalContext<'a> {
     #[allow(dead_code)]
     pub fn lookup_module(&'a self, id: &Identifier) -> Option<&'a Module> {
         self.env.lookup_module(id)
+    }
+
+    pub fn lookup_const(&'a self, id: &Identifier) -> Option<&'a Value> {
+        self.env.lookup_const(id)
+    }
+
+    pub fn lookup_type(&'a self, id: &Identifier) -> Option<&'a TypeDef> {
+        self.env.lookup_type(id)
     }
 }
 

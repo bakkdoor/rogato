@@ -1,6 +1,7 @@
 use std::{collections::HashMap, fmt::Display};
 
 use crate::rogato::ast::{fn_def::FnDef, type_expression::TypeDef};
+use crate::rogato::db::Value;
 
 use super::Identifier;
 
@@ -9,15 +10,17 @@ pub struct Module {
     id: Identifier,
     fn_defs: HashMap<Identifier, Box<FnDef>>,
     type_defs: HashMap<Identifier, Box<TypeDef>>,
+    constants: HashMap<Identifier, Value>,
 }
 
 impl Module {
     #[allow(dead_code)]
-    pub fn new(id: Identifier) -> Module {
+    pub fn new(id: &Identifier) -> Module {
         Module {
-            id,
+            id: id.clone(),
             fn_defs: HashMap::new(),
             type_defs: HashMap::new(),
+            constants: HashMap::new(),
         }
     }
 
@@ -47,6 +50,19 @@ impl Module {
             Some(f) => Some(f),
             None => None,
         }
+    }
+
+    #[allow(dead_code)]
+    pub fn lookup_const<'a>(&'a self, id: &Identifier) -> Option<&'a Value> {
+        match self.constants.get(id) {
+            Some(v) => Some(v),
+            None => None,
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn define_const<'a>(&'a mut self, id: &Identifier, val: Value) {
+        self.constants.insert(id.clone(), val);
     }
 }
 

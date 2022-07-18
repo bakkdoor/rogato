@@ -113,7 +113,8 @@ impl<'a> Evaluate<'a, Value> for Expression {
                 context.call_function(fn_ident, call_args)
             }
             Expression::OpCall(op_ident, left, right) => {
-                val::string(format!("{} {} {}", op_ident, left, right))
+                let call_args = vec![left.evaluate(context), right.evaluate(context)];
+                context.call_function(op_ident, call_args)
             }
             Expression::Var(id) => match context.lookup_var(id) {
                 Some(var) => var.to_owned(),
@@ -122,7 +123,25 @@ impl<'a> Evaluate<'a, Value> for Expression {
                     val::null()
                 }
             },
-            Expression::ConstOrTypeRef(_id) => val::string("eval const or type ref"),
+            Expression::ConstOrTypeRef(id) => {
+                match context.lookup_const(id) {
+                    Some(val) => val.to_owned(),
+                    None => {
+                        match context.lookup_type(id) {
+                            Some(type_) => val::object(vec![
+                                ("type".to_string(), val::string("TypeExpression")),
+                                ("id".to_string(), val::string(type_.id())),
+                                ("expression".to_string(), val::string(format!("{}", type_))),
+                            ]),
+                            None => {
+                                eprintln!("Const or type not found: {}", id);
+                                // return an error
+                                val::null()
+                            }
+                        }
+                    }
+                }
+            }
             Expression::PropFnRef(_id) => val::string("eval prop fn ref"),
             Expression::EdgeProp(_id, _edge) => val::string("eval edge prop"),
             Expression::Let(let_expr) => let_expr.evaluate(context),

@@ -20,6 +20,10 @@ impl TypeDef {
     pub fn new(id: Identifier, type_expr: Box<TypeExpression>) -> TypeDef {
         TypeDef { id, type_expr }
     }
+
+    pub fn id(&self) -> Identifier {
+        self.id.clone()
+    }
 }
 
 impl Display for TypeDef {

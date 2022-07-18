@@ -1,22 +1,38 @@
 use std::collections::HashMap;
 
 use super::{module::Module, Identifier};
-use crate::rogato::db::Value;
+use crate::rogato::{ast::type_expression::TypeDef, db::Value};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Environment<'a> {
     parent: Option<&'a Environment<'a>>,
     variables: HashMap<Identifier, Value>,
     modules: HashMap<Identifier, Module>,
+    module: Identifier,
 }
 
 impl<'a> Environment<'a> {
     #[allow(dead_code)]
-    pub fn new() -> Environment<'a> {
+    pub fn new<'b>() -> Environment<'b> {
+        let mut modules = HashMap::new();
+        let mod_name = "Std".to_string();
+        modules.insert(mod_name.clone(), Module::new(&mod_name));
+
+        Environment {
+            parent: None,
+            variables: HashMap::new(),
+            modules,
+            module: mod_name,
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn new_with_module(module: &Identifier) -> Environment<'_> {
         Environment {
             parent: None,
             variables: HashMap::new(),
             modules: HashMap::new(),
+            module: module.clone(),
         }
     }
 
@@ -26,6 +42,19 @@ impl<'a> Environment<'a> {
             parent: Some(self),
             variables: HashMap::new(),
             modules: HashMap::new(),
+            module: self.module.clone(),
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn child_with_module(&'a self, module: &Identifier) -> Environment<'a> {
+        let mut modules = HashMap::new();
+        modules.insert(module.clone(), Module::new(module));
+        Environment {
+            parent: Some(self),
+            variables: HashMap::new(),
+            modules,
+            module: module.clone(),
         }
     }
 
@@ -59,6 +88,36 @@ impl<'a> Environment<'a> {
                 Some(parent_env) => parent_env.lookup_module(id),
                 None => None,
             },
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn lookup_const(&'a self, id: &Identifier) -> Option<&'a Value> {
+        match self.lookup_module(&self.module) {
+            Some(module) => module.lookup_const(id),
+            None => {
+                let err_str = format!(
+                    "Module not found: {} while trying to lookup const: {}",
+                    self.module, id
+                );
+                eprintln!("{}", err_str);
+                panic!("{}", err_str)
+            }
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn lookup_type(&'a self, id: &Identifier) -> Option<&'a TypeDef> {
+        match self.lookup_module(&self.module) {
+            Some(module) => module.lookup_type(id),
+            None => {
+                let err_str = format!(
+                    "Module not found: {} while trying to lookup type: {}",
+                    self.module, id
+                );
+                eprintln!("{}", err_str);
+                panic!("{}", err_str)
+            }
         }
     }
 }
