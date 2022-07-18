@@ -142,7 +142,7 @@ impl<'a> Evaluate<'a, Value> for Expression {
                     }
                 }
             }
-            Expression::PropFnRef(_id) => val::string("eval prop fn ref"),
+            Expression::PropFnRef(id) => val::string(format!(".{}", id)),
             Expression::EdgeProp(_id, _edge) => val::string("eval edge prop"),
             Expression::Let(let_expr) => let_expr.evaluate(context),
             Expression::Lambda(_lambda) => val::string("eval lambda"),
