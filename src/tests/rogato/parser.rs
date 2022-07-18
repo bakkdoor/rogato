@@ -640,6 +640,49 @@ fn queries() {
             fn_call("inspect", vec![var("p")])
         )
     );
+
+    assert_parse_expr!(
+        "? p <- Person
+         ? p <- hello 1 2
+         ? p <!- (
+            ? p2 <- (a | b)
+            !> p2
+         )#Friend
+         ? p <!- (
+            p
+            |> friendsWithoutFriends
+         )
+         !> inspect p",
+        query(
+            vec![
+                (vec!["p"], const_or_type_ref("Person"), false),
+                (
+                    vec!["p"],
+                    fn_call("hello", vec![int_lit(1), int_lit(2)]),
+                    false
+                ),
+                (
+                    vec!["p"],
+                    edge_prop(
+                        query(
+                            vec![(vec!["p2"], op_call("|", var("a"), var("b")), false)],
+                            vec![],
+                            var("p2")
+                        ),
+                        "Friend"
+                    ),
+                    true
+                ),
+                (
+                    vec!["p"],
+                    fn_call("friendsWithoutFriends", vec![var("p")]),
+                    true
+                )
+            ],
+            vec![],
+            fn_call("inspect", vec![var("p")])
+        )
+    );
 }
 
 #[test]

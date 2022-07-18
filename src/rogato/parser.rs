@@ -263,6 +263,7 @@ grammar parser() for str {
     rule query_expr() -> Expression
         = edge_prop()
         / "(" _ l:lambda() _ ")" { l }
+        / "(" _ q:query() _ ")" { q }
         / "(" _ c:(fn_pipe() / fn_call() / op_call()) _ ")" { c }
         / fn_pipe()
         / fn_call()
@@ -280,6 +281,7 @@ grammar parser() for str {
 
     rule edge_prop_expr() -> Expression
         = variable()
+        / "(" _ q:query() _ ")" { q }
         / "(" _ c:(fn_pipe() / fn_call() / op_call()) _ ")" { c }
 
     rule query_guard() -> Expression
