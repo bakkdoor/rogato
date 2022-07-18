@@ -49,8 +49,18 @@ impl Walk for Lambda {
 
 impl<'a> Evaluate<'a, Value> for Lambda {
     fn evaluate(&self, context: &mut EvalContext<'a>) -> Value {
-        let evaluated_args = self.args.evaluate(context);
+        let evaluated_args: Vec<Value> = self.args.evaluate(context);
         let mut fn_context = context.with_child_env();
+        let given_args = evaluated_args.len();
+        let expected_args = self.args.len();
+
+        if given_args != expected_args {
+            panic!(
+                "Mismatch in lambda arguments. Expected {} but got {}",
+                expected_args, given_args
+            )
+        }
+
         for i in 0..self.args.len() {
             let arg_name = self.args.get(i).unwrap().clone();
             let arg_val = evaluated_args[i].clone();
@@ -118,5 +128,15 @@ impl<'a, A: Display + ASTDepth + Evaluate<'a, Value>> Evaluate<'a, Value> for La
             vec.push(arg.evaluate(context))
         }
         val::array(vec)
+    }
+}
+
+impl<'a, A: Display + ASTDepth + Evaluate<'a, Value>> Evaluate<'a, Vec<Value>> for LambdaArgs<A> {
+    fn evaluate(&self, context: &mut EvalContext<'a>) -> Vec<Value> {
+        let mut vec = Vec::new();
+        for arg in self.args.iter() {
+            vec.push(arg.evaluate(context))
+        }
+        vec
     }
 }
