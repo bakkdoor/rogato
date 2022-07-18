@@ -47,6 +47,19 @@ impl Walk for Lambda {
     }
 }
 
+impl<'a> Evaluate<'a, Value> for Lambda {
+    fn evaluate(&self, context: &mut EvalContext<'a>) -> Value {
+        let evaluated_args = self.args.evaluate(context);
+        let mut fn_context = context.with_child_env();
+        for i in 0..self.args.len() {
+            let arg_name = self.args.get(i).unwrap().clone();
+            let arg_val = evaluated_args[i].clone();
+            fn_context.define_var(&arg_name, arg_val)
+        }
+        self.body.evaluate(&mut fn_context)
+    }
+}
+
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct LambdaArgs<A: Display> {
     args: Vec<A>,
@@ -71,6 +84,10 @@ impl<A: Display + ASTDepth> LambdaArgs<A> {
     #[allow(dead_code)]
     pub fn iter(&self) -> std::slice::Iter<A> {
         self.args.iter()
+    }
+
+    pub fn get(&self, idx: usize) -> Option<&A> {
+        self.args.get(idx)
     }
 }
 

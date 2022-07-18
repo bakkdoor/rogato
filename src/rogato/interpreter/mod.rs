@@ -63,6 +63,13 @@ impl<'a> EvalContext<'a> {
     pub fn lookup_type(&'a self, id: &Identifier) -> Option<&'a TypeDef> {
         self.env.lookup_type(id)
     }
+
+    pub fn with_child_env(&'a self) -> Self {
+        EvalContext {
+            env: self.env.child(),
+            obj_storage: ObjectStorage::new(),
+        }
+    }
 }
 
 pub trait Evaluate<'a, T> {

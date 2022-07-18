@@ -19,6 +19,18 @@ pub mod walker;
 
 pub type Identifier = String;
 
+impl<'a> Evaluate<'a, Value> for Identifier {
+    fn evaluate(&self, context: &mut EvalContext<'a>) -> Value {
+        match context.lookup_var(self) {
+            Some(val) => val.clone(),
+            None => {
+                eprintln!("Failed to lookup var: {}", self.to_string());
+                val::null()
+            }
+        }
+    }
+}
+
 pub use program::Program;
 
 use super::db::{val, Value};
