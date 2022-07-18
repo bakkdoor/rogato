@@ -53,16 +53,16 @@ impl Module {
     }
 
     #[allow(dead_code)]
+    pub fn const_def<'a>(&'a mut self, id: &Identifier, val: Value) {
+        self.constants.insert(id.clone(), val);
+    }
+
+    #[allow(dead_code)]
     pub fn lookup_const<'a>(&'a self, id: &Identifier) -> Option<&'a Value> {
         match self.constants.get(id) {
             Some(v) => Some(v),
             None => None,
         }
-    }
-
-    #[allow(dead_code)]
-    pub fn define_const<'a>(&'a mut self, id: &Identifier, val: Value) {
-        self.constants.insert(id.clone(), val);
     }
 }
 
