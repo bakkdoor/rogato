@@ -95,12 +95,8 @@ fn print_parse_result<T: Display, E: Display>(code: &str, result: &Result<T, E>)
     });
 
     match result {
-        Ok(expr) => println!(
-            "✅\t{}\n\n🧾 ✅\n{}\n\n",
-            code_with_line_numbers,
-            expr.indented("\t")
-        ),
-        Err(error) => println!("\n❌\t{}\n\n❌\t{}\n\n", code_with_line_numbers, error),
+        Ok(expr) => println!("🧾 ✅\n{}\n\n", expr.indented("\t")),
+        Err(error) => println!("❌{}\n\n❌\t{}\n\n", code_with_line_numbers, error),
     }
 }
 
