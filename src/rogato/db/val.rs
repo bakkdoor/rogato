@@ -24,7 +24,11 @@ where
 }
 
 #[allow(dead_code)]
-pub fn object(props: Vec<(String, Value)>) -> Value {
+pub fn object<S: ToString>(props: Vec<(S, Value)>) -> Value {
+    let props: Vec<(String, Value)> = props
+        .iter()
+        .map(|(prop, val)| (prop.to_string(), val.clone()))
+        .collect();
     Value::Object(Map::from_iter(props))
 }
 

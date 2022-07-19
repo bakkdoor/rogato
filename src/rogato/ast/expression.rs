@@ -129,9 +129,9 @@ impl<'a> Evaluate<'a, Value> for Expression {
                     None => {
                         match context.lookup_type(id) {
                             Some(type_) => val::object(vec![
-                                ("type".to_string(), val::string("TypeExpression")),
-                                ("id".to_string(), val::string(type_.id())),
-                                ("expression".to_string(), val::string(format!("{}", type_))),
+                                ("type", val::string("TypeExpression")),
+                                ("id", val::string(type_.id())),
+                                ("expression", val::string(format!("{}", type_))),
                             ]),
                             None => {
                                 eprintln!("Const or type not found: {}", id);

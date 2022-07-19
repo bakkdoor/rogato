@@ -41,9 +41,9 @@ impl ASTDepth for TypeDef {
 impl<'a> Evaluate<'a, Value> for TypeDef {
     fn evaluate(&self, context: &mut EvalContext<'a>) -> Value {
         val::object(vec![
-            ("type".to_string(), val::string("TypeDef")),
-            ("name".to_string(), val::string(self.id.to_string())),
-            ("type_expr".to_string(), self.type_expr.evaluate(context)),
+            ("type", val::string("TypeDef")),
+            ("name", val::string(self.id.to_string())),
+            ("type_expr", self.type_expr.evaluate(context)),
         ])
     }
 }
@@ -115,8 +115,8 @@ impl ASTDepth for TypeExpression {
 
 fn type_ref<ID: ToString>(id: ID) -> Value {
     val::object(vec![
-        ("type".to_string(), val::string("TypeRef")),
-        ("name".to_string(), val::string(id.to_string())),
+        ("type", val::string("TypeRef")),
+        ("name", val::string(id.to_string())),
     ])
 }
 
@@ -127,21 +127,21 @@ impl<'a> Evaluate<'a, Value> for TypeExpression {
             TypeExpression::StringType => type_ref("String"),
             TypeExpression::TypeRef(id) => type_ref(id),
             TypeExpression::FunctionType(arg_types, return_type) => val::object(vec![
-                ("type".to_string(), val::string("FunctionType")),
-                ("args".to_string(), arg_types.evaluate(context)),
-                ("return_type".to_string(), return_type.evaluate(context)),
+                ("type", val::string("FunctionType")),
+                ("args", arg_types.evaluate(context)),
+                ("return_type", return_type.evaluate(context)),
             ]),
             TypeExpression::TupleType(el_types) => val::object(vec![
-                ("type".to_string(), val::string("TupleType")),
-                ("el_types".to_string(), el_types.evaluate(context)),
+                ("type", val::string("TupleType")),
+                ("el_types", el_types.evaluate(context)),
             ]),
             TypeExpression::ListType(type_expr) => val::object(vec![
-                ("type".to_string(), val::string("ListType")),
-                ("type_expr".to_string(), type_expr.evaluate(context)),
+                ("type", val::string("ListType")),
+                ("type_expr", type_expr.evaluate(context)),
             ]),
             TypeExpression::StructType(prop_types) => val::object(vec![
-                ("type".to_string(), val::string("StructType")),
-                ("props".to_string(), prop_types.evaluate(context)),
+                ("type", val::string("StructType")),
+                ("props", prop_types.evaluate(context)),
             ]),
         }
     }

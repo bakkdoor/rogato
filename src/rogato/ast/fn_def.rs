@@ -45,13 +45,13 @@ impl ASTDepth for FnDef {
 impl<'a> Evaluate<'a, Value> for FnDef {
     fn evaluate(&self, context: &mut EvalContext<'a>) -> Value {
         val::object(vec![
-            ("type".to_string(), val::string("Fn")),
-            ("name".to_string(), val::string(self.id.to_string())),
+            ("type", val::string("Fn")),
+            ("name", val::string(self.id.to_string())),
             (
-                "args".to_string(),
+                "args",
                 Value::Array(self.args.iter().map(val::string).collect::<Vec<Value>>()),
             ),
-            ("body".to_string(), self.body.evaluate(context)),
+            ("body", self.body.evaluate(context)),
         ])
     }
 }

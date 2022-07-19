@@ -33,10 +33,10 @@ impl ASTDepth for ModuleDef {
 impl<'a> Evaluate<'a, Value> for ModuleDef {
     fn evaluate(&self, _context: &mut EvalContext<'a>) -> Value {
         val::object(vec![
-            ("type".to_string(), Value::String("Module".to_string())),
-            ("name".to_string(), Value::String(self.id.to_string())),
+            ("type", Value::String("Module".to_string())),
+            ("name", Value::String(self.id.to_string())),
             (
-                "exports".to_string(),
+                "exports",
                 Value::Array(
                     self.exports
                         .iter()
