@@ -24,7 +24,7 @@ impl<'a> Evaluate<'a, Value> for Identifier {
         match context.lookup_var(self) {
             Some(val) => val.clone(),
             None => {
-                eprintln!("Failed to lookup var: {}", self.to_string());
+                eprintln!("Failed to lookup var: {}", self);
                 val::null()
             }
         }

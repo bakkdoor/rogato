@@ -53,7 +53,7 @@ impl Module {
     }
 
     #[allow(dead_code)]
-    pub fn const_def<'a>(&'a mut self, id: &Identifier, val: Value) {
+    pub fn const_def(&mut self, id: &Identifier, val: Value) {
         self.constants.insert(id.clone(), val);
     }
 

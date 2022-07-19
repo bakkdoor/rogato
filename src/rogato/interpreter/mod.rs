@@ -52,7 +52,7 @@ impl<'a> EvalContext<'a> {
     }
 
     #[allow(dead_code)]
-    pub fn lookup_module(&'a self, id: &Identifier) -> Option<&'a Module> {
+    pub fn lookup_module(&self, id: &Identifier) -> Option<&Module> {
         self.env.lookup_module(id)
     }
 

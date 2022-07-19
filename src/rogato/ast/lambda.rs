@@ -61,10 +61,9 @@ impl<'a> Evaluate<'a, Value> for Lambda {
             )
         }
 
-        for i in 0..self.args.len() {
+        for (i, arg_val) in evaluated_args.iter().enumerate().take(self.args.len()) {
             let arg_name = self.args.get(i).unwrap().clone();
-            let arg_val = evaluated_args[i].clone();
-            fn_context.define_var(&arg_name, arg_val)
+            fn_context.define_var(&arg_name, arg_val.clone())
         }
         self.body.evaluate(&mut fn_context)
     }
