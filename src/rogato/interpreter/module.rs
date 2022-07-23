@@ -25,8 +25,8 @@ impl Module {
     }
 
     #[allow(dead_code)]
-    pub fn fn_def(&mut self, id: Identifier, fn_def: Box<FnDef>) -> &mut Self {
-        self.fn_defs.insert(id, fn_def);
+    pub fn fn_def(&mut self, fn_def: Box<FnDef>) -> &mut Self {
+        self.fn_defs.insert(fn_def.id(), fn_def);
         self
     }
 

@@ -1,7 +1,7 @@
 use self::{environment::Environment, module::Module};
 
 use super::{
-    ast::type_expression::TypeDef,
+    ast::{fn_def::FnDef, type_expression::TypeDef},
     db::{val, ObjectStorage, Value},
 };
 
@@ -31,6 +31,21 @@ impl<'a> EvalContext<'a> {
             env: env.clone(),
             obj_storage: ObjectStorage::new(),
         }
+    }
+
+    pub fn with_child_env(&'a self) -> Self {
+        EvalContext {
+            env: self.env.child(),
+            obj_storage: ObjectStorage::new(),
+        }
+    }
+
+    pub fn define_fn(&mut self, fn_def: FnDef) -> Value {
+        // TODO
+        // let module: &mut Module = self.current_module_mut();
+        let id = fn_def.id();
+        // module.fn_def(Box::new(fn_def));
+        val::string(format!("FnDef {}", id))
     }
 
     pub fn call_function(&self, id: &str, args: Vec<Value>) -> Value {
@@ -64,12 +79,13 @@ impl<'a> EvalContext<'a> {
         self.env.lookup_type(id)
     }
 
-    pub fn with_child_env(&'a self) -> Self {
-        EvalContext {
-            env: self.env.child(),
-            obj_storage: ObjectStorage::new(),
-        }
+    pub fn current_module(&self) -> &Module {
+        self.env.current_module()
     }
+
+    // pub fn current_module_mut(&mut self) -> &mut Module {
+    //     self.env.current_module_mut()
+    // }
 }
 
 pub trait Evaluate<'a, T> {

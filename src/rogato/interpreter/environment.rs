@@ -80,6 +80,25 @@ impl<'a> Environment<'a> {
         self
     }
 
+    pub fn current_module(&'a self) -> &'a Module {
+        match self.lookup_module(&self.module) {
+            Some(module) => module,
+            None => {
+                panic!("No current module found: {}", self.module)
+            }
+        }
+    }
+
+    // pub fn current_module_mut(&mut self) -> &mut Module {
+    //     let module = self.module.clone();
+    //     match self.lookup_module_mut(&module) {
+    //         Some(module) => module,
+    //         None => {
+    //             panic!("No current module found: {}", module)
+    //         }
+    //     }
+    // }
+
     #[allow(dead_code)]
     pub fn lookup_module(&'a self, id: &Identifier) -> Option<&'a Module> {
         match self.modules.get(id) {
@@ -90,6 +109,17 @@ impl<'a> Environment<'a> {
             },
         }
     }
+
+    // #[allow(dead_code)]
+    // pub fn lookup_module_mut(&mut self, id: &Identifier) -> Option<&mut Module> {
+    //     match self.modules.get_mut(id) {
+    //         Some(module) => Some(module),
+    //         None => match self.parent.as_mut() {
+    //             Some(&mut parent_env) => parent_env.lookup_module_mut(id),
+    //             None => None,
+    //         },
+    //     }
+    // }
 
     #[allow(dead_code)]
     pub fn lookup_const(&'a self, id: &Identifier) -> Option<&'a Value> {

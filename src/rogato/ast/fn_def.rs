@@ -20,6 +20,10 @@ impl FnDef {
         FnDef { id, args, body }
     }
 
+    pub fn id(&self) -> Identifier {
+        self.id.clone()
+    }
+
     pub fn body(&self) -> &Expression {
         &self.body
     }
@@ -44,6 +48,11 @@ impl ASTDepth for FnDef {
 
 impl<'a> Evaluate<'a, Value> for FnDef {
     fn evaluate(&self, context: &mut EvalContext<'a>) -> Value {
+        context.define_fn(FnDef::new(
+            self.id.clone(),
+            self.args.clone(),
+            self.body.clone(),
+        ));
         val::object(vec![
             ("type", val::string("Fn")),
             ("name", val::string(self.id.to_string())),
