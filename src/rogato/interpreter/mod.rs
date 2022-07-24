@@ -79,6 +79,7 @@ impl<'a> EvalContext<'a> {
         self.env.lookup_type(id)
     }
 
+    #[allow(dead_code)]
     pub fn current_module(&self) -> &Module {
         self.env.current_module()
     }
