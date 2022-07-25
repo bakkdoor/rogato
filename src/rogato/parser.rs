@@ -509,11 +509,6 @@ pub fn parse(str: &str) -> ParseResult {
     parser::traced_program(str)
 }
 
-#[allow(dead_code)]
-pub fn parse_traced(str: &str) -> ParseResult {
-    parser::traced_program(str)
-}
-
 #[cfg(test)]
 pub type ParseASTResult = Result<Box<AST>, ParseError<LineCol>>;
 
