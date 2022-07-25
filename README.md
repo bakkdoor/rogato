@@ -20,6 +20,30 @@ For some example source code and syntax ideas (still WIP), check out the code ex
 * Symbolic language capabilities for easy knowledge graph construction and querying
 * Easy importing of data from various data formats, ideally provided by std lib
 
+### Build instructions
+
+Build with cargo, Rust's package and build manager:
+
+#### Build without optimizations (debug mode)
+
+    cargo b
+
+#### Build with optimizations (release mode)
+
+    cargo b -r
+
+#### Build with parser tracing enabled
+
+    carbo b --features trace
+
+    # works also for release builds:
+    carbo b -r --features trace
+
+    # to get parser tracing viz via pegviz, run:
+    ./target/release/rogato example/query.roga | pegviz --output pegviz.html
+
+    # then open pegviz.html to view parser tracing visualization
+
 ### Q&A
 
 #### Why?

@@ -499,8 +499,14 @@ grammar parser() for str {
 
 pub type ParseResult = Result<Program, ParseError<LineCol>>;
 
+#[cfg(not(feature = "trace"))]
 pub fn parse(str: &str) -> ParseResult {
     parser::program(str)
+}
+
+#[cfg(feature = "trace")]
+pub fn parse(str: &str) -> ParseResult {
+    parser::traced_program(str)
 }
 
 #[allow(dead_code)]
