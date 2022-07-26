@@ -20,7 +20,6 @@ pub struct EvalContext {
 }
 
 impl EvalContext {
-    #[allow(dead_code)]
     pub fn new() -> EvalContext {
         EvalContext {
             env: Environment::new(),
@@ -81,7 +80,6 @@ impl EvalContext {
         self.env.borrow().lookup_type(id)
     }
 
-    #[allow(dead_code)]
     pub fn current_module(&self) -> ModuleRef {
         self.env.borrow().current_module()
     }

@@ -17,7 +17,6 @@ pub struct Environment {
 }
 
 impl Environment {
-    #[allow(dead_code)]
     pub fn new() -> EnvironmentRef {
         let mut modules = HashMap::new();
         let mod_name = "Std".to_string();
@@ -74,12 +73,10 @@ impl Environment {
         &self.module
     }
 
-    #[allow(dead_code)]
     pub fn define_var(&mut self, id: &Identifier, val: Value) {
         self.variables.insert(id.clone(), val);
     }
 
-    #[allow(dead_code)]
     pub fn lookup_var(&self, id: &str) -> Option<Value> {
         match self.variables.get(id) {
             Some(expr) => Some(expr.clone()),
@@ -90,7 +87,6 @@ impl Environment {
         }
     }
 
-    #[allow(dead_code)]
     pub fn define_module(&mut self, id: &Identifier, module: ModuleRef) -> &mut Self {
         self.modules.insert(id.clone(), module);
         self
@@ -105,7 +101,6 @@ impl Environment {
         }
     }
 
-    #[allow(dead_code)]
     pub fn lookup_module(&self, id: &Identifier) -> Option<ModuleRef> {
         match self.modules.get(id) {
             Some(module) => Some(module.clone()),
@@ -116,7 +111,6 @@ impl Environment {
         }
     }
 
-    #[allow(dead_code)]
     pub fn lookup_const(&self, id: &Identifier) -> Option<Value> {
         match self.lookup_module(&self.module) {
             Some(module) => module.borrow().lookup_const(id),
@@ -131,7 +125,6 @@ impl Environment {
         }
     }
 
-    #[allow(dead_code)]
     pub fn lookup_type(&self, id: &Identifier) -> Option<Box<TypeDef>> {
         match self.lookup_module(&self.module) {
             Some(module) => module.borrow().lookup_type(id),

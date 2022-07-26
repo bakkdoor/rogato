@@ -8,7 +8,6 @@ pub struct Object {
 }
 
 impl Object {
-    #[allow(dead_code)]
     pub fn new<Props: IntoIterator<Item = (String, Value)>>(
         type_id: Identifier,
         props: Props,

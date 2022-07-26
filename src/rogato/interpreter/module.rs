@@ -18,7 +18,6 @@ pub struct Module {
 pub type ModuleRef = Rc<RefCell<Module>>;
 
 impl Module {
-    #[allow(dead_code)]
     pub fn new(id: &Identifier) -> ModuleRef {
         let module = Module {
             id: id.clone(),
@@ -29,7 +28,6 @@ impl Module {
         Rc::new(RefCell::new(module))
     }
 
-    #[allow(dead_code)]
     pub fn fn_def(&mut self, fn_def: Box<FnDef>) -> &mut Self {
         self.fn_defs.insert(fn_def.id(), fn_def);
         self
@@ -49,7 +47,6 @@ impl Module {
         self
     }
 
-    #[allow(dead_code)]
     pub fn lookup_type(&self, id: &Identifier) -> Option<Box<TypeDef>> {
         self.type_defs.get(id).cloned()
     }
@@ -59,7 +56,6 @@ impl Module {
         self.constants.insert(id.clone(), val);
     }
 
-    #[allow(dead_code)]
     pub fn lookup_const(&self, id: &Identifier) -> Option<Value> {
         self.constants.get(id).cloned()
     }

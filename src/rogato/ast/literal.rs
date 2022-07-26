@@ -108,12 +108,10 @@ impl<I: Display> TupleItems<I> {
         TupleItems { items }
     }
 
-    #[allow(dead_code)]
     pub fn len(&self) -> usize {
         self.items.len()
     }
 
-    #[allow(dead_code)]
     pub fn iter(&self) -> std::slice::Iter<Box<I>> {
         self.items.iter()
     }
@@ -173,7 +171,6 @@ impl StructProps {
         self.props.len()
     }
 
-    #[allow(dead_code)]
     pub fn iter(&self) -> std::slice::Iter<(String, Box<Expression>)> {
         self.props.iter()
     }
@@ -181,7 +178,7 @@ impl StructProps {
 
 impl Display for StructProps {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let fmt_str = self.props.iter().fold(String::from(""), |acc, (id, expr)| {
+        let fmt_str = self.iter().fold(String::from(""), |acc, (id, expr)| {
             if acc.is_empty() {
                 format!("{}: {}", id, expr)
             } else {
