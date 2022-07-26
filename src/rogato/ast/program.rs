@@ -47,8 +47,8 @@ impl Display for Program {
     }
 }
 
-impl<'a> Evaluate<'a, Value> for Program {
-    fn evaluate(&self, context: &mut EvalContext<'a>) -> Value {
+impl Evaluate<Value> for Program {
+    fn evaluate(&self, context: &mut EvalContext) -> Value {
         Value::Array(self.iter().map(|ast| ast.evaluate(context)).collect())
     }
 }

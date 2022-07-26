@@ -103,8 +103,8 @@ fn display_unquoted<Expr: Display>(
     }
 }
 
-impl<'a> Evaluate<'a, Value> for Expression {
-    fn evaluate(&self, context: &mut EvalContext<'a>) -> Value {
+impl Evaluate<Value> for Expression {
+    fn evaluate(&self, context: &mut EvalContext) -> Value {
         match self {
             Expression::Commented(_c, e) => e.evaluate(context),
             Expression::Lit(lit_exp) => lit_exp.evaluate(context),

@@ -1,61 +1,75 @@
-use std::collections::HashMap;
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
-use super::{module::Module, Identifier};
+use super::{
+    module::{Module, ModuleRef},
+    Identifier,
+};
 use crate::rogato::{ast::type_expression::TypeDef, db::Value};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub struct Environment<'a> {
-    parent: Option<&'a Environment<'a>>,
+pub struct Environment {
+    parent: Option<Rc<RefCell<Environment>>>,
     variables: HashMap<Identifier, Value>,
-    modules: HashMap<Identifier, Module>,
+    modules: HashMap<Identifier, ModuleRef>,
     module: Identifier,
 }
 
-impl<'a> Environment<'a> {
+impl Environment {
     #[allow(dead_code)]
-    pub fn new<'b>() -> Environment<'b> {
+    pub fn new() -> Rc<RefCell<Environment>> {
         let mut modules = HashMap::new();
         let mod_name = "Std".to_string();
         modules.insert(mod_name.clone(), Module::new(&mod_name));
 
-        Environment {
+        let env = Environment {
             parent: None,
             variables: HashMap::new(),
             modules,
             module: mod_name,
-        }
+        };
+        Rc::new(RefCell::new(env))
     }
 
     #[allow(dead_code)]
-    pub fn new_with_module(module: &Identifier) -> Environment<'_> {
-        Environment {
+    pub fn new_with_module(module: &Identifier) -> Rc<RefCell<Environment>> {
+        let env = Environment {
             parent: None,
             variables: HashMap::new(),
             modules: HashMap::new(),
             module: module.clone(),
-        }
+        };
+        Rc::new(RefCell::new(env))
     }
 
-    #[allow(dead_code)]
-    pub fn child(&'a self) -> Environment<'a> {
-        Environment {
-            parent: Some(self),
+    pub fn spawn_child(parent: Rc<RefCell<Environment>>) -> Rc<RefCell<Environment>> {
+        let child = Environment {
+            parent: Some(parent.clone()),
             variables: HashMap::new(),
             modules: HashMap::new(),
-            module: self.module.clone(),
-        }
+            module: parent.borrow().module().clone(),
+        };
+
+        Rc::new(RefCell::new(child))
     }
 
     #[allow(dead_code)]
-    pub fn child_with_module(&'a self, module: &Identifier) -> Environment<'a> {
+    pub fn spawn_child_with_module(
+        module: &Identifier,
+        parent: Rc<RefCell<Environment>>,
+    ) -> Rc<RefCell<Environment>> {
         let mut modules = HashMap::new();
         modules.insert(module.clone(), Module::new(module));
-        Environment {
-            parent: Some(self),
+        let child = Environment {
+            parent: Some(parent),
             variables: HashMap::new(),
             modules,
             module: module.clone(),
-        }
+        };
+        Rc::new(RefCell::new(child))
+    }
+
+    pub fn module(&self) -> &Identifier {
+        &self.module
     }
 
     #[allow(dead_code)]
@@ -64,23 +78,23 @@ impl<'a> Environment<'a> {
     }
 
     #[allow(dead_code)]
-    pub fn lookup_var(&'a self, id: &str) -> Option<&'a Value> {
+    pub fn lookup_var(&self, id: &str) -> Option<Value> {
         match self.variables.get(id) {
-            Some(expr) => Some(expr),
-            None => match self.parent {
-                Some(parent_env) => parent_env.lookup_var(id),
+            Some(expr) => Some(expr.clone()),
+            None => match &self.parent {
+                Some(parent_env) => parent_env.borrow_mut().lookup_var(id),
                 None => None,
             },
         }
     }
 
     #[allow(dead_code)]
-    pub fn define_module(&'a mut self, id: &Identifier, module: Module) -> &'a mut Self {
+    pub fn define_module(&mut self, id: &Identifier, module: ModuleRef) -> &mut Self {
         self.modules.insert(id.clone(), module);
         self
     }
 
-    pub fn current_module(&'a self) -> &'a Module {
+    pub fn current_module(&self) -> ModuleRef {
         match self.lookup_module(&self.module) {
             Some(module) => module,
             None => {
@@ -89,42 +103,21 @@ impl<'a> Environment<'a> {
         }
     }
 
-    // pub fn current_module_mut(&mut self) -> &mut Module {
-    //     let module = self.module.clone();
-    //     match self.lookup_module_mut(&module) {
-    //         Some(module) => module,
-    //         None => {
-    //             panic!("No current module found: {}", module)
-    //         }
-    //     }
-    // }
-
     #[allow(dead_code)]
-    pub fn lookup_module(&'a self, id: &Identifier) -> Option<&'a Module> {
+    pub fn lookup_module(&self, id: &Identifier) -> Option<ModuleRef> {
         match self.modules.get(id) {
-            Some(module) => Some(module),
-            None => match self.parent {
-                Some(parent_env) => parent_env.lookup_module(id),
+            Some(module) => Some(module.clone()),
+            None => match &self.parent {
+                Some(parent_env) => parent_env.borrow_mut().lookup_module(id),
                 None => None,
             },
         }
     }
 
-    // #[allow(dead_code)]
-    // pub fn lookup_module_mut(&mut self, id: &Identifier) -> Option<&mut Module> {
-    //     match self.modules.get_mut(id) {
-    //         Some(module) => Some(module),
-    //         None => match self.parent.as_mut() {
-    //             Some(&mut parent_env) => parent_env.lookup_module_mut(id),
-    //             None => None,
-    //         },
-    //     }
-    // }
-
     #[allow(dead_code)]
-    pub fn lookup_const(&'a self, id: &Identifier) -> Option<&'a Value> {
+    pub fn lookup_const(&self, id: &Identifier) -> Option<Value> {
         match self.lookup_module(&self.module) {
-            Some(module) => module.lookup_const(id),
+            Some(module) => module.borrow().lookup_const(id),
             None => {
                 let err_str = format!(
                     "Module not found: {} while trying to lookup const: {}",
@@ -137,9 +130,9 @@ impl<'a> Environment<'a> {
     }
 
     #[allow(dead_code)]
-    pub fn lookup_type(&'a self, id: &Identifier) -> Option<&'a TypeDef> {
+    pub fn lookup_type(&self, id: &Identifier) -> Option<Box<TypeDef>> {
         match self.lookup_module(&self.module) {
-            Some(module) => module.lookup_type(id),
+            Some(module) => module.borrow().lookup_type(id),
             None => {
                 let err_str = format!(
                     "Module not found: {} while trying to lookup type: {}",

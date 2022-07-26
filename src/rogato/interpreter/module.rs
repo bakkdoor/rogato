@@ -1,3 +1,5 @@
+use std::cell::RefCell;
+use std::rc::Rc;
 use std::{collections::HashMap, fmt::Display};
 
 use crate::rogato::ast::{fn_def::FnDef, type_expression::TypeDef};
@@ -13,15 +15,18 @@ pub struct Module {
     constants: HashMap<Identifier, Value>,
 }
 
+pub type ModuleRef = Rc<RefCell<Module>>;
+
 impl Module {
     #[allow(dead_code)]
-    pub fn new(id: &Identifier) -> Module {
-        Module {
+    pub fn new(id: &Identifier) -> ModuleRef {
+        let module = Module {
             id: id.clone(),
             fn_defs: HashMap::new(),
             type_defs: HashMap::new(),
             constants: HashMap::new(),
-        }
+        };
+        Rc::new(RefCell::new(module))
     }
 
     #[allow(dead_code)]
@@ -45,9 +50,9 @@ impl Module {
     }
 
     #[allow(dead_code)]
-    pub fn lookup_type<'a>(&'a self, id: &Identifier) -> Option<&'a TypeDef> {
+    pub fn lookup_type(&self, id: &Identifier) -> Option<Box<TypeDef>> {
         match self.type_defs.get(id) {
-            Some(f) => Some(f),
+            Some(f) => Some(f.clone()),
             None => None,
         }
     }
@@ -58,9 +63,9 @@ impl Module {
     }
 
     #[allow(dead_code)]
-    pub fn lookup_const<'a>(&'a self, id: &Identifier) -> Option<&'a Value> {
+    pub fn lookup_const(&self, id: &Identifier) -> Option<Value> {
         match self.constants.get(id) {
-            Some(v) => Some(v),
+            Some(v) => Some(v.clone()),
             None => None,
         }
     }

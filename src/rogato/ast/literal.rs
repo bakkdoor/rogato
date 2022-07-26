@@ -66,8 +66,8 @@ impl ASTDepth for Literal {
     }
 }
 
-impl<'a> Evaluate<'a, Value> for Literal {
-    fn evaluate(&self, context: &mut EvalContext<'a>) -> Value {
+impl Evaluate<Value> for Literal {
+    fn evaluate(&self, context: &mut EvalContext) -> Value {
         match self {
             Literal::Int64(number) => val::number(*number),
             Literal::String(string) => val::string(string),
@@ -142,8 +142,8 @@ impl<I: ASTDepth> ASTDepth for TupleItems<I> {
     }
 }
 
-impl<'a, T: Evaluate<'a, Value>> Evaluate<'a, Value> for TupleItems<T> {
-    fn evaluate(&self, context: &mut EvalContext<'a>) -> Value {
+impl<T: Evaluate<Value>> Evaluate<Value> for TupleItems<T> {
+    fn evaluate(&self, context: &mut EvalContext) -> Value {
         val::array(self.items.iter().map(|i| i.evaluate(context)).collect())
     }
 }

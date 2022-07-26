@@ -38,8 +38,8 @@ impl ASTDepth for TypeDef {
     }
 }
 
-impl<'a> Evaluate<'a, Value> for TypeDef {
-    fn evaluate(&self, context: &mut EvalContext<'a>) -> Value {
+impl Evaluate<Value> for TypeDef {
+    fn evaluate(&self, context: &mut EvalContext) -> Value {
         val::object(vec![
             ("type", val::string("TypeDef")),
             ("name", val::string(self.id.to_string())),
@@ -120,8 +120,8 @@ fn type_ref<ID: ToString>(id: ID) -> Value {
     ])
 }
 
-impl<'a> Evaluate<'a, Value> for TypeExpression {
-    fn evaluate(&self, context: &mut EvalContext<'a>) -> Value {
+impl Evaluate<Value> for TypeExpression {
+    fn evaluate(&self, context: &mut EvalContext) -> Value {
         match self {
             TypeExpression::IntType => type_ref("Int"),
             TypeExpression::StringType => type_ref("String"),
@@ -147,8 +147,8 @@ impl<'a> Evaluate<'a, Value> for TypeExpression {
     }
 }
 
-impl<'a> Evaluate<'a, Value> for Vec<(Identifier, Box<TypeExpression>)> {
-    fn evaluate(&self, context: &mut EvalContext<'a>) -> Value {
+impl Evaluate<Value> for Vec<(Identifier, Box<TypeExpression>)> {
+    fn evaluate(&self, context: &mut EvalContext) -> Value {
         let mut vec = Vec::new();
         for (_id, type_expr) in self.iter() {
             vec.push(type_expr.evaluate(context))

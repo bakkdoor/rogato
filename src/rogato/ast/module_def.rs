@@ -30,8 +30,8 @@ impl ASTDepth for ModuleDef {
     }
 }
 
-impl<'a> Evaluate<'a, Value> for ModuleDef {
-    fn evaluate(&self, _context: &mut EvalContext<'a>) -> Value {
+impl Evaluate<Value> for ModuleDef {
+    fn evaluate(&self, _context: &mut EvalContext) -> Value {
         val::object(vec![
             ("type", Value::String("Module".to_string())),
             ("name", Value::String(self.id.to_string())),

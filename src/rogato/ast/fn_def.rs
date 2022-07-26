@@ -46,8 +46,8 @@ impl ASTDepth for FnDef {
     }
 }
 
-impl<'a> Evaluate<'a, Value> for FnDef {
-    fn evaluate(&self, context: &mut EvalContext<'a>) -> Value {
+impl Evaluate<Value> for FnDef {
+    fn evaluate(&self, context: &mut EvalContext) -> Value {
         context.define_fn(FnDef::new(
             self.id.clone(),
             self.args.clone(),
