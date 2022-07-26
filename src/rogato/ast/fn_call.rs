@@ -1,3 +1,6 @@
+use crate::rogato::db::Value;
+use crate::rogato::interpreter::Evaluate;
+
 use super::expression::Expression;
 use std::fmt::Display;
 
@@ -34,5 +37,11 @@ impl Display for FnCallArgs {
             .fold(String::from(""), |acc, fmt| format!("{} {}", acc, fmt));
 
         f.write_fmt(format_args!("{}", fmt_str))
+    }
+}
+
+impl Evaluate<Vec<Value>> for FnCallArgs {
+    fn evaluate(&self, context: &mut crate::rogato::interpreter::EvalContext) -> Vec<Value> {
+        self.iter().map(|a| a.evaluate(context)).collect()
     }
 }

@@ -109,7 +109,7 @@ impl Evaluate<Value> for Expression {
             Expression::Commented(_c, e) => e.evaluate(context),
             Expression::Lit(lit_exp) => lit_exp.evaluate(context),
             Expression::FnCall(fn_ident, args) => {
-                let call_args = args.iter().map(|a| a.evaluate(context)).collect();
+                let call_args = args.evaluate(context);
                 context.call_function(fn_ident, call_args)
             }
             Expression::OpCall(op_ident, left, right) => {
