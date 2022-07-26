@@ -6,9 +6,11 @@ use super::{
 };
 use crate::rogato::{ast::type_expression::TypeDef, db::Value};
 
+pub type EnvironmentRef = Rc<RefCell<Environment>>;
+
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Environment {
-    parent: Option<Rc<RefCell<Environment>>>,
+    parent: Option<EnvironmentRef>,
     variables: HashMap<Identifier, Value>,
     modules: HashMap<Identifier, ModuleRef>,
     module: Identifier,
@@ -16,7 +18,7 @@ pub struct Environment {
 
 impl Environment {
     #[allow(dead_code)]
-    pub fn new() -> Rc<RefCell<Environment>> {
+    pub fn new() -> EnvironmentRef {
         let mut modules = HashMap::new();
         let mod_name = "Std".to_string();
         modules.insert(mod_name.clone(), Module::new(&mod_name));
@@ -31,7 +33,7 @@ impl Environment {
     }
 
     #[allow(dead_code)]
-    pub fn new_with_module(module: &Identifier) -> Rc<RefCell<Environment>> {
+    pub fn new_with_module(module: &Identifier) -> EnvironmentRef {
         let env = Environment {
             parent: None,
             variables: HashMap::new(),
@@ -41,7 +43,7 @@ impl Environment {
         Rc::new(RefCell::new(env))
     }
 
-    pub fn spawn_child(parent: Rc<RefCell<Environment>>) -> Rc<RefCell<Environment>> {
+    pub fn spawn_child(parent: EnvironmentRef) -> EnvironmentRef {
         let child = Environment {
             parent: Some(parent.clone()),
             variables: HashMap::new(),
@@ -53,10 +55,7 @@ impl Environment {
     }
 
     #[allow(dead_code)]
-    pub fn spawn_child_with_module(
-        module: &Identifier,
-        parent: Rc<RefCell<Environment>>,
-    ) -> Rc<RefCell<Environment>> {
+    pub fn spawn_child_with_module(module: &Identifier, parent: EnvironmentRef) -> EnvironmentRef {
         let mut modules = HashMap::new();
         modules.insert(module.clone(), Module::new(module));
         let child = Environment {

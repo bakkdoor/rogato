@@ -1,6 +1,7 @@
-use std::{cell::RefCell, rc::Rc};
-
-use self::{environment::Environment, module::ModuleRef};
+use self::{
+    environment::{Environment, EnvironmentRef},
+    module::ModuleRef,
+};
 
 use super::{
     ast::{fn_def::FnDef, type_expression::TypeDef},
@@ -14,7 +15,7 @@ type Identifier = String;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct EvalContext {
-    env: Rc<RefCell<Environment>>,
+    env: EnvironmentRef,
     obj_storage: ObjectStorage,
 }
 
@@ -28,7 +29,7 @@ impl EvalContext {
     }
 
     #[allow(dead_code)]
-    pub fn from_env(env: Rc<RefCell<Environment>>) -> EvalContext {
+    pub fn from_env(env: EnvironmentRef) -> EvalContext {
         EvalContext {
             env,
             obj_storage: ObjectStorage::new(),
