@@ -1,3 +1,4 @@
+use crate::rogato::ast::helpers::{fn_call, lambda, var};
 use crate::rogato::db::{val, Value};
 use crate::rogato::interpreter::{EvalContext, Evaluate};
 
@@ -142,7 +143,10 @@ impl Evaluate<Value> for Expression {
                     }
                 }
             }
-            Expression::PropFnRef(id) => val::string(format!(".{}", id)),
+            Expression::PropFnRef(id) => {
+                let lambda = lambda(vec!["object"], fn_call(id, vec![var("object")]));
+                lambda.evaluate(context)
+            }
             Expression::EdgeProp(_id, _edge) => val::string("eval edge prop"),
             Expression::Let(let_expr) => let_expr.evaluate(context),
             Expression::Lambda(lambda) => lambda.evaluate(context),

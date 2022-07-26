@@ -1,16 +1,12 @@
-use crate::tests::rogato::{
-    commented, edge_prop, int_type, list_lit, prop_fn_ref, quoted, quoted_ast, root_comment,
-    string_type, struct_lit, struct_type, symbol, tuple_type, type_def, type_ref, unquoted,
-    unquoted_ast,
-};
 #[cfg(test)]
 use crate::{assert_parse, assert_parse_ast, assert_parse_expr};
 
-use super::{const_or_type_ref, lambda, query};
 #[cfg(test)]
-use super::{
-    fn_call, fn_def, int_lit, let_expr, module_def, op_call, parse_expr, program, string_lit,
-    tuple_lit, var,
+use crate::rogato::ast::helpers::{
+    commented, const_or_type_ref, edge_prop, fn_call, fn_def, int_lit, int_type, lambda, let_expr,
+    list_lit, module_def, op_call, parse_expr, program, prop_fn_ref, query, quoted, quoted_ast,
+    root_comment, string_lit, string_type, struct_lit, struct_type, symbol, tuple_lit, tuple_type,
+    type_def, type_ref, unquoted, unquoted_ast, var,
 };
 
 #[test]

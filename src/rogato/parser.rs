@@ -520,10 +520,8 @@ pub fn parse_ast(str: &str) -> ParseASTResult {
     }
 }
 
-#[cfg(test)]
 pub type ParseExprResult = Result<Box<Expression>, ParseError<LineCol>>;
 
-#[cfg(test)]
 pub fn parse_expr(str: &str) -> ParseExprResult {
     match parser::expression(str) {
         Ok(expr) => Ok(Box::new(expr)),

@@ -13,7 +13,7 @@ impl Program {
         Program { nodes }
     }
 
-    #[cfg(test)]
+    #[allow(clippy::vec_box)]
     pub fn from_boxed(nodes: Vec<Box<AST>>) -> Self {
         Program {
             nodes: Vec::from_iter(nodes.iter().map(|d| *d.clone())),
