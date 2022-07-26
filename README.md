@@ -36,13 +36,15 @@ Build with cargo, Rust's package and build manager:
 
     carbo b --features trace
 
-    # works also for release builds:
+This works also for release builds:
+
     carbo b -r --features trace
 
-    # to get parser tracing viz via pegviz, run:
+To get parser tracing viz via pegviz, run:
+
     ./target/release/rogato example/query.roga | pegviz --output pegviz.html
 
-    # then open pegviz.html to view parser tracing visualization
+Then open pegviz.html to view parser tracing visualization.
 
 ### Q&A
 
