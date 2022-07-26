@@ -33,12 +33,15 @@ impl Environment {
     }
 
     #[allow(dead_code)]
-    pub fn new_with_module(module: &Identifier) -> EnvironmentRef {
+    pub fn new_with_module(module_name: &Identifier) -> EnvironmentRef {
+        let mut modules = HashMap::new();
+        modules.insert(module_name.clone(), Module::new(module_name));
+
         let env = Environment {
             parent: None,
             variables: HashMap::new(),
-            modules: HashMap::new(),
-            module: module.clone(),
+            modules,
+            module: module_name.clone(),
         };
         Rc::new(RefCell::new(env))
     }
