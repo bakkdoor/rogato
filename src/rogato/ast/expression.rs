@@ -117,7 +117,7 @@ impl Evaluate<Value> for Expression {
                 context.call_function(op_ident, call_args)
             }
             Expression::Var(id) => match context.lookup_var(id) {
-                Some(var) => var.to_owned(),
+                Some(var) => var,
                 None => {
                     eprintln!("Var not found: {}", id);
                     val::null()
@@ -125,7 +125,7 @@ impl Evaluate<Value> for Expression {
             },
             Expression::ConstOrTypeRef(id) => {
                 match context.lookup_const(id) {
-                    Some(val) => val.to_owned(),
+                    Some(val) => val,
                     None => {
                         match context.lookup_type(id) {
                             Some(type_) => val::object(vec![

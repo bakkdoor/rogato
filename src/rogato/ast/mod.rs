@@ -22,7 +22,7 @@ pub type Identifier = String;
 impl Evaluate<Value> for Identifier {
     fn evaluate(&self, context: &mut EvalContext) -> Value {
         match context.lookup_var(self) {
-            Some(val) => val.clone(),
+            Some(val) => val,
             None => {
                 eprintln!("Failed to lookup var: {}", self);
                 val::null()

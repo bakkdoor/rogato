@@ -51,10 +51,7 @@ impl Module {
 
     #[allow(dead_code)]
     pub fn lookup_type(&self, id: &Identifier) -> Option<Box<TypeDef>> {
-        match self.type_defs.get(id) {
-            Some(f) => Some(f.clone()),
-            None => None,
-        }
+        self.type_defs.get(id).cloned()
     }
 
     #[allow(dead_code)]
@@ -64,10 +61,7 @@ impl Module {
 
     #[allow(dead_code)]
     pub fn lookup_const(&self, id: &Identifier) -> Option<Value> {
-        match self.constants.get(id) {
-            Some(v) => Some(v.clone()),
-            None => None,
-        }
+        self.constants.get(id).cloned()
     }
 }
 
