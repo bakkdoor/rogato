@@ -8,61 +8,68 @@ use crate::rogato::db::Value;
 use super::Identifier;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub struct Module {
+pub struct ModuleState {
     id: Identifier,
     fn_defs: HashMap<Identifier, Box<FnDef>>,
     type_defs: HashMap<Identifier, Box<TypeDef>>,
     constants: HashMap<Identifier, Value>,
 }
 
-pub type ModuleRef = Rc<RefCell<Module>>;
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct Module {
+    state: Rc<RefCell<ModuleState>>,
+}
 
 impl Module {
-    pub fn new(id: &Identifier) -> ModuleRef {
-        let module = Module {
+    pub fn new(id: &Identifier) -> Module {
+        let state = ModuleState {
             id: id.clone(),
             fn_defs: HashMap::new(),
             type_defs: HashMap::new(),
             constants: HashMap::new(),
         };
-        Rc::new(RefCell::new(module))
-    }
-
-    pub fn fn_def(&mut self, fn_def: Box<FnDef>) -> &mut Self {
-        self.fn_defs.insert(fn_def.id(), fn_def);
-        self
-    }
-
-    #[allow(dead_code)]
-    pub fn lookup_fn<'a>(&'a self, id: &Identifier) -> Option<&'a FnDef> {
-        match self.fn_defs.get(id) {
-            Some(f) => Some(f),
-            None => None,
+        Module {
+            state: Rc::new(RefCell::new(state)),
         }
     }
 
+    pub fn fn_def(&mut self, fn_def: Box<FnDef>) {
+        let mut state = self.state.borrow_mut();
+        state.fn_defs.insert(fn_def.id(), fn_def);
+    }
+
     #[allow(dead_code)]
-    pub fn type_def(&mut self, id: Identifier, type_def: Box<TypeDef>) -> &mut Self {
-        self.type_defs.insert(id, type_def);
-        self
+    pub fn lookup_fn(&self, id: &Identifier) -> Option<Box<FnDef>> {
+        let state = self.state.borrow();
+        state.fn_defs.get(id).cloned()
+    }
+
+    #[allow(dead_code)]
+    pub fn type_def(&mut self, id: Identifier, type_def: Box<TypeDef>) {
+        let mut state = self.state.borrow_mut();
+        state.type_defs.insert(id, type_def);
     }
 
     pub fn lookup_type(&self, id: &Identifier) -> Option<Box<TypeDef>> {
-        self.type_defs.get(id).cloned()
+        let state = self.state.borrow();
+        state.type_defs.get(id).cloned()
     }
 
     #[allow(dead_code)]
     pub fn const_def(&mut self, id: &Identifier, val: Value) {
-        self.constants.insert(id.clone(), val);
+        let mut state = self.state.borrow_mut();
+        state.constants.insert(id.clone(), val);
     }
 
     pub fn lookup_const(&self, id: &Identifier) -> Option<Value> {
-        self.constants.get(id).cloned()
+        let state = self.state.borrow();
+        state.constants.get(id).cloned()
     }
 }
 
 impl Display for Module {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!("Module {{ id: {:?} }}", self.id))
+        let state = self.state.borrow();
+        f.write_fmt(format_args!("Module {{ id: {:?} }}", state.id))
     }
 }

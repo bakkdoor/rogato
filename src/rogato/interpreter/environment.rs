@@ -1,16 +1,13 @@
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
-use super::{
-    module::{Module, ModuleRef},
-    Identifier,
-};
+use super::{module::Module, Identifier};
 use crate::rogato::{ast::type_expression::TypeDef, db::Value};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct EnvironmentState {
     parent: Option<Environment>,
     variables: HashMap<Identifier, Value>,
-    modules: HashMap<Identifier, ModuleRef>,
+    modules: HashMap<Identifier, Module>,
     module: Identifier,
 }
 
@@ -96,12 +93,12 @@ impl Environment {
         }
     }
 
-    pub fn define_module(&mut self, id: &Identifier, module: ModuleRef) -> &mut Self {
+    pub fn define_module(&mut self, id: &Identifier, module: Module) -> &mut Self {
         self.state.borrow_mut().modules.insert(id.clone(), module);
         self
     }
 
-    pub fn current_module(&self) -> ModuleRef {
+    pub fn current_module(&self) -> Module {
         let state = self.state.borrow();
         match self.lookup_module(&state.module) {
             Some(module) => module,
@@ -111,7 +108,7 @@ impl Environment {
         }
     }
 
-    pub fn lookup_module(&self, id: &Identifier) -> Option<ModuleRef> {
+    pub fn lookup_module(&self, id: &Identifier) -> Option<Module> {
         let state = self.state.borrow();
         match state.modules.get(id) {
             Some(module) => Some(module.clone()),
@@ -125,7 +122,7 @@ impl Environment {
     pub fn lookup_const(&self, id: &Identifier) -> Option<Value> {
         let state = self.state.borrow();
         match self.lookup_module(&state.module) {
-            Some(module) => module.borrow().lookup_const(id),
+            Some(module) => module.lookup_const(id),
             None => {
                 let err_str = format!(
                     "Module not found: {} while trying to lookup const: {}",
@@ -140,7 +137,7 @@ impl Environment {
     pub fn lookup_type(&self, id: &Identifier) -> Option<Box<TypeDef>> {
         let state = self.state.borrow();
         match self.lookup_module(&state.module) {
-            Some(module) => module.borrow().lookup_type(id),
+            Some(module) => module.lookup_type(id),
             None => {
                 let err_str = format!(
                     "Module not found: {} while trying to lookup type: {}",

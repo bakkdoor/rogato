@@ -1,4 +1,4 @@
-use self::{environment::Environment, module::ModuleRef};
+use self::{environment::Environment, module::Module};
 
 use super::{
     ast::{fn_def::FnDef, type_expression::TypeDef},
@@ -40,9 +40,9 @@ impl EvalContext {
     }
 
     pub fn define_fn(&mut self, fn_def: FnDef) -> Value {
-        let module = self.current_module();
+        let mut module = self.current_module();
         let id = fn_def.id();
-        module.borrow_mut().fn_def(Box::new(fn_def));
+        module.fn_def(Box::new(fn_def));
         val::string(format!("FnDef {}", id))
     }
 
@@ -60,12 +60,12 @@ impl EvalContext {
     }
 
     #[allow(dead_code)]
-    pub fn define_module(&mut self, id: &Identifier, module: ModuleRef) {
+    pub fn define_module(&mut self, id: &Identifier, module: Module) {
         self.env.define_module(id, module);
     }
 
     #[allow(dead_code)]
-    pub fn lookup_module(&self, id: &Identifier) -> Option<ModuleRef> {
+    pub fn lookup_module(&self, id: &Identifier) -> Option<Module> {
         self.env.lookup_module(id)
     }
 
@@ -77,7 +77,7 @@ impl EvalContext {
         self.env.lookup_type(id)
     }
 
-    pub fn current_module(&self) -> ModuleRef {
+    pub fn current_module(&self) -> Module {
         self.env.current_module()
     }
 }
