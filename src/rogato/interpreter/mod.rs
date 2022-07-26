@@ -1,7 +1,4 @@
-use self::{
-    environment::{Environment, EnvironmentRef},
-    module::ModuleRef,
-};
+use self::{environment::Environment, module::ModuleRef};
 
 use super::{
     ast::{fn_def::FnDef, type_expression::TypeDef},
@@ -15,7 +12,7 @@ type Identifier = String;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct EvalContext {
-    env: EnvironmentRef,
+    env: Environment,
     obj_storage: ObjectStorage,
 }
 
@@ -28,7 +25,7 @@ impl EvalContext {
     }
 
     #[allow(dead_code)]
-    pub fn from_env(env: EnvironmentRef) -> EvalContext {
+    pub fn from_env(env: Environment) -> EvalContext {
         EvalContext {
             env,
             obj_storage: ObjectStorage::new(),
@@ -55,33 +52,33 @@ impl EvalContext {
     }
 
     pub fn define_var(&mut self, id: &Identifier, val: Value) {
-        self.env.borrow_mut().define_var(id, val);
+        self.env.define_var(id, val);
     }
 
     pub fn lookup_var(&self, id: &str) -> Option<Value> {
-        self.env.borrow().lookup_var(id)
+        self.env.lookup_var(id)
     }
 
     #[allow(dead_code)]
     pub fn define_module(&mut self, id: &Identifier, module: ModuleRef) {
-        self.env.borrow_mut().define_module(id, module);
+        self.env.define_module(id, module);
     }
 
     #[allow(dead_code)]
     pub fn lookup_module(&self, id: &Identifier) -> Option<ModuleRef> {
-        self.env.borrow().lookup_module(id)
+        self.env.lookup_module(id)
     }
 
     pub fn lookup_const(&self, id: &Identifier) -> Option<Value> {
-        self.env.borrow().lookup_const(id)
+        self.env.lookup_const(id)
     }
 
     pub fn lookup_type(&self, id: &Identifier) -> Option<Box<TypeDef>> {
-        self.env.borrow().lookup_type(id)
+        self.env.lookup_type(id)
     }
 
     pub fn current_module(&self) -> ModuleRef {
-        self.env.borrow().current_module()
+        self.env.current_module()
     }
 }
 
