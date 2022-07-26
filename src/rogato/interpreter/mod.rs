@@ -34,7 +34,7 @@ impl EvalContext {
 
     pub fn with_child_env(&self) -> Self {
         EvalContext {
-            env: Environment::spawn_child(self.env.clone()),
+            env: self.env.child(),
             obj_storage: ObjectStorage::new(),
         }
     }

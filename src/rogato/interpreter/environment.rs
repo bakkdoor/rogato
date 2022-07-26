@@ -50,12 +50,12 @@ impl Environment {
         }
     }
 
-    pub fn spawn_child(parent: Environment) -> Environment {
+    pub fn child(&self) -> Environment {
         let state = EnvironmentState {
-            parent: Some(parent.clone()),
+            parent: Some(self.clone()),
             variables: HashMap::new(),
             modules: HashMap::new(),
-            module: parent.module(),
+            module: self.module(),
         };
         Environment {
             state: Rc::new(RefCell::new(state)),
@@ -63,11 +63,11 @@ impl Environment {
     }
 
     #[allow(dead_code)]
-    pub fn spawn_child_with_module(module: &Identifier, parent: Environment) -> Environment {
+    pub fn child_with_module(&self, module: &Identifier) -> Environment {
         let mut modules = HashMap::new();
         modules.insert(module.clone(), Module::new(module));
         let state = EnvironmentState {
-            parent: Some(parent),
+            parent: Some(self.clone()),
             variables: HashMap::new(),
             modules,
             module: module.clone(),
