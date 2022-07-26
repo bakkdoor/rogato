@@ -55,7 +55,7 @@ impl Environment {
             parent: Some(parent.clone()),
             variables: HashMap::new(),
             modules: HashMap::new(),
-            module: parent.module().clone(),
+            module: parent.module(),
         };
         Environment {
             state: Rc::new(RefCell::new(state)),
