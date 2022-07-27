@@ -1,4 +1,8 @@
 use super::{expression::Expression, walker::Walk, ASTDepth};
+use crate::rogato::{
+    db::{val, val::Value},
+    interpreter::{EvalContext, Evaluate},
+};
 use std::{fmt::Display, rc::Rc};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -50,6 +54,15 @@ impl Walk for Query {
             g.walk(v);
         }
         self.production.walk(v);
+    }
+}
+
+impl Evaluate<Value> for Query {
+    fn evaluate(&self, context: &mut EvalContext) -> Value {
+        match context.schedule_query(self) {
+            Ok(val) => val,
+            Err(e) => val::string(format!("error: {:?}", e)),
+        }
     }
 }
 

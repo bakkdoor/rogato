@@ -3,8 +3,11 @@ use std::rc::Rc;
 use self::{environment::Environment, module::Module};
 
 use super::{
-    ast::{fn_def::FnDef, type_expression::TypeDef},
-    db::{val, ObjectStorage, Value},
+    ast::{expression::Query, fn_def::FnDef, type_expression::TypeDef},
+    db::{
+        query::{QueryPlanner, QueryResult},
+        val, ObjectStorage, Value,
+    },
 };
 
 pub mod environment;
@@ -16,6 +19,7 @@ type Identifier = String;
 pub struct EvalContext {
     env: Environment,
     obj_storage: ObjectStorage,
+    query_planner: QueryPlanner,
 }
 
 impl EvalContext {
@@ -23,6 +27,7 @@ impl EvalContext {
         EvalContext {
             env: Environment::new(),
             obj_storage: ObjectStorage::new(),
+            query_planner: QueryPlanner::new(),
         }
     }
 
@@ -31,6 +36,7 @@ impl EvalContext {
         EvalContext {
             env,
             obj_storage: ObjectStorage::new(),
+            query_planner: QueryPlanner::new(),
         }
     }
 
@@ -38,6 +44,7 @@ impl EvalContext {
         EvalContext {
             env: self.env.child(),
             obj_storage: ObjectStorage::new(),
+            query_planner: QueryPlanner::new(),
         }
     }
 
@@ -81,6 +88,10 @@ impl EvalContext {
 
     pub fn current_module(&self) -> Module {
         self.env.current_module()
+    }
+
+    pub fn schedule_query(&self, query: &Query) -> QueryResult {
+        self.query_planner.query(query)
     }
 }
 

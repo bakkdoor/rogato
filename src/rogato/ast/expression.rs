@@ -151,7 +151,7 @@ impl Evaluate<Value> for Expression {
             Expression::EdgeProp(_id, _edge) => val::string("eval edge prop"),
             Expression::Let(let_expr) => let_expr.evaluate(context),
             Expression::Lambda(lambda) => lambda.evaluate(context),
-            Expression::Query(_query) => val::string("eval query"),
+            Expression::Query(query) => query.evaluate(context),
             Expression::Symbol(id) => val::string(format!("Symbol ^{}", id)), // likely need custom value types besides just json values to properly support symbols
             Expression::Quoted(expr) => val::string(format!("^({})", expr)),
             Expression::QuotedAST(ast) => val::string(format!("^({})", ast)),

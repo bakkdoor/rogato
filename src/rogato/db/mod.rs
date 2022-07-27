@@ -12,6 +12,7 @@ pub use uuid::Uuid;
 
 pub mod object;
 pub mod object_storage;
+pub mod query;
 pub mod val;
 
 pub use object_storage::ObjectStorage;
