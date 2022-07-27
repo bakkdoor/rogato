@@ -8,7 +8,7 @@ use crate::rogato::db::Value;
 use super::Identifier;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub struct ModuleState {
+struct State {
     id: Identifier,
     fn_defs: HashMap<Identifier, Rc<FnDef>>,
     type_defs: HashMap<Identifier, Rc<TypeDef>>,
@@ -17,12 +17,12 @@ pub struct ModuleState {
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Module {
-    state: Rc<RefCell<ModuleState>>,
+    state: Rc<RefCell<State>>,
 }
 
 impl Module {
     pub fn new(id: &Identifier) -> Module {
-        let state = ModuleState {
+        let state = State {
             id: id.clone(),
             fn_defs: HashMap::new(),
             type_defs: HashMap::new(),

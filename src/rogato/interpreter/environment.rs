@@ -4,7 +4,7 @@ use super::{module::Module, Identifier};
 use crate::rogato::{ast::type_expression::TypeDef, db::Value};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub struct EnvironmentState {
+struct State {
     parent: Option<Environment>,
     variables: HashMap<Identifier, Value>,
     modules: HashMap<Identifier, Module>,
@@ -13,7 +13,7 @@ pub struct EnvironmentState {
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Environment {
-    state: Rc<RefCell<EnvironmentState>>,
+    state: Rc<RefCell<State>>,
 }
 
 impl Environment {
@@ -21,7 +21,7 @@ impl Environment {
         let mut modules = HashMap::new();
         let mod_name = "Std".to_string();
         modules.insert(mod_name.clone(), Module::new(&mod_name));
-        let state = EnvironmentState {
+        let state = State {
             parent: None,
             variables: HashMap::new(),
             modules,
@@ -36,7 +36,7 @@ impl Environment {
     pub fn new_with_module(module_name: &Identifier) -> Environment {
         let mut modules = HashMap::new();
         modules.insert(module_name.clone(), Module::new(module_name));
-        let state = EnvironmentState {
+        let state = State {
             parent: None,
             variables: HashMap::new(),
             modules,
@@ -48,7 +48,7 @@ impl Environment {
     }
 
     pub fn child(&self) -> Environment {
-        let state = EnvironmentState {
+        let state = State {
             parent: Some(self.clone()),
             variables: HashMap::new(),
             modules: HashMap::new(),
@@ -63,7 +63,7 @@ impl Environment {
     pub fn child_with_module(&self, module: &Identifier) -> Environment {
         let mut modules = HashMap::new();
         modules.insert(module.clone(), Module::new(module));
-        let state = EnvironmentState {
+        let state = State {
             parent: Some(self.clone()),
             variables: HashMap::new(),
             modules,
