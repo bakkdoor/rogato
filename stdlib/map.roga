@@ -1,7 +1,7 @@
 module Std.Map { map, mapKeys, count, isEmpty }
 
 let map {} _ = []
-let map {k => v :: rest} = [f {k, v} :: map rest f]
+let map {k => v :: rest} f = [f {k, v} :: map rest f]
 
 let mapKeys {} _ = []
 let mapKeys {k => v :: rest} f = { (f k) => v :: mapKeys rest f }
