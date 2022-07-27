@@ -19,4 +19,4 @@ let reduce {k => v | rest} acc f =
   reduce rest (f {k,v} acc) f
 
 let keys {} = []
-let keys {k => _ | rest} = [k | rest]
+let keys {k => _ | rest} = [k | keys rest]
