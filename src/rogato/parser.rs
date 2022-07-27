@@ -1,5 +1,7 @@
 extern crate peg;
 
+use std::rc::Rc;
+
 use crate::rogato::ast::{
     expression::{
         Expression, FnCallArgs, FnDefArgs, Lambda, LambdaArgs, LetBindings, LetExpression, Literal,
@@ -37,9 +39,9 @@ grammar parser() for str {
             Program::new(vec![])
         }
 
-    pub rule program_root_def() -> AST
+    pub rule program_root_def() -> Rc<AST>
         = _ def:root_def() {
-            def
+            Rc::new(def)
         }
 
     pub rule root_def() -> AST
@@ -81,7 +83,7 @@ grammar parser() for str {
 
     rule fn_def() -> AST
         = _ "let " _ id:identifier() _ args:(fn_def_arg())* _ "=" _ body:(expression()) _ {
-            AST::FnDef(FnDef::new(id, FnDefArgs::new(args), Box::new(body)))
+            AST::FnDef(FnDef::new(id, FnDefArgs::new(args), Rc::new(body)))
         }
 
     rule fn_def_arg() -> Identifier
@@ -91,7 +93,7 @@ grammar parser() for str {
 
     rule type_def() -> AST
         = _ "type " _ id:identifier() _ "::" _ t_expr:type_expr() {
-            AST::TypeDef(TypeDef::new(id, Box::new(t_expr)))
+            AST::TypeDef(TypeDef::new(id, Rc::new(t_expr)))
         }
 
     rule type_expr() -> TypeExpression
@@ -120,12 +122,12 @@ grammar parser() for str {
 
     rule list_type() -> TypeExpression
         = "[" _ type_expr:type_expr() _ "]" {
-            TypeExpression::ListType(Box::new(type_expr))
+            TypeExpression::ListType(Rc::new(type_expr))
         }
 
     rule function_type() -> TypeExpression
         = "(" _ arg_types:(tuple_type_item())+ " "+ "->" return_type:type_expr() _ ")"{
-            TypeExpression::FunctionType(LambdaArgs::new(arg_types), Box::new(return_type))
+            TypeExpression::FunctionType(LambdaArgs::new(arg_types), Rc::new(return_type))
         }
 
     rule struct_type() -> TypeExpression
@@ -133,12 +135,12 @@ grammar parser() for str {
             TypeExpression::StructType(properties)
         }
 
-    rule struct_prop_type() -> (Identifier, Box<TypeExpression>)
+    rule struct_prop_type() -> (Identifier, Rc<TypeExpression>)
         = id:identifier() " "+ "::" _ type_expr:type_expr() " "* "," _ {
-            (id, Box::new(type_expr))
+            (id, Rc::new(type_expr))
         }
         / id:identifier() " "+ "::" _ type_expr:type_expr() [^'\n']* "\n"+ _ {
-            (id, Box::new(type_expr))
+            (id, Rc::new(type_expr))
         }
 
     pub rule expression() -> Expression
@@ -158,7 +160,7 @@ grammar parser() for str {
             let call = calls.iter().fold(a, |acc, call|{
                 if let Expression::FnCall(id, args) = call {
                     let mut args = args.clone();
-                    args.prepend_arg(acc);
+                    args.prepend_arg(Rc::new(acc));
                     return Expression::FnCall(id.clone(), args)
                 }
                 panic!("Failed to create fn call pipeline")
@@ -182,7 +184,7 @@ grammar parser() for str {
 
     rule commented_expr() -> Expression
         = c:comment() _ e:expression() {
-            Expression::Commented(c, Box::new(e))
+            Expression::Commented(c, Rc::new(e))
         }
 
     rule atom() -> Expression
@@ -205,23 +207,23 @@ grammar parser() for str {
 
     rule quoted_expr() -> Expression
         = "^" "(" expr:expression() ")" {
-            Expression::Quoted(Box::new(expr))
+            Expression::Quoted(Rc::new(expr))
         }
         / "^" "(" ast:root_def() ")" {
-            Expression::QuotedAST(Box::new(ast))
+            Expression::QuotedAST(Rc::new(ast))
         }
         / symbol()
         / unquoted_expr()
 
     rule unquoted_expr() -> Expression
         = "~" "(" expr:expression() ")" {
-            Expression::Unquoted(Box::new(expr))
+            Expression::Unquoted(Rc::new(expr))
         }
         / "~" "(" ast:root_def() ")" {
-            Expression::UnquotedAST(Box::new(ast))
+            Expression::UnquotedAST(Rc::new(ast))
         }
         / "~" var:variable() {
-            Expression::Unquoted(Box::new(var))
+            Expression::Unquoted(Rc::new(var))
         }
 
     rule symbol() -> Expression
@@ -235,17 +237,17 @@ grammar parser() for str {
                 Query::new(
                     QueryBindings::new(bindings),
                     QueryGuards::new(guards),
-                    Box::new(prod)
+                    Rc::new(prod)
                 )
             )
         }
 
     rule query_binding() -> QueryBinding
         = _ "?" _ vars:query_binding_vars() _ "<!-" _ expr:query_expr() _ {
-            QueryBinding::new_negated(vars, Box::new(expr))
+            QueryBinding::new_negated(vars, Rc::new(expr))
         }
         / _ "?" _ vars:query_binding_vars() _ "<-" _ expr:query_expr() _ {
-            QueryBinding::new(vars, Box::new(expr))
+            QueryBinding::new(vars, Rc::new(expr))
         }
 
     rule query_binding_vars() -> Vec<Identifier>
@@ -276,7 +278,7 @@ grammar parser() for str {
 
     rule edge_prop() -> Expression
         = expr:edge_prop_expr() "#" edge:struct_identifier() {
-            Expression::EdgeProp(Box::new(expr), edge)
+            Expression::EdgeProp(Rc::new(expr), edge)
         }
 
     rule edge_prop_expr() -> Expression
@@ -284,17 +286,17 @@ grammar parser() for str {
         / "(" _ q:query() _ ")" { q }
         / "(" _ c:(fn_pipe() / fn_call() / op_call()) _ ")" { c }
 
-    rule query_guard() -> Expression
+    rule query_guard() -> Rc<Expression>
         = _ c:comment() _ g:query_guard() {
-            Expression::Commented(c, Box::new(g))
+            Rc::new(Expression::Commented(c, g))
         }
         / _ "! " _ expr:query_expr() {
-            expr
+            Rc::new(expr)
         }
 
     rule query_production() -> Expression
         = c:comment() _ qp:query_production() {
-            Expression::Commented(c, Box::new(qp))
+            Expression::Commented(c, Rc::new(qp))
         }
         / "!> " _ expr:query_expr() _ {
             expr
@@ -303,16 +305,16 @@ grammar parser() for str {
 
     rule fn_call() -> Expression
         = _ id:identifier() args:(fn_arg())+ _ {
-            let args = FnCallArgs::new(args);
+            let args = FnCallArgs::from_owned(args);
             Expression::FnCall(id, args)
         }
 
     rule op_call() -> Expression
         = left:op_arg() " "+ id:operator() _ right:op_arg() {
-            Expression::OpCall(id, Box::new(left), Box::new(right))
+            Expression::OpCall(id, Rc::new(left), Rc::new(right))
         }
         / left:op_arg() _ id:operator() " "+ right:op_arg() {
-            Expression::OpCall(id, Box::new(left), Box::new(right))
+            Expression::OpCall(id, Rc::new(left), Rc::new(right))
         }
 
     rule fn_arg() -> Expression
@@ -327,7 +329,7 @@ grammar parser() for str {
     rule let_expr() -> Expression
         = "let" _ bindings:let_bindings() _ "in" _ body:let_body() {
             Expression::Let(
-                LetExpression::new(LetBindings::new(bindings), Box::new(body))
+                LetExpression::new(LetBindings::from_owned(bindings), Rc::new(body))
             )
         }
 
@@ -363,7 +365,7 @@ grammar parser() for str {
 
     rule commented_let_body() -> Expression
         = c:comment() _ body:let_body() {
-            Expression::Commented(c, Box::new(body))
+            Expression::Commented(c, Rc::new(body))
         }
 
     rule literal_expr() -> Expression
@@ -411,7 +413,7 @@ grammar parser() for str {
 
     rule commented_tuple_item() -> Expression
         = c:comment() _ item:tuple_item() {
-            Expression::Commented(c, Box::new(item))
+            Expression::Commented(c, Rc::new(item))
         }
 
     rule additional_tuple_item() -> Expression
@@ -421,22 +423,22 @@ grammar parser() for str {
 
     rule struct_lit() -> Expression
         = id:struct_identifier() "{" _ first:struct_prop() rest:(additional_struct_prop())*  _ ("," _)? "}" {
-            Expression::Lit(Literal::Struct(id, Box::new(StructProps::new(first, rest))))
+            Expression::Lit(Literal::Struct(id, Rc::new(StructProps::new(first, rest))))
         }
 
-    rule additional_struct_prop() -> (Identifier, Expression)
+    rule additional_struct_prop() -> (Identifier, Rc<Expression>)
         = _ "," _ prop:struct_prop() {
             prop
         }
 
-    rule struct_prop() -> (Identifier, Expression)
+    rule struct_prop() -> (Identifier, Rc<Expression>)
         = id:identifier() _ ":" _ expr:(tuple_item()) {
-            (id, expr)
+            (id, Rc::new(expr))
         }
 
     rule lambda() -> Expression
         = args:lambda_args() " "+ "->" _ body:let_body() {
-            Expression::Lambda(Lambda::new(LambdaArgs::new(args), Box::new(body)))
+            Expression::Lambda(Lambda::new(LambdaArgs::new(args), Rc::new(body)))
         }
 
     rule lambda_args() -> Vec<Identifier>
@@ -510,21 +512,18 @@ pub fn parse(str: &str) -> ParseResult {
 }
 
 #[cfg(test)]
-pub type ParseASTResult = Result<Box<AST>, ParseError<LineCol>>;
+pub type ParseASTResult = Result<Rc<AST>, ParseError<LineCol>>;
 
 #[cfg(test)]
 pub fn parse_ast(str: &str) -> ParseASTResult {
-    match parser::program_root_def(str) {
-        Ok(program) => Ok(Box::new(program)),
-        Err(e) => Err(e),
-    }
+    parser::program_root_def(str)
 }
 
-pub type ParseExprResult = Result<Box<Expression>, ParseError<LineCol>>;
+pub type ParseExprResult = Result<Rc<Expression>, ParseError<LineCol>>;
 
 pub fn parse_expr(str: &str) -> ParseExprResult {
     match parser::expression(str) {
-        Ok(expr) => Ok(Box::new(expr)),
+        Ok(expr) => Ok(Rc::new(expr)),
         Err(err) => Err(err),
     }
 }

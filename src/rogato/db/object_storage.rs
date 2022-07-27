@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use std::fmt::Debug;
+use std::{collections::HashMap, rc::Rc};
 
 use indradb::VertexPropertyQuery;
 
@@ -44,8 +44,8 @@ impl ObjectStorage {
     pub fn store_object<DB: Datastore>(
         &mut self,
         db: &DB,
-        object: Box<Object>,
-    ) -> DBResult<Box<PersistedObject>> {
+        object: Rc<Object>,
+    ) -> DBResult<Rc<PersistedObject>> {
         let vtx = object.vertex();
         db.create_vertex(&vtx)?;
         let p_obj = PersistedObject::new_boxed(vtx.to_owned(), object.to_owned());

@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{fmt::Display, rc::Rc};
 
 use crate::rogato::{
     db::{val, Value},
@@ -11,11 +11,11 @@ use super::{expression::Expression, walker::Walk, ASTDepth, Identifier};
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Lambda {
     args: LambdaArgs<Identifier>,
-    body: Box<Expression>,
+    body: Rc<Expression>,
 }
 
 impl Lambda {
-    pub fn new(args: LambdaArgs<Identifier>, body: Box<Expression>) -> Lambda {
+    pub fn new(args: LambdaArgs<Identifier>, body: Rc<Expression>) -> Lambda {
         Lambda { args, body }
     }
 }

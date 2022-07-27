@@ -2,22 +2,16 @@ use super::AST;
 use crate::rogato::db::Value;
 use crate::rogato::interpreter::{EvalContext, Evaluate};
 use std::fmt::Display;
+use std::rc::Rc;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Program {
-    nodes: Vec<AST>,
+    nodes: Vec<Rc<AST>>,
 }
 
 impl Program {
-    pub fn new(nodes: Vec<AST>) -> Self {
+    pub fn new(nodes: Vec<Rc<AST>>) -> Self {
         Program { nodes }
-    }
-
-    #[allow(clippy::vec_box)]
-    pub fn from_boxed(nodes: Vec<Box<AST>>) -> Self {
-        Program {
-            nodes: Vec::from_iter(nodes.iter().map(|d| *d.clone())),
-        }
     }
 
     #[allow(dead_code)]
@@ -25,7 +19,7 @@ impl Program {
         self.nodes.len()
     }
 
-    pub fn iter(&self) -> std::slice::Iter<AST> {
+    pub fn iter(&self) -> std::slice::Iter<Rc<AST>> {
         self.nodes.iter()
     }
 }

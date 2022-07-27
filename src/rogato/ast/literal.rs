@@ -4,7 +4,7 @@ use crate::rogato::{
     interpreter::{EvalContext, Evaluate},
     util::indent,
 };
-use std::fmt::Display;
+use std::{fmt::Display, rc::Rc};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum Literal {
@@ -12,7 +12,7 @@ pub enum Literal {
     String(String),
     Tuple(TupleItems<Expression>),
     List(TupleItems<Expression>),
-    Struct(Identifier, Box<StructProps>),
+    Struct(Identifier, Rc<StructProps>),
 }
 
 impl Display for Literal {
@@ -92,19 +92,19 @@ impl Evaluate<Value> for Literal {
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct TupleItems<I> {
-    items: Vec<Box<I>>,
+    items: Vec<Rc<I>>,
 }
 
 impl<I: Display> TupleItems<I> {
     pub fn new(first: I, rest: Vec<I>) -> Self {
-        let mut items = vec![Box::new(first)];
+        let mut items = vec![Rc::new(first)];
         for item in rest {
-            items.push(Box::new(item))
+            items.push(Rc::new(item))
         }
         Self::from(items)
     }
 
-    pub fn from(items: Vec<Box<I>>) -> Self {
+    pub fn from(items: Vec<Rc<I>>) -> Self {
         TupleItems { items }
     }
 
@@ -112,7 +112,7 @@ impl<I: Display> TupleItems<I> {
         self.items.len()
     }
 
-    pub fn iter(&self) -> std::slice::Iter<Box<I>> {
+    pub fn iter(&self) -> std::slice::Iter<Rc<I>> {
         self.items.iter()
     }
 }
@@ -148,21 +148,24 @@ impl<T: Evaluate<Value>> Evaluate<Value> for TupleItems<T> {
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct StructProps {
-    props: Vec<(Identifier, Box<Expression>)>,
+    props: Vec<(Identifier, Rc<Expression>)>,
 }
 
 impl StructProps {
-    pub fn new(first: (Identifier, Expression), rest: Vec<(Identifier, Expression)>) -> Self {
+    pub fn new(
+        first: (Identifier, Rc<Expression>),
+        rest: Vec<(Identifier, Rc<Expression>)>,
+    ) -> Self {
         let mut boxed_props = Vec::new();
         let (f_id, f_expr) = first;
-        boxed_props.push((f_id, Box::new(f_expr)));
+        boxed_props.push((f_id, f_expr));
         for (id, expr) in rest {
-            boxed_props.push((id, Box::new(expr)))
+            boxed_props.push((id, expr))
         }
         Self::from(boxed_props)
     }
 
-    pub fn from(props: Vec<(Identifier, Box<Expression>)>) -> Self {
+    pub fn from(props: Vec<(Identifier, Rc<Expression>)>) -> Self {
         StructProps { props }
     }
 
@@ -171,7 +174,7 @@ impl StructProps {
         self.props.len()
     }
 
-    pub fn iter(&self) -> std::slice::Iter<(String, Box<Expression>)> {
+    pub fn iter(&self) -> std::slice::Iter<(String, Rc<Expression>)> {
         self.props.iter()
     }
 }

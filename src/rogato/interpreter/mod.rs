@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use self::{environment::Environment, module::Module};
 
 use super::{
@@ -42,7 +44,7 @@ impl EvalContext {
     pub fn define_fn(&mut self, fn_def: FnDef) -> Value {
         let mut module = self.current_module();
         let id = fn_def.id();
-        module.fn_def(Box::new(fn_def));
+        module.fn_def(Rc::new(fn_def));
         val::string(format!("FnDef {}", id))
     }
 
@@ -73,7 +75,7 @@ impl EvalContext {
         self.env.lookup_const(id)
     }
 
-    pub fn lookup_type(&self, id: &Identifier) -> Option<Box<TypeDef>> {
+    pub fn lookup_type(&self, id: &Identifier) -> Option<Rc<TypeDef>> {
         self.env.lookup_type(id)
     }
 

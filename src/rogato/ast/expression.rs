@@ -10,25 +10,26 @@ pub use super::literal::*;
 pub use super::query::{Query, QueryBinding, QueryBindings, QueryGuards};
 use super::{ASTDepth, Identifier, AST};
 use std::fmt::Display;
+use std::rc::Rc;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum Expression {
-    Commented(String, Box<Expression>),
+    Commented(String, Rc<Expression>),
     Lit(Literal),
     FnCall(Identifier, FnCallArgs),
-    OpCall(Identifier, Box<Expression>, Box<Expression>),
+    OpCall(Identifier, Rc<Expression>, Rc<Expression>),
     Var(Identifier),
     ConstOrTypeRef(Identifier),
     PropFnRef(Identifier),
-    EdgeProp(Box<Expression>, Identifier),
+    EdgeProp(Rc<Expression>, Identifier),
     Let(LetExpression),
     Lambda(Lambda),
     Query(Query),
     Symbol(Identifier),
-    Quoted(Box<Expression>),
-    QuotedAST(Box<AST>),
-    Unquoted(Box<Expression>),
-    UnquotedAST(Box<AST>),
+    Quoted(Rc<Expression>),
+    QuotedAST(Rc<AST>),
+    Unquoted(Rc<Expression>),
+    UnquotedAST(Rc<AST>),
 }
 
 impl ASTDepth for Expression {

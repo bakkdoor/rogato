@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{fmt::Display, rc::Rc};
 
 use crate::rogato::{
     db::Value,
@@ -11,11 +11,11 @@ use super::{expression::Expression, visitor::Visitor, walker::Walk, ASTDepth, Id
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct LetExpression {
     bindings: LetBindings,
-    body: Box<Expression>,
+    body: Rc<Expression>,
 }
 
 impl LetExpression {
-    pub fn new(bindings: LetBindings, body: Box<Expression>) -> LetExpression {
+    pub fn new(bindings: LetBindings, body: Rc<Expression>) -> LetExpression {
         LetExpression { bindings, body }
     }
 }
@@ -58,15 +58,24 @@ impl Evaluate<Value> for LetExpression {
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct LetBindings {
-    bindings: Vec<(Identifier, Expression)>,
+    bindings: Vec<(Identifier, Rc<Expression>)>,
 }
 
 impl LetBindings {
-    pub fn new(bindings: Vec<(Identifier, Expression)>) -> LetBindings {
+    pub fn new(bindings: Vec<(Identifier, Rc<Expression>)>) -> LetBindings {
         LetBindings { bindings }
     }
 
-    pub fn iter(&self) -> std::slice::Iter<(String, Expression)> {
+    pub fn from_owned(bindings: Vec<(Identifier, Expression)>) -> LetBindings {
+        LetBindings {
+            bindings: bindings
+                .iter()
+                .map(|(id, expr)| (id.clone(), Rc::new(expr.clone())))
+                .collect(),
+        }
+    }
+
+    pub fn iter(&self) -> std::slice::Iter<(String, Rc<Expression>)> {
         self.bindings.iter()
     }
 }

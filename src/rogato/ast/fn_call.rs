@@ -3,18 +3,25 @@ use crate::rogato::interpreter::Evaluate;
 
 use super::expression::Expression;
 use std::fmt::Display;
+use std::rc::Rc;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct FnCallArgs {
-    args: Vec<Expression>,
+    args: Vec<Rc<Expression>>,
 }
 
 impl FnCallArgs {
-    pub fn new(args: Vec<Expression>) -> Self {
+    pub fn new(args: Vec<Rc<Expression>>) -> Self {
         FnCallArgs { args }
     }
 
-    pub fn prepend_arg(&mut self, arg: Expression) {
+    pub fn from_owned(args: Vec<Expression>) -> Self {
+        FnCallArgs {
+            args: args.iter().map(|a| Rc::new(a.clone())).collect(),
+        }
+    }
+
+    pub fn prepend_arg(&mut self, arg: Rc<Expression>) {
         self.args.insert(0, arg);
     }
 
@@ -23,7 +30,7 @@ impl FnCallArgs {
         self.args.len()
     }
 
-    pub fn iter(&self) -> std::slice::Iter<Expression> {
+    pub fn iter(&self) -> std::slice::Iter<Rc<Expression>> {
         self.args.iter()
     }
 }

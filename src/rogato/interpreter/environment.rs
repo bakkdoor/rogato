@@ -134,7 +134,7 @@ impl Environment {
         }
     }
 
-    pub fn lookup_type(&self, id: &Identifier) -> Option<Box<TypeDef>> {
+    pub fn lookup_type(&self, id: &Identifier) -> Option<Rc<TypeDef>> {
         let state = self.state.borrow();
         match self.lookup_module(&state.module) {
             Some(module) => module.lookup_type(id),

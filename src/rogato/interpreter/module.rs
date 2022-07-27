@@ -10,8 +10,8 @@ use super::Identifier;
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct ModuleState {
     id: Identifier,
-    fn_defs: HashMap<Identifier, Box<FnDef>>,
-    type_defs: HashMap<Identifier, Box<TypeDef>>,
+    fn_defs: HashMap<Identifier, Rc<FnDef>>,
+    type_defs: HashMap<Identifier, Rc<TypeDef>>,
     constants: HashMap<Identifier, Value>,
 }
 
@@ -33,24 +33,24 @@ impl Module {
         }
     }
 
-    pub fn fn_def(&mut self, fn_def: Box<FnDef>) {
+    pub fn fn_def(&mut self, fn_def: Rc<FnDef>) {
         let mut state = self.state.borrow_mut();
         state.fn_defs.insert(fn_def.id(), fn_def);
     }
 
     #[allow(dead_code)]
-    pub fn lookup_fn(&self, id: &Identifier) -> Option<Box<FnDef>> {
+    pub fn lookup_fn(&self, id: &Identifier) -> Option<Rc<FnDef>> {
         let state = self.state.borrow();
         state.fn_defs.get(id).cloned()
     }
 
     #[allow(dead_code)]
-    pub fn type_def(&mut self, id: Identifier, type_def: Box<TypeDef>) {
+    pub fn type_def(&mut self, id: Identifier, type_def: Rc<TypeDef>) {
         let mut state = self.state.borrow_mut();
         state.type_defs.insert(id, type_def);
     }
 
-    pub fn lookup_type(&self, id: &Identifier) -> Option<Box<TypeDef>> {
+    pub fn lookup_type(&self, id: &Identifier) -> Option<Rc<TypeDef>> {
         let state = self.state.borrow();
         state.type_defs.get(id).cloned()
     }

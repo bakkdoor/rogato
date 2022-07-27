@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use super::*;
 use serde_json::{Map, Value};
 
@@ -22,8 +24,8 @@ impl Object {
     pub fn new_boxed<Props: IntoIterator<Item = (String, Value)>>(
         type_id: Identifier,
         props: Props,
-    ) -> Box<Self> {
-        Box::new(Self::new(type_id, props))
+    ) -> Rc<Self> {
+        Rc::new(Self::new(type_id, props))
     }
 
     pub fn vertex(&self) -> Vertex {
@@ -69,14 +71,14 @@ impl PartialEq for Object {
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct PersistedObject {
     vertex: Vertex,
-    object: Box<Object>,
+    object: Rc<Object>,
 }
 
 impl PersistedObject {
-    pub fn new(vertex: Vertex, object: Box<Object>) -> PersistedObject {
+    pub fn new(vertex: Vertex, object: Rc<Object>) -> PersistedObject {
         PersistedObject { vertex, object }
     }
-    pub fn new_boxed(vertex: Vertex, object: Box<Object>) -> Box<PersistedObject> {
-        Box::new(Self::new(vertex, object))
+    pub fn new_boxed(vertex: Vertex, object: Rc<Object>) -> Rc<PersistedObject> {
+        Rc::new(Self::new(vertex, object))
     }
 }

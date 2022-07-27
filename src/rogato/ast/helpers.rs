@@ -18,54 +18,55 @@ use crate::rogato::ast::{
 };
 use crate::rogato::ast::{type_expression::TypeExpression, Program};
 pub use crate::rogato::parser::{parse, parse_expr};
+use std::rc::Rc;
 use std::string::String;
 
-pub fn program(nodes: Vec<Box<AST>>) -> Program {
-    Program::from_boxed(nodes)
+pub fn program(nodes: Vec<Rc<AST>>) -> Program {
+    Program::new(nodes)
 }
 
-pub fn lit(lit: Literal) -> Box<Expression> {
-    Box::new(Lit(lit))
+pub fn lit(lit: Literal) -> Rc<Expression> {
+    Rc::new(Lit(lit))
 }
 
-pub fn int_lit(val: i64) -> Box<Expression> {
+pub fn int_lit(val: i64) -> Rc<Expression> {
     lit(Int64(val))
 }
 
-pub fn string_lit(val: &str) -> Box<Expression> {
+pub fn string_lit(val: &str) -> Rc<Expression> {
     lit(String(val.to_string()))
 }
 
-pub fn tuple_lit(vals: Vec<Box<Expression>>) -> Box<Expression> {
+pub fn tuple_lit(vals: Vec<Rc<Expression>>) -> Rc<Expression> {
     lit(Tuple(TupleItems::from(vals)))
 }
 
-pub fn list_lit(vals: Vec<Box<Expression>>) -> Box<Expression> {
+pub fn list_lit(vals: Vec<Rc<Expression>>) -> Rc<Expression> {
     lit(List(TupleItems::from(vals)))
 }
 
-pub fn struct_lit<S: ToString>(id: S, raw_props: Vec<(S, Box<Expression>)>) -> Box<Expression> {
+pub fn struct_lit<S: ToString>(id: S, raw_props: Vec<(S, Rc<Expression>)>) -> Rc<Expression> {
     let mut props = Vec::new();
     for (id, expr) in raw_props {
         props.push((id.to_string(), expr))
     }
-    lit(Struct(id.to_string(), Box::new(StructProps::from(props))))
+    lit(Struct(id.to_string(), Rc::new(StructProps::from(props))))
 }
 
-pub fn var(id: &str) -> Box<Expression> {
-    Box::new(Var(id.to_string()))
+pub fn var(id: &str) -> Rc<Expression> {
+    Rc::new(Var(id.to_string()))
 }
 
-pub fn const_or_type_ref(id: &str) -> Box<Expression> {
-    Box::new(ConstOrTypeRef(id.to_string()))
+pub fn const_or_type_ref(id: &str) -> Rc<Expression> {
+    Rc::new(ConstOrTypeRef(id.to_string()))
 }
 
-pub fn prop_fn_ref(id: &str) -> Box<Expression> {
-    Box::new(PropFnRef(id.to_string()))
+pub fn prop_fn_ref(id: &str) -> Rc<Expression> {
+    Rc::new(PropFnRef(id.to_string()))
 }
 
-pub fn fn_def(id: &str, args: Vec<&str>, body: Box<Expression>) -> Box<AST> {
-    Box::new(AST::FnDef(FnDef::new(
+pub fn fn_def(id: &str, args: Vec<&str>, body: Rc<Expression>) -> Rc<AST> {
+    Rc::new(AST::FnDef(FnDef::new(
         id.to_string(),
         fn_def_args(args),
         body,
@@ -76,18 +77,18 @@ pub fn fn_def_args(args: Vec<&str>) -> FnDefArgs {
     FnDefArgs::new(Vec::from_iter(args.iter().map(|a| a.to_string())))
 }
 
-pub fn let_expr(bindings: Vec<(&str, Box<Expression>)>, body: Box<Expression>) -> Box<Expression> {
-    let bindings: Vec<(String, Expression)> = bindings
+pub fn let_expr(bindings: Vec<(&str, Rc<Expression>)>, body: Rc<Expression>) -> Rc<Expression> {
+    let bindings: Vec<(String, Rc<Expression>)> = bindings
         .iter()
         .cloned()
-        .map(|(name, expr)| (name.to_string(), *expr))
+        .map(|(name, expr)| (name.to_string(), expr))
         .collect();
 
-    Box::new(Let(LetExpression::new(LetBindings::new(bindings), body)))
+    Rc::new(Let(LetExpression::new(LetBindings::new(bindings), body)))
 }
 
-pub fn module_def(id: &str, exports: Vec<&str>) -> Box<AST> {
-    Box::new(AST::ModuleDef(ModuleDef::new(
+pub fn module_def(id: &str, exports: Vec<&str>) -> Rc<AST> {
+    Rc::new(AST::ModuleDef(ModuleDef::new(
         id.to_string(),
         module_def_exports(exports),
     )))
@@ -97,65 +98,60 @@ pub fn module_def_exports(exports: Vec<&str>) -> ModuleExports {
     ModuleExports::new(Vec::from_iter(exports.iter().map(|e| e.to_string())))
 }
 
-pub fn call_args(args: Vec<Box<Expression>>) -> FnCallArgs {
-    let mut args_unboxed = Vec::new();
-    for a in args {
-        args_unboxed.push(*a)
-    }
-    FnCallArgs::new(args_unboxed)
+pub fn call_args(args: Vec<Rc<Expression>>) -> FnCallArgs {
+    FnCallArgs::new(args)
 }
 
-pub fn fn_call(id: &str, args: Vec<Box<Expression>>) -> Box<Expression> {
-    Box::new(Expression::FnCall(id.to_string(), call_args(args)))
+pub fn fn_call(id: &str, args: Vec<Rc<Expression>>) -> Rc<Expression> {
+    Rc::new(Expression::FnCall(id.to_string(), call_args(args)))
 }
 
-pub fn op_call(id: &str, left: Box<Expression>, right: Box<Expression>) -> Box<Expression> {
-    Box::new(Expression::OpCall(id.to_string(), left, right))
+pub fn op_call(id: &str, left: Rc<Expression>, right: Rc<Expression>) -> Rc<Expression> {
+    Rc::new(Expression::OpCall(id.to_string(), left, right))
 }
 
-pub fn root_comment(comment: &str) -> Box<AST> {
-    Box::new(AST::RootComment(comment.to_string()))
+pub fn root_comment(comment: &str) -> Rc<AST> {
+    Rc::new(AST::RootComment(comment.to_string()))
 }
 
-pub fn commented(comment: &str, exp: Box<Expression>) -> Box<Expression> {
-    Box::new(Expression::Commented(comment.to_string(), exp))
+pub fn commented(comment: &str, exp: Rc<Expression>) -> Rc<Expression> {
+    Rc::new(Expression::Commented(comment.to_string(), exp))
 }
 
-pub fn type_def(id: &str, type_expr: Box<TypeExpression>) -> Box<AST> {
-    Box::new(AST::TypeDef(TypeDef::new(id.to_string(), type_expr)))
+pub fn type_def(id: &str, type_expr: Rc<TypeExpression>) -> Rc<AST> {
+    Rc::new(AST::TypeDef(TypeDef::new(id.to_string(), type_expr)))
 }
 
-pub fn tuple_type(items: Vec<Box<TypeExpression>>) -> Box<TypeExpression> {
-    Box::new(TypeExpression::TupleType(TupleItems::from(items)))
+pub fn tuple_type(items: Vec<Rc<TypeExpression>>) -> Rc<TypeExpression> {
+    Rc::new(TypeExpression::TupleType(TupleItems::from(items)))
 }
 
-pub fn struct_type(props: Vec<(&str, Box<TypeExpression>)>) -> Box<TypeExpression> {
+pub fn struct_type(props: Vec<(&str, Rc<TypeExpression>)>) -> Rc<TypeExpression> {
     let boxed_props = Vec::from_iter(
         props
             .iter()
             .map(|(id, expr)| (id.to_string(), expr.clone())),
     );
-    Box::new(TypeExpression::StructType(boxed_props))
+    Rc::new(TypeExpression::StructType(boxed_props))
 }
 
-pub fn int_type() -> Box<TypeExpression> {
-    Box::new(TypeExpression::IntType)
+pub fn int_type() -> Rc<TypeExpression> {
+    Rc::new(TypeExpression::IntType)
 }
 
-pub fn string_type() -> Box<TypeExpression> {
-    Box::new(TypeExpression::StringType)
+pub fn string_type() -> Rc<TypeExpression> {
+    Rc::new(TypeExpression::StringType)
 }
 
-pub fn type_ref(id: &str) -> Box<TypeExpression> {
-    Box::new(TypeExpression::TypeRef(id.to_string()))
+pub fn type_ref(id: &str) -> Rc<TypeExpression> {
+    Rc::new(TypeExpression::TypeRef(id.to_string()))
 }
 
 pub fn query(
-    bindings: Vec<(Vec<&str>, Box<Expression>, bool)>,
-    guards: Vec<Box<Expression>>,
-    production: Box<Expression>,
-) -> Box<Expression> {
-    let guards: Vec<Expression> = Vec::from_iter(guards.iter().map(|g| *g.clone()));
+    bindings: Vec<(Vec<&str>, Rc<Expression>, bool)>,
+    guards: Vec<Rc<Expression>>,
+    production: Rc<Expression>,
+) -> Rc<Expression> {
     let query_bindings = bindings
         .iter()
         .map(|(ids, expr, is_negated)| {
@@ -167,38 +163,38 @@ pub fn query(
             }
         })
         .collect();
-    Box::new(Expression::Query(Query::new(
+    Rc::new(Expression::Query(Query::new(
         QueryBindings::new(query_bindings),
         QueryGuards::new(guards),
         production,
     )))
 }
 
-pub fn edge_prop(expr: Box<Expression>, edge: &str) -> Box<Expression> {
-    Box::new(Expression::EdgeProp(expr, edge.to_string()))
+pub fn edge_prop(expr: Rc<Expression>, edge: &str) -> Rc<Expression> {
+    Rc::new(Expression::EdgeProp(expr, edge.to_string()))
 }
 
-pub fn lambda(args: Vec<&str>, body: Box<Expression>) -> Box<Expression> {
+pub fn lambda(args: Vec<&str>, body: Rc<Expression>) -> Rc<Expression> {
     let args = args.iter().map(|a| a.to_string()).collect();
-    Box::new(Expression::Lambda(Lambda::new(LambdaArgs::new(args), body)))
+    Rc::new(Expression::Lambda(Lambda::new(LambdaArgs::new(args), body)))
 }
 
-pub fn symbol(id: &str) -> Box<Expression> {
-    Box::new(Expression::Symbol(id.to_string()))
+pub fn symbol(id: &str) -> Rc<Expression> {
+    Rc::new(Expression::Symbol(id.to_string()))
 }
 
-pub fn quoted(expr: Box<Expression>) -> Box<Expression> {
-    Box::new(Expression::Quoted(expr))
+pub fn quoted(expr: Rc<Expression>) -> Rc<Expression> {
+    Rc::new(Expression::Quoted(expr))
 }
 
-pub fn quoted_ast(ast: Box<AST>) -> Box<Expression> {
-    Box::new(Expression::QuotedAST(ast))
+pub fn quoted_ast(ast: Rc<AST>) -> Rc<Expression> {
+    Rc::new(Expression::QuotedAST(ast))
 }
 
-pub fn unquoted(expr: Box<Expression>) -> Box<Expression> {
-    Box::new(Expression::Unquoted(expr))
+pub fn unquoted(expr: Rc<Expression>) -> Rc<Expression> {
+    Rc::new(Expression::Unquoted(expr))
 }
 
-pub fn unquoted_ast(ast: Box<AST>) -> Box<Expression> {
-    Box::new(Expression::UnquotedAST(ast))
+pub fn unquoted_ast(ast: Rc<AST>) -> Rc<Expression> {
+    Rc::new(Expression::UnquotedAST(ast))
 }

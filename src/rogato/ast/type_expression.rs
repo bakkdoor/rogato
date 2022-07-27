@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{fmt::Display, rc::Rc};
 
 use crate::rogato::{
     db::{val, Value},
@@ -13,11 +13,11 @@ use super::{ASTDepth, Identifier};
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct TypeDef {
     id: Identifier,
-    type_expr: Box<TypeExpression>,
+    type_expr: Rc<TypeExpression>,
 }
 
 impl TypeDef {
-    pub fn new(id: Identifier, type_expr: Box<TypeExpression>) -> TypeDef {
+    pub fn new(id: Identifier, type_expr: Rc<TypeExpression>) -> TypeDef {
         TypeDef { id, type_expr }
     }
 
@@ -53,10 +53,10 @@ pub enum TypeExpression {
     IntType,
     StringType,
     TypeRef(Identifier),
-    FunctionType(LambdaArgs<TypeExpression>, Box<TypeExpression>), // args & return type
+    FunctionType(LambdaArgs<TypeExpression>, Rc<TypeExpression>), // args & return type
     TupleType(TupleItems<TypeExpression>),
-    ListType(Box<TypeExpression>),
-    StructType(Vec<(Identifier, Box<TypeExpression>)>),
+    ListType(Rc<TypeExpression>),
+    StructType(Vec<(Identifier, Rc<TypeExpression>)>),
 }
 
 impl Display for TypeExpression {
@@ -147,7 +147,7 @@ impl Evaluate<Value> for TypeExpression {
     }
 }
 
-impl Evaluate<Value> for Vec<(Identifier, Box<TypeExpression>)> {
+impl Evaluate<Value> for Vec<(Identifier, Rc<TypeExpression>)> {
     fn evaluate(&self, context: &mut EvalContext) -> Value {
         let mut vec = Vec::new();
         for (_id, type_expr) in self.iter() {

@@ -1,15 +1,15 @@
 use super::{expression::Expression, walker::Walk, ASTDepth};
-use std::fmt::Display;
+use std::{fmt::Display, rc::Rc};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Query {
     bindings: QueryBindings,
     guards: QueryGuards,
-    production: Box<Expression>,
+    production: Rc<Expression>,
 }
 
 impl Query {
-    pub fn new(bindings: QueryBindings, guards: QueryGuards, production: Box<Expression>) -> Self {
+    pub fn new(bindings: QueryBindings, guards: QueryGuards, production: Rc<Expression>) -> Self {
         Self {
             bindings,
             guards,
@@ -55,16 +55,16 @@ impl Walk for Query {
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct QueryGuards {
-    guards: Vec<Expression>,
+    guards: Vec<Rc<Expression>>,
 }
 
 impl QueryGuards {
-    pub fn new(guards: Vec<Expression>) -> Self {
+    pub fn new(guards: Vec<Rc<Expression>>) -> Self {
         QueryGuards { guards }
     }
 
     #[allow(dead_code)]
-    pub fn prepend_guard(&mut self, arg: Expression) {
+    pub fn prepend_guard(&mut self, arg: Rc<Expression>) {
         self.guards.insert(0, arg);
     }
 
@@ -73,7 +73,7 @@ impl QueryGuards {
         self.guards.len()
     }
 
-    pub fn iter(&self) -> std::slice::Iter<Expression> {
+    pub fn iter(&self) -> std::slice::Iter<Rc<Expression>> {
         self.guards.iter()
     }
 
@@ -103,12 +103,12 @@ impl Display for QueryGuards {
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct QueryBinding {
     ids: Vec<String>,
-    val: Box<Expression>,
+    val: Rc<Expression>,
     is_negated: bool,
 }
 
 impl QueryBinding {
-    pub fn new(ids: Vec<String>, val: Box<Expression>) -> Self {
+    pub fn new(ids: Vec<String>, val: Rc<Expression>) -> Self {
         QueryBinding {
             ids,
             val,
@@ -116,7 +116,7 @@ impl QueryBinding {
         }
     }
 
-    pub fn new_negated(ids: Vec<String>, val: Box<Expression>) -> Self {
+    pub fn new_negated(ids: Vec<String>, val: Rc<Expression>) -> Self {
         QueryBinding {
             ids,
             val,

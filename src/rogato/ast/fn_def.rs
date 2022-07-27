@@ -6,17 +6,17 @@ use crate::rogato::{
 };
 
 use super::{expression::Expression, ASTDepth, Identifier};
-use std::fmt::Display;
+use std::{fmt::Display, rc::Rc};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct FnDef {
     id: Identifier,
     args: FnDefArgs,
-    body: Box<Expression>,
+    body: Rc<Expression>,
 }
 
 impl FnDef {
-    pub fn new(id: Identifier, args: FnDefArgs, body: Box<Expression>) -> FnDef {
+    pub fn new(id: Identifier, args: FnDefArgs, body: Rc<Expression>) -> FnDef {
         FnDef { id, args, body }
     }
 
