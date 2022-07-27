@@ -2,11 +2,11 @@ module Std.List { map, count, isEmpty }
 
 let map [] f = []
 let map [x] f = [f x]
-let map [x | xs] = [f x | map f xs]
+let map [x :: xs] = [f x :: map f xs]
 
 let count [] = 0
 let count [_] = 1
-let count [_ | xs] = 1 + (count cxs)
+let count [_ :: xs] = 1 + (count cxs)
 
 let isEmpty [] = true
 let isEmpty _ = false
