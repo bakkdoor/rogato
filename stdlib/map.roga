@@ -1,22 +1,22 @@
 module Std.Map { map, mapKeys, count, isEmpty }
 
 let map {} _ = []
-let map {k => v | rest} = [f {k, v} | map rest f]
+let map {k => v :: rest} = [f {k, v} :: map rest f]
 
 let mapKeys {} _ = []
-let mapKeys {k => v | rest} f = { (f k) => v | mapKeys rest f }
+let mapKeys {k => v :: rest} f = { (f k) => v :: mapKeys rest f }
 
 let mapValues {} _ = []
-let mapValues {k => v | rest} f = { k => (f v) | mapValues rest f }
+let mapValues {k => v :: rest} f = { k => (f v) :: mapValues rest f }
 
 let count {} = 0
-let count {_ => _ | rest} = 1 + count rest
+let count {_ => _ :: rest} = 1 + count rest
 
 let isEmpty m = (count m) == 0
 
 let reduce {} acc _ = acc
-let reduce {k => v | rest} acc f =
+let reduce {k => v :: rest} acc f =
   reduce rest (f {k,v} acc) f
 
 let keys {} = []
-let keys {k => _ | rest} = [k | keys rest]
+let keys {k => _ :: rest} = [k :: keys rest]
