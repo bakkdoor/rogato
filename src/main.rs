@@ -116,7 +116,7 @@ fn run_repl() {
                 println!("OK> {:?}\n{}", ast, ast);
                 println!("EVAL> {}", ast.evaluate(&mut context));
             }
-            Err(err) => match parse_expr(buffer.as_str()) {
+            Err(_) => match parse_expr(buffer.as_str()) {
                 Ok(ast) => {
                     println!("OK> {:?}\n{}", ast, ast);
                     println!("EVAL> {}", ast.evaluate(&mut context));
