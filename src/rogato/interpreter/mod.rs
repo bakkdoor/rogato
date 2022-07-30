@@ -65,9 +65,7 @@ impl EvalContext {
                 if given_argc != expected_argc {
                     panic!(
                         "Function arity mismatch for {}: Expected {} but got {}",
-                        id.to_string(),
-                        expected_argc,
-                        given_argc
+                        id, expected_argc, given_argc
                     );
                 }
                 let mut fn_ctx = self.with_child_env();
