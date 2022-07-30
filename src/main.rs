@@ -8,7 +8,7 @@ use indent_write::indentable::Indentable;
 use rogato::db;
 #[allow(unused_imports)]
 use rogato::db::{EdgeQueryExt, VertexQueryExt};
-use rogato::parser::parse;
+use rogato::parser::{parse, parse_expr};
 use std::fs::File;
 
 use crate::rogato::interpreter::{EvalContext, Evaluate};
@@ -101,6 +101,8 @@ fn print_parse_result<T: Display, E: Display>(code: &str, result: &Result<T, E>)
 }
 
 fn run_repl() {
+    let mut context = EvalContext::new();
+
     loop {
         let mut buffer = String::new();
         let has_more_lines = Regex::new(r"(\\\s*)$").unwrap();
@@ -112,12 +114,17 @@ fn run_repl() {
         match parse(buffer.as_str()) {
             Ok(ast) => {
                 println!("OK> {:?}\n{}", ast, ast);
-                let mut context = EvalContext::new();
                 println!("EVAL> {}", ast.evaluate(&mut context));
             }
-            Err(err) => {
-                eprintln!("Error> {:?}", err)
-            }
+            Err(err) => match parse_expr(buffer.as_str()) {
+                Ok(ast) => {
+                    println!("OK> {:?}\n{}", ast, ast);
+                    println!("EVAL> {}", ast.evaluate(&mut context));
+                }
+                Err(err) => {
+                    eprintln!("Error> {:?}", err)
+                }
+            },
         }
     }
 }

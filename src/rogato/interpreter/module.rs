@@ -21,9 +21,9 @@ pub struct Module {
 }
 
 impl Module {
-    pub fn new(id: &Identifier) -> Module {
+    pub fn new(id: &str) -> Module {
         let state = State {
-            id: id.clone(),
+            id: id.to_string(),
             fn_defs: HashMap::new(),
             type_defs: HashMap::new(),
             constants: HashMap::new(),

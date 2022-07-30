@@ -26,7 +26,7 @@ pub struct EvalContext {
 impl EvalContext {
     pub fn new() -> EvalContext {
         EvalContext {
-            env: Environment::new(),
+            env: native_fn::std_env(),
             obj_storage: ObjectStorage::new(),
             query_planner: QueryPlanner::new(),
         }
@@ -69,10 +69,10 @@ impl EvalContext {
                     );
                 }
                 let mut fn_ctx = self.with_child_env();
-                for (arg_name, arg_val) in func.args().iter().zip(args) {
+                for (arg_name, arg_val) in func.args().iter().zip(args.clone()) {
                     fn_ctx.define_var(arg_name, arg_val)
                 }
-                func.body().evaluate(&mut fn_ctx)
+                func.body().call(&mut fn_ctx, &args)
             }
             None => {
                 panic!("unknown function: {}", id)
