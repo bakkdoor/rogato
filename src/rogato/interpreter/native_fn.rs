@@ -16,62 +16,48 @@ pub type NativeFn = fn(context: &mut EvalContext, args: &Vec<Value>) -> Value;
 pub fn std_env() -> Environment {
     let env = Environment::new_with_module("Std.Math");
     let mut module = env.current_module();
+    let op_args = FnDefArgs::new(vec!["a".to_string(), "b".to_string()]);
 
-    let f_add = FnDef::new(
+    module.fn_def(FnDef::new(
         "+".to_string(),
-        FnDefArgs::new(vec!["a".to_string(), "b".to_string()]),
+        op_args.clone(),
         Rc::new(FnDefBody::native(move |_ctx, args| {
-            let a = args.get(0).unwrap();
-            let b = args.get(1).unwrap();
-            match (Value::is_i64(a), Value::is_i64(b)) {
-                (true, true) => val::number(a.as_i64().unwrap() + b.as_i64().unwrap()),
-                _ => panic!("Invalid arguments for +"),
-            }
+            with_number_op_args("+", args, |a, b| a + b)
         })),
-    );
-    module.fn_def(Rc::new(f_add));
+    ));
 
-    let f_subtract = FnDef::new(
+    module.fn_def(FnDef::new(
         "-".to_string(),
-        FnDefArgs::new(vec!["a".to_string(), "b".to_string()]),
+        op_args.clone(),
         Rc::new(FnDefBody::native(move |_ctx, args| {
-            let a = args.get(0).unwrap();
-            let b = args.get(1).unwrap();
-            match (Value::is_i64(a), Value::is_i64(b)) {
-                (true, true) => val::number(a.as_i64().unwrap() - b.as_i64().unwrap()),
-                _ => panic!("Invalid arguments for -"),
-            }
+            with_number_op_args("-", args, |a, b| a - b)
         })),
-    );
-    module.fn_def(Rc::new(f_subtract));
+    ));
 
-    let f_subtract = FnDef::new(
+    module.fn_def(FnDef::new(
         "*".to_string(),
-        FnDefArgs::new(vec!["a".to_string(), "b".to_string()]),
+        op_args.clone(),
         Rc::new(FnDefBody::native(move |_ctx, args| {
-            let a = args.get(0).unwrap();
-            let b = args.get(1).unwrap();
-            match (Value::is_i64(a), Value::is_i64(b)) {
-                (true, true) => val::number(a.as_i64().unwrap() * b.as_i64().unwrap()),
-                _ => panic!("Invalid arguments for *"),
-            }
+            with_number_op_args("*", args, |a, b| a * b)
         })),
-    );
-    module.fn_def(Rc::new(f_subtract));
+    ));
 
-    let f_subtract = FnDef::new(
-        "-".to_string(),
-        FnDefArgs::new(vec!["a".to_string(), "b".to_string()]),
+    module.fn_def(FnDef::new(
+        "/".to_string(),
+        op_args.clone(),
         Rc::new(FnDefBody::native(move |_ctx, args| {
-            let a = args.get(0).unwrap();
-            let b = args.get(1).unwrap();
-            match (Value::is_i64(a), Value::is_i64(b)) {
-                (true, true) => val::number(a.as_i64().unwrap() / b.as_i64().unwrap()),
-                _ => panic!("Invalid arguments for /"),
-            }
+            with_number_op_args("/", args, |a, b| a / b)
         })),
-    );
-    module.fn_def(Rc::new(f_subtract));
+    ));
 
     env
+}
+
+fn with_number_op_args(id: &str, args: &Vec<Value>, func: fn(i64, i64) -> i64) -> Value {
+    let a = args.get(0).unwrap();
+    let b = args.get(1).unwrap();
+    match (Value::is_i64(a), Value::is_i64(b)) {
+        (true, true) => val::number(func(a.as_i64().unwrap(), b.as_i64().unwrap())),
+        _ => panic!("Invalid arguments for {}", id),
+    }
 }

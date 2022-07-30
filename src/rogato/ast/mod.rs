@@ -1,4 +1,5 @@
 use std::fmt::Display;
+use std::rc::Rc;
 
 use self::{
     expression::Expression, fn_def::FnDef, module_def::ModuleDef, type_expression::TypeDef,
@@ -40,7 +41,7 @@ use super::interpreter::{EvalContext, Evaluate};
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum AST {
     RootComment(String),
-    FnDef(FnDef),
+    FnDef(Rc<FnDef>),
     ModuleDef(ModuleDef),
     Use(Identifier),
     TypeDef(TypeDef),

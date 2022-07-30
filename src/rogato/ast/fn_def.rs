@@ -16,8 +16,8 @@ pub struct FnDef {
 }
 
 impl FnDef {
-    pub fn new(id: Identifier, args: FnDefArgs, body: Rc<FnDefBody>) -> FnDef {
-        FnDef { id, args, body }
+    pub fn new(id: Identifier, args: FnDefArgs, body: Rc<FnDefBody>) -> Rc<FnDef> {
+        Rc::new(FnDef { id, args, body })
     }
 
     pub fn id(&self) -> &Identifier {

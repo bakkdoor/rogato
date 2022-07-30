@@ -49,10 +49,10 @@ impl EvalContext {
         }
     }
 
-    pub fn define_fn(&mut self, fn_def: FnDef) -> Value {
+    pub fn define_fn(&mut self, fn_def: Rc<FnDef>) -> Value {
         let mut module = self.current_module();
         let id = fn_def.id().clone();
-        module.fn_def(Rc::new(fn_def));
+        module.fn_def(fn_def);
         val::string(format!("FnDef {}", id))
     }
 
