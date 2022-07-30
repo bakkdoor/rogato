@@ -20,8 +20,12 @@ impl FnDef {
         FnDef { id, args, body }
     }
 
-    pub fn id(&self) -> Identifier {
-        self.id.clone()
+    pub fn id(&self) -> &Identifier {
+        &self.id
+    }
+
+    pub fn args(&self) -> &FnDefArgs {
+        &self.args
     }
 
     pub fn body(&self) -> &Expression {

@@ -35,7 +35,7 @@ impl Module {
 
     pub fn fn_def(&mut self, fn_def: Rc<FnDef>) {
         let mut state = self.state.borrow_mut();
-        state.fn_defs.insert(fn_def.id(), fn_def);
+        state.fn_defs.insert(fn_def.id().clone(), fn_def);
     }
 
     #[allow(dead_code)]
