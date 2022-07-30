@@ -71,7 +71,7 @@ pub fn fn_def(id: &str, args: Vec<&str>, body: Rc<Expression>) -> Rc<AST> {
     Rc::new(AST::FnDef(FnDef::new(
         id.to_string(),
         fn_def_args(args),
-        Rc::new(FnDefBody::RogatoFn(body)),
+        Rc::new(FnDefBody::rogato(body)),
     )))
 }
 
