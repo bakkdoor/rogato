@@ -16,8 +16,12 @@ pub struct FnDef {
 }
 
 impl FnDef {
-    pub fn new(id: Identifier, args: FnDefArgs, body: Rc<FnDefBody>) -> Rc<FnDef> {
-        Rc::new(FnDef { id, args, body })
+    pub fn new<ID: ToString>(id: ID, args: FnDefArgs, body: Rc<FnDefBody>) -> Rc<FnDef> {
+        Rc::new(FnDef {
+            id: id.to_string(),
+            args,
+            body,
+        })
     }
 
     pub fn id(&self) -> &Identifier {

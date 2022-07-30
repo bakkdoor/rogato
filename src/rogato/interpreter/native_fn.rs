@@ -19,7 +19,7 @@ pub fn std_env() -> Environment {
     let op_args = FnDefArgs::new(vec!["a".to_string(), "b".to_string()]);
 
     module.fn_def(FnDef::new(
-        "+".to_string(),
+        "+",
         op_args.clone(),
         Rc::new(FnDefBody::native(move |_ctx, args| {
             with_number_op_args("+", args, |a, b| a + b)
@@ -27,7 +27,7 @@ pub fn std_env() -> Environment {
     ));
 
     module.fn_def(FnDef::new(
-        "-".to_string(),
+        "-",
         op_args.clone(),
         Rc::new(FnDefBody::native(move |_ctx, args| {
             with_number_op_args("-", args, |a, b| a - b)
@@ -35,7 +35,7 @@ pub fn std_env() -> Environment {
     ));
 
     module.fn_def(FnDef::new(
-        "*".to_string(),
+        "*",
         op_args.clone(),
         Rc::new(FnDefBody::native(move |_ctx, args| {
             with_number_op_args("*", args, |a, b| a * b)
@@ -43,7 +43,7 @@ pub fn std_env() -> Environment {
     ));
 
     module.fn_def(FnDef::new(
-        "/".to_string(),
+        "/",
         op_args,
         Rc::new(FnDefBody::native(move |_ctx, args| {
             with_number_op_args("/", args, |a, b| a / b)
