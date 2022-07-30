@@ -12,6 +12,7 @@ use super::{
 
 pub mod environment;
 pub mod module;
+pub mod native_fn;
 
 type Identifier = String;
 
