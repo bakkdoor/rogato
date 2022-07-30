@@ -1,8 +1,21 @@
 # Tasks
 
 - [x] Parser (WIP but works for the most part, further syntax changes expected)
+- [ ] Analyzer
+  - [ ] Static type checking? Or default to runtime type checking for now?- [ ]
+  - [ ] Local variable access (prevent accessing undefined variables)
+  - [ ] Check function signatures and call-sites
+  - [ ] Basic type checker for
+    - [ ] Local variable bindings
+    - [ ] Function call arguments
+    - [ ] Query
+      - [ ] Sources
+      - [ ] Guards
+      - [ ] Productions
+    - [ ] Simplifier / AST Optimizer
+      - [ ] Constant (function) replacements
+      - [ ] Constant arithmetic expressions
 - [ ] Interpreter
-- [ ] Static type checking? Or default to runtime type checking for now?
 - [ ] DB Value
   - [ ] Storage
     - [ ] Serialization
