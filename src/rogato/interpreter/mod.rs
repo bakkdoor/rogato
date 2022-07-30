@@ -56,28 +56,24 @@ impl EvalContext {
         val::string(format!("FnDef {}", id))
     }
 
-    pub fn call_function<ID: ToString>(&self, id: ID, args: Vec<Value>) -> Value {
+    pub fn call_function<ID: ToString>(&self, id: ID, args: Vec<Value>) -> Option<Value> {
         let id = id.to_string();
-        match self.current_module().lookup_fn(&id) {
-            Some(func) => {
-                let given_argc = args.len();
-                let expected_argc = func.args().len();
-                if given_argc != expected_argc {
-                    panic!(
-                        "Function arity mismatch for {}: Expected {} but got {}",
-                        id, expected_argc, given_argc
-                    );
-                }
-                let mut fn_ctx = self.with_child_env();
-                for (arg_name, arg_val) in func.args().iter().zip(args.clone()) {
-                    fn_ctx.define_var(arg_name, arg_val)
-                }
-                func.body().call(&mut fn_ctx, &args)
+        self.current_module().lookup_fn(&id).map(|func| {
+            let given_argc = args.len();
+            let expected_argc = func.args().len();
+            if given_argc != expected_argc {
+                eprintln!(
+                    "Function arity mismatch for {}: Expected {} but got {}",
+                    id, expected_argc, given_argc
+                );
+                return val::null();
             }
-            None => {
-                panic!("unknown function: {}", id)
+            let mut fn_ctx = self.with_child_env();
+            for (arg_name, arg_val) in func.args().iter().zip(args.clone()) {
+                fn_ctx.define_var(arg_name, arg_val)
             }
-        }
+            func.body().call(&mut fn_ctx, &args)
+        })
     }
 
     pub fn define_var(&mut self, id: &Identifier, val: Value) {
