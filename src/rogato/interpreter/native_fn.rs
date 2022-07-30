@@ -44,7 +44,7 @@ pub fn std_env() -> Environment {
 
     module.fn_def(FnDef::new(
         "/".to_string(),
-        op_args.clone(),
+        op_args,
         Rc::new(FnDefBody::native(move |_ctx, args| {
             with_number_op_args("/", args, |a, b| a / b)
         })),
@@ -53,7 +53,7 @@ pub fn std_env() -> Environment {
     env
 }
 
-fn with_number_op_args(id: &str, args: &Vec<Value>, func: fn(i64, i64) -> i64) -> Value {
+fn with_number_op_args(id: &str, args: &[Value], func: fn(i64, i64) -> i64) -> Value {
     let a = args.get(0).unwrap();
     let b = args.get(1).unwrap();
     match (Value::is_i64(a), Value::is_i64(b)) {
