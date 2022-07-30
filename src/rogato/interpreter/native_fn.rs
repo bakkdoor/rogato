@@ -53,6 +53,10 @@ fn op_fn_def(id: &str, body: Rc<FnDefBody>) -> Rc<FnDef> {
     )
 }
 
+fn fn_body(f: NativeFn) -> Rc<FnDefBody> {
+    Rc::new(FnDefBody::native(f))
+}
+
 fn with_number_op_args(id: &str, args: &[Value], func: fn(i64, i64) -> i64) -> Value {
     let a = args.get(0).unwrap();
     let b = args.get(1).unwrap();
@@ -60,8 +64,4 @@ fn with_number_op_args(id: &str, args: &[Value], func: fn(i64, i64) -> i64) -> V
         (true, true) => val::number(func(a.as_i64().unwrap(), b.as_i64().unwrap())),
         _ => panic!("Invalid arguments for {}", id),
     }
-}
-
-fn fn_body(f: NativeFn) -> Rc<FnDefBody> {
-    Rc::new(FnDefBody::native(f))
 }
