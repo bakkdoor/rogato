@@ -15,45 +15,6 @@ pub struct FnDef {
     body: Rc<FnDefBody>,
 }
 
-#[derive(Clone, PartialEq, Eq, Debug)]
-pub enum FnDefBody {
-    // NativeFn(&'static dyn Fn(Vec<Value>) -> Value),
-    RogatoFn(Rc<Expression>),
-}
-
-impl FnDefBody {
-    // pub fn native(f: &'static dyn Fn(Vec<Value>) -> Value) -> FnDefBody {
-    //     FnDefBody::NativeFn(f)
-    // }
-    pub fn rogato(expr: Rc<Expression>) -> FnDefBody {
-        FnDefBody::RogatoFn(expr)
-    }
-}
-
-impl ASTDepth for FnDefBody {
-    fn ast_depth(&self) -> usize {
-        match self {
-            FnDefBody::RogatoFn(expr) => expr.ast_depth(),
-        }
-    }
-}
-
-impl Evaluate<Value> for FnDefBody {
-    fn evaluate(&self, context: &mut EvalContext) -> Value {
-        match self {
-            FnDefBody::RogatoFn(expr) => expr.evaluate(context),
-        }
-    }
-}
-
-impl Walk for FnDefBody {
-    fn walk<V: super::visitor::Visitor>(&self, v: &mut V) {
-        match self {
-            FnDefBody::RogatoFn(expr) => expr.walk(v),
-        }
-    }
-}
-
 impl FnDef {
     pub fn new(id: Identifier, args: FnDefArgs, body: Rc<FnDefBody>) -> FnDef {
         FnDef { id, args, body }
@@ -143,5 +104,44 @@ impl Display for FnDefArgs {
             .fold(String::from(""), |acc, fmt| format!("{} {}", acc, fmt));
 
         f.write_fmt(format_args!("{}", fmt_str))
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub enum FnDefBody {
+    // NativeFn(dyn NativeFn),
+    RogatoFn(Rc<Expression>),
+}
+
+impl FnDefBody {
+    // pub fn native(f: dyn NativeFn) -> FnDefBody {
+    //     FnDefBody::NativeFn(f)
+    // }
+    pub fn rogato(expr: Rc<Expression>) -> FnDefBody {
+        FnDefBody::RogatoFn(expr)
+    }
+}
+
+impl ASTDepth for FnDefBody {
+    fn ast_depth(&self) -> usize {
+        match self {
+            FnDefBody::RogatoFn(expr) => expr.ast_depth(),
+        }
+    }
+}
+
+impl Evaluate<Value> for FnDefBody {
+    fn evaluate(&self, context: &mut EvalContext) -> Value {
+        match self {
+            FnDefBody::RogatoFn(expr) => expr.evaluate(context),
+        }
+    }
+}
+
+impl Walk for FnDefBody {
+    fn walk<V: super::visitor::Visitor>(&self, v: &mut V) {
+        match self {
+            FnDefBody::RogatoFn(expr) => expr.walk(v),
+        }
     }
 }
