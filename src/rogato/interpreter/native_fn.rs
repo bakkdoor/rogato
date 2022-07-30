@@ -11,7 +11,7 @@ use crate::rogato::{
 
 use super::{environment::Environment, EvalContext};
 
-pub type NativeFn = fn(context: &mut EvalContext, args: &Vec<Value>) -> Value;
+pub type NativeFn = fn(context: &mut EvalContext, args: &[Value]) -> Value;
 
 pub fn std_env() -> Environment {
     let env = Environment::new_with_module("Std.Math");

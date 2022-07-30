@@ -121,7 +121,7 @@ impl FnDefBody {
         FnDefBody::RogatoFn(expr)
     }
 
-    pub fn call(&self, context: &mut EvalContext, args: &Vec<Value>) -> Value {
+    pub fn call(&self, context: &mut EvalContext, args: &[Value]) -> Value {
         match self {
             FnDefBody::NativeFn(f) => f(context, args),
             FnDefBody::RogatoFn(expr) => expr.evaluate(context),
