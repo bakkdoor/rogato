@@ -112,7 +112,7 @@ impl Evaluate<Value> for Expression {
             Expression::Lit(lit_exp) => lit_exp.evaluate(context),
             Expression::FnCall(fn_ident, args) => {
                 let call_args = args.evaluate(context);
-                match context.call_function(fn_ident, call_args) {
+                match context.call_function(fn_ident, &call_args) {
                     Some(val) => val,
                     None => {
                         eprintln!("Function not defined: {}", fn_ident);
@@ -122,7 +122,7 @@ impl Evaluate<Value> for Expression {
             }
             Expression::OpCall(op_ident, left, right) => {
                 let call_args = vec![left.evaluate(context), right.evaluate(context)];
-                match context.call_function(op_ident, call_args) {
+                match context.call_function(op_ident, &call_args) {
                     Some(val) => val,
                     None => {
                         eprintln!("Operator not defined: {}", op_ident);
@@ -132,7 +132,7 @@ impl Evaluate<Value> for Expression {
             }
             Expression::Var(id) => match context.lookup_var(id) {
                 Some(var) => var,
-                None => match context.call_function(id, vec![]) {
+                None => match context.call_function(id, &vec![]) {
                     Some(val) => val,
                     None => {
                         eprintln!("Var not defined: {}", id);

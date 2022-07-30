@@ -56,7 +56,7 @@ impl EvalContext {
         val::string(format!("FnDef {}", id))
     }
 
-    pub fn call_function<ID: ToString>(&self, id: ID, args: Vec<Value>) -> Option<Value> {
+    pub fn call_function<ID: ToString>(&self, id: ID, args: &[Value]) -> Option<Value> {
         let id = id.to_string();
         self.current_module().lookup_fn(&id).map(|func| {
             let given_argc = args.len();
@@ -70,7 +70,7 @@ impl EvalContext {
             }
             let mut fn_ctx = self.with_child_env();
             for (arg_name, arg_val) in func.args().iter().zip(args.clone()) {
-                fn_ctx.define_var(arg_name, arg_val)
+                fn_ctx.define_var(arg_name, arg_val.clone())
             }
             func.body().call(&mut fn_ctx, &args)
         })
