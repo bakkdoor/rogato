@@ -21,6 +21,8 @@ pub use crate::rogato::parser::{parse, parse_expr};
 use std::rc::Rc;
 use std::string::String;
 
+use super::fn_def::FnDefBody;
+
 pub fn program(nodes: Vec<Rc<AST>>) -> Program {
     Program::new(nodes)
 }
@@ -69,7 +71,7 @@ pub fn fn_def(id: &str, args: Vec<&str>, body: Rc<Expression>) -> Rc<AST> {
     Rc::new(AST::FnDef(FnDef::new(
         id.to_string(),
         fn_def_args(args),
-        body,
+        Rc::new(FnDefBody::RogatoFn(body)),
     )))
 }
 

@@ -7,7 +7,7 @@ use crate::rogato::ast::{
         Expression, FnCallArgs, FnDefArgs, Lambda, LambdaArgs, LetBindings, LetExpression, Literal,
         Query, QueryBinding, QueryBindings, QueryGuards, StructProps, TupleItems,
     },
-    fn_def::FnDef,
+    fn_def::{FnDef, FnDefBody},
     module_def::{ModuleDef, ModuleExports},
     type_expression::{TypeDef, TypeExpression},
     Identifier, Program, AST,
@@ -83,7 +83,7 @@ grammar parser() for str {
 
     rule fn_def() -> AST
         = _ "let " _ id:identifier() _ args:(fn_def_arg())* _ "=" _ body:(expression()) _ {
-            AST::FnDef(FnDef::new(id, FnDefArgs::new(args), Rc::new(body)))
+            AST::FnDef(FnDef::new(id, FnDefArgs::new(args), Rc::new(FnDefBody::rogato(Rc::new(body)))))
         }
 
     rule fn_def_arg() -> Identifier

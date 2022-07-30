@@ -5,18 +5,57 @@ use crate::rogato::{
     util::indent,
 };
 
-use super::{expression::Expression, ASTDepth, Identifier};
-use std::{fmt::Display, rc::Rc};
+use super::{expression::Expression, walker::Walk, ASTDepth, Identifier};
+use std::{borrow::Borrow, fmt::Display, rc::Rc};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct FnDef {
     id: Identifier,
     args: FnDefArgs,
-    body: Rc<Expression>,
+    body: Rc<FnDefBody>,
+}
+
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub enum FnDefBody {
+    // NativeFn(&'static dyn Fn(Vec<Value>) -> Value),
+    RogatoFn(Rc<Expression>),
+}
+
+impl FnDefBody {
+    // pub fn native(f: &'static dyn Fn(Vec<Value>) -> Value) -> FnDefBody {
+    //     FnDefBody::NativeFn(f)
+    // }
+    pub fn rogato(expr: Rc<Expression>) -> FnDefBody {
+        FnDefBody::RogatoFn(expr)
+    }
+}
+
+impl ASTDepth for FnDefBody {
+    fn ast_depth(&self) -> usize {
+        match self {
+            FnDefBody::RogatoFn(expr) => expr.ast_depth(),
+        }
+    }
+}
+
+impl Evaluate<Value> for FnDefBody {
+    fn evaluate(&self, context: &mut EvalContext) -> Value {
+        match self {
+            FnDefBody::RogatoFn(expr) => expr.evaluate(context),
+        }
+    }
+}
+
+impl Walk for FnDefBody {
+    fn walk<V: super::visitor::Visitor>(&self, v: &mut V) {
+        match self {
+            FnDefBody::RogatoFn(expr) => expr.walk(v),
+        }
+    }
 }
 
 impl FnDef {
-    pub fn new(id: Identifier, args: FnDefArgs, body: Rc<Expression>) -> FnDef {
+    pub fn new(id: Identifier, args: FnDefArgs, body: Rc<FnDefBody>) -> FnDef {
         FnDef { id, args, body }
     }
 
@@ -28,19 +67,27 @@ impl FnDef {
         &self.args
     }
 
-    pub fn body(&self) -> &Expression {
+    pub fn body(&self) -> &FnDefBody {
         &self.body
     }
 }
 
 impl Display for FnDef {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!(
-            "let {}{} =\n{}",
-            self.id,
-            self.args,
-            indent(self.body.to_owned())
-        ))
+        match self.body.borrow() {
+            // FnDefBody::NativeFn(_) => f.write_fmt(format_args!(
+            //     "let {}{} =\n{}",
+            //     self.id,
+            //     self.args,
+            //     indent("[NATIVE FN]")
+            // )),
+            FnDefBody::RogatoFn(body_expr) => f.write_fmt(format_args!(
+                "let {}{} =\n{}",
+                self.id,
+                self.args,
+                indent(body_expr.to_owned())
+            )),
+        }
     }
 }
 
