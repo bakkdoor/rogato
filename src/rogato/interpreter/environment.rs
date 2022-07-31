@@ -8,7 +8,7 @@ struct State {
     parent: Option<Environment>,
     variables: HashMap<Identifier, Value>,
     modules: HashMap<Identifier, Module>,
-    module: Identifier,
+    current_module_name: Identifier,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -26,7 +26,7 @@ impl Environment {
             parent: None,
             variables: HashMap::new(),
             modules,
-            module: mod_name,
+            current_module_name: mod_name,
         };
         Environment {
             state: Rc::new(RefCell::new(state)),
@@ -41,7 +41,7 @@ impl Environment {
             parent: None,
             variables: HashMap::new(),
             modules,
-            module: module_name.to_string(),
+            current_module_name: module_name.to_string(),
         };
         Environment {
             state: Rc::new(RefCell::new(state)),
@@ -53,7 +53,7 @@ impl Environment {
             parent: Some(self.clone()),
             variables: HashMap::new(),
             modules: HashMap::new(),
-            module: self.module(),
+            current_module_name: self.module(),
         };
         Environment {
             state: Rc::new(RefCell::new(state)),
@@ -61,14 +61,14 @@ impl Environment {
     }
 
     #[allow(dead_code)]
-    pub fn child_with_module(&self, module: &Identifier) -> Environment {
+    pub fn child_with_module(&self, module_name: &Identifier) -> Environment {
         let mut modules = HashMap::new();
-        modules.insert(module.clone(), Module::new(module));
+        modules.insert(module_name.clone(), Module::new(module_name));
         let state = State {
             parent: Some(self.clone()),
             variables: HashMap::new(),
             modules,
-            module: module.clone(),
+            current_module_name: module_name.clone(),
         };
         Environment {
             state: Rc::new(RefCell::new(state)),
@@ -76,7 +76,7 @@ impl Environment {
     }
 
     pub fn module(&self) -> Identifier {
-        self.state.borrow().module.clone()
+        self.state.borrow().current_module_name.clone()
     }
 
     pub fn define_var(&mut self, id: &Identifier, val: Value) {
@@ -101,10 +101,10 @@ impl Environment {
 
     pub fn current_module(&self) -> Module {
         let state = self.state.borrow();
-        match self.lookup_module(&state.module) {
+        match self.lookup_module(&state.current_module_name) {
             Some(module) => module,
             None => {
-                panic!("No current module found: {}", state.module)
+                panic!("No current module found: {}", state.current_module_name)
             }
         }
     }
@@ -122,12 +122,12 @@ impl Environment {
 
     pub fn lookup_const(&self, id: &Identifier) -> Option<Value> {
         let state = self.state.borrow();
-        match self.lookup_module(&state.module) {
+        match self.lookup_module(&state.current_module_name) {
             Some(module) => module.lookup_const(id),
             None => {
                 let err_str = format!(
                     "Module not found: {} while trying to lookup const: {}",
-                    state.module, id
+                    state.current_module_name, id
                 );
                 eprintln!("{}", err_str);
                 panic!("{}", err_str)
@@ -137,12 +137,12 @@ impl Environment {
 
     pub fn lookup_type(&self, id: &Identifier) -> Option<Rc<TypeDef>> {
         let state = self.state.borrow();
-        match self.lookup_module(&state.module) {
+        match self.lookup_module(&state.current_module_name) {
             Some(module) => module.lookup_type(id),
             None => {
                 let err_str = format!(
                     "Module not found: {} while trying to lookup type: {}",
-                    state.module, id
+                    state.current_module_name, id
                 );
                 eprintln!("{}", err_str);
                 panic!("{}", err_str)
