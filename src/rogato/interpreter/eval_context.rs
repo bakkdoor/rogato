@@ -1,5 +1,4 @@
-use std::rc::Rc;
-
+use super::{environment::Environment, module::Module, native_fn, Identifier};
 use crate::rogato::{
     ast::{expression::Query, fn_def::FnDef, type_expression::TypeDef},
     db::{
@@ -7,8 +6,7 @@ use crate::rogato::{
         val, ObjectStorage, Value,
     },
 };
-
-use super::{environment::Environment, module::Module, Identifier, native_fn};
+use std::rc::Rc;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct EvalContext {
