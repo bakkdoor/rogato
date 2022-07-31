@@ -69,10 +69,10 @@ impl EvalContext {
                 return val::null();
             }
             let mut fn_ctx = self.with_child_env();
-            for (arg_name, arg_val) in func.args().iter().zip(args.clone()) {
+            for (arg_name, arg_val) in func.args().iter().zip(args) {
                 fn_ctx.define_var(arg_name, arg_val.clone())
             }
-            func.body().call(&mut fn_ctx, &args)
+            func.body().call(&mut fn_ctx, args)
         })
     }
 
