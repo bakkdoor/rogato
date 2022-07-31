@@ -36,8 +36,8 @@ impl EvalContext {
     pub fn with_child_env(&self) -> Self {
         EvalContext {
             env: self.env.child(),
-            obj_storage: ObjectStorage::new(),
-            query_planner: QueryPlanner::new(),
+            obj_storage: self.obj_storage.clone(),
+            query_planner: self.query_planner.clone(),
         }
     }
 
