@@ -20,6 +20,18 @@ impl Query {
             production,
         }
     }
+
+    pub fn bindings(&self) -> &QueryBindings {
+        &self.bindings
+    }
+
+    pub fn guards(&self) -> &QueryGuards {
+        &self.guards
+    }
+
+    pub fn production(&self) -> &Expression {
+        &self.production
+    }
 }
 
 impl Display for Query {
@@ -95,6 +107,29 @@ impl QueryGuards {
     }
 }
 
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub enum QueryGuardError {
+    Unknown(String),
+}
+
+impl Evaluate<Vec<Result<Value, QueryGuardError>>> for QueryGuards {
+    fn evaluate(&self, context: &mut EvalContext) -> Vec<Result<Value, QueryGuardError>> {
+        let mut results = vec![];
+        for guard in self.iter() {
+            let value = guard.evaluate(context);
+            if value.is_null() {
+                results.push(Err(QueryGuardError::Unknown(format!(
+                    "Not sure what went wrong but query guard failed: {:?}",
+                    guard
+                ))));
+            } else {
+                results.push(Ok(value))
+            }
+        }
+        results
+    }
+}
+
 impl Display for QueryGuards {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let fmt_str =
@@ -135,6 +170,18 @@ impl QueryBinding {
             val,
             is_negated: true,
         }
+    }
+
+    pub fn ids(&self) -> &[String] {
+        &self.ids
+    }
+
+    pub fn value_expr(&self) -> Rc<Expression> {
+        self.val.clone()
+    }
+
+    pub fn is_negated(&self) -> bool {
+        self.is_negated
     }
 }
 
