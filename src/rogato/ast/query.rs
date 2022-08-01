@@ -149,6 +149,11 @@ impl Display for QueryGuards {
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
+pub enum QueryBindingError {
+    BindingFailed(QueryBinding),
+}
+
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub struct QueryBinding {
     ids: Vec<String>,
     val: Rc<Expression>,
@@ -172,16 +177,22 @@ impl QueryBinding {
         }
     }
 
-    pub fn ids(&self) -> &[String] {
-        &self.ids
-    }
+    pub fn attempt_binding(&self, context: &mut EvalContext) -> Result<Value, QueryBindingError> {
+        let value = self.val.evaluate(context);
+        // todo: actual query logic needed here
+        if value.is_null() {
+            if !self.is_negated {
+                return Err(QueryBindingError::BindingFailed(self.clone()));
+            }
+        } else if self.is_negated {
+            return Err(QueryBindingError::BindingFailed(self.clone()));
+        }
 
-    pub fn value_expr(&self) -> Rc<Expression> {
-        self.val.clone()
-    }
+        for id in self.ids.iter() {
+            context.define_var(id, value.clone())
+        }
 
-    pub fn is_negated(&self) -> bool {
-        self.is_negated
+        return Ok(value);
     }
 }
 
@@ -202,7 +213,6 @@ impl Display for QueryBinding {
         }
     }
 }
-
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct QueryBindings {
     bindings: Vec<QueryBinding>,

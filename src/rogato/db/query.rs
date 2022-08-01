@@ -1,5 +1,8 @@
 use crate::rogato::{
-    ast::{expression::Query, query::QueryGuardError},
+    ast::{
+        expression::Query,
+        query::{QueryBindingError, QueryGuardError},
+    },
     interpreter::{EvalContext, Evaluate},
 };
 
@@ -12,7 +15,8 @@ pub struct QueryPlanner {}
 #[allow(dead_code)]
 pub enum QueryError {
     Unknown(String),
-    QueryGuards(Vec<QueryGuardError>),
+    QueryGuardsFailed(Vec<QueryGuardError>),
+    QueryBindingFailed(QueryBindingError),
 }
 
 pub type QueryResult = Result<val::Value, QueryError>;
@@ -24,22 +28,16 @@ impl QueryPlanner {
 
     pub fn query(&self, context: &mut EvalContext, query: &Query) -> QueryResult {
         let mut query_ctx = context.with_child_env();
+
+        // TODO:
+        // - convert bindings into db queries
+        // - run each query guard and check its return value for truthiness
+        // - return query production if all guards hold
+
         for binding in query.bindings().iter() {
-            // TODO:
-            // - convert bindings into db queries
-            // - run each query guard and check its return value for truthiness
-            // - return query production if all guards hold
-            let value = binding.value_expr().evaluate(&mut query_ctx);
-            // todo: actual query logic needed here
-            if value.is_null() {
-                if !binding.is_negated() {
-                    panic!("query failed: {:?}", query)
-                }
-            } else if binding.is_negated() {
-                panic!("negated query failed: {:?}", query)
-            }
-            for id in binding.ids().iter() {
-                query_ctx.define_var(id, value.clone())
+            match binding.attempt_binding(&mut query_ctx) {
+                Ok(_) => {}
+                Err(e) => return Err(QueryError::QueryBindingFailed(e)),
             }
         }
 
@@ -54,7 +52,7 @@ impl QueryPlanner {
         if guard_failures.is_empty() {
             Ok(query.production().evaluate(&mut query_ctx))
         } else {
-            Err(QueryError::QueryGuards(guard_failures))
+            Err(QueryError::QueryGuardsFailed(guard_failures))
         }
     }
 }
