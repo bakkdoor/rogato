@@ -42,12 +42,11 @@ impl QueryPlanner {
         }
 
         let guard_results = query.guards().evaluate(&mut query_ctx);
-        let guard_failures = Vec::from_iter(
-            guard_results
-                .iter()
-                .filter(|gf| gf.is_err())
-                .map(|gf| -> QueryGuardError { gf.clone().err().unwrap() }),
-        );
+        let guard_failures: Vec<QueryGuardError> = guard_results
+            .iter()
+            .filter(|gf| gf.is_err())
+            .map(|gf| gf.clone().err().unwrap())
+            .collect();
 
         if guard_failures.is_empty() {
             Ok(query.production().evaluate(&mut query_ctx))
