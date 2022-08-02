@@ -4,16 +4,24 @@ use crate::rogato::{
 };
 
 use super::val;
+use thiserror::Error;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct QueryPlanner {}
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Error, Debug, PartialEq, Eq, Clone)]
 #[allow(dead_code)]
 pub enum QueryError {
+    #[error("QueryError: Unknown error: {0}")]
     Unknown(String),
+
+    #[error("QueryError: Guard failed: {0}")]
     GuardFailed(Box<EvalError>),
+
+    #[error("QueryError: Binding failed: {0:?}")]
     BindingFailed(QueryBindingError),
+
+    #[error("QueryError: Production failed: {0}")]
     ProductionFailed(Box<EvalError>),
 }
 
