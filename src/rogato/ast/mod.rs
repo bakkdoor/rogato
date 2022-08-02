@@ -22,13 +22,10 @@ pub mod walker;
 pub type Identifier = String;
 
 impl Evaluate<Value> for Identifier {
-    fn evaluate(&self, context: &mut EvalContext) -> Value {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<Value, EvalError> {
         match context.lookup_var(self) {
-            Some(val) => val,
-            None => {
-                eprintln!("Failed to lookup var: {}", self);
-                val::null()
-            }
+            Some(val) => Ok(val),
+            None => Err(EvalError::VarNotDefined(self.clone())),
         }
     }
 }
@@ -36,7 +33,7 @@ impl Evaluate<Value> for Identifier {
 pub use program::Program;
 
 use super::db::{val, Value};
-use super::interpreter::{EvalContext, Evaluate};
+use super::interpreter::{EvalContext, EvalError, Evaluate};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum AST {
@@ -76,12 +73,12 @@ impl ASTDepth for AST {
 }
 
 impl Evaluate<Value> for AST {
-    fn evaluate(&self, context: &mut EvalContext) -> Value {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<Value, EvalError> {
         match self {
-            AST::RootComment(_) => val::null(),
+            AST::RootComment(_) => Ok(val::null()),
             AST::FnDef(fn_def) => fn_def.evaluate(context),
             AST::ModuleDef(mod_def) => mod_def.evaluate(context),
-            AST::Use(_id) => val::null(),
+            AST::Use(_id) => Ok(val::null()),
             AST::TypeDef(type_def) => type_def.evaluate(context),
         }
     }

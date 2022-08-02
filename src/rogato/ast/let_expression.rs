@@ -2,7 +2,7 @@ use std::{fmt::Display, rc::Rc};
 
 use crate::rogato::{
     db::Value,
-    interpreter::{EvalContext, Evaluate},
+    interpreter::{EvalContext, EvalError, Evaluate},
     util::indent,
 };
 
@@ -47,10 +47,12 @@ impl Walk for LetExpression {
 }
 
 impl Evaluate<Value> for LetExpression {
-    fn evaluate(&self, context: &mut EvalContext) -> Value {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<Value, EvalError> {
         for (id, expr) in self.bindings.iter() {
-            let val = expr.evaluate(context);
-            context.define_var(id, val)
+            match expr.evaluate(context) {
+                Ok(val) => context.define_var(id, val),
+                Err(e) => return Err(e),
+            }
         }
         self.body.evaluate(context)
     }

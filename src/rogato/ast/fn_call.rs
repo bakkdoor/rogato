@@ -1,5 +1,5 @@
 use crate::rogato::db::Value;
-use crate::rogato::interpreter::Evaluate;
+use crate::rogato::interpreter::{EvalContext, EvalError, Evaluate};
 
 use super::expression::Expression;
 use std::fmt::Display;
@@ -48,7 +48,14 @@ impl Display for FnCallArgs {
 }
 
 impl Evaluate<Vec<Value>> for FnCallArgs {
-    fn evaluate(&self, context: &mut crate::rogato::interpreter::EvalContext) -> Vec<Value> {
-        self.iter().map(|a| a.evaluate(context)).collect()
+    fn evaluate(&self, context: &mut EvalContext) -> Result<Vec<Value>, EvalError> {
+        let mut values = vec![];
+        for arg in self.iter() {
+            match arg.evaluate(context) {
+                Ok(val) => values.push(val),
+                Err(e) => return Err(EvalError::FnCallArgumentError(Box::new(e))),
+            }
+        }
+        Ok(values)
     }
 }

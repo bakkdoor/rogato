@@ -1,6 +1,6 @@
 use crate::rogato::ast::helpers::{fn_call, lambda, var};
 use crate::rogato::db::{val, Value};
-use crate::rogato::interpreter::{EvalContext, Evaluate};
+use crate::rogato::interpreter::{EvalContext, EvalError, Evaluate};
 
 pub use super::fn_call::FnCallArgs;
 pub use super::fn_def::FnDefArgs;
@@ -106,72 +106,55 @@ fn display_unquoted<Expr: Display>(
 }
 
 impl Evaluate<Value> for Expression {
-    fn evaluate(&self, context: &mut EvalContext) -> Value {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<Value, EvalError> {
         match self {
             Expression::Commented(_c, e) => e.evaluate(context),
             Expression::Lit(lit_exp) => lit_exp.evaluate(context),
             Expression::FnCall(fn_ident, args) => {
-                let call_args = args.evaluate(context);
+                let call_args = args.evaluate(context)?;
                 match context.call_function(fn_ident, &call_args) {
-                    Some(val) => val,
-                    None => {
-                        eprintln!("Function not defined: {}", fn_ident);
-                        val::null()
-                    }
+                    Some(val) => Ok(val?),
+                    None => Err(EvalError::FunctionNotDefined(fn_ident.clone())),
                 }
             }
             Expression::OpCall(op_ident, left, right) => {
-                let call_args = vec![left.evaluate(context), right.evaluate(context)];
+                let call_args = vec![left.evaluate(context)?, right.evaluate(context)?];
                 match context.call_function(op_ident, &call_args) {
-                    Some(val) => val,
-                    None => {
-                        eprintln!("Operator not defined: {}", op_ident);
-                        val::null()
-                    }
+                    Some(val) => Ok(val?),
+                    None => Err(EvalError::OperatorNotDefined(op_ident.clone())),
                 }
             }
             Expression::Var(id) => match context.lookup_var(id) {
-                Some(var) => var,
+                Some(var) => Ok(var),
                 None => match context.call_function(id, &[]) {
-                    Some(val) => val,
-                    None => {
-                        eprintln!("Var not defined: {}", id);
-                        val::null()
-                    }
+                    Some(val) => Ok(val?),
+                    None => Err(EvalError::VarNotDefined(id.clone())),
                 },
             },
-            Expression::ConstOrTypeRef(id) => {
-                match context.lookup_const(id) {
-                    Some(val) => val,
-                    None => {
-                        match context.lookup_type(id) {
-                            Some(type_) => val::object(vec![
-                                ("type", val::string("TypeExpression")),
-                                ("id", val::string(type_.id())),
-                                ("expression", val::string(format!("{}", type_))),
-                            ]),
-                            None => {
-                                eprintln!("Const or type not found: {}", id);
-                                // return an error
-                                val::null()
-                            }
-                        }
-                    }
-                }
-            }
+            Expression::ConstOrTypeRef(id) => match context.lookup_const(id) {
+                Some(val) => Ok(val),
+                None => match context.lookup_type(id) {
+                    Some(type_) => Ok(val::object(vec![
+                        ("type", val::string("TypeExpression")),
+                        ("id", val::string(type_.id())),
+                        ("expression", val::string(format!("{}", type_))),
+                    ])),
+                    None => Err(EvalError::ConstOrTypeNotFound(id.clone())),
+                },
+            },
             Expression::PropFnRef(id) => {
                 let lambda = lambda(vec!["object"], fn_call(id, vec![var("object")]));
                 lambda.evaluate(context)
             }
-            Expression::EdgeProp(_id, _edge) => val::string("eval edge prop"),
+            Expression::EdgeProp(_id, _edge) => Ok(val::string("eval edge prop")),
             Expression::Let(let_expr) => let_expr.evaluate(context),
             Expression::Lambda(lambda) => lambda.evaluate(context),
             Expression::Query(query) => query.evaluate(context),
-            Expression::Symbol(id) => val::string(format!("Symbol ^{}", id)), // likely need custom value types besides just json values to properly support symbols
-            Expression::Quoted(expr) => val::string(format!("^({})", expr)),
-            Expression::QuotedAST(ast) => val::string(format!("^({})", ast)),
-            Expression::Unquoted(expr) => val::string(format!("~({})", expr)),
-            Expression::UnquotedAST(ast) => val::string(format!("~({})", ast)),
+            Expression::Symbol(id) => Ok(val::string(format!("Symbol ^{}", id))), // likely need custom value types besides just json values to properly support symbol
+            Expression::Quoted(expr) => Ok(val::string(format!("^({})", expr))),
+            Expression::QuotedAST(ast) => Ok(val::string(format!("^({})", ast))),
+            Expression::Unquoted(expr) => Ok(val::string(format!("~({})", expr))),
+            Expression::UnquotedAST(ast) => Ok(val::string(format!("~({})", ast))),
         }
     }
 }

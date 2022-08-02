@@ -1,6 +1,6 @@
 use super::AST;
 use crate::rogato::db::Value;
-use crate::rogato::interpreter::{EvalContext, Evaluate};
+use crate::rogato::interpreter::{EvalContext, EvalError, Evaluate};
 use std::fmt::Display;
 use std::rc::Rc;
 
@@ -42,7 +42,11 @@ impl Display for Program {
 }
 
 impl Evaluate<Value> for Program {
-    fn evaluate(&self, context: &mut EvalContext) -> Value {
-        Value::Array(self.iter().map(|ast| ast.evaluate(context)).collect())
+    fn evaluate(&self, context: &mut EvalContext) -> Result<Value, EvalError> {
+        let mut values = vec![];
+        for ast in self.iter() {
+            values.push(ast.evaluate(context)?)
+        }
+        Ok(Value::Array(values))
     }
 }

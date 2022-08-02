@@ -1,7 +1,7 @@
 use super::{expression::Expression, ASTDepth, Identifier};
 use crate::rogato::{
     db::{val, Value},
-    interpreter::{EvalContext, Evaluate},
+    interpreter::{EvalContext, EvalError, Evaluate},
     util::indent,
 };
 use std::{fmt::Display, rc::Rc};
@@ -67,25 +67,32 @@ impl ASTDepth for Literal {
 }
 
 impl Evaluate<Value> for Literal {
-    fn evaluate(&self, context: &mut EvalContext) -> Value {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<Value, EvalError> {
         match self {
-            Literal::Int64(number) => val::number(*number),
-            Literal::String(string) => val::string(string),
+            Literal::Int64(number) => Ok(val::number(*number)),
+            Literal::String(string) => Ok(val::string(string)),
             Literal::Tuple(items) => {
-                let mut values = items
-                    .iter()
-                    .map(|i| i.evaluate(context))
-                    .collect::<Vec<Value>>();
+                let mut values = vec![];
+                for item in items.iter() {
+                    values.push(item.evaluate(context)?)
+                }
                 values.insert(0, val::string(format!("rogato.Tuple.{}", items.len())));
-                val::array(values)
+                Ok(val::array(values))
             }
-            Literal::List(items) => val::array(items.iter().map(|i| i.evaluate(context)).collect()),
-            Literal::Struct(_struct_id, props) => val::object(
-                props
-                    .iter()
-                    .map(|(id, p)| (id.clone(), p.evaluate(context)))
-                    .collect(),
-            ),
+            Literal::List(items) => {
+                let mut values = vec![];
+                for item in items.iter() {
+                    values.push(item.evaluate(context)?)
+                }
+                Ok(val::array(values))
+            }
+            Literal::Struct(_struct_id, props) => {
+                let mut prop_values = vec![];
+                for (id, expr) in props.iter() {
+                    prop_values.push((id.clone(), expr.evaluate(context)?))
+                }
+                Ok(val::object(prop_values))
+            }
         }
     }
 }
@@ -141,8 +148,12 @@ impl<I: ASTDepth> ASTDepth for TupleItems<I> {
 }
 
 impl<T: Evaluate<Value>> Evaluate<Value> for TupleItems<T> {
-    fn evaluate(&self, context: &mut EvalContext) -> Value {
-        val::array(self.items.iter().map(|i| i.evaluate(context)).collect())
+    fn evaluate(&self, context: &mut EvalContext) -> Result<Value, EvalError> {
+        let mut values = vec![];
+        for item in self.items.iter() {
+            values.push(item.evaluate(context)?)
+        }
+        Ok(val::array(values))
     }
 }
 

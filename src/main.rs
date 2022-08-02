@@ -114,12 +114,12 @@ fn run_repl() {
         match parse(buffer.as_str()) {
             Ok(ast) => {
                 println!("OK> {:?}\n{}", ast, ast);
-                println!("EVAL> {}", ast.evaluate(&mut context));
+                println!("EVAL> {}", ast.evaluate(&mut context).unwrap());
             }
             Err(_) => match parse_expr(buffer.as_str()) {
                 Ok(ast) => {
                     println!("OK> {:?}\n{}", ast, ast);
-                    println!("EVAL> {}", ast.evaluate(&mut context));
+                    println!("EVAL> {}", ast.evaluate(&mut context).unwrap());
                 }
                 Err(err) => {
                     eprintln!("Error> {:?}", err)

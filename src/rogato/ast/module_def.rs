@@ -1,6 +1,6 @@
 use crate::rogato::{
     db::{val, Value},
-    interpreter::{EvalContext, Evaluate},
+    interpreter::{EvalContext, EvalError, Evaluate},
 };
 
 use super::{ASTDepth, Identifier};
@@ -31,8 +31,8 @@ impl ASTDepth for ModuleDef {
 }
 
 impl Evaluate<Value> for ModuleDef {
-    fn evaluate(&self, _context: &mut EvalContext) -> Value {
-        val::object(vec![
+    fn evaluate(&self, _context: &mut EvalContext) -> Result<Value, EvalError> {
+        Ok(val::object(vec![
             ("type", Value::String("Module".to_string())),
             ("name", Value::String(self.id.to_string())),
             (
@@ -44,7 +44,7 @@ impl Evaluate<Value> for ModuleDef {
                         .collect::<Vec<Value>>(),
                 ),
             ),
-        ])
+        ]))
     }
 }
 

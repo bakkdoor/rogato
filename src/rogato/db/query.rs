@@ -1,9 +1,6 @@
 use crate::rogato::{
-    ast::{
-        expression::Query,
-        query::{QueryBindingError, QueryGuardError},
-    },
-    interpreter::{EvalContext, Evaluate},
+    ast::{expression::Query, query::QueryBindingError},
+    interpreter::{EvalContext, EvalError, Evaluate},
 };
 
 use super::val;
@@ -15,8 +12,15 @@ pub struct QueryPlanner {}
 #[allow(dead_code)]
 pub enum QueryError {
     Unknown(String),
-    QueryGuardsFailed(Vec<QueryGuardError>),
-    QueryBindingFailed(QueryBindingError),
+    GuardFailed(Box<EvalError>),
+    BindingFailed(QueryBindingError),
+    ProductionFailed(Box<EvalError>),
+}
+
+impl From<EvalError> for QueryError {
+    fn from(e: EvalError) -> Self {
+        Self::GuardFailed(Box::new(e))
+    }
 }
 
 pub type QueryResult = Result<val::Value, QueryError>;
@@ -37,21 +41,15 @@ impl QueryPlanner {
         for binding in query.bindings().iter() {
             match binding.attempt_binding(&mut query_ctx) {
                 Ok(_) => {}
-                Err(e) => return Err(QueryError::QueryBindingFailed(e)),
+                Err(e) => return Err(QueryError::BindingFailed(e)),
             }
         }
 
-        let guard_results = query.guards().evaluate(&mut query_ctx);
-        let guard_failures: Vec<QueryGuardError> = guard_results
-            .iter()
-            .filter(|gf| gf.is_err())
-            .map(|gf| gf.clone().err().unwrap())
-            .collect();
+        query.guards().evaluate(&mut query_ctx)?;
 
-        if guard_failures.is_empty() {
-            Ok(query.production().evaluate(&mut query_ctx))
-        } else {
-            Err(QueryError::QueryGuardsFailed(guard_failures))
-        }
+        query
+            .production()
+            .evaluate(&mut query_ctx)
+            .map_err(|e| QueryError::ProductionFailed(Box::new(e)))
     }
 }

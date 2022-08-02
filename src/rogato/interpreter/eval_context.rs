@@ -1,4 +1,4 @@
-use super::{environment::Environment, module::Module, native_fn, Identifier};
+use super::{environment::Environment, module::Module, native_fn, EvalError, Identifier};
 use crate::rogato::{
     ast::{expression::Query, fn_def::FnDef, type_expression::TypeDef},
     db::{
@@ -48,7 +48,11 @@ impl EvalContext {
         val::string(format!("FnDef {}", id))
     }
 
-    pub fn call_function<ID: ToString>(&self, id: ID, args: &[Value]) -> Option<Value> {
+    pub fn call_function<ID: ToString>(
+        &self,
+        id: ID,
+        args: &[Value],
+    ) -> Option<Result<Value, EvalError>> {
         let id = id.to_string();
         self.current_module().lookup_fn(&id).map(|func| {
             let given_argc = args.len();
@@ -58,7 +62,11 @@ impl EvalContext {
                     "Function arity mismatch for {}: Expected {} but got {}",
                     id, expected_argc, given_argc
                 );
-                return val::null();
+                return Err(EvalError::FunctionArityMismatch(
+                    id.clone(),
+                    expected_argc,
+                    given_argc,
+                ));
             }
             let mut fn_ctx = self.with_child_env();
             for (arg_name, arg_val) in func.args().iter().zip(args) {

@@ -1,7 +1,7 @@
 use super::{expression::Expression, walker::Walk, ASTDepth};
 use crate::rogato::{
-    db::{val, val::Value},
-    interpreter::{EvalContext, Evaluate},
+    db::val::Value,
+    interpreter::{EvalContext, EvalError, Evaluate},
 };
 use std::{fmt::Display, rc::Rc};
 
@@ -70,10 +70,10 @@ impl Walk for Query {
 }
 
 impl Evaluate<Value> for Query {
-    fn evaluate(&self, context: &mut EvalContext) -> Value {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<Value, EvalError> {
         match context.schedule_query(self) {
-            Ok(val) => val,
-            Err(e) => val::string(format!("error: {:?}", e)),
+            Ok(val) => Ok(val),
+            Err(e) => Err(EvalError::from(e)),
         }
     }
 }
@@ -107,26 +107,13 @@ impl QueryGuards {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Debug)]
-pub enum QueryGuardError {
-    Unknown(String),
-}
-
-impl Evaluate<Vec<Result<Value, QueryGuardError>>> for QueryGuards {
-    fn evaluate(&self, context: &mut EvalContext) -> Vec<Result<Value, QueryGuardError>> {
+impl Evaluate<Vec<Value>> for QueryGuards {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<Vec<Value>, EvalError> {
         let mut results = vec![];
         for guard in self.iter() {
-            let value = guard.evaluate(context);
-            if value.is_null() {
-                results.push(Err(QueryGuardError::Unknown(format!(
-                    "Not sure what went wrong but query guard failed: {:?}",
-                    guard
-                ))));
-            } else {
-                results.push(Ok(value))
-            }
+            results.push(guard.evaluate(context)?)
         }
-        results
+        Ok(results)
     }
 }
 
@@ -151,6 +138,7 @@ impl Display for QueryGuards {
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum QueryBindingError {
     BindingFailed(QueryBinding),
+    BindingFailedWith(QueryBinding, Box<EvalError>),
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -178,21 +166,28 @@ impl QueryBinding {
     }
 
     pub fn attempt_binding(&self, context: &mut EvalContext) -> Result<Value, QueryBindingError> {
-        let value = self.val.evaluate(context);
-        // todo: actual query logic needed here
-        if value.is_null() {
-            if !self.is_negated {
-                return Err(QueryBindingError::BindingFailed(self.clone()));
+        match self.val.evaluate(context) {
+            Ok(value) => {
+                // todo: actual query logic needed here
+                if value.is_null() {
+                    if !self.is_negated {
+                        return Err(QueryBindingError::BindingFailed(self.clone()));
+                    }
+                } else if self.is_negated {
+                    return Err(QueryBindingError::BindingFailed(self.clone()));
+                }
+
+                for id in self.ids.iter() {
+                    context.define_var(id, value.clone())
+                }
+
+                Ok(value)
             }
-        } else if self.is_negated {
-            return Err(QueryBindingError::BindingFailed(self.clone()));
+            Err(e) => Err(QueryBindingError::BindingFailedWith(
+                self.clone(),
+                Box::new(e),
+            )),
         }
-
-        for id in self.ids.iter() {
-            context.define_var(id, value.clone())
-        }
-
-        return Ok(value);
     }
 }
 

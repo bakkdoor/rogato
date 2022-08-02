@@ -2,7 +2,7 @@ use std::{fmt::Display, rc::Rc};
 
 use crate::rogato::{
     db::{val, Value},
-    interpreter::{EvalContext, Evaluate},
+    interpreter::{EvalContext, EvalError, Evaluate},
     util::indent,
 };
 
@@ -48,8 +48,8 @@ impl Walk for Lambda {
 }
 
 impl Evaluate<Value> for Lambda {
-    fn evaluate(&self, context: &mut EvalContext) -> Value {
-        let evaluated_args: Vec<Value> = self.args.evaluate(context);
+    fn evaluate(&self, context: &mut EvalContext) -> Result<Value, EvalError> {
+        let evaluated_args: Vec<Value> = self.args.evaluate(context)?;
         let mut fn_context = context.with_child_env();
         let given_args = evaluated_args.len();
         let expected_args = self.args.len();
@@ -121,21 +121,21 @@ impl<A: Display + ASTDepth> ASTDepth for LambdaArgs<A> {
 }
 
 impl<A: Display + ASTDepth + Evaluate<Value>> Evaluate<Value> for LambdaArgs<A> {
-    fn evaluate(&self, context: &mut EvalContext) -> Value {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<Value, EvalError> {
         let mut vec = Vec::new();
         for arg in self.args.iter() {
-            vec.push(arg.evaluate(context))
+            vec.push(arg.evaluate(context)?)
         }
-        val::array(vec)
+        Ok(val::array(vec))
     }
 }
 
 impl<A: Display + ASTDepth + Evaluate<Value>> Evaluate<Vec<Value>> for LambdaArgs<A> {
-    fn evaluate(&self, context: &mut EvalContext) -> Vec<Value> {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<Vec<Value>, EvalError> {
         let mut vec = Vec::new();
         for arg in self.args.iter() {
-            vec.push(arg.evaluate(context))
+            vec.push(arg.evaluate(context)?)
         }
-        vec
+        Ok(vec)
     }
 }
