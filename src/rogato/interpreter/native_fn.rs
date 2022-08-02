@@ -73,12 +73,15 @@ fn with_number_op_args(
     args: &[Value],
     func: fn(i64, i64) -> i64,
 ) -> Result<Value, EvalError> {
-    let a = args.get(0).unwrap();
-    let b = args.get(1).unwrap();
-    match (Value::is_i64(a), Value::is_i64(b)) {
-        (true, true) => Ok(val::number(func(a.as_i64().unwrap(), b.as_i64().unwrap()))),
-        _ => Err(EvalError::NativeFnFailed(NativeFnError::InvalidArguments(
-            id.to_string(),
-        ))),
+    match (
+        args.get(0).map(|a| a.as_i64()),
+        args.get(1).map(|b| b.as_i64()),
+    ) {
+        (Some(Some(a)), Some(Some(b))) => Ok(val::number(func(a, b))),
+        _ => Err(invalid_args(id)),
     }
+}
+
+fn invalid_args(id: &str) -> EvalError {
+    EvalError::NativeFnFailed(NativeFnError::InvalidArguments(id.to_string()))
 }
