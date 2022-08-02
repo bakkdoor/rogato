@@ -1,4 +1,5 @@
 use std::rc::Rc;
+use thiserror::Error;
 
 use crate::rogato::{
     ast::{
@@ -9,9 +10,19 @@ use crate::rogato::{
     db::val::Value,
 };
 
-use super::{environment::Environment, EvalContext};
+use super::{environment::Environment, EvalContext, EvalError, Identifier};
 
-pub type NativeFn = fn(context: &mut EvalContext, args: &[Value]) -> Value;
+pub type NativeFn = fn(context: &mut EvalContext, args: &[Value]) -> Result<Value, EvalError>;
+
+#[derive(Error, Debug, PartialEq, Eq, Clone)]
+pub enum NativeFnError {
+    #[allow(dead_code)]
+    #[error("NativeFnError: Unknown error: {0}")]
+    Unknown(String),
+
+    #[error("NativeFnError: Invalid arguments for {0}")]
+    InvalidArguments(Identifier),
+}
 
 pub fn std_env() -> Environment {
     let env = Environment::new_with_module("Std.Math");
@@ -57,11 +68,17 @@ fn fn_body(f: NativeFn) -> Rc<FnDefBody> {
     Rc::new(FnDefBody::native(f))
 }
 
-fn with_number_op_args(id: &str, args: &[Value], func: fn(i64, i64) -> i64) -> Value {
+fn with_number_op_args(
+    id: &str,
+    args: &[Value],
+    func: fn(i64, i64) -> i64,
+) -> Result<Value, EvalError> {
     let a = args.get(0).unwrap();
     let b = args.get(1).unwrap();
     match (Value::is_i64(a), Value::is_i64(b)) {
-        (true, true) => val::number(func(a.as_i64().unwrap(), b.as_i64().unwrap())),
-        _ => panic!("Invalid arguments for {}", id),
+        (true, true) => Ok(val::number(func(a.as_i64().unwrap(), b.as_i64().unwrap()))),
+        _ => Err(EvalError::NativeFnFailed(NativeFnError::InvalidArguments(
+            id.to_string(),
+        ))),
     }
 }

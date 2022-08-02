@@ -127,7 +127,7 @@ impl FnDefBody {
 
     pub fn call(&self, context: &mut EvalContext, args: &[Value]) -> Result<Value, EvalError> {
         match self {
-            FnDefBody::NativeFn(f) => Ok(f(context, args)),
+            FnDefBody::NativeFn(f) => f(context, args),
             FnDefBody::RogatoFn(expr) => expr.evaluate(context),
         }
     }
