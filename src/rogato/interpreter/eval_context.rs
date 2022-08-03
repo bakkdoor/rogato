@@ -51,7 +51,7 @@ impl EvalContext {
     pub fn call_function<ID: ToString>(
         &self,
         id: ID,
-        args: &Vec<Rc<Value>>,
+        args: &[Rc<Value>],
     ) -> Option<Result<Rc<Value>, EvalError>> {
         let id = id.to_string();
         self.current_module().lookup_fn(&id).map(|func| {

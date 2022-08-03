@@ -133,7 +133,7 @@ impl FnDefBody {
     pub fn call(
         &self,
         context: &mut EvalContext,
-        args: &Vec<Rc<Value>>,
+        args: &[Rc<Value>],
     ) -> Result<Rc<Value>, EvalError> {
         match self {
             FnDefBody::NativeFn(f) => f(context, args),

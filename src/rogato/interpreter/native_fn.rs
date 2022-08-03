@@ -13,7 +13,7 @@ use crate::rogato::{
 use super::{environment::Environment, EvalContext, EvalError, Identifier};
 
 pub type NativeFn =
-    fn(context: &mut EvalContext, args: &Vec<Rc<Value>>) -> Result<Rc<Value>, EvalError>;
+    fn(context: &mut EvalContext, args: &[Rc<Value>]) -> Result<Rc<Value>, EvalError>;
 
 #[derive(Error, Debug, PartialEq, Eq, Clone)]
 pub enum NativeFnError {
@@ -71,7 +71,7 @@ fn fn_body(f: NativeFn) -> Rc<FnDefBody> {
 
 fn with_number_op_args(
     id: &str,
-    args: &Vec<Rc<Value>>,
+    args: &[Rc<Value>],
     func: fn(i64, i64) -> i64,
 ) -> Result<Rc<Value>, EvalError> {
     match (args.get(0), args.get(1)) {
