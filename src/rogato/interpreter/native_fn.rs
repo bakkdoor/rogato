@@ -53,6 +53,11 @@ pub fn std_env() -> Environment {
         fn_body(move |_ctx, args| with_number_op_args("%", args, |a, b| a % b)),
     ));
 
+    module.fn_def(op_fn_def(
+        "^",
+        fn_body(move |_ctx, args| with_number_op_args("^", args, |a, b| a ^ b)),
+    ));
+
     env
 }
 
