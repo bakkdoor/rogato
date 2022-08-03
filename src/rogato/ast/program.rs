@@ -1,5 +1,5 @@
 use super::AST;
-use crate::rogato::db::{val, val::Value};
+use crate::rogato::db::{val, val::ValueRef};
 use crate::rogato::interpreter::{EvalContext, EvalError, Evaluate};
 use std::fmt::Display;
 use std::rc::Rc;
@@ -41,8 +41,8 @@ impl Display for Program {
     }
 }
 
-impl Evaluate<Rc<Value>> for Program {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<Rc<Value>, EvalError> {
+impl Evaluate<ValueRef> for Program {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
         let mut values = vec![];
         for ast in self.iter() {
             values.push(ast.evaluate(context)?)

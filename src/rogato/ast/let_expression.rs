@@ -1,7 +1,7 @@
 use std::{fmt::Display, rc::Rc};
 
 use crate::rogato::{
-    db::Value,
+    db::ValueRef,
     interpreter::{EvalContext, EvalError, Evaluate},
     util::indent,
 };
@@ -46,8 +46,8 @@ impl Walk for LetExpression {
     }
 }
 
-impl Evaluate<Rc<Value>> for LetExpression {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<Rc<Value>, EvalError> {
+impl Evaluate<ValueRef> for LetExpression {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
         for (id, expr) in self.bindings.iter() {
             match expr.evaluate(context) {
                 Ok(val) => context.define_var(id, val),

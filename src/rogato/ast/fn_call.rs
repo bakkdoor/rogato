@@ -1,4 +1,4 @@
-use crate::rogato::db::Value;
+use crate::rogato::db::ValueRef;
 use crate::rogato::interpreter::{EvalContext, EvalError, Evaluate};
 
 use super::expression::Expression;
@@ -47,8 +47,8 @@ impl Display for FnCallArgs {
     }
 }
 
-impl Evaluate<Vec<Rc<Value>>> for FnCallArgs {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<Vec<Rc<Value>>, EvalError> {
+impl Evaluate<Vec<ValueRef>> for FnCallArgs {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<Vec<ValueRef>, EvalError> {
         let mut values = vec![];
         for arg in self.iter() {
             match arg.evaluate(context) {

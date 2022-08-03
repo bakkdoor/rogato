@@ -1,11 +1,9 @@
-use std::rc::Rc;
-
 use crate::rogato::{
     ast::{expression::Query, query::QueryBindingError},
     interpreter::{EvalContext, EvalError, Evaluate},
 };
 
-use super::Value;
+use super::ValueRef;
 use thiserror::Error;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -33,7 +31,7 @@ impl From<EvalError> for QueryError {
     }
 }
 
-pub type QueryResult = Result<Rc<Value>, QueryError>;
+pub type QueryResult = Result<ValueRef, QueryError>;
 
 impl QueryPlanner {
     pub fn new() -> QueryPlanner {

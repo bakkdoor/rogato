@@ -1,6 +1,6 @@
 use super::{expression::Expression, ASTDepth, Identifier};
 use crate::rogato::{
-    db::{val, Value},
+    db::{val, ValueRef},
     interpreter::{EvalContext, EvalError, Evaluate},
     util::indent,
 };
@@ -66,8 +66,8 @@ impl ASTDepth for Literal {
     }
 }
 
-impl Evaluate<Rc<Value>> for Literal {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<Rc<Value>, EvalError> {
+impl Evaluate<ValueRef> for Literal {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
         match self {
             Literal::Int64(number) => Ok(val::int64(*number)),
             Literal::String(string) => Ok(val::string(string)),
@@ -147,8 +147,8 @@ impl<I: ASTDepth> ASTDepth for TupleItems<I> {
     }
 }
 
-impl<T: Evaluate<Rc<Value>>> Evaluate<Rc<Value>> for TupleItems<T> {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<Rc<Value>, EvalError> {
+impl<T: Evaluate<ValueRef>> Evaluate<ValueRef> for TupleItems<T> {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
         let mut values = vec![];
         for item in self.items.iter() {
             values.push(item.evaluate(context)?)

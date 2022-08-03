@@ -1,7 +1,7 @@
 use std::{fmt::Display, rc::Rc};
 
 use crate::rogato::{
-    db::{val, Value},
+    db::{val, ValueRef},
     interpreter::{EvalContext, EvalError, Evaluate},
     util::indent,
 };
@@ -38,8 +38,8 @@ impl ASTDepth for TypeDef {
     }
 }
 
-impl Evaluate<Rc<Value>> for TypeDef {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<Rc<Value>, EvalError> {
+impl Evaluate<ValueRef> for TypeDef {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
         Ok(val::object(vec![
             ("type", val::string("TypeDef")),
             ("name", val::string(self.id.to_string())),
@@ -113,15 +113,15 @@ impl ASTDepth for TypeExpression {
     }
 }
 
-fn type_ref<ID: ToString>(id: ID) -> Rc<Value> {
+fn type_ref<ID: ToString>(id: ID) -> ValueRef {
     val::object(vec![
         ("type", val::string("TypeRef")),
         ("name", val::string(id.to_string())),
     ])
 }
 
-impl Evaluate<Rc<Value>> for TypeExpression {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<Rc<Value>, EvalError> {
+impl Evaluate<ValueRef> for TypeExpression {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
         Ok(match self {
             TypeExpression::IntType => type_ref("Int"),
             TypeExpression::StringType => type_ref("String"),
@@ -147,8 +147,8 @@ impl Evaluate<Rc<Value>> for TypeExpression {
     }
 }
 
-impl Evaluate<Rc<Value>> for Vec<(Identifier, Rc<TypeExpression>)> {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<Rc<Value>, EvalError> {
+impl Evaluate<ValueRef> for Vec<(Identifier, Rc<TypeExpression>)> {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
         let mut vec = Vec::new();
         for (_id, type_expr) in self.iter() {
             vec.push(type_expr.evaluate(context)?)

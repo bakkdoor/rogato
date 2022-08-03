@@ -4,32 +4,32 @@ pub use serde_json::Number;
 
 use crate::rogato::ast::{expression::TupleItems, ASTDepth};
 
-pub fn list(vec: Vec<Rc<Value>>) -> Rc<Value> {
+pub fn list(vec: Vec<ValueRef>) -> ValueRef {
     Rc::new(Value::List(vec))
 }
 
 #[allow(dead_code)]
-pub fn bool(b: bool) -> Rc<Value> {
+pub fn bool(b: bool) -> ValueRef {
     Rc::new(Value::Bool(b))
 }
 
-pub fn null() -> Rc<Value> {
+pub fn null() -> ValueRef {
     Rc::new(Value::Null)
 }
 
-pub fn int64(n: i64) -> Rc<Value> {
+pub fn int64(n: i64) -> ValueRef {
     Rc::new(Value::Int64(n))
 }
 
-pub fn object<S: ToString>(props: Vec<(S, Rc<Value>)>) -> Rc<Value> {
-    let props: Vec<(String, Rc<Value>)> = props
+pub fn object<S: ToString>(props: Vec<(S, ValueRef)>) -> ValueRef {
+    let props: Vec<(String, ValueRef)> = props
         .iter()
         .map(|(prop, val)| (prop.to_string(), val.clone()))
         .collect();
     Rc::new(Value::Object(HashMap::from_iter(props)))
 }
 
-pub fn string<S: ToString>(s: S) -> Rc<Value> {
+pub fn string<S: ToString>(s: S) -> ValueRef {
     Rc::new(Value::String(s.to_string()))
 }
 
@@ -39,10 +39,10 @@ pub enum Value {
     String(String),
     Bool(bool),
     Int64(i64),
-    List(Vec<Rc<Value>>),
+    List(Vec<ValueRef>),
     #[allow(dead_code)]
-    Map(HashMap<String, Rc<Value>>),
-    Object(HashMap<String, Rc<Value>>),
+    Map(HashMap<String, ValueRef>),
+    Object(HashMap<String, ValueRef>),
 }
 
 impl Value {
@@ -50,6 +50,8 @@ impl Value {
         matches!(self, Value::Null)
     }
 }
+
+pub type ValueRef = Rc<Value>;
 
 impl From<serde_json::Value> for Value {
     fn from(json_val: serde_json::Value) -> Self {
@@ -67,7 +69,7 @@ impl From<serde_json::Value> for Value {
                 props
                     .iter()
                     .map(|(prop, val)| (prop.clone(), Rc::new(Value::from(val.clone()))))
-                    .collect::<Vec<(String, Rc<Value>)>>(),
+                    .collect::<Vec<(String, ValueRef)>>(),
             )),
             serde_json::Value::String(s) => Value::String(s),
         }

@@ -1,5 +1,5 @@
 use crate::rogato::ast::helpers::{fn_call, lambda, var};
-use crate::rogato::db::{val, Value};
+use crate::rogato::db::{val, ValueRef};
 use crate::rogato::interpreter::{EvalContext, EvalError, Evaluate};
 
 pub use super::fn_call::FnCallArgs;
@@ -105,8 +105,8 @@ fn display_unquoted<Expr: Display>(
     }
 }
 
-impl Evaluate<Rc<Value>> for Expression {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<Rc<Value>, EvalError> {
+impl Evaluate<ValueRef> for Expression {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
         match self {
             Expression::Commented(_c, e) => e.evaluate(context),
             Expression::Lit(lit_exp) => lit_exp.evaluate(context),

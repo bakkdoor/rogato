@@ -21,8 +21,8 @@ pub mod walker;
 
 pub type Identifier = String;
 
-impl Evaluate<Rc<Value>> for Identifier {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<Rc<Value>, EvalError> {
+impl Evaluate<ValueRef> for Identifier {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
         match context.lookup_var(self) {
             Some(val) => Ok(val),
             None => Err(EvalError::VarNotDefined(self.clone())),
@@ -32,7 +32,7 @@ impl Evaluate<Rc<Value>> for Identifier {
 
 pub use program::Program;
 
-use super::db::{val, Value};
+use super::db::{val, ValueRef};
 use super::interpreter::{EvalContext, EvalError, Evaluate};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -72,8 +72,8 @@ impl ASTDepth for AST {
     }
 }
 
-impl Evaluate<Rc<Value>> for AST {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<Rc<Value>, EvalError> {
+impl Evaluate<ValueRef> for AST {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
         match self {
             AST::RootComment(_) => Ok(val::null()),
             AST::FnDef(fn_def) => fn_def.evaluate(context),

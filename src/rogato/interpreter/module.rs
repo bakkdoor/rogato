@@ -3,7 +3,7 @@ use std::rc::Rc;
 use std::{collections::HashMap, fmt::Display};
 
 use crate::rogato::ast::{fn_def::FnDef, type_expression::TypeDef};
-use crate::rogato::db::Value;
+use crate::rogato::db::ValueRef;
 
 use super::Identifier;
 
@@ -12,7 +12,7 @@ struct State {
     id: Identifier,
     fn_defs: HashMap<Identifier, Rc<FnDef>>,
     type_defs: HashMap<Identifier, Rc<TypeDef>>,
-    constants: HashMap<Identifier, Rc<Value>>,
+    constants: HashMap<Identifier, ValueRef>,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -56,12 +56,12 @@ impl Module {
     }
 
     #[allow(dead_code)]
-    pub fn const_def(&mut self, id: &Identifier, val: Rc<Value>) {
+    pub fn const_def(&mut self, id: &Identifier, val: ValueRef) {
         let mut state = self.state.borrow_mut();
         state.constants.insert(id.clone(), val);
     }
 
-    pub fn lookup_const(&self, id: &Identifier) -> Option<Rc<Value>> {
+    pub fn lookup_const(&self, id: &Identifier) -> Option<ValueRef> {
         let state = self.state.borrow();
         state.constants.get(id).cloned()
     }

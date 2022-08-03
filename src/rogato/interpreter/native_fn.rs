@@ -6,14 +6,13 @@ use crate::rogato::{
         expression::FnDefArgs,
         fn_def::{FnDef, FnDefBody},
     },
-    db::val,
-    db::val::Value,
+    db::val::ValueRef,
+    db::val::{self, Value},
 };
 
 use super::{environment::Environment, EvalContext, EvalError, Identifier};
 
-pub type NativeFn =
-    fn(context: &mut EvalContext, args: &[Rc<Value>]) -> Result<Rc<Value>, EvalError>;
+pub type NativeFn = fn(context: &mut EvalContext, args: &[ValueRef]) -> Result<ValueRef, EvalError>;
 
 #[derive(Error, Debug, PartialEq, Eq, Clone)]
 pub enum NativeFnError {
@@ -71,9 +70,9 @@ fn fn_body(f: NativeFn) -> Rc<FnDefBody> {
 
 fn with_number_op_args(
     id: &str,
-    args: &[Rc<Value>],
+    args: &[ValueRef],
     func: fn(i64, i64) -> i64,
-) -> Result<Rc<Value>, EvalError> {
+) -> Result<ValueRef, EvalError> {
     match (args.get(0), args.get(1)) {
         (Some(a), Some(b)) => match ((*a).deref(), (*b).deref()) {
             (Value::Int64(a), Value::Int64(b)) => Ok(val::int64(func(*a, *b))),

@@ -1,6 +1,6 @@
 use crate::rogato::{
     db::val,
-    db::val::Value,
+    db::val::ValueRef,
     interpreter::{native_fn::NativeFn, EvalContext, EvalError, Evaluate},
     util::indent,
 };
@@ -62,8 +62,8 @@ impl ASTDepth for FnDef {
     }
 }
 
-impl Evaluate<Rc<Value>> for FnDef {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<Rc<Value>, EvalError> {
+impl Evaluate<ValueRef> for FnDef {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
         context.define_fn(FnDef::new(
             self.id.clone(),
             self.args.clone(),
@@ -74,12 +74,7 @@ impl Evaluate<Rc<Value>> for FnDef {
             ("name", val::string(self.id.to_string())),
             (
                 "args",
-                val::list(
-                    self.args
-                        .iter()
-                        .map(val::string)
-                        .collect::<Vec<Rc<Value>>>(),
-                ),
+                val::list(self.args.iter().map(val::string).collect::<Vec<ValueRef>>()),
             ),
         ]))
     }
@@ -133,8 +128,8 @@ impl FnDefBody {
     pub fn call(
         &self,
         context: &mut EvalContext,
-        args: &[Rc<Value>],
-    ) -> Result<Rc<Value>, EvalError> {
+        args: &[ValueRef],
+    ) -> Result<ValueRef, EvalError> {
         match self {
             FnDefBody::NativeFn(f) => f(context, args),
             FnDefBody::RogatoFn(expr) => expr.evaluate(context),

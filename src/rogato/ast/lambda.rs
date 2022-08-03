@@ -1,7 +1,7 @@
 use std::{fmt::Display, rc::Rc};
 
 use crate::rogato::{
-    db::{val, Value},
+    db::{val, ValueRef},
     interpreter::{EvalContext, EvalError, Evaluate},
     util::indent,
 };
@@ -47,9 +47,9 @@ impl Walk for Lambda {
     }
 }
 
-impl Evaluate<Rc<Value>> for Lambda {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<Rc<Value>, EvalError> {
-        let evaluated_args: Vec<Rc<Value>> = self.args.evaluate(context)?;
+impl Evaluate<ValueRef> for Lambda {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
+        let evaluated_args: Vec<ValueRef> = self.args.evaluate(context)?;
         let mut fn_context = context.with_child_env();
         let given_args = evaluated_args.len();
         let expected_args = self.args.len();
@@ -120,8 +120,8 @@ impl<A: Display + ASTDepth> ASTDepth for LambdaArgs<A> {
     }
 }
 
-impl<A: Display + ASTDepth + Evaluate<Rc<Value>>> Evaluate<Rc<Value>> for LambdaArgs<A> {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<Rc<Value>, EvalError> {
+impl<A: Display + ASTDepth + Evaluate<ValueRef>> Evaluate<ValueRef> for LambdaArgs<A> {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
         let mut vec = Vec::new();
         for arg in self.args.iter() {
             vec.push(arg.evaluate(context)?)
@@ -130,8 +130,8 @@ impl<A: Display + ASTDepth + Evaluate<Rc<Value>>> Evaluate<Rc<Value>> for Lambda
     }
 }
 
-impl<A: Display + ASTDepth + Evaluate<Rc<Value>>> Evaluate<Vec<Rc<Value>>> for LambdaArgs<A> {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<Vec<Rc<Value>>, EvalError> {
+impl<A: Display + ASTDepth + Evaluate<ValueRef>> Evaluate<Vec<ValueRef>> for LambdaArgs<A> {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<Vec<ValueRef>, EvalError> {
         let mut vec = Vec::new();
         for arg in self.args.iter() {
             vec.push(arg.evaluate(context)?)
