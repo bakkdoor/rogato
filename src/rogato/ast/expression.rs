@@ -126,7 +126,7 @@ impl Evaluate<Rc<Value>> for Expression {
             }
             Expression::Var(id) => match context.lookup_var(id) {
                 Some(var) => Ok(var),
-                None => match context.call_function(id, &vec![]) {
+                None => match context.call_function(id, &[]) {
                     Some(val) => Ok(val?),
                     None => Err(EvalError::VarNotDefined(id.clone())),
                 },
