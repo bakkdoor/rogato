@@ -21,8 +21,8 @@ pub mod walker;
 
 pub type Identifier = String;
 
-impl Evaluate<Value> for Identifier {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<Value, EvalError> {
+impl Evaluate<Rc<Value>> for Identifier {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<Rc<Value>, EvalError> {
         match context.lookup_var(self) {
             Some(val) => Ok(val),
             None => Err(EvalError::VarNotDefined(self.clone())),
@@ -72,8 +72,8 @@ impl ASTDepth for AST {
     }
 }
 
-impl Evaluate<Value> for AST {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<Value, EvalError> {
+impl Evaluate<Rc<Value>> for AST {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<Rc<Value>, EvalError> {
         match self {
             AST::RootComment(_) => Ok(val::null()),
             AST::FnDef(fn_def) => fn_def.evaluate(context),

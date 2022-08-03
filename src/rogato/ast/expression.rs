@@ -105,8 +105,8 @@ fn display_unquoted<Expr: Display>(
     }
 }
 
-impl Evaluate<Value> for Expression {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<Value, EvalError> {
+impl Evaluate<Rc<Value>> for Expression {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<Rc<Value>, EvalError> {
         match self {
             Expression::Commented(_c, e) => e.evaluate(context),
             Expression::Lit(lit_exp) => lit_exp.evaluate(context),
@@ -126,7 +126,7 @@ impl Evaluate<Value> for Expression {
             }
             Expression::Var(id) => match context.lookup_var(id) {
                 Some(var) => Ok(var),
-                None => match context.call_function(id, &[]) {
+                None => match context.call_function(id, &vec![]) {
                     Some(val) => Ok(val?),
                     None => Err(EvalError::VarNotDefined(id.clone())),
                 },

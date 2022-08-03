@@ -69,8 +69,8 @@ impl Walk for Query {
     }
 }
 
-impl Evaluate<Value> for Query {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<Value, EvalError> {
+impl Evaluate<Rc<Value>> for Query {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<Rc<Value>, EvalError> {
         match context.schedule_query(self) {
             Ok(val) => Ok(val),
             Err(e) => Err(EvalError::from(e)),
@@ -107,8 +107,8 @@ impl QueryGuards {
     }
 }
 
-impl Evaluate<Vec<Value>> for QueryGuards {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<Vec<Value>, EvalError> {
+impl Evaluate<Vec<Rc<Value>>> for QueryGuards {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<Vec<Rc<Value>>, EvalError> {
         let mut results = vec![];
         for guard in self.iter() {
             results.push(guard.evaluate(context)?)
@@ -165,7 +165,10 @@ impl QueryBinding {
         }
     }
 
-    pub fn attempt_binding(&self, context: &mut EvalContext) -> Result<Value, QueryBindingError> {
+    pub fn attempt_binding(
+        &self,
+        context: &mut EvalContext,
+    ) -> Result<Rc<Value>, QueryBindingError> {
         match self.val.evaluate(context) {
             Ok(value) => {
                 // todo: actual query logic needed here

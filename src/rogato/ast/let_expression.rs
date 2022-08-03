@@ -46,8 +46,8 @@ impl Walk for LetExpression {
     }
 }
 
-impl Evaluate<Value> for LetExpression {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<Value, EvalError> {
+impl Evaluate<Rc<Value>> for LetExpression {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<Rc<Value>, EvalError> {
         for (id, expr) in self.bindings.iter() {
             match expr.evaluate(context) {
                 Ok(val) => context.define_var(id, val),

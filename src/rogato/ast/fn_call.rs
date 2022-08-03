@@ -47,8 +47,8 @@ impl Display for FnCallArgs {
     }
 }
 
-impl Evaluate<Vec<Value>> for FnCallArgs {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<Vec<Value>, EvalError> {
+impl Evaluate<Vec<Rc<Value>>> for FnCallArgs {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<Vec<Rc<Value>>, EvalError> {
         let mut values = vec![];
         for arg in self.iter() {
             match arg.evaluate(context) {

@@ -66,10 +66,10 @@ impl ASTDepth for Literal {
     }
 }
 
-impl Evaluate<Value> for Literal {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<Value, EvalError> {
+impl Evaluate<Rc<Value>> for Literal {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<Rc<Value>, EvalError> {
         match self {
-            Literal::Int64(number) => Ok(val::number(*number)),
+            Literal::Int64(number) => Ok(val::int64(*number)),
             Literal::String(string) => Ok(val::string(string)),
             Literal::Tuple(items) => {
                 let mut values = vec![];
@@ -77,14 +77,14 @@ impl Evaluate<Value> for Literal {
                     values.push(item.evaluate(context)?)
                 }
                 values.insert(0, val::string(format!("rogato.Tuple.{}", items.len())));
-                Ok(val::array(values))
+                Ok(val::list(values))
             }
             Literal::List(items) => {
                 let mut values = vec![];
                 for item in items.iter() {
                     values.push(item.evaluate(context)?)
                 }
-                Ok(val::array(values))
+                Ok(val::list(values))
             }
             Literal::Struct(_struct_id, props) => {
                 let mut prop_values = vec![];
@@ -147,13 +147,13 @@ impl<I: ASTDepth> ASTDepth for TupleItems<I> {
     }
 }
 
-impl<T: Evaluate<Value>> Evaluate<Value> for TupleItems<T> {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<Value, EvalError> {
+impl<T: Evaluate<Rc<Value>>> Evaluate<Rc<Value>> for TupleItems<T> {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<Rc<Value>, EvalError> {
         let mut values = vec![];
         for item in self.items.iter() {
             values.push(item.evaluate(context)?)
         }
-        Ok(val::array(values))
+        Ok(val::list(values))
     }
 }
 

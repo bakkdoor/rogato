@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::{ops::Deref, rc::Rc};
 use thiserror::Error;
 
 use crate::rogato::{
@@ -12,7 +12,8 @@ use crate::rogato::{
 
 use super::{environment::Environment, EvalContext, EvalError, Identifier};
 
-pub type NativeFn = fn(context: &mut EvalContext, args: &[Value]) -> Result<Value, EvalError>;
+pub type NativeFn =
+    fn(context: &mut EvalContext, args: &Vec<Rc<Value>>) -> Result<Rc<Value>, EvalError>;
 
 #[derive(Error, Debug, PartialEq, Eq, Clone)]
 pub enum NativeFnError {
@@ -70,14 +71,14 @@ fn fn_body(f: NativeFn) -> Rc<FnDefBody> {
 
 fn with_number_op_args(
     id: &str,
-    args: &[Value],
+    args: &Vec<Rc<Value>>,
     func: fn(i64, i64) -> i64,
-) -> Result<Value, EvalError> {
-    match (
-        args.get(0).map(|a| a.as_i64()),
-        args.get(1).map(|b| b.as_i64()),
-    ) {
-        (Some(Some(a)), Some(Some(b))) => Ok(val::number(func(a, b))),
+) -> Result<Rc<Value>, EvalError> {
+    match (args.get(0), args.get(1)) {
+        (Some(a), Some(b)) => match ((*a).deref(), (*b).deref()) {
+            (Value::Int64(a), Value::Int64(b)) => Ok(val::int64(func(*a, *b))),
+            _ => Err(invalid_args(id)),
+        },
         _ => Err(invalid_args(id)),
     }
 }

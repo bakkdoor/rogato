@@ -6,7 +6,7 @@ use crate::rogato::{ast::type_expression::TypeDef, db::Value};
 #[derive(Clone, PartialEq, Eq, Debug)]
 struct State {
     parent: Option<Environment>,
-    variables: HashMap<Identifier, Value>,
+    variables: HashMap<Identifier, Rc<Value>>,
     modules: HashMap<Identifier, Module>,
     current_module_name: Identifier,
 }
@@ -79,11 +79,11 @@ impl Environment {
         self.state.borrow().current_module_name.clone()
     }
 
-    pub fn define_var(&mut self, id: &Identifier, val: Value) {
+    pub fn define_var(&mut self, id: &Identifier, val: Rc<Value>) {
         self.state.borrow_mut().variables.insert(id.clone(), val);
     }
 
-    pub fn lookup_var(&self, id: &str) -> Option<Value> {
+    pub fn lookup_var(&self, id: &str) -> Option<Rc<Value>> {
         let state = self.state.borrow();
         match state.variables.get(id) {
             Some(expr) => Some(expr.clone()),
@@ -120,7 +120,7 @@ impl Environment {
         }
     }
 
-    pub fn lookup_const(&self, id: &Identifier) -> Option<Value> {
+    pub fn lookup_const(&self, id: &Identifier) -> Option<Rc<Value>> {
         let state = self.state.borrow();
         match self.lookup_module(&state.current_module_name) {
             Some(module) => module.lookup_const(id),

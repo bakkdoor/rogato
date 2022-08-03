@@ -12,7 +12,7 @@ struct State {
     id: Identifier,
     fn_defs: HashMap<Identifier, Rc<FnDef>>,
     type_defs: HashMap<Identifier, Rc<TypeDef>>,
-    constants: HashMap<Identifier, Value>,
+    constants: HashMap<Identifier, Rc<Value>>,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -56,12 +56,12 @@ impl Module {
     }
 
     #[allow(dead_code)]
-    pub fn const_def(&mut self, id: &Identifier, val: Value) {
+    pub fn const_def(&mut self, id: &Identifier, val: Rc<Value>) {
         let mut state = self.state.borrow_mut();
         state.constants.insert(id.clone(), val);
     }
 
-    pub fn lookup_const(&self, id: &Identifier) -> Option<Value> {
+    pub fn lookup_const(&self, id: &Identifier) -> Option<Rc<Value>> {
         let state = self.state.borrow();
         state.constants.get(id).cloned()
     }

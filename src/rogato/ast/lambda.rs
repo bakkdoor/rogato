@@ -47,9 +47,9 @@ impl Walk for Lambda {
     }
 }
 
-impl Evaluate<Value> for Lambda {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<Value, EvalError> {
-        let evaluated_args: Vec<Value> = self.args.evaluate(context)?;
+impl Evaluate<Rc<Value>> for Lambda {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<Rc<Value>, EvalError> {
+        let evaluated_args: Vec<Rc<Value>> = self.args.evaluate(context)?;
         let mut fn_context = context.with_child_env();
         let given_args = evaluated_args.len();
         let expected_args = self.args.len();
@@ -120,18 +120,18 @@ impl<A: Display + ASTDepth> ASTDepth for LambdaArgs<A> {
     }
 }
 
-impl<A: Display + ASTDepth + Evaluate<Value>> Evaluate<Value> for LambdaArgs<A> {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<Value, EvalError> {
+impl<A: Display + ASTDepth + Evaluate<Rc<Value>>> Evaluate<Rc<Value>> for LambdaArgs<A> {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<Rc<Value>, EvalError> {
         let mut vec = Vec::new();
         for arg in self.args.iter() {
             vec.push(arg.evaluate(context)?)
         }
-        Ok(val::array(vec))
+        Ok(val::list(vec))
     }
 }
 
-impl<A: Display + ASTDepth + Evaluate<Value>> Evaluate<Vec<Value>> for LambdaArgs<A> {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<Vec<Value>, EvalError> {
+impl<A: Display + ASTDepth + Evaluate<Rc<Value>>> Evaluate<Vec<Rc<Value>>> for LambdaArgs<A> {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<Vec<Rc<Value>>, EvalError> {
         let mut vec = Vec::new();
         for arg in self.args.iter() {
             vec.push(arg.evaluate(context)?)

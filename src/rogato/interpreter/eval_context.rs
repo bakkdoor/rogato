@@ -41,7 +41,7 @@ impl EvalContext {
         }
     }
 
-    pub fn define_fn(&mut self, fn_def: Rc<FnDef>) -> Value {
+    pub fn define_fn(&mut self, fn_def: Rc<FnDef>) -> Rc<Value> {
         let mut module = self.current_module();
         let id = fn_def.id().clone();
         module.fn_def(fn_def);
@@ -51,8 +51,8 @@ impl EvalContext {
     pub fn call_function<ID: ToString>(
         &self,
         id: ID,
-        args: &[Value],
-    ) -> Option<Result<Value, EvalError>> {
+        args: &Vec<Rc<Value>>,
+    ) -> Option<Result<Rc<Value>, EvalError>> {
         let id = id.to_string();
         self.current_module().lookup_fn(&id).map(|func| {
             let given_argc = args.len();
@@ -76,11 +76,11 @@ impl EvalContext {
         })
     }
 
-    pub fn define_var(&mut self, id: &Identifier, val: Value) {
+    pub fn define_var(&mut self, id: &Identifier, val: Rc<Value>) {
         self.env.define_var(id, val);
     }
 
-    pub fn lookup_var(&self, id: &str) -> Option<Value> {
+    pub fn lookup_var(&self, id: &str) -> Option<Rc<Value>> {
         self.env.lookup_var(id)
     }
 
@@ -94,7 +94,7 @@ impl EvalContext {
         self.env.lookup_module(id)
     }
 
-    pub fn lookup_const(&self, id: &Identifier) -> Option<Value> {
+    pub fn lookup_const(&self, id: &Identifier) -> Option<Rc<Value>> {
         self.env.lookup_const(id)
     }
 

@@ -6,9 +6,10 @@ pub use indradb::{
     RangeVertexQuery, RocksdbDatastore, SpecificVertexQuery, Vertex, VertexPropertyQuery,
     VertexQuery, VertexQueryExt,
 };
-pub use serde_json::{Number, Value};
+pub use serde_json::Number;
 use std::path::Path;
 pub use uuid::Uuid;
+pub use val::Value;
 
 pub mod object;
 pub mod object_storage;
@@ -22,6 +23,7 @@ pub type DBResult<T> = Result<T, indradb::Error>;
 #[allow(dead_code)]
 pub type ValidationResult<T> = Result<T, indradb::ValidationError>;
 
+#[allow(dead_code)]
 pub fn open<P: AsRef<Path>>(db_path: P) -> DBResult<RocksdbDatastore> {
     RocksdbDatastore::new(db_path, None)
 }

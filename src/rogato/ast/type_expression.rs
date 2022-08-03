@@ -38,8 +38,8 @@ impl ASTDepth for TypeDef {
     }
 }
 
-impl Evaluate<Value> for TypeDef {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<Value, EvalError> {
+impl Evaluate<Rc<Value>> for TypeDef {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<Rc<Value>, EvalError> {
         Ok(val::object(vec![
             ("type", val::string("TypeDef")),
             ("name", val::string(self.id.to_string())),
@@ -113,15 +113,15 @@ impl ASTDepth for TypeExpression {
     }
 }
 
-fn type_ref<ID: ToString>(id: ID) -> Value {
+fn type_ref<ID: ToString>(id: ID) -> Rc<Value> {
     val::object(vec![
         ("type", val::string("TypeRef")),
         ("name", val::string(id.to_string())),
     ])
 }
 
-impl Evaluate<Value> for TypeExpression {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<Value, EvalError> {
+impl Evaluate<Rc<Value>> for TypeExpression {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<Rc<Value>, EvalError> {
         Ok(match self {
             TypeExpression::IntType => type_ref("Int"),
             TypeExpression::StringType => type_ref("String"),
@@ -147,12 +147,12 @@ impl Evaluate<Value> for TypeExpression {
     }
 }
 
-impl Evaluate<Value> for Vec<(Identifier, Rc<TypeExpression>)> {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<Value, EvalError> {
+impl Evaluate<Rc<Value>> for Vec<(Identifier, Rc<TypeExpression>)> {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<Rc<Value>, EvalError> {
         let mut vec = Vec::new();
         for (_id, type_expr) in self.iter() {
             vec.push(type_expr.evaluate(context)?)
         }
-        Ok(val::array(vec))
+        Ok(val::list(vec))
     }
 }

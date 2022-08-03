@@ -4,7 +4,7 @@ use crate::rogato::{
 };
 
 use super::{ASTDepth, Identifier};
-use std::fmt::Display;
+use std::{fmt::Display, rc::Rc};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct ModuleDef {
@@ -30,18 +30,18 @@ impl ASTDepth for ModuleDef {
     }
 }
 
-impl Evaluate<Value> for ModuleDef {
-    fn evaluate(&self, _context: &mut EvalContext) -> Result<Value, EvalError> {
+impl Evaluate<Rc<Value>> for ModuleDef {
+    fn evaluate(&self, _context: &mut EvalContext) -> Result<Rc<Value>, EvalError> {
         Ok(val::object(vec![
-            ("type", Value::String("Module".to_string())),
-            ("name", Value::String(self.id.to_string())),
+            ("type", val::string("Module")),
+            ("name", val::string(self.id.clone())),
             (
                 "exports",
-                Value::Array(
+                val::list(
                     self.exports
                         .iter()
-                        .map(|e| Value::String(e.to_string()))
-                        .collect::<Vec<Value>>(),
+                        .map(|e| val::string(e.to_string()))
+                        .collect::<Vec<Rc<Value>>>(),
                 ),
             ),
         ]))

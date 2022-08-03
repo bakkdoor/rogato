@@ -62,8 +62,8 @@ impl ASTDepth for FnDef {
     }
 }
 
-impl Evaluate<Value> for FnDef {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<Value, EvalError> {
+impl Evaluate<Rc<Value>> for FnDef {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<Rc<Value>, EvalError> {
         context.define_fn(FnDef::new(
             self.id.clone(),
             self.args.clone(),
@@ -74,7 +74,12 @@ impl Evaluate<Value> for FnDef {
             ("name", val::string(self.id.to_string())),
             (
                 "args",
-                Value::Array(self.args.iter().map(val::string).collect::<Vec<Value>>()),
+                val::list(
+                    self.args
+                        .iter()
+                        .map(val::string)
+                        .collect::<Vec<Rc<Value>>>(),
+                ),
             ),
         ]))
     }
@@ -125,7 +130,11 @@ impl FnDefBody {
         FnDefBody::RogatoFn(expr)
     }
 
-    pub fn call(&self, context: &mut EvalContext, args: &[Value]) -> Result<Value, EvalError> {
+    pub fn call(
+        &self,
+        context: &mut EvalContext,
+        args: &Vec<Rc<Value>>,
+    ) -> Result<Rc<Value>, EvalError> {
         match self {
             FnDefBody::NativeFn(f) => f(context, args),
             FnDefBody::RogatoFn(expr) => expr.evaluate(context),
