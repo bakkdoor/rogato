@@ -76,8 +76,7 @@ impl Evaluate<ValueRef> for Literal {
                 for item in items.iter() {
                     values.push(item.evaluate(context)?)
                 }
-                values.insert(0, val::string(format!("rogato.Tuple.{}", items.len())));
-                Ok(val::list(values))
+                Ok(val::tuple(values))
             }
             Literal::List(items) => {
                 let mut values = vec![];
@@ -115,6 +114,7 @@ impl<I: Display> TupleItems<I> {
         TupleItems { items }
     }
 
+    #[allow(dead_code)]
     pub fn len(&self) -> usize {
         self.items.len()
     }

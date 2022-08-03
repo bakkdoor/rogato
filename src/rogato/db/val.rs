@@ -4,6 +4,10 @@ pub use serde_json::Number;
 
 use crate::rogato::ast::{expression::TupleItems, ASTDepth};
 
+pub fn tuple(vec: Vec<ValueRef>) -> ValueRef {
+    Rc::new(Value::Tuple(vec.len(), vec))
+}
+
 pub fn list(vec: Vec<ValueRef>) -> ValueRef {
     Rc::new(Value::List(vec))
 }
@@ -39,6 +43,7 @@ pub enum Value {
     String(String),
     Bool(bool),
     Int64(i64),
+    Tuple(usize, Vec<ValueRef>),
     List(Vec<ValueRef>),
     #[allow(dead_code)]
     Map(HashMap<String, ValueRef>),
@@ -83,6 +88,11 @@ impl Display for Value {
             Value::String(s) => f.write_fmt(format_args!("\"{}\"", s)),
             Value::Bool(b) => f.write_fmt(format_args!("{}", b)),
             Value::Int64(i) => f.write_fmt(format_args!("{}", i)),
+            Value::Tuple(size, items) => f.write_fmt(format_args!(
+                "{{{}}}{{ {} }}",
+                size,
+                TupleItems::from(items.clone())
+            )),
             Value::List(items) => {
                 f.write_fmt(format_args!("[ {} ]", TupleItems::from(items.clone())))
             }
@@ -99,6 +109,7 @@ impl ASTDepth for Value {
             Value::String(_) => 1,
             Value::Bool(_) => 1,
             Value::Int64(_) => 1,
+            Value::Tuple(size, _) => 1 + size,
             Value::List(items) => 1 + items.len(),
             Value::Map(items) => 1 + items.len(),
             Value::Object(props) => 1 + props.len(),

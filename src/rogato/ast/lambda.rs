@@ -70,7 +70,7 @@ impl Evaluate<ValueRef> for Lambda {
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub struct LambdaArgs<A: Display> {
+pub struct LambdaArgs<A: Display + ASTDepth> {
     args: Vec<A>,
 }
 
