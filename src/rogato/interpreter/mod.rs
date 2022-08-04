@@ -51,6 +51,12 @@ impl From<QueryError> for EvalError {
     }
 }
 
+impl From<NativeFnError> for EvalError {
+    fn from(nfe: NativeFnError) -> Self {
+        EvalError::NativeFnFailed(nfe)
+    }
+}
+
 type Identifier = String;
 
 pub trait Evaluate<T> {
