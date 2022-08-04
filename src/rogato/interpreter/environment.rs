@@ -140,12 +140,11 @@ impl Environment {
         match self.lookup_module(&state.current_module_name) {
             Some(module) => module.lookup_type(id),
             None => {
-                let err_str = format!(
+                eprintln!(
                     "Module not found: {} while trying to lookup type: {}",
                     state.current_module_name, id
                 );
-                eprintln!("{}", err_str);
-                panic!("{}", err_str)
+                None
             }
         }
     }

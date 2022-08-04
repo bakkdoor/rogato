@@ -55,10 +55,7 @@ impl Evaluate<ValueRef> for Lambda {
         let expected_args = self.args.len();
 
         if given_args != expected_args {
-            panic!(
-                "Mismatch in lambda arguments. Expected {} but got {}",
-                expected_args, given_args
-            )
+            return Err(EvalError::LambdaArityMismatch(expected_args, given_args));
         }
 
         for (i, arg_val) in evaluated_args.iter().enumerate().take(self.args.len()) {

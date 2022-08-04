@@ -125,12 +125,26 @@ fn run_repl() {
         match parse(buffer.as_str()) {
             Ok(ast) => {
                 println!("OK> {:?}\n{}", ast, ast);
-                println!("EVAL> {}", ast.evaluate(&mut context).unwrap());
+                match ast.evaluate(&mut context) {
+                    Ok(val) => {
+                        println!("EVAL> {}", val);
+                    }
+                    Err(e) => {
+                        eprintln!("EVAL ERROR> {}", e)
+                    }
+                }
             }
             Err(_) => match parse_expr(buffer.as_str()) {
                 Ok(ast) => {
                     println!("OK> {:?}\n{}", ast, ast);
-                    println!("EVAL> {}", ast.evaluate(&mut context).unwrap());
+                    match ast.evaluate(&mut context) {
+                        Ok(val) => {
+                            println!("EVAL> {}", val)
+                        }
+                        Err(e) => {
+                            eprintln!("EVAL ERROR> {}", e)
+                        }
+                    }
                 }
                 Err(err) => {
                     eprintln!("Error> {:?}", err)

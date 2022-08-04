@@ -38,6 +38,9 @@ pub enum EvalError {
     #[error("EvalError: Function arity mismatch for {0} : Expected: {1} but got: {2}")]
     FunctionArityMismatch(Identifier, usize, usize),
 
+    #[error("EvalError: Lambda arity mismatch: Expected: {0} but got: {1}")]
+    LambdaArityMismatch(usize, usize),
+
     #[error("EvalError: {0}")]
     NativeFnFailed(NativeFnError),
 }
