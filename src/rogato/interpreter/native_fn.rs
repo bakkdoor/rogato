@@ -30,32 +30,37 @@ pub fn std_env() -> Environment {
 
     module.fn_def(op_fn_def(
         "+",
-        fn_body(move |_ctx, args| with_number_op_args("+", args, |a, b| a + b)),
+        fn_body(move |_ctx, args| with_number_op_args("+", args, |a, b| Ok(a + b))),
     ));
 
     module.fn_def(op_fn_def(
         "-",
-        fn_body(move |_ctx, args| with_number_op_args("-", args, |a, b| a - b)),
+        fn_body(move |_ctx, args| with_number_op_args("-", args, |a, b| Ok(a - b))),
     ));
 
     module.fn_def(op_fn_def(
         "*",
-        fn_body(move |_ctx, args| with_number_op_args("*", args, |a, b| a * b)),
+        fn_body(move |_ctx, args| with_number_op_args("*", args, |a, b| Ok(a * b))),
     ));
 
     module.fn_def(op_fn_def(
         "/",
-        fn_body(move |_ctx, args| with_number_op_args("/", args, |a, b| a / b)),
+        fn_body(move |_ctx, args| with_number_op_args("/", args, |a, b| Ok(a / b))),
     ));
 
     module.fn_def(op_fn_def(
         "%",
-        fn_body(move |_ctx, args| with_number_op_args("%", args, |a, b| a % b)),
+        fn_body(move |_ctx, args| with_number_op_args("%", args, |a, b| Ok(a % b))),
     ));
 
     module.fn_def(op_fn_def(
         "^",
-        fn_body(move |_ctx, args| with_number_op_args("^", args, |a, b| a ^ b)),
+        fn_body(move |_ctx, args| {
+            with_number_op_args("^", args, |a, b| match u32::try_from(b) {
+                Ok(exponent) => Ok(a.pow(exponent)),
+                Err(_) => Err(invalid_args("^")),
+            })
+        }),
     ));
 
     env
@@ -76,11 +81,11 @@ fn fn_body(f: NativeFn) -> Rc<FnDefBody> {
 fn with_number_op_args(
     id: &str,
     args: &[ValueRef],
-    func: fn(i64, i64) -> i64,
+    func: fn(i64, i64) -> Result<i64, EvalError>,
 ) -> Result<ValueRef, EvalError> {
     match (args.get(0), args.get(1)) {
         (Some(a), Some(b)) => match ((*a).deref(), (*b).deref()) {
-            (Value::Int64(a), Value::Int64(b)) => Ok(val::int64(func(*a, *b))),
+            (Value::Int64(a), Value::Int64(b)) => func(*a, *b).map(val::int64),
             _ => Err(invalid_args(id)),
         },
         _ => Err(invalid_args(id)),

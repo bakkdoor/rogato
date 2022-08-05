@@ -3,6 +3,9 @@ pub mod db;
 #[cfg(test)]
 pub mod parser;
 
+#[cfg(test)]
+pub mod interpreter;
+
 pub use crate::rogato::parser::{parse, parse_expr};
 
 #[macro_export]
