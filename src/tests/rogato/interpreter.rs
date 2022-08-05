@@ -22,3 +22,25 @@ fn basic_arithmetic() {
         assert_eq!(ast.evaluate(&mut ctx), Ok(value.clone()))
     }
 }
+
+#[test]
+fn string_literals() {
+    let mut ctx = EvalContext::new();
+
+    let string_literals = vec![
+        "",
+        "!",
+        " ",
+        "  ",
+        "Hello, World!",
+        "My name is John Connor",
+    ];
+
+    for string_lit in string_literals.iter() {
+        let parse_result = parse_expr(format!("{:?}", string_lit).as_str());
+        assert!(parse_result.is_ok());
+        if let Ok(ast) = parse_result {
+            assert_eq!(ast.evaluate(&mut ctx), Ok(val::string(string_lit)));
+        }
+    }
+}
