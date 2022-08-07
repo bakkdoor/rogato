@@ -113,41 +113,43 @@ fn print_parse_result<T: Display, E: Display>(code: &str, result: &Result<T, E>)
 
 fn run_repl() {
     let mut context = EvalContext::new();
-
+    let mut counter = 0;
     loop {
+        counter += 1;
         let mut buffer = String::new();
         let has_more_lines = Regex::new(r"(\\\s*)$").unwrap();
         while buffer.is_empty() || has_more_lines.is_match(buffer.as_str()) {
             let replaced_buff = has_more_lines.replace(buffer.as_str(), "\n");
             buffer = replaced_buff.to_string();
+            println!("\n{:03} > ", counter);
             io::stdin().read_line(&mut buffer).unwrap();
         }
         match parse(buffer.as_str()) {
             Ok(ast) => {
-                println!("OK> {:?}\n{}", ast, ast);
+                println!("{:03} AST> {:?}\n\n{}\n", counter, ast, ast);
                 match ast.evaluate(&mut context) {
                     Ok(val) => {
-                        println!("EVAL> {}", val);
+                        println!("{:03} EVAL> {}", counter, val);
                     }
                     Err(e) => {
-                        eprintln!("EVAL ERROR> {}", e)
+                        eprintln!("{:03} EVAL ERROR> {}", counter, e)
                     }
                 }
             }
             Err(_) => match parse_expr(buffer.as_str()) {
                 Ok(ast) => {
-                    println!("OK> {:?}\n{}", ast, ast);
+                    println!("{:03} EXPR> {:?}\n\n{}\n", counter, ast, ast);
                     match ast.evaluate(&mut context) {
                         Ok(val) => {
-                            println!("EVAL> {}", val)
+                            println!("{:03} EVAL> {}", counter, val)
                         }
                         Err(e) => {
-                            eprintln!("EVAL ERROR> {}", e)
+                            eprintln!("{:03} EVAL ERROR> {}", counter, e)
                         }
                     }
                 }
                 Err(err) => {
-                    eprintln!("Error> {:?}", err)
+                    eprintln!("{:03} PARSE ERROR> {:?}", counter, err)
                 }
             },
         }
