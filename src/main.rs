@@ -30,12 +30,12 @@ struct CLIArgs {
     name: String,
 }
 
-fn main() {
+fn main() -> anyhow::Result<()> {
     let args = std::env::args().skip(1);
     if args.len() == 0 {
         println!("No arguments given, but required.");
         print_help();
-        return;
+        return Ok(());
     }
     let mut help_required = false;
     for arg in args {
@@ -68,6 +68,8 @@ fn main() {
     if help_required {
         print_help()
     }
+
+    return Ok(());
 }
 
 fn read_parse_file(file_path: &Path) {
