@@ -3,7 +3,7 @@ use std::rc::Rc;
 use std::{collections::HashMap, fmt::Display};
 
 use crate::rogato::ast::{fn_def::FnDef, type_expression::TypeDef};
-use crate::rogato::db::ValueRef;
+use crate::rogato::interpreter::ValueRef;
 
 use super::Identifier;
 

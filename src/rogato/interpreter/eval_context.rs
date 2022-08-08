@@ -3,8 +3,9 @@ use crate::rogato::{
     ast::{expression::Query, fn_def::FnDef, type_expression::TypeDef},
     db::{
         query::{QueryPlanner, QueryResult},
-        val, ObjectStorage, ValueRef,
+        ObjectStorage,
     },
+    interpreter::{val, ValueRef},
 };
 use std::rc::Rc;
 

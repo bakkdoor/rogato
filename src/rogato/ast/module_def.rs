@@ -1,7 +1,4 @@
-use crate::rogato::{
-    db::{val, ValueRef},
-    interpreter::{EvalContext, EvalError, Evaluate},
-};
+use crate::rogato::interpreter::{val, EvalContext, EvalError, Evaluate, ValueRef};
 
 use super::{ASTDepth, Identifier};
 use std::fmt::Display;

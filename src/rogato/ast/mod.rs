@@ -33,8 +33,7 @@ impl Evaluate<ValueRef> for Identifier {
 
 pub use program::Program;
 
-use super::db::{val, ValueRef};
-use super::interpreter::{EvalContext, EvalError, Evaluate};
+use super::interpreter::{val, EvalContext, EvalError, Evaluate, ValueRef};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum AST {

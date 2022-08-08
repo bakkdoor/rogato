@@ -1,6 +1,5 @@
 use crate::rogato::ast::helpers::parse_expr;
-use crate::rogato::db::val;
-use crate::rogato::interpreter::{EvalContext, Evaluate};
+use crate::rogato::interpreter::{val, EvalContext, Evaluate};
 
 #[test]
 fn basic_arithmetic() {

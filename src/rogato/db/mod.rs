@@ -9,12 +9,10 @@ pub use indradb::{
 pub use serde_json::Number;
 use std::path::Path;
 pub use uuid::Uuid;
-pub use val::{Value, ValueRef};
 
 pub mod object;
 pub mod object_storage;
 pub mod query;
-pub mod val;
 
 pub use object_storage::ObjectStorage;
 

@@ -1,6 +1,5 @@
 use super::AST;
-use crate::rogato::db::{val, val::ValueRef};
-use crate::rogato::interpreter::{EvalContext, EvalError, Evaluate};
+use crate::rogato::interpreter::{val, EvalContext, EvalError, Evaluate, ValueRef};
 use std::fmt::Display;
 use std::rc::Rc;
 

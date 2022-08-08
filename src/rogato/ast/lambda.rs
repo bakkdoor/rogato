@@ -3,8 +3,7 @@ use std::{fmt::Display, rc::Rc};
 use smol_str::SmolStr;
 
 use crate::rogato::{
-    db::{val, ValueRef},
-    interpreter::{EvalContext, EvalError, Evaluate},
+    interpreter::{val, EvalContext, EvalError, Evaluate, ValueRef},
     util::indent,
 };
 

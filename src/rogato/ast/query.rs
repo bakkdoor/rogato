@@ -1,8 +1,5 @@
 use super::{expression::Expression, walker::Walk, ASTDepth, Identifier};
-use crate::rogato::{
-    db::val::ValueRef,
-    interpreter::{EvalContext, EvalError, Evaluate},
-};
+use crate::rogato::interpreter::{EvalContext, EvalError, Evaluate, ValueRef};
 use std::{fmt::Display, rc::Rc};
 
 #[derive(Clone, PartialEq, Eq, Debug)]

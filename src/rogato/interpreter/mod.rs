@@ -2,8 +2,10 @@ pub mod environment;
 pub mod eval_context;
 pub mod module;
 pub mod native_fn;
+pub mod val;
 
 pub use eval_context::EvalContext;
+pub use val::ValueRef;
 
 use thiserror::Error;
 

@@ -6,8 +6,10 @@ use crate::rogato::{
         expression::FnDefArgs,
         fn_def::{FnDef, FnDefBody},
     },
-    db::val::ValueRef,
-    db::val::{self, Value},
+    interpreter::{
+        val,
+        val::{Value, ValueRef},
+    },
 };
 
 use super::{environment::Environment, EvalContext, EvalError, Identifier};

@@ -1,9 +1,8 @@
 use crate::rogato::{
     ast::{expression::Query, query::QueryBindingError},
-    interpreter::{EvalContext, EvalError, Evaluate},
+    interpreter::{EvalContext, EvalError, Evaluate, ValueRef},
 };
 
-use super::ValueRef;
 use thiserror::Error;
 
 #[derive(Clone, PartialEq, Eq, Debug)]

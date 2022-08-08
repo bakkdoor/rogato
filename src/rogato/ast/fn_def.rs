@@ -1,7 +1,5 @@
 use crate::rogato::{
-    db::val,
-    db::val::ValueRef,
-    interpreter::{native_fn::NativeFn, EvalContext, EvalError, Evaluate},
+    interpreter::{native_fn::NativeFn, val, val::ValueRef, EvalContext, EvalError, Evaluate},
     util::indent,
 };
 
