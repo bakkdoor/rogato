@@ -19,7 +19,8 @@ pub mod type_expression;
 pub mod visitor;
 pub mod walker;
 
-pub type Identifier = String;
+use smol_str::SmolStr;
+pub type Identifier = SmolStr;
 
 impl Evaluate<ValueRef> for Identifier {
     fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {

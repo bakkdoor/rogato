@@ -1,4 +1,4 @@
-use super::{expression::Expression, walker::Walk, ASTDepth};
+use super::{expression::Expression, walker::Walk, ASTDepth, Identifier};
 use crate::rogato::{
     db::val::ValueRef,
     interpreter::{EvalContext, EvalError, Evaluate},
@@ -143,13 +143,13 @@ pub enum QueryBindingError {
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct QueryBinding {
-    ids: Vec<String>,
+    ids: Vec<Identifier>,
     val: Rc<Expression>,
     is_negated: bool,
 }
 
 impl QueryBinding {
-    pub fn new(ids: Vec<String>, val: Rc<Expression>) -> Self {
+    pub fn new(ids: Vec<Identifier>, val: Rc<Expression>) -> Self {
         QueryBinding {
             ids,
             val,
@@ -157,7 +157,7 @@ impl QueryBinding {
         }
     }
 
-    pub fn new_negated(ids: Vec<String>, val: Rc<Expression>) -> Self {
+    pub fn new_negated(ids: Vec<Identifier>, val: Rc<Expression>) -> Self {
         QueryBinding {
             ids,
             val,

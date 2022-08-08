@@ -23,7 +23,7 @@ pub struct Module {
 impl Module {
     pub fn new(id: &str) -> Module {
         let state = State {
-            id: id.to_string(),
+            id: id.into(),
             fn_defs: HashMap::new(),
             type_defs: HashMap::new(),
             constants: HashMap::new(),

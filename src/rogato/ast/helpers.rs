@@ -19,9 +19,9 @@ use crate::rogato::ast::{
 use crate::rogato::ast::{type_expression::TypeExpression, Program};
 pub use crate::rogato::parser::{parse, parse_expr};
 use std::rc::Rc;
-use std::string::String;
 
 use super::fn_def::FnDefBody;
+use super::Identifier;
 
 pub fn program(nodes: Vec<Rc<AST>>) -> Program {
     Program::new(nodes)
@@ -47,43 +47,46 @@ pub fn list_lit(vals: Vec<Rc<Expression>>) -> Rc<Expression> {
     lit(List(TupleItems::from(vals)))
 }
 
-pub fn struct_lit<S: ToString>(id: S, raw_props: Vec<(S, Rc<Expression>)>) -> Rc<Expression> {
+pub fn struct_lit<S: Into<Identifier>>(
+    id: S,
+    raw_props: Vec<(S, Rc<Expression>)>,
+) -> Rc<Expression> {
     let mut props = Vec::new();
     for (id, expr) in raw_props {
-        props.push((id.to_string(), expr))
+        props.push((id.into(), expr))
     }
-    lit(Struct(id.to_string(), Rc::new(StructProps::from(props))))
+    lit(Struct(id.into(), Rc::new(StructProps::from(props))))
 }
 
 pub fn var(id: &str) -> Rc<Expression> {
-    Rc::new(Var(id.to_string()))
+    Rc::new(Var(id.into()))
 }
 
 pub fn const_or_type_ref(id: &str) -> Rc<Expression> {
-    Rc::new(ConstOrTypeRef(id.to_string()))
+    Rc::new(ConstOrTypeRef(id.into()))
 }
 
 pub fn prop_fn_ref(id: &str) -> Rc<Expression> {
-    Rc::new(PropFnRef(id.to_string()))
+    Rc::new(PropFnRef(id.into()))
 }
 
 pub fn fn_def(id: &str, args: Vec<&str>, body: Rc<Expression>) -> Rc<AST> {
     Rc::new(AST::FnDef(FnDef::new(
-        id.to_string(),
+        id,
         fn_def_args(args),
         Rc::new(FnDefBody::rogato(body)),
     )))
 }
 
 pub fn fn_def_args(args: Vec<&str>) -> FnDefArgs {
-    FnDefArgs::new(Vec::from_iter(args.iter().map(|a| a.to_string())))
+    FnDefArgs::new(Vec::from_iter(args.iter().map(|a| a.into())))
 }
 
 pub fn let_expr(bindings: Vec<(&str, Rc<Expression>)>, body: Rc<Expression>) -> Rc<Expression> {
-    let bindings: Vec<(String, Rc<Expression>)> = bindings
+    let bindings: Vec<(Identifier, Rc<Expression>)> = bindings
         .iter()
         .cloned()
-        .map(|(name, expr)| (name.to_string(), expr))
+        .map(|(name, expr)| (name.into(), expr))
         .collect();
 
     Rc::new(Let(LetExpression::new(LetBindings::new(bindings), body)))
@@ -91,13 +94,13 @@ pub fn let_expr(bindings: Vec<(&str, Rc<Expression>)>, body: Rc<Expression>) -> 
 
 pub fn module_def(id: &str, exports: Vec<&str>) -> Rc<AST> {
     Rc::new(AST::ModuleDef(ModuleDef::new(
-        id.to_string(),
+        id.into(),
         module_def_exports(exports),
     )))
 }
 
 pub fn module_def_exports(exports: Vec<&str>) -> ModuleExports {
-    ModuleExports::new(Vec::from_iter(exports.iter().map(|e| e.to_string())))
+    ModuleExports::new(Vec::from_iter(exports.iter().map(|e| e.into())))
 }
 
 pub fn call_args(args: Vec<Rc<Expression>>) -> FnCallArgs {
@@ -105,11 +108,11 @@ pub fn call_args(args: Vec<Rc<Expression>>) -> FnCallArgs {
 }
 
 pub fn fn_call(id: &str, args: Vec<Rc<Expression>>) -> Rc<Expression> {
-    Rc::new(Expression::FnCall(id.to_string(), call_args(args)))
+    Rc::new(Expression::FnCall(id.into(), call_args(args)))
 }
 
 pub fn op_call(id: &str, left: Rc<Expression>, right: Rc<Expression>) -> Rc<Expression> {
-    Rc::new(Expression::OpCall(id.to_string(), left, right))
+    Rc::new(Expression::OpCall(id.into(), left, right))
 }
 
 pub fn root_comment(comment: &str) -> Rc<AST> {
@@ -121,7 +124,7 @@ pub fn commented(comment: &str, exp: Rc<Expression>) -> Rc<Expression> {
 }
 
 pub fn type_def(id: &str, type_expr: Rc<TypeExpression>) -> Rc<AST> {
-    Rc::new(AST::TypeDef(TypeDef::new(id.to_string(), type_expr)))
+    Rc::new(AST::TypeDef(TypeDef::new(id.into(), type_expr)))
 }
 
 pub fn tuple_type(items: Vec<Rc<TypeExpression>>) -> Rc<TypeExpression> {
@@ -129,11 +132,7 @@ pub fn tuple_type(items: Vec<Rc<TypeExpression>>) -> Rc<TypeExpression> {
 }
 
 pub fn struct_type(props: Vec<(&str, Rc<TypeExpression>)>) -> Rc<TypeExpression> {
-    let boxed_props = Vec::from_iter(
-        props
-            .iter()
-            .map(|(id, expr)| (id.to_string(), expr.clone())),
-    );
+    let boxed_props = Vec::from_iter(props.iter().map(|(id, expr)| (id.into(), expr.clone())));
     Rc::new(TypeExpression::StructType(boxed_props))
 }
 
@@ -146,7 +145,7 @@ pub fn string_type() -> Rc<TypeExpression> {
 }
 
 pub fn type_ref(id: &str) -> Rc<TypeExpression> {
-    Rc::new(TypeExpression::TypeRef(id.to_string()))
+    Rc::new(TypeExpression::TypeRef(id.into()))
 }
 
 pub fn query(
@@ -157,7 +156,7 @@ pub fn query(
     let query_bindings = bindings
         .iter()
         .map(|(ids, expr, is_negated)| {
-            let qb_ids = ids.iter().map(|id| id.to_string()).collect();
+            let qb_ids = ids.iter().map(|id| id.into()).collect();
             if *is_negated {
                 QueryBinding::new_negated(qb_ids, expr.clone())
             } else {
@@ -173,16 +172,16 @@ pub fn query(
 }
 
 pub fn edge_prop(expr: Rc<Expression>, edge: &str) -> Rc<Expression> {
-    Rc::new(Expression::EdgeProp(expr, edge.to_string()))
+    Rc::new(Expression::EdgeProp(expr, edge.into()))
 }
 
 pub fn lambda(args: Vec<&str>, body: Rc<Expression>) -> Rc<Expression> {
-    let args = args.iter().map(|a| a.to_string()).collect();
+    let args = args.iter().map(|a| a.into()).collect();
     Rc::new(Expression::Lambda(Lambda::new(LambdaArgs::new(args), body)))
 }
 
 pub fn symbol(id: &str) -> Rc<Expression> {
-    Rc::new(Expression::Symbol(id.to_string()))
+    Rc::new(Expression::Symbol(id.into()))
 }
 
 pub fn quoted(expr: Rc<Expression>) -> Rc<Expression> {

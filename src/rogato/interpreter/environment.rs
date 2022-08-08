@@ -20,7 +20,7 @@ impl Environment {
     #[allow(dead_code)]
     pub fn new() -> Environment {
         let mut modules = HashMap::new();
-        let mod_name = "Std".to_string();
+        let mod_name: Identifier = "Std".into();
         modules.insert(mod_name.clone(), Module::new(&mod_name));
         let state = State {
             parent: None,
@@ -36,12 +36,12 @@ impl Environment {
     #[allow(dead_code)]
     pub fn new_with_module(module_name: &str) -> Environment {
         let mut modules = HashMap::new();
-        modules.insert(module_name.to_string(), Module::new(module_name));
+        modules.insert(module_name.into(), Module::new(module_name));
         let state = State {
             parent: None,
             variables: HashMap::new(),
             modules,
-            current_module_name: module_name.to_string(),
+            current_module_name: module_name.into(),
         };
         Environment {
             state: Rc::new(RefCell::new(state)),

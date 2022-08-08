@@ -13,6 +13,7 @@ use crate::rogato::ast::{
     Identifier, Program, AST,
 };
 use peg::{error::ParseError, parser, str::LineCol};
+use smol_str::SmolStr;
 
 parser! {
 /// Doc comment
@@ -77,8 +78,8 @@ grammar parser() for str {
         }
 
     rule use_stmt() -> AST
-        = "use " id:constant_or_type_ref() {
-            AST::Use(id.to_string())
+        = "use " id:struct_identifier() {
+            AST::Use(id)
         }
 
     rule fn_def() -> AST
@@ -483,7 +484,7 @@ grammar parser() for str {
             join_string("!", id)
         }
         / id:$(['+' | '-' | '*' | '/' | '>' | '<' | '=' | '^' | '=' | '|' | '%'])+ id2:$(['+' | '-' | '*' | '/' | '>' | '<' | '=' | '!' | '^' | '=' | '|' | '%'])* {
-            join_string(String::from_iter(id).as_str(), id2)
+            join_string(SmolStr::from_iter(id).as_str(), id2)
         }
 
 
@@ -528,9 +529,10 @@ pub fn parse_expr(str: &str) -> ParseExprResult {
     }
 }
 
-fn join_string(first: &str, rest: Vec<&str>) -> String {
-    let mut s = String::new();
-    s.push_str(first);
-    s.push_str(String::from_iter(rest).as_str());
-    s
+fn join_string(first: &str, rest: Vec<&str>) -> SmolStr {
+    let mut parts = vec![first];
+    for part in rest {
+        parts.push(part)
+    }
+    SmolStr::from_iter(parts)
 }

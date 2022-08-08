@@ -77,7 +77,7 @@ impl LetBindings {
         }
     }
 
-    pub fn iter(&self) -> std::slice::Iter<(String, Rc<Expression>)> {
+    pub fn iter(&self) -> std::slice::Iter<(Identifier, Rc<Expression>)> {
         self.bindings.iter()
     }
 }

@@ -48,13 +48,12 @@ impl EvalContext {
         val::string(format!("FnDef {}", id))
     }
 
-    pub fn call_function<ID: ToString>(
+    pub fn call_function(
         &self,
-        id: ID,
+        id: &Identifier,
         args: &[ValueRef],
     ) -> Option<Result<ValueRef, EvalError>> {
-        let id = id.to_string();
-        self.current_module().lookup_fn(&id).map(|func| {
+        self.current_module().lookup_fn(id).map(|func| {
             let given_argc = args.len();
             let expected_argc = func.args().len();
             if given_argc != expected_argc {

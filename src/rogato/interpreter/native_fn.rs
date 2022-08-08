@@ -69,7 +69,7 @@ pub fn std_env() -> Environment {
 fn op_fn_def(id: &str, body: Rc<FnDefBody>) -> Rc<FnDef> {
     FnDef::new(
         id.to_string(),
-        FnDefArgs::new(vec!["left".to_string(), "right".to_string()]),
+        FnDefArgs::new(vec!["left".into(), "right".into()]),
         body,
     )
 }
@@ -93,5 +93,5 @@ fn with_number_op_args(
 }
 
 fn invalid_args(id: &str) -> EvalError {
-    EvalError::NativeFnFailed(NativeFnError::InvalidArguments(id.to_string()))
+    EvalError::NativeFnFailed(NativeFnError::InvalidArguments(id.into()))
 }

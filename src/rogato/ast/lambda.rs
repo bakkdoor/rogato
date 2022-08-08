@@ -1,5 +1,7 @@
 use std::{fmt::Display, rc::Rc};
 
+use smol_str::SmolStr;
+
 use crate::rogato::{
     db::{val, ValueRef},
     interpreter::{EvalContext, EvalError, Evaluate},
@@ -71,7 +73,7 @@ pub struct LambdaArgs<A: Display + ASTDepth> {
     args: Vec<A>,
 }
 
-impl ASTDepth for String {
+impl ASTDepth for SmolStr {
     fn ast_depth(&self) -> usize {
         1
     }

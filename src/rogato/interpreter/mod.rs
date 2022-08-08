@@ -57,7 +57,7 @@ impl From<NativeFnError> for EvalError {
     }
 }
 
-type Identifier = String;
+type Identifier = super::ast::Identifier;
 
 pub trait Evaluate<T> {
     fn evaluate(&self, context: &mut EvalContext) -> Result<T, EvalError>;

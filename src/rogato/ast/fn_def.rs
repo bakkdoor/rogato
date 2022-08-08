@@ -16,9 +16,9 @@ pub struct FnDef {
 }
 
 impl FnDef {
-    pub fn new<ID: ToString>(id: ID, args: FnDefArgs, body: Rc<FnDefBody>) -> Rc<FnDef> {
+    pub fn new<ID: Into<Identifier>>(id: ID, args: FnDefArgs, body: Rc<FnDefBody>) -> Rc<FnDef> {
         Rc::new(FnDef {
-            id: id.to_string(),
+            id: id.into(),
             args,
             body,
         })
@@ -94,7 +94,7 @@ impl FnDefArgs {
         self.args.len()
     }
 
-    pub fn iter(&self) -> std::slice::Iter<String> {
+    pub fn iter(&self) -> std::slice::Iter<Identifier> {
         self.args.iter()
     }
 }
