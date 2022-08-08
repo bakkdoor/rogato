@@ -1,18 +1,17 @@
 use std::{ops::Deref, rc::Rc};
 use thiserror::Error;
 
-use crate::rogato::{
-    ast::{
-        expression::FnDefArgs,
-        fn_def::{FnDef, FnDefBody},
-    },
-    interpreter::{
-        val,
-        val::{Value, ValueRef},
-    },
+use crate::rogato::ast::{
+    expression::FnDefArgs,
+    fn_def::{FnDef, FnDefBody},
 };
 
-use super::{environment::Environment, EvalContext, EvalError, Identifier};
+use super::{
+    environment::Environment,
+    val,
+    val::{Value, ValueRef},
+    EvalContext, EvalError, Identifier,
+};
 
 pub type NativeFn = fn(context: &mut EvalContext, args: &[ValueRef]) -> Result<ValueRef, EvalError>;
 

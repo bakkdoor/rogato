@@ -1,7 +1,7 @@
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
-use super::{module::Module, Identifier};
-use crate::rogato::{ast::type_expression::TypeDef, interpreter::ValueRef};
+use super::{module::Module, Identifier, ValueRef};
+use crate::rogato::ast::type_expression::TypeDef;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 struct State {

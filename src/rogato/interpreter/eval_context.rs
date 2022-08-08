@@ -1,11 +1,12 @@
-use super::{environment::Environment, module::Module, native_fn, EvalError, Identifier};
+use super::{
+    environment::Environment, module::Module, native_fn, val, EvalError, Identifier, ValueRef,
+};
 use crate::rogato::{
     ast::{expression::Query, fn_def::FnDef, type_expression::TypeDef},
     db::{
         query::{QueryPlanner, QueryResult},
         ObjectStorage,
     },
-    interpreter::{val, ValueRef},
 };
 use std::rc::Rc;
 

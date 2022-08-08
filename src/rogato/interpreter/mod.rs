@@ -5,7 +5,7 @@ pub mod native_fn;
 pub mod val;
 
 pub use eval_context::EvalContext;
-pub use val::ValueRef;
+pub use val::{Value, ValueRef};
 
 use thiserror::Error;
 
