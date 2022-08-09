@@ -69,7 +69,7 @@ fn main() -> anyhow::Result<()> {
         print_help()
     }
 
-    return Ok(());
+    Ok(())
 }
 
 fn read_parse_file(file_path: &Path) {
