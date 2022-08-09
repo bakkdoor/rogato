@@ -1,16 +1,28 @@
-module Std.Map { map, mapKeys, count, isEmpty }
+module Std.Map { map, mapKeys, count, isEmpty, mapValues, reduce, keys, fromPairs }
 
 let map {} _ = []
 let map {k => v :: rest} f = [f {k, v} :: map rest f]
 
-let mapKeys {} _ = []
-let mapKeys {k => v :: rest} f = { (f k) => v :: mapKeys rest f }
+let mapKeys m f = mapKeys_ [] m f
 
-let mapValues {} _ = []
-let mapValues {k => v :: rest} f = { k => (f v) :: mapValues rest f }
+let mapKeys_ acc {} _ =
+  fromPairs acc
+let mapKeys_ acc {k => v :: rest} f =
+  mapKeys_  [{f k, v} :: acc] rest f
 
-let count {} = 0
-let count {_ => _ :: rest} = 1 + count rest
+let mapValues {} _  = []
+let mapValues m f = mapValues_ [] m f
+
+let mapValues_ acc {} _ =
+  fromPairs acc
+
+let mapValues_ acc {k => v :: rest} f =
+  mapValues_ [{k, f v} :: acc] rest f
+
+let count m = count_ 0 m
+
+let count_ acc {} = acc
+let count_ acc {_ => _ :: rest} = count_ (acc + 1) rest
 
 let isEmpty m = (count m) == 0
 
@@ -18,5 +30,12 @@ let reduce {} acc _ = acc
 let reduce {k => v :: rest} acc f =
   reduce rest (f {k,v} acc) f
 
-let keys {} = []
-let keys {k => _ :: rest} = [k :: keys rest]
+let keys m = keys_ [] m
+
+let keys_ acc {} = acc
+let keys_ acc {k => _ :: rest} = keys_ [k :: acc] rest
+
+let fromPairs list = fromPairs_ {} list
+
+let fromPairs_ acc [] = acc
+let fromPairs_ acc [{k,v} :: rest] = fromPairs_ {k => v :: acc} rest

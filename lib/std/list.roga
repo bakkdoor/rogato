@@ -1,12 +1,20 @@
-module Std.List { map, count, isEmpty }
+module Std.List { map, count, isEmpty, reverse }
 
-let map [] f = []
-let map [x] f = [f x]
-let map [x :: xs] = [f x :: map f xs]
+let map list f = map_ [] list f
 
-let count [] = 0
-let count [_] = 1
-let count [_ :: xs] = 1 + (count cxs)
+let map_ acc [] _ = acc
+let map_ acc [x :: xs] f = map_ [f x :: acc] xs f
+
+let count list = count_ 0 list
+
+let count_ acc [] = acc
+let count_ acc [_ :: xs] = count_ (acc + 1) xs
 
 let isEmpty [] = true
 let isEmpty _ = false
+
+let reverse list = reverse_ [] list
+
+let reverse_ acc [] = acc
+let reverse_ acc [x :: xs] = reverse_ [x :: acc] xs
+
