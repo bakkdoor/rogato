@@ -1,11 +1,11 @@
 use super::{expression::Expression, visitor::Visitor, AST};
 
 pub trait Walk {
-    fn walk<V: Visitor>(&self, v: &mut V);
+    fn walk<V: Visitor<()>>(&self, v: &mut V);
 }
 
 impl Walk for AST {
-    fn walk<V: Visitor>(&self, v: &mut V) {
+    fn walk<V: Visitor<()>>(&self, v: &mut V) {
         match self {
             AST::RootComment(c) => v.root_comment(c),
             AST::ModuleDef(mod_def) => v.module_def(mod_def),
@@ -20,7 +20,7 @@ impl Walk for AST {
 }
 
 impl Walk for Expression {
-    fn walk<V: Visitor>(&self, v: &mut V) {
+    fn walk<V: Visitor<()>>(&self, v: &mut V) {
         match self {
             Expression::Commented(c, expr) => {
                 v.commented(c, expr);

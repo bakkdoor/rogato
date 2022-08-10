@@ -176,7 +176,7 @@ impl ASTDepth for FnDefBody {
 }
 
 impl Walk for FnDefBody {
-    fn walk<V: super::visitor::Visitor>(&self, v: &mut V) {
+    fn walk<V: super::visitor::Visitor<()>>(&self, v: &mut V) {
         match self {
             FnDefBody::RogatoFn(expr) => expr.walk(v),
             FnDefBody::NativeFn(_) => {}

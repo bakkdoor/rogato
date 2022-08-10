@@ -44,7 +44,7 @@ impl ASTDepth for Lambda {
 }
 
 impl Walk for Lambda {
-    fn walk<V: super::visitor::Visitor>(&self, v: &mut V) {
+    fn walk<V: super::visitor::Visitor<()>>(&self, v: &mut V) {
         v.lambda(self);
         self.body.walk(v);
     }

@@ -54,7 +54,7 @@ impl ASTDepth for Query {
 }
 
 impl Walk for Query {
-    fn walk<V: super::visitor::Visitor>(&self, v: &mut V) {
+    fn walk<V: super::visitor::Visitor<()>>(&self, v: &mut V) {
         v.query(self);
         for binding in self.bindings.iter() {
             binding.val.walk(v);

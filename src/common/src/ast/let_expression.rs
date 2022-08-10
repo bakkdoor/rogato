@@ -36,7 +36,7 @@ impl ASTDepth for LetExpression {
 }
 
 impl Walk for LetExpression {
-    fn walk<V: Visitor>(&self, v: &mut V) {
+    fn walk<V: Visitor<()>>(&self, v: &mut V) {
         v.let_(self);
         self.body.walk(v);
         for (_id, val) in self.bindings.iter() {
