@@ -552,6 +552,7 @@ dependencies = [
  "peg",
  "regex",
  "rogato-common",
+ "rogato-db",
  "rogato-interpreter",
  "rogato-parser",
  "serde",
@@ -576,11 +577,23 @@ dependencies = [
 ]
 
 [[package]]
-name = "rogato-interpreter"
+name = "rogato-db"
 version = "0.1.0"
 dependencies = [
  "indradb-lib",
  "rogato-common",
+ "rogato-parser",
+ "serde_json",
+ "thiserror",
+ "uuid 1.1.2",
+]
+
+[[package]]
+name = "rogato-interpreter"
+version = "0.1.0"
+dependencies = [
+ "rogato-common",
+ "rogato-db",
  "rogato-parser",
  "serde_json",
  "thiserror",

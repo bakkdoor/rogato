@@ -9,7 +9,7 @@ pub use rogato_common::val::{NativeFnError, Value, ValueRef};
 
 use thiserror::Error;
 
-use super::db::query::QueryError;
+use super::query_planner::QueryError;
 
 #[derive(Error, Debug, PartialEq, Eq, Clone)]
 pub enum EvalError {

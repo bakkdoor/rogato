@@ -4,12 +4,9 @@ use std::io::{self, Read};
 use std::path::Path;
 
 use indent_write::indentable::Indentable;
+
 #[allow(unused_imports)]
-use rogato_interpreter::{
-    db,
-    db::{EdgeQueryExt, VertexQueryExt},
-    eval::{EvalContext, Evaluate},
-};
+use rogato_interpreter::eval::{EvalContext, Evaluate};
 use rogato_parser::{parse, parse_expr};
 use std::fs::File;
 

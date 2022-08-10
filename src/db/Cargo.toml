@@ -1,5 +1,5 @@
 [package]
-name = "rogato-interpreter"
+name = "rogato-db"
 version = "0.1.0"
 authors = ["Christopher Bertels <bakkdoor@flasht.de>"]
 edition = "2021"
@@ -9,7 +9,7 @@ repository = "https://github.com/bakkdoor/rogato"
 [dependencies]
 rogato-common = { path = "../common" }
 rogato-parser = { path = "../parser" }
-rogato-db = { path = "../db" }
 thiserror = "1.0"
 uuid = { version = "~1.1.2", features = ["v1", "serde"] }
+indradb-lib = { version = "3.0.2", features = ["rocksdb-datastore"] }
 serde_json = "1.0.82"

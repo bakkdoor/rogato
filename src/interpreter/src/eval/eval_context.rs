@@ -1,17 +1,13 @@
 use rogato_common::ast::fn_def::FnDefBody;
 
 use super::{environment::Environment, module::Module, native_fn, EvalError, Identifier, ValueRef};
-use crate::{
-    db::{
-        query::{QueryPlanner, QueryResult},
-        ObjectStorage,
-    },
-    eval::Evaluate,
-};
+use crate::eval::Evaluate;
+use crate::query_planner::{QueryPlanner, QueryResult};
 use rogato_common::{
     ast::{expression::Query, fn_def::FnDef, type_expression::TypeDef},
     val,
 };
+use rogato_db::db::ObjectStorage;
 use std::rc::Rc;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
