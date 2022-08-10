@@ -6,7 +6,7 @@ use std::path::Path;
 use indent_write::indentable::Indentable;
 
 #[allow(unused_imports)]
-use rogato_interpreter::eval::{EvalContext, Evaluate};
+use rogato_interpreter::{EvalContext, Evaluate};
 use rogato_parser::{parse, parse_expr};
 use std::fs::File;
 

@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use crate::eval::{EvalContext, EvalError, Evaluate};
+use crate::{EvalContext, EvalError, Evaluate};
 use rogato_common::{
     ast::literal::{Literal, TupleItems},
     val::{self, ValueRef},

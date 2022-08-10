@@ -1,4 +1,4 @@
-use crate::eval::{EvalContext, EvalError, Evaluate, ValueRef};
+use crate::{EvalContext, EvalError, Evaluate, ValueRef};
 
 use rogato_common::ast::{expression::Query, query::QueryBinding};
 use thiserror::Error;

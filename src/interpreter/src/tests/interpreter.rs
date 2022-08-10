@@ -1,4 +1,4 @@
-use crate::eval::{EvalContext, Evaluate};
+use crate::{EvalContext, Evaluate};
 use rogato_common::val;
 use rogato_parser::parse_expr;
 

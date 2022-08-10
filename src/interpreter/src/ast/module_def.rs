@@ -3,7 +3,7 @@ use rogato_common::{
     val::{self, ValueRef},
 };
 
-use crate::eval::{EvalContext, EvalError, Evaluate};
+use crate::{EvalContext, EvalError, Evaluate};
 
 impl Evaluate<ValueRef> for ModuleDef {
     fn evaluate(&self, _context: &mut EvalContext) -> Result<ValueRef, EvalError> {

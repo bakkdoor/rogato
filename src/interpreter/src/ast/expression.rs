@@ -1,4 +1,4 @@
-use crate::eval::{EvalContext, EvalError, Evaluate};
+use crate::{EvalContext, EvalError, Evaluate};
 use rogato_common::{
     ast::{
         expression::Expression,

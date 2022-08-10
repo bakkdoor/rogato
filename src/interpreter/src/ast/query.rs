@@ -1,6 +1,6 @@
 use rogato_common::ast::query::{Query, QueryGuards};
 
-use crate::eval::{EvalContext, EvalError, Evaluate, ValueRef};
+use crate::{EvalContext, EvalError, Evaluate, ValueRef};
 
 impl Evaluate<ValueRef> for Query {
     fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {

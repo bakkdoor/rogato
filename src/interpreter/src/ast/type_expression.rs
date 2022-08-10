@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use crate::eval::{EvalContext, EvalError, Evaluate, Identifier, ValueRef};
+use crate::{EvalContext, EvalError, Evaluate, Identifier, ValueRef};
 use rogato_common::{
     ast::type_expression::{TypeDef, TypeExpression},
     val,

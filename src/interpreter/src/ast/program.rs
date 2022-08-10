@@ -1,6 +1,9 @@
-use rogato_common::{val::{ValueRef, self}, ast::Program};
+use rogato_common::{
+    ast::Program,
+    val::{self, ValueRef},
+};
 
-use crate::eval::{Evaluate, EvalContext, EvalError};
+use crate::{EvalContext, EvalError, Evaluate};
 
 impl Evaluate<ValueRef> for Program {
     fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {

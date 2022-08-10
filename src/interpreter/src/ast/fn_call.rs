@@ -1,6 +1,6 @@
 use rogato_common::{ast::fn_call::FnCallArgs, val::ValueRef};
 
-use crate::eval::{EvalContext, EvalError, Evaluate};
+use crate::{EvalContext, EvalError, Evaluate};
 
 impl Evaluate<Vec<ValueRef>> for FnCallArgs {
     fn evaluate(&self, context: &mut EvalContext) -> Result<Vec<ValueRef>, EvalError> {
