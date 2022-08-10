@@ -1,9 +1,4 @@
-use crate::{
-    eval::{native_fn::NativeFn, EvalContext, EvalError, Evaluate},
-    util::indent,
-    val,
-    val::ValueRef,
-};
+use crate::{util::indent, val::NativeFn};
 
 use super::{expression::Expression, walker::Walk, ASTDepth, Identifier};
 use std::{borrow::Borrow, fmt::Display, rc::Rc};
@@ -32,8 +27,8 @@ impl FnDef {
         &self.args
     }
 
-    pub fn body(&self) -> &FnDefBody {
-        &self.body
+    pub fn body(&self) -> Rc<FnDefBody> {
+        Rc::clone(&self.body)
     }
 }
 
@@ -59,24 +54,6 @@ impl Display for FnDef {
 impl ASTDepth for FnDef {
     fn ast_depth(&self) -> usize {
         1 + self.args.len() + self.body.ast_depth()
-    }
-}
-
-impl Evaluate<ValueRef> for FnDef {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
-        context.define_fn(FnDef::new(
-            self.id.clone(),
-            self.args.clone(),
-            self.body.clone(),
-        ));
-        Ok(val::object(vec![
-            ("type", val::string("Fn")),
-            ("name", val::string(self.id.to_string())),
-            (
-                "args",
-                val::list(self.args.iter().map(val::string).collect::<Vec<ValueRef>>()),
-            ),
-        ]))
     }
 }
 
@@ -127,17 +104,6 @@ impl FnDefBody {
 
     pub fn rogato(expr: Rc<Expression>) -> FnDefBody {
         FnDefBody::RogatoFn(expr)
-    }
-
-    pub fn call(
-        &self,
-        context: &mut EvalContext,
-        args: &[ValueRef],
-    ) -> Result<ValueRef, EvalError> {
-        match self {
-            FnDefBody::NativeFn(f) => f(context, args),
-            FnDefBody::RogatoFn(expr) => expr.evaluate(context),
-        }
     }
 }
 

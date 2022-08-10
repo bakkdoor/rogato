@@ -2,12 +2,7 @@ use std::{fmt::Display, rc::Rc};
 
 use smol_str::SmolStr;
 
-use crate::{
-    eval::{EvalContext, EvalError, Evaluate},
-    util::indent,
-    val,
-    val::ValueRef,
-};
+use crate::util::indent;
 
 use super::{expression::Expression, walker::Walk, ASTDepth, Identifier};
 
@@ -20,6 +15,21 @@ pub struct Lambda {
 impl Lambda {
     pub fn new(args: LambdaArgs<Identifier>, body: Rc<Expression>) -> Lambda {
         Lambda { args, body }
+    }
+    pub fn get_arg(&self, i: usize) -> Option<&Identifier> {
+        self.args.get(i)
+    }
+
+    pub fn args(&self) -> &LambdaArgs<Identifier> {
+        &self.args
+    }
+
+    pub fn arg_count(&self) -> usize {
+        self.args.len()
+    }
+
+    pub fn body(&self) -> Rc<Expression> {
+        Rc::clone(&self.body)
     }
 }
 
@@ -47,25 +57,6 @@ impl Walk for Lambda {
     fn walk<V: super::visitor::Visitor<()>>(&self, v: &mut V) {
         v.lambda(self);
         self.body.walk(v);
-    }
-}
-
-impl Evaluate<ValueRef> for Lambda {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
-        let evaluated_args: Vec<ValueRef> = self.args.evaluate(context)?;
-        let mut fn_context = context.with_child_env();
-        let given_args = evaluated_args.len();
-        let expected_args = self.args.len();
-
-        if given_args != expected_args {
-            return Err(EvalError::LambdaArityMismatch(expected_args, given_args));
-        }
-
-        for (i, arg_val) in evaluated_args.iter().enumerate().take(self.args.len()) {
-            let arg_name = self.args.get(i).unwrap().clone();
-            fn_context.define_var(&arg_name, arg_val.clone())
-        }
-        self.body.evaluate(&mut fn_context)
     }
 }
 
@@ -120,25 +111,5 @@ impl<A: Display + ASTDepth> Display for LambdaArgs<A> {
 impl<A: Display + ASTDepth> ASTDepth for LambdaArgs<A> {
     fn ast_depth(&self) -> usize {
         self.args.iter().map(|a| a.ast_depth()).sum::<usize>()
-    }
-}
-
-impl<A: Display + ASTDepth + Evaluate<ValueRef>> Evaluate<ValueRef> for LambdaArgs<A> {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
-        let mut vec = Vec::new();
-        for arg in self.args.iter() {
-            vec.push(arg.evaluate(context)?)
-        }
-        Ok(val::list(vec))
-    }
-}
-
-impl<A: Display + ASTDepth + Evaluate<ValueRef>> Evaluate<Vec<ValueRef>> for LambdaArgs<A> {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<Vec<ValueRef>, EvalError> {
-        let mut vec = Vec::new();
-        for arg in self.args.iter() {
-            vec.push(arg.evaluate(context)?)
-        }
-        Ok(vec)
     }
 }

@@ -22,19 +22,7 @@ pub mod walker;
 use smol_str::SmolStr;
 pub type Identifier = SmolStr;
 
-impl Evaluate<ValueRef> for Identifier {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
-        match context.lookup_var(self) {
-            Some(val) => Ok(val),
-            None => Err(EvalError::VarNotDefined(self.clone())),
-        }
-    }
-}
-
 pub use program::Program;
-
-use super::eval::{EvalContext, EvalError, Evaluate, ValueRef};
-use super::val;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum AST {
@@ -69,18 +57,6 @@ impl ASTDepth for AST {
             AST::ModuleDef(mod_def) => mod_def.ast_depth(),
             AST::Use(_) => 1,
             AST::TypeDef(type_def) => type_def.ast_depth(),
-        }
-    }
-}
-
-impl Evaluate<ValueRef> for AST {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
-        match self {
-            AST::RootComment(_) => Ok(val::null()),
-            AST::FnDef(fn_def) => fn_def.evaluate(context),
-            AST::ModuleDef(mod_def) => mod_def.evaluate(context),
-            AST::Use(_id) => Ok(val::null()),
-            AST::TypeDef(type_def) => type_def.evaluate(context),
         }
     }
 }

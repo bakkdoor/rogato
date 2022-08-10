@@ -1,10 +1,6 @@
 use std::{fmt::Display, rc::Rc};
 
-use crate::{
-    eval::{EvalContext, EvalError, Evaluate, ValueRef},
-    util::indent,
-    val,
-};
+use crate::util::indent;
 
 use self::super::expression::{LambdaArgs, TupleItems};
 
@@ -24,6 +20,10 @@ impl TypeDef {
     pub fn id(&self) -> Identifier {
         self.id.clone()
     }
+
+    pub fn type_expr(&self) -> Rc<TypeExpression> {
+        Rc::clone(&self.type_expr)
+    }
 }
 
 impl Display for TypeDef {
@@ -35,16 +35,6 @@ impl Display for TypeDef {
 impl ASTDepth for TypeDef {
     fn ast_depth(&self) -> usize {
         1 + self.type_expr.ast_depth()
-    }
-}
-
-impl Evaluate<ValueRef> for TypeDef {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
-        Ok(val::object(vec![
-            ("type", val::string("TypeDef")),
-            ("name", val::string(self.id.to_string())),
-            ("type_expr", self.type_expr.evaluate(context)?),
-        ]))
     }
 }
 
@@ -110,49 +100,5 @@ impl ASTDepth for TypeExpression {
                     .sum::<usize>()
             }
         }
-    }
-}
-
-fn type_ref<ID: ToString>(id: ID) -> ValueRef {
-    val::object(vec![
-        ("type", val::string("TypeRef")),
-        ("name", val::string(id.to_string())),
-    ])
-}
-
-impl Evaluate<ValueRef> for TypeExpression {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
-        Ok(match self {
-            TypeExpression::IntType => type_ref("Int"),
-            TypeExpression::StringType => type_ref("String"),
-            TypeExpression::TypeRef(id) => type_ref(id),
-            TypeExpression::FunctionType(arg_types, return_type) => val::object(vec![
-                ("type", val::string("FunctionType")),
-                ("args", arg_types.evaluate(context)?),
-                ("return_type", return_type.evaluate(context)?),
-            ]),
-            TypeExpression::TupleType(el_types) => val::object(vec![
-                ("type", val::string("TupleType")),
-                ("el_types", el_types.evaluate(context)?),
-            ]),
-            TypeExpression::ListType(type_expr) => val::object(vec![
-                ("type", val::string("ListType")),
-                ("type_expr", type_expr.evaluate(context)?),
-            ]),
-            TypeExpression::StructType(prop_types) => val::object(vec![
-                ("type", val::string("StructType")),
-                ("props", prop_types.evaluate(context)?),
-            ]),
-        })
-    }
-}
-
-impl Evaluate<ValueRef> for Vec<(Identifier, Rc<TypeExpression>)> {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
-        let mut vec = Vec::new();
-        for (_id, type_expr) in self.iter() {
-            vec.push(type_expr.evaluate(context)?)
-        }
-        Ok(val::list(vec))
     }
 }

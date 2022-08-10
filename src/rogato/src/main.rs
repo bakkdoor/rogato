@@ -5,7 +5,7 @@ use std::path::Path;
 
 use indent_write::indentable::Indentable;
 #[allow(unused_imports)]
-use rogato_common::{
+use rogato_interpreter::{
     db,
     db::{EdgeQueryExt, VertexQueryExt},
     eval::{EvalContext, Evaluate},

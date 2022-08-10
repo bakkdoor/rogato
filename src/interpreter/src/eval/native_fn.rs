@@ -1,27 +1,14 @@
 use std::{ops::Deref, rc::Rc};
-use thiserror::Error;
 
-use super::{environment::Environment, EvalContext, EvalError, Identifier};
-use crate::ast::{
-    expression::FnDefArgs,
-    fn_def::{FnDef, FnDefBody},
-};
-use crate::{
-    val,
+use super::environment::Environment;
+use rogato_common::{
+    ast::{
+        expression::FnDefArgs,
+        fn_def::{FnDef, FnDefBody},
+    },
+    val::{self, NativeFn, NativeFnError},
     val::{Value, ValueRef},
 };
-
-pub type NativeFn = fn(context: &mut EvalContext, args: &[ValueRef]) -> Result<ValueRef, EvalError>;
-
-#[derive(Error, Debug, PartialEq, Eq, Clone)]
-pub enum NativeFnError {
-    #[allow(dead_code)]
-    #[error("NativeFnError: Unknown error: {0}")]
-    Unknown(String),
-
-    #[error("NativeFnError: Invalid arguments for {0}")]
-    InvalidArguments(Identifier),
-}
 
 pub fn std_env() -> Environment {
     let env = Environment::new_with_module("Std.Math");
@@ -29,32 +16,32 @@ pub fn std_env() -> Environment {
 
     module.fn_def(op_fn_def(
         "+",
-        fn_body(move |_ctx, args| with_number_op_args("+", args, |a, b| Ok(a + b))),
+        fn_body(move |args| with_number_op_args("+", args, |a, b| Ok(a + b))),
     ));
 
     module.fn_def(op_fn_def(
         "-",
-        fn_body(move |_ctx, args| with_number_op_args("-", args, |a, b| Ok(a - b))),
+        fn_body(move |args| with_number_op_args("-", args, |a, b| Ok(a - b))),
     ));
 
     module.fn_def(op_fn_def(
         "*",
-        fn_body(move |_ctx, args| with_number_op_args("*", args, |a, b| Ok(a * b))),
+        fn_body(move |args| with_number_op_args("*", args, |a, b| Ok(a * b))),
     ));
 
     module.fn_def(op_fn_def(
         "/",
-        fn_body(move |_ctx, args| with_number_op_args("/", args, |a, b| Ok(a / b))),
+        fn_body(move |args| with_number_op_args("/", args, |a, b| Ok(a / b))),
     ));
 
     module.fn_def(op_fn_def(
         "%",
-        fn_body(move |_ctx, args| with_number_op_args("%", args, |a, b| Ok(a % b))),
+        fn_body(move |args| with_number_op_args("%", args, |a, b| Ok(a % b))),
     ));
 
     module.fn_def(op_fn_def(
         "^",
-        fn_body(move |_ctx, args| {
+        fn_body(move |args| {
             with_number_op_args("^", args, |a, b| match u32::try_from(b) {
                 Ok(exponent) => Ok(a.pow(exponent)),
                 Err(_) => Err(invalid_args("^")),
@@ -80,8 +67,8 @@ fn fn_body(f: NativeFn) -> Rc<FnDefBody> {
 fn with_number_op_args(
     id: &str,
     args: &[ValueRef],
-    func: fn(i64, i64) -> Result<i64, EvalError>,
-) -> Result<ValueRef, EvalError> {
+    func: fn(i64, i64) -> Result<i64, NativeFnError>,
+) -> Result<ValueRef, NativeFnError> {
     match (args.get(0), args.get(1)) {
         (Some(a), Some(b)) => match ((*a).deref(), (*b).deref()) {
             (Value::Int64(a), Value::Int64(b)) => func(*a, *b).map(val::int64),
@@ -91,6 +78,6 @@ fn with_number_op_args(
     }
 }
 
-fn invalid_args(id: &str) -> EvalError {
-    EvalError::NativeFnFailed(NativeFnError::InvalidArguments(id.into()))
+fn invalid_args(id: &str) -> NativeFnError {
+    NativeFnError::InvalidArguments(id.into())
 }

@@ -568,21 +568,23 @@ dependencies = [
  "anyhow",
  "clap",
  "indent_write",
- "indradb-lib",
  "regex",
  "serde",
  "serde_json",
  "smol_str",
  "thiserror",
- "uuid 1.1.2",
 ]
 
 [[package]]
 name = "rogato-interpreter"
 version = "0.1.0"
 dependencies = [
+ "indradb-lib",
  "rogato-common",
  "rogato-parser",
+ "serde_json",
+ "thiserror",
+ "uuid 1.1.2",
 ]
 
 [[package]]

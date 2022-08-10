@@ -1,9 +1,6 @@
 use std::{fmt::Display, rc::Rc};
 
-use crate::{
-    eval::{EvalContext, EvalError, Evaluate, ValueRef},
-    util::indent,
-};
+use crate::util::indent;
 
 use super::{expression::Expression, visitor::Visitor, walker::Walk, ASTDepth, Identifier};
 
@@ -16,6 +13,14 @@ pub struct LetExpression {
 impl LetExpression {
     pub fn new(bindings: LetBindings, body: Rc<Expression>) -> LetExpression {
         LetExpression { bindings, body }
+    }
+
+    pub fn bindings(&self) -> &LetBindings {
+        &self.bindings
+    }
+
+    pub fn body(&self) -> Rc<Expression> {
+        Rc::clone(&self.body)
     }
 }
 
@@ -42,18 +47,6 @@ impl Walk for LetExpression {
         for (_id, val) in self.bindings.iter() {
             val.walk(v);
         }
-    }
-}
-
-impl Evaluate<ValueRef> for LetExpression {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
-        for (id, expr) in self.bindings.iter() {
-            match expr.evaluate(context) {
-                Ok(val) => context.define_var(id, val),
-                Err(e) => return Err(e),
-            }
-        }
-        self.body.evaluate(context)
     }
 }
 

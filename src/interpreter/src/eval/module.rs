@@ -2,8 +2,8 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::{collections::HashMap, fmt::Display};
 
-use crate::ast::{fn_def::FnDef, type_expression::TypeDef};
 use crate::eval::ValueRef;
+use rogato_common::ast::{fn_def::FnDef, type_expression::TypeDef};
 
 use super::Identifier;
 

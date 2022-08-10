@@ -1,10 +1,15 @@
+use rogato_common::ast::fn_def::FnDefBody;
+
 use super::{environment::Environment, module::Module, native_fn, EvalError, Identifier, ValueRef};
 use crate::{
-    ast::{expression::Query, fn_def::FnDef, type_expression::TypeDef},
     db::{
         query::{QueryPlanner, QueryResult},
         ObjectStorage,
     },
+    eval::Evaluate,
+};
+use rogato_common::{
+    ast::{expression::Query, fn_def::FnDef, type_expression::TypeDef},
     val,
 };
 use std::rc::Rc;
@@ -56,7 +61,7 @@ impl EvalContext {
     }
 
     pub fn call_function(
-        &self,
+        &mut self,
         id: &Identifier,
         args: &[ValueRef],
     ) -> Option<Result<ValueRef, EvalError>> {
@@ -78,7 +83,11 @@ impl EvalContext {
             for (arg_name, arg_val) in func.args().iter().zip(args) {
                 fn_ctx.define_var(arg_name, arg_val.clone())
             }
-            func.body().call(&mut fn_ctx, args)
+
+            match &*(func.body()) {
+                FnDefBody::NativeFn(f) => f(args).map_err(EvalError::from),
+                FnDefBody::RogatoFn(expr) => expr.evaluate(self),
+            }
         })
     }
 

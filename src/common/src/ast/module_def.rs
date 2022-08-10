@@ -1,8 +1,3 @@
-use crate::{
-    eval::{EvalContext, EvalError, Evaluate, ValueRef},
-    val,
-};
-
 use super::{ASTDepth, Identifier};
 use std::fmt::Display;
 
@@ -16,6 +11,13 @@ impl ModuleDef {
     pub fn new(id: Identifier, exports: ModuleExports) -> ModuleDef {
         ModuleDef { id, exports }
     }
+
+    pub fn id(&self) -> &Identifier {
+        &self.id
+    }
+    pub fn exports(&self) -> &ModuleExports {
+        &self.exports
+    }
 }
 
 impl Display for ModuleDef {
@@ -27,24 +29,6 @@ impl Display for ModuleDef {
 impl ASTDepth for ModuleDef {
     fn ast_depth(&self) -> usize {
         1 + self.exports.ast_depth()
-    }
-}
-
-impl Evaluate<ValueRef> for ModuleDef {
-    fn evaluate(&self, _context: &mut EvalContext) -> Result<ValueRef, EvalError> {
-        Ok(val::object(vec![
-            ("type", val::string("Module")),
-            ("name", val::string(self.id.clone())),
-            (
-                "exports",
-                val::list(
-                    self.exports
-                        .iter()
-                        .map(|e| val::string(e.to_string()))
-                        .collect::<Vec<ValueRef>>(),
-                ),
-            ),
-        ]))
     }
 }
 

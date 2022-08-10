@@ -1,14 +1,13 @@
+mod ast;
 pub mod environment;
 pub mod eval_context;
 pub mod module;
 pub mod native_fn;
 
-pub use super::val::{Value, ValueRef};
 pub use eval_context::EvalContext;
+pub use rogato_common::val::{NativeFnError, Value, ValueRef};
 
 use thiserror::Error;
-
-use self::native_fn::NativeFnError;
 
 use super::db::query::QueryError;
 
@@ -58,7 +57,7 @@ impl From<NativeFnError> for EvalError {
     }
 }
 
-type Identifier = super::ast::Identifier;
+pub type Identifier = rogato_common::ast::Identifier;
 
 pub trait Evaluate<T> {
     fn evaluate(&self, context: &mut EvalContext) -> Result<T, EvalError>;

@@ -1,5 +1,3 @@
-use crate::eval::{EvalContext, EvalError, Evaluate, ValueRef};
-
 use super::expression::Expression;
 use std::fmt::Display;
 use std::rc::Rc;
@@ -46,18 +44,5 @@ impl Display for FnCallArgs {
             .fold(String::from(""), |acc, fmt| format!("{} {}", acc, fmt));
 
         f.write_fmt(format_args!("{}", fmt_str))
-    }
-}
-
-impl Evaluate<Vec<ValueRef>> for FnCallArgs {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<Vec<ValueRef>, EvalError> {
-        let mut values = vec![];
-        for arg in self.iter() {
-            match arg.evaluate(context) {
-                Ok(val) => values.push(val),
-                Err(e) => return Err(EvalError::FnCallArgumentError(Box::new(e))),
-            }
-        }
-        Ok(values)
     }
 }

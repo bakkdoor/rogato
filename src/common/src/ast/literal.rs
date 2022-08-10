@@ -1,9 +1,5 @@
 use super::{expression::Expression, ASTDepth, Identifier};
-use crate::{
-    eval::{EvalContext, EvalError, Evaluate, ValueRef},
-    util::indent,
-    val,
-};
+use crate::util::indent;
 use std::{fmt::Display, rc::Rc};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -66,36 +62,6 @@ impl ASTDepth for Literal {
     }
 }
 
-impl Evaluate<ValueRef> for Literal {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
-        match self {
-            Literal::Int64(number) => Ok(val::int64(*number)),
-            Literal::String(string) => Ok(val::string(string)),
-            Literal::Tuple(items) => {
-                let mut values = vec![];
-                for item in items.iter() {
-                    values.push(item.evaluate(context)?)
-                }
-                Ok(val::tuple(values))
-            }
-            Literal::List(items) => {
-                let mut values = vec![];
-                for item in items.iter() {
-                    values.push(item.evaluate(context)?)
-                }
-                Ok(val::list(values))
-            }
-            Literal::Struct(_struct_id, props) => {
-                let mut prop_values = vec![];
-                for (id, expr) in props.iter() {
-                    prop_values.push((id.clone(), expr.evaluate(context)?))
-                }
-                Ok(val::object(prop_values))
-            }
-        }
-    }
-}
-
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct TupleItems<I> {
     items: Vec<Rc<I>>,
@@ -148,16 +114,6 @@ impl<I: Display + ASTDepth> Display for TupleItems<I> {
 impl<I: ASTDepth> ASTDepth for TupleItems<I> {
     fn ast_depth(&self) -> usize {
         1 + self.items.iter().map(|i| i.ast_depth()).sum::<usize>()
-    }
-}
-
-impl<T: Evaluate<ValueRef>> Evaluate<ValueRef> for TupleItems<T> {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
-        let mut values = vec![];
-        for item in self.items.iter() {
-            values.push(item.evaluate(context)?)
-        }
-        Ok(val::list(values))
     }
 }
 

@@ -1,8 +1,4 @@
 use super::AST;
-use crate::{
-    eval::{EvalContext, EvalError, Evaluate, ValueRef},
-    val,
-};
 use std::fmt::Display;
 use std::rc::Rc;
 
@@ -44,15 +40,5 @@ impl Display for Program {
                 });
 
         f.write_fmt(format_args!("{}", fmt_str))
-    }
-}
-
-impl Evaluate<ValueRef> for Program {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
-        let mut values = vec![];
-        for ast in self.iter() {
-            values.push(ast.evaluate(context)?)
-        }
-        Ok(val::list(values))
     }
 }

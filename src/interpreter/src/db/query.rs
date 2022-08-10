@@ -1,8 +1,6 @@
-use crate::{
-    ast::{expression::Query, query::QueryBindingError},
-    eval::{EvalContext, EvalError, Evaluate, ValueRef},
-};
+use crate::eval::{EvalContext, EvalError, Evaluate, ValueRef};
 
+use rogato_common::ast::{expression::Query, query::QueryBinding};
 use thiserror::Error;
 
 #[derive(Clone, PartialEq, Eq, Debug, Default)]
@@ -30,6 +28,12 @@ impl From<EvalError> for QueryError {
     }
 }
 
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub enum QueryBindingError {
+    BindingFailed(QueryBinding),
+    BindingFailedWith(QueryBinding, Box<EvalError>),
+}
+
 pub type QueryResult = Result<ValueRef, QueryError>;
 
 impl QueryPlanner {
@@ -46,7 +50,7 @@ impl QueryPlanner {
         // - return query production if all guards hold
 
         for binding in query.bindings().iter() {
-            match binding.attempt_binding(&mut query_ctx) {
+            match self.attempt_binding(binding, &mut query_ctx) {
                 Ok(_) => {}
                 Err(e) => return Err(QueryError::BindingFailed(e)),
             }
@@ -58,5 +62,34 @@ impl QueryPlanner {
             .production()
             .evaluate(&mut query_ctx)
             .map_err(|e| QueryError::ProductionFailed(Box::new(e)))
+    }
+
+    pub fn attempt_binding(
+        &self,
+        binding: &QueryBinding,
+        context: &mut EvalContext,
+    ) -> Result<ValueRef, QueryBindingError> {
+        match binding.val().evaluate(context) {
+            Ok(value) => {
+                // todo: actual query logic needed here
+                if value.is_null() {
+                    if !binding.is_negated() {
+                        return Err(QueryBindingError::BindingFailed(binding.clone()));
+                    }
+                } else if binding.is_negated() {
+                    return Err(QueryBindingError::BindingFailed(binding.clone()));
+                }
+
+                for id in binding.ids().iter() {
+                    context.define_var(id, value.clone())
+                }
+
+                Ok(value)
+            }
+            Err(e) => Err(QueryBindingError::BindingFailedWith(
+                binding.clone(),
+                Box::new(e),
+            )),
+        }
     }
 }

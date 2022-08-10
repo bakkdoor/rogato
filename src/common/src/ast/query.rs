@@ -1,5 +1,4 @@
 use super::{expression::Expression, walker::Walk, ASTDepth, Identifier};
-use crate::eval::{EvalContext, EvalError, Evaluate, ValueRef};
 use std::{fmt::Display, rc::Rc};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -66,15 +65,6 @@ impl Walk for Query {
     }
 }
 
-impl Evaluate<ValueRef> for Query {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
-        match context.schedule_query(self) {
-            Ok(val) => Ok(val),
-            Err(e) => Err(EvalError::from(e)),
-        }
-    }
-}
-
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct QueryGuards {
     guards: Vec<Rc<Expression>>,
@@ -104,16 +94,6 @@ impl QueryGuards {
     }
 }
 
-impl Evaluate<Vec<ValueRef>> for QueryGuards {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<Vec<ValueRef>, EvalError> {
-        let mut results = vec![];
-        for guard in self.iter() {
-            results.push(guard.evaluate(context)?)
-        }
-        Ok(results)
-    }
-}
-
 impl Display for QueryGuards {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let fmt_str =
@@ -130,12 +110,6 @@ impl Display for QueryGuards {
 
         f.write_fmt(format_args!("{}", fmt_str))
     }
-}
-
-#[derive(Clone, PartialEq, Eq, Debug)]
-pub enum QueryBindingError {
-    BindingFailed(QueryBinding),
-    BindingFailedWith(QueryBinding, Box<EvalError>),
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -162,32 +136,16 @@ impl QueryBinding {
         }
     }
 
-    pub fn attempt_binding(
-        &self,
-        context: &mut EvalContext,
-    ) -> Result<ValueRef, QueryBindingError> {
-        match self.val.evaluate(context) {
-            Ok(value) => {
-                // todo: actual query logic needed here
-                if value.is_null() {
-                    if !self.is_negated {
-                        return Err(QueryBindingError::BindingFailed(self.clone()));
-                    }
-                } else if self.is_negated {
-                    return Err(QueryBindingError::BindingFailed(self.clone()));
-                }
+    pub fn is_negated(&self) -> bool {
+        self.is_negated
+    }
 
-                for id in self.ids.iter() {
-                    context.define_var(id, value.clone())
-                }
+    pub fn ids(&self) -> &Vec<Identifier> {
+        &self.ids
+    }
 
-                Ok(value)
-            }
-            Err(e) => Err(QueryBindingError::BindingFailedWith(
-                self.clone(),
-                Box::new(e),
-            )),
-        }
+    pub fn val(&self) -> Rc<Expression> {
+        Rc::clone(&self.val)
     }
 }
 
