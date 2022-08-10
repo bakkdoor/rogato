@@ -10,7 +10,7 @@ use rogato_common::ast::helpers::{
 };
 
 #[cfg(test)]
-use rogato_parser::parse_expr;
+use crate::parse_expr;
 
 #[test]
 fn fn_defs() {

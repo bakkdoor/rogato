@@ -554,7 +554,6 @@ dependencies = [
  "rogato-common",
  "rogato-interpreter",
  "rogato-parser",
- "rogato-tests",
  "serde",
  "serde_json",
  "smol_str",
@@ -583,6 +582,7 @@ name = "rogato-interpreter"
 version = "0.1.0"
 dependencies = [
  "rogato-common",
+ "rogato-parser",
 ]
 
 [[package]]
@@ -592,14 +592,6 @@ dependencies = [
  "peg",
  "rogato-common",
  "smol_str",
-]
-
-[[package]]
-name = "rogato-tests"
-version = "0.1.0"
-dependencies = [
- "rogato-common",
- "rogato-parser",
 ]
 
 [[package]]

@@ -8,3 +8,4 @@ repository = "https://github.com/bakkdoor/rogato"
 
 [dependencies]
 rogato-common = { path = "../common" }
+rogato-parser = { path = "../parser" }

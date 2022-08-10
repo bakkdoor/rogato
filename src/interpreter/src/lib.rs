@@ -1,1 +1,2 @@
-// TODO
+#[cfg(test)]
+pub mod tests;
