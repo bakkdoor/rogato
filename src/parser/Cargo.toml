@@ -1,0 +1,15 @@
+[package]
+name = "rogato-parser"
+version = "0.1.0"
+authors = ["Christopher Bertels <bakkdoor@flasht.de>"]
+edition = "2021"
+license = "BSD 3-Clause"
+repository = "https://github.com/bakkdoor/rogato"
+
+[dependencies]
+rogato-common = { path = "../common" }
+peg = "0.8.0"
+smol_str = { version="0.1.23", features = ["std", "serde"] }
+
+[features]
+trace = ["peg/trace"]

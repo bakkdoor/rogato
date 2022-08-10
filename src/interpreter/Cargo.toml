@@ -1,0 +1,10 @@
+[package]
+name = "rogato-interpreter"
+version = "0.1.0"
+authors = ["Christopher Bertels <bakkdoor@flasht.de>"]
+edition = "2021"
+license = "BSD 3-Clause"
+repository = "https://github.com/bakkdoor/rogato"
+
+[dependencies]
+rogato-common = { path = "../common" }
