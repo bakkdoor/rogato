@@ -549,27 +549,18 @@ dependencies = [
  "clap",
  "indent_write",
  "indradb-lib",
- "peg",
  "regex",
  "rogato-common",
  "rogato-db",
  "rogato-interpreter",
  "rogato-parser",
- "serde",
- "serde_json",
- "smol_str",
- "thiserror",
- "uuid 1.1.2",
 ]
 
 [[package]]
 name = "rogato-common"
 version = "0.1.0"
 dependencies = [
- "anyhow",
- "clap",
  "indent_write",
- "regex",
  "serde",
  "serde_json",
  "smol_str",
@@ -584,7 +575,6 @@ dependencies = [
  "rogato-common",
  "rogato-parser",
  "serde_json",
- "thiserror",
  "uuid 1.1.2",
 ]
 
@@ -595,9 +585,7 @@ dependencies = [
  "rogato-common",
  "rogato-db",
  "rogato-parser",
- "serde_json",
  "thiserror",
- "uuid 1.1.2",
 ]
 
 [[package]]

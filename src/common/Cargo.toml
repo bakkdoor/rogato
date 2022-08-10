@@ -7,10 +7,7 @@ license = "BSD 3-Clause"
 repository = "https://github.com/bakkdoor/rogato"
 
 [dependencies]
-clap = { version = "3.2.8", features = ["derive"] }
-anyhow = "1.0.13"
 indent_write = "2.2.0"
-regex = "1"
 serde = "1.0.138"
 serde_json = "1.0.82"
 thiserror = "1.0"

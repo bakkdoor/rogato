@@ -11,5 +11,3 @@ rogato-common = { path = "../common" }
 rogato-parser = { path = "../parser" }
 rogato-db = { path = "../db" }
 thiserror = "1.0"
-uuid = { version = "~1.1.2", features = ["v1", "serde"] }
-serde_json = "1.0.82"
