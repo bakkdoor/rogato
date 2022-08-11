@@ -230,7 +230,7 @@ impl Environment {
     }
 
     fn qualified_lookup(&self, id: &Identifier) -> Option<(Identifier, Identifier)> {
-        let parts: Vec<&str> = id.split(".").collect();
+        let parts: Vec<&str> = id.split('.').collect();
         match parts.len() {
             0 => None,
             1 => None,
