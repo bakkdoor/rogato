@@ -6,8 +6,8 @@ pub mod query_planner;
 pub mod ast;
 pub mod environment;
 pub mod eval_context;
+pub mod lib_std;
 pub mod module;
-pub mod native_fn;
 
 pub use eval_context::EvalContext;
 use query_planner::QueryError;

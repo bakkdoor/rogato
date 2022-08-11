@@ -1,6 +1,6 @@
 use std::{ops::Deref, rc::Rc};
 
-use super::environment::Environment;
+use crate::environment::Environment;
 use rogato_common::native_fn::{NativeFn, NativeFnError};
 use rogato_common::val;
 use rogato_common::{
@@ -11,7 +11,7 @@ use rogato_common::{
     val::{Value, ValueRef},
 };
 
-pub fn std_env() -> Environment {
+pub fn env() -> Environment {
     let env = Environment::new_with_module("Std.Math");
     let mut module = env.current_module();
 

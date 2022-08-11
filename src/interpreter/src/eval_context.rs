@@ -2,7 +2,7 @@ use rogato_common::ast::fn_def::FnDefBody;
 
 use super::{environment::Environment, module::Module, EvalError, Identifier, ValueRef};
 use crate::{
-    native_fn,
+    lib_std,
     query_planner::{QueryPlanner, QueryResult},
     Evaluate,
 };
@@ -29,7 +29,7 @@ impl Default for EvalContext {
 impl EvalContext {
     pub fn new() -> EvalContext {
         EvalContext {
-            env: native_fn::std_env(),
+            env: lib_std::env(),
             obj_storage: ObjectStorage::new(),
             query_planner: QueryPlanner::new(),
         }
