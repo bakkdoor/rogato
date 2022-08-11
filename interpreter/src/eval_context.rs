@@ -59,12 +59,16 @@ impl EvalContext {
         val::string(format!("FnDef {}", id))
     }
 
+    pub fn lookup_fn(&mut self, id: &Identifier) -> Option<Rc<FnDef>> {
+        self.env.lookup_fn(id)
+    }
+
     pub fn call_function(
         &mut self,
         id: &Identifier,
         args: &[ValueRef],
     ) -> Option<Result<ValueRef, EvalError>> {
-        self.current_module().lookup_fn(id).map(|func| {
+        self.lookup_fn(id).map(|func| {
             let given_argc = args.len();
             let expected_argc = func.args().len();
             if given_argc != expected_argc {
@@ -99,8 +103,8 @@ impl EvalContext {
     }
 
     #[allow(dead_code)]
-    pub fn define_module(&mut self, id: &Identifier, module: Module) {
-        self.env.define_module(id, module);
+    pub fn define_module(&mut self, module: Module) {
+        self.env.define_module(module);
     }
 
     #[allow(dead_code)]

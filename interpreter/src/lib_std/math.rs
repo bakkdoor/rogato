@@ -1,6 +1,4 @@
-use std::{ops::Deref, rc::Rc};
-
-use crate::environment::Environment;
+use crate::module::Module;
 use rogato_common::native_fn::{NativeFn, NativeFnError};
 use rogato_common::val;
 use rogato_common::{
@@ -10,10 +8,11 @@ use rogato_common::{
     },
     val::{Value, ValueRef},
 };
+use std::ops::Deref;
+use std::rc::Rc;
 
-pub fn env() -> Environment {
-    let env = Environment::new_with_module("Std.Math");
-    let mut module = env.current_module();
+pub fn module() -> Module {
+    let mut module = Module::new("Std");
 
     module.fn_def(op_fn_def("+", move |args| {
         with_number_op_args("+", args, |a, b| Ok(a + b))
@@ -42,7 +41,7 @@ pub fn env() -> Environment {
         })
     }));
 
-    env
+    module
 }
 
 fn op_fn_def(id: &str, body: NativeFn) -> Rc<FnDef> {
