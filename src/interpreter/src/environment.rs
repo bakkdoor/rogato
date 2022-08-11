@@ -108,12 +108,8 @@ impl Environment {
 
     pub fn current_module(&self) -> Module {
         let state = self.state.borrow();
-        match self.lookup_module(&state.current_module_name) {
-            Some(module) => module,
-            None => {
-                panic!("No current module found: {}", state.current_module_name)
-            }
-        }
+        self.lookup_module(&state.current_module_name)
+            .expect("current_module should be set")
     }
 
     pub fn lookup_module(&self, id: &Identifier) -> Option<Module> {
