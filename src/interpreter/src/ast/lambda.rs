@@ -8,7 +8,7 @@ use rogato_common::{
     val::{self, ValueRef},
 };
 
-use crate::{EvalContext, EvalError, Evaluate};
+use crate::{EvalContext, EvalError, Evaluate, Identifier};
 
 impl Evaluate<ValueRef> for Lambda {
     fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
@@ -46,5 +46,14 @@ impl<A: Display + ASTDepth + Evaluate<ValueRef>> Evaluate<Vec<ValueRef>> for Lam
             vec.push(arg.evaluate(context)?)
         }
         Ok(vec)
+    }
+}
+
+impl Evaluate<ValueRef> for Identifier {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
+        match context.lookup_var(self) {
+            Some(val) => Ok(val),
+            None => Err(EvalError::VarNotDefined(self.clone())),
+        }
     }
 }
