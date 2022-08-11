@@ -4,13 +4,20 @@ type Result
   = Ok val
   | Err err
 
-let isOk (Ok val) = true
-let isOK _ = false
+let isOk (Ok val) =
+  true
+let isOK _ =
+  false
 
-let isErr r = not (isOk r)
+let isErr r =
+  not (isOk r)
 
-let map (Ok val) f = Ok (f val)
-let map r _ = r
+let map (Ok val) f =
+  Ok (f val)
+let map r _ =
+  r
 
-let mapErr (Err e) f = Err (f e)
-let mapErr r _ = r
+let mapErr (Err e) f =
+  Err (f e)
+let mapErr r _ =
+  r

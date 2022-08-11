@@ -1,20 +1,45 @@
 module Std.List { map, count, isEmpty, reverse }
 
-let map list f = map_ [] list f
+let map list f =
+  map_ [] list f
 
-let map_ acc [] _ = acc
-let map_ acc [x :: xs] f = map_ [f x :: acc] xs f
+let map_ acc [] _ =
+  reverse acc
+let map_ acc [x :: xs] f =
+  map_ [f x :: acc] xs f
 
-let count list = count_ 0 list
+let count list =
+  count_ 0 list
 
-let count_ acc [] = acc
-let count_ acc [_ :: xs] = count_ (acc + 1) xs
+let count_ acc [] =
+  acc
+let count_ acc [_ :: xs] =
+  count_ (acc + 1) xs
 
-let isEmpty [] = true
-let isEmpty _ = false
+let isEmpty [] =
+  true
+let isEmpty _  =
+  false
 
-let reverse list = reverse_ [] list
+let reverse list =
+  reverse_ [] list
 
-let reverse_ acc [] = acc
-let reverse_ acc [x :: xs] = reverse_ [x :: acc] xs
+let reverse_ acc [] =
+  acc
+let reverse_ acc [x :: xs =
+  reverse_ [x :: acc] xs
 
+let skip list 0 =
+  list
+let skip [x :: xs] n =
+  skip xs (n - 1)
+
+let take list n =
+  take_ [] list n
+
+let take_ acc _ 0 =
+  reverse acc
+let take_ acc [] _ =
+  reverse acc
+let take_ acc [x :: xs] n =
+  take_ [x :: acc] xs (n - 1)
