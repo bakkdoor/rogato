@@ -217,7 +217,14 @@ impl Environment {
                         Imports::Specific(imported_ids) => {
                             for iid in imported_ids.iter() {
                                 if import_id_matches(iid, id) {
-                                    return Some(self.lookup_module(module_id).unwrap());
+                                    let module = self.lookup_module(module_id).expect(
+                                        format!(
+                                            "module should exist: {} for fn: {}",
+                                            module_id, id
+                                        )
+                                        .as_str(),
+                                    );
+                                    return Some(module);
                                 }
                             }
                         }
@@ -247,7 +254,14 @@ impl Environment {
                         Imports::Specific(imported_ids) => {
                             for iid in imported_ids.iter() {
                                 if import_id_matches(iid, id) {
-                                    return Some(self.lookup_module(module_id).unwrap());
+                                    let module = self.lookup_module(module_id).expect(
+                                        format!(
+                                            "module should exist: {} for type: {}",
+                                            module_id, id
+                                        )
+                                        .as_str(),
+                                    );
+                                    return Some(module);
                                 }
                             }
                         }
@@ -277,7 +291,14 @@ impl Environment {
                         Imports::Specific(imported_ids) => {
                             for iid in imported_ids.iter() {
                                 if import_id_matches(iid, id) {
-                                    return Some(self.lookup_module(module_id).unwrap());
+                                    let module = self.lookup_module(module_id).expect(
+                                        format!(
+                                            "module should exist: {} for const: {}",
+                                            module_id, id
+                                        )
+                                        .as_str(),
+                                    );
+                                    return Some(module);
                                 }
                             }
                         }
