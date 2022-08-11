@@ -470,7 +470,8 @@ fn let_expressions() {
     assert_parse_expr!(
         "let
             add a b = a + b
-            mul a b = a * b
+            mul a b =
+                a * b
          in
             { add 1 2, mul 2 3 }",
         let_expr(

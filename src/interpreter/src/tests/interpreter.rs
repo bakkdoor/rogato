@@ -50,9 +50,12 @@ fn let_expressions() {
     let mut ctx = EvalContext::new();
     let ast = parse_expr(
         "let
-            f x = x + 1
-            g x y = x - (f (x / y))
-            x = f 101
+            f x =
+                x + 1
+            g x y =
+                x - (f (x / y))
+            x =
+                f 101
          in
             {x, f x, g x 10}",
     )
