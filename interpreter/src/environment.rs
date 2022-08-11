@@ -115,6 +115,13 @@ impl Environment {
         self.state.borrow().imported_modules.clone()
     }
 
+    pub fn import(&mut self, module: &Module, imports: Imports) {
+        self.state
+            .borrow_mut()
+            .imported_modules
+            .insert(module.id(), imports);
+    }
+
     pub fn define_var(&mut self, id: &Identifier, val: ValueRef) {
         self.state.borrow_mut().variables.insert(id.clone(), val);
     }
@@ -185,7 +192,28 @@ impl Environment {
         }
     }
 
+    fn qualified_lookup(&self, id: &Identifier) -> Option<(Identifier, Identifier)> {
+        let parts: Vec<&str> = id.split(".").collect();
+        match parts.len() {
+            0 => None,
+            1 => None,
+            len => {
+                let (module_id, fn_id) = parts.split_at(len - 1);
+                let mid: Identifier = module_id.join(".").into();
+                let fid: Identifier = fn_id.join("").into();
+                Some((mid, fid))
+            }
+        }
+    }
+
     pub fn lookup_fn(&self, id: &Identifier) -> Option<Rc<FnDef>> {
+        if let Some((module_id, fn_id)) = self.qualified_lookup(id) {
+            return Some(
+                self.lookup_module(&module_id)
+                    .and_then(|m| m.lookup_fn(&fn_id))
+                    .unwrap_or_else(|| panic!("qualified lookup failed: {}", id)),
+            );
+        }
         let curr_mod = self.current_module();
         match curr_mod.lookup_fn(id) {
             Some(fn_def) => Some(fn_def),

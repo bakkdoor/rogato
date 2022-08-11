@@ -100,3 +100,18 @@ fn let_expressions() {
         Ok(val::tuple(vec![val::int64(3), val::int64(6)]))
     )
 }
+
+#[test]
+fn std_math_module() {
+    let mut ctx = EvalContext::new();
+    let code_with_vals = vec![
+        ("Std.Math.abs -10", val::int64(10)),
+        ("Std.Math.abs (10 * -10)", val::int64(100)),
+        ("Std.Math.abs (100 - 1000)", val::int64(900)),
+    ];
+
+    for (code, val) in code_with_vals.iter() {
+        let ast = parse_expr(code).unwrap();
+        assert_eq!(ast.evaluate(&mut ctx), Ok(val.clone()));
+    }
+}

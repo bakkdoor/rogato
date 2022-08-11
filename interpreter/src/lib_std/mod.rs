@@ -1,4 +1,7 @@
-use crate::{environment::Environment, module::Module};
+use crate::{
+    environment::{Environment, Imports},
+    module::Module,
+};
 use rogato_common::{
     ast::{
         expression::FnDefArgs,
@@ -16,9 +19,14 @@ pub mod string;
 pub fn env() -> Environment {
     let mut env = Environment::new();
 
+    let std_mod = std_module();
     let math_mod = math::module();
     let string_mod = string::module();
-    env.define_module(std_module());
+
+    env.import(&math_mod, Imports::All);
+    env.import(&string_mod, Imports::All);
+
+    env.define_module(std_mod);
     env.define_module(math_mod);
     env.define_module(string_mod);
 
@@ -60,6 +68,14 @@ pub fn std_module() -> Module {
     }));
 
     module
+}
+
+pub fn fn_def(id: &str, args: Vec<&str>, body: NativeFn) -> Rc<FnDef> {
+    FnDef::new(
+        id.to_string(),
+        FnDefArgs::new(args.iter().map(|a| a.into()).collect()),
+        Rc::new(FnDefBody::native(body)),
+    )
 }
 
 pub fn op_fn_def(id: &str, body: NativeFn) -> Rc<FnDef> {
