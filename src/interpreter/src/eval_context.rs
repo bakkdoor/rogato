@@ -1,8 +1,11 @@
 use rogato_common::ast::fn_def::FnDefBody;
 
-use super::{environment::Environment, module::Module, native_fn, EvalError, Identifier, ValueRef};
-use crate::query_planner::{QueryPlanner, QueryResult};
-use crate::Evaluate;
+use super::{environment::Environment, module::Module, EvalError, Identifier, ValueRef};
+use crate::{
+    native_fn,
+    query_planner::{QueryPlanner, QueryResult},
+    Evaluate,
+};
 use rogato_common::{
     ast::{expression::Query, fn_def::FnDef, type_expression::TypeDef},
     val,

@@ -11,7 +11,10 @@ pub mod native_fn;
 
 pub use eval_context::EvalContext;
 use query_planner::QueryError;
-pub use rogato_common::val::{NativeFnError, Value, ValueRef};
+pub use rogato_common::{
+    native_fn::{NativeFn, NativeFnError},
+    val::{Value, ValueRef},
+};
 
 use thiserror::Error;
 

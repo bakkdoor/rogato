@@ -1,6 +1,5 @@
-use crate::{util::indent, val::NativeFn};
-
 use super::{expression::Expression, walker::Walk, ASTDepth, Identifier};
+use crate::{native_fn::NativeFn, util::indent};
 use std::{borrow::Borrow, fmt::Display, rc::Rc};
 
 #[derive(Clone, PartialEq, Eq, Debug)]

@@ -1,12 +1,13 @@
 use std::{ops::Deref, rc::Rc};
 
 use super::environment::Environment;
+use rogato_common::native_fn::{NativeFn, NativeFnError};
+use rogato_common::val;
 use rogato_common::{
     ast::{
         expression::FnDefArgs,
         fn_def::{FnDef, FnDefBody},
     },
-    val::{self, NativeFn, NativeFnError},
     val::{Value, ValueRef},
 };
 
