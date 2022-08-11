@@ -1,2 +1,8 @@
 [workspace]
-members = ["src/*"]
+members = [
+  "common",
+  "db",
+  "interpreter",
+  "parser",
+  "rogato"
+]
