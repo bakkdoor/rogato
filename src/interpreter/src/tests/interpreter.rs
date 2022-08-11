@@ -24,6 +24,18 @@ fn basic_arithmetic() {
 }
 
 #[test]
+fn multiplication() {
+    let mut ctx = EvalContext::new();
+
+    for i in -100..100 {
+        let a = i * 10;
+        let b = i * 100;
+        let ast = parse_expr(format!("{} * {}", a, b).as_str()).unwrap();
+        assert_eq!(ast.evaluate(&mut ctx), Ok(val::int64(a * b)));
+    }
+}
+
+#[test]
 fn string_literals() {
     let mut ctx = EvalContext::new();
 
