@@ -161,6 +161,14 @@ impl Environment {
     }
 
     pub fn lookup_const(&self, id: &Identifier) -> Option<ValueRef> {
+        if let Some((module_id, fn_id)) = self.qualified_lookup(id) {
+            return Some(
+                self.lookup_module(&module_id)
+                    .and_then(|m| m.lookup_const(&fn_id))
+                    .unwrap_or_else(|| panic!("qualified const lookup failed: {}", id)),
+            );
+        }
+
         match self
             .lookup_module_for_const(id)
             .and_then(|m| m.lookup_const(id))
@@ -177,6 +185,14 @@ impl Environment {
     }
 
     pub fn lookup_type(&self, id: &Identifier) -> Option<Rc<TypeDef>> {
+        if let Some((module_id, fn_id)) = self.qualified_lookup(id) {
+            return Some(
+                self.lookup_module(&module_id)
+                    .and_then(|m| m.lookup_type(&fn_id))
+                    .unwrap_or_else(|| panic!("qualified type lookup failed: {}", id)),
+            );
+        }
+
         match self
             .lookup_module_for_type(id)
             .and_then(|m| m.lookup_type(id))
@@ -186,6 +202,27 @@ impl Environment {
                 let state = self.state.borrow();
                 match &state.parent {
                     Some(parent_env) => parent_env.lookup_type(id),
+                    None => None,
+                }
+            }
+        }
+    }
+
+    pub fn lookup_fn(&self, id: &Identifier) -> Option<Rc<FnDef>> {
+        if let Some((module_id, fn_id)) = self.qualified_lookup(id) {
+            return Some(
+                self.lookup_module(&module_id)
+                    .and_then(|m| m.lookup_fn(&fn_id))
+                    .unwrap_or_else(|| panic!("qualified fn lookup failed: {}", id)),
+            );
+        }
+
+        match self.lookup_module_for_fn(id).and_then(|m| m.lookup_fn(id)) {
+            Some(fn_def) => Some(fn_def),
+            None => {
+                let state = self.state.borrow();
+                match &state.parent {
+                    Some(parent_env) => parent_env.lookup_fn(id),
                     None => None,
                 }
             }
@@ -206,30 +243,9 @@ impl Environment {
         }
     }
 
-    pub fn lookup_fn(&self, id: &Identifier) -> Option<Rc<FnDef>> {
-        if let Some((module_id, fn_id)) = self.qualified_lookup(id) {
-            return Some(
-                self.lookup_module(&module_id)
-                    .and_then(|m| m.lookup_fn(&fn_id))
-                    .unwrap_or_else(|| panic!("qualified lookup failed: {}", id)),
-            );
-        }
-        let curr_mod = self.current_module();
-        match curr_mod.lookup_fn(id) {
-            Some(fn_def) => Some(fn_def),
-            None => {
-                let state = self.state.borrow();
-                match &state.parent {
-                    Some(parent_env) => parent_env.lookup_fn(id),
-                    None => None,
-                }
-            }
-        }
-    }
-
     pub fn lookup_module_for_fn(&self, id: &Identifier) -> Option<Module> {
         let curr_mod = self.current_module();
-        match curr_mod.lookup_type(id) {
+        match curr_mod.lookup_fn(id) {
             Some(_) => Some(curr_mod),
             None => {
                 let state = self.state.borrow();
