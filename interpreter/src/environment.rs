@@ -69,7 +69,13 @@ impl Environment {
     #[allow(dead_code)]
     pub fn child_with_module(&self, module_name: &Identifier) -> Environment {
         let mut modules = HashMap::new();
-        modules.insert(module_name.clone(), Module::new(module_name));
+        match modules.get(module_name) {
+            Some(_) => {}
+            None => {
+                modules.insert(module_name.clone(), Module::new(module_name));
+            }
+        }
+
         let state = State {
             parent: Some(self.clone()),
             variables: HashMap::new(),
