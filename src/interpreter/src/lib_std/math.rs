@@ -15,54 +15,42 @@ pub fn env() -> Environment {
     let env = Environment::new_with_module("Std.Math");
     let mut module = env.current_module();
 
-    module.fn_def(op_fn_def(
-        "+",
-        fn_body(move |args| with_number_op_args("+", args, |a, b| Ok(a + b))),
-    ));
+    module.fn_def(op_fn_def("+", move |args| {
+        with_number_op_args("+", args, |a, b| Ok(a + b))
+    }));
 
-    module.fn_def(op_fn_def(
-        "-",
-        fn_body(move |args| with_number_op_args("-", args, |a, b| Ok(a - b))),
-    ));
+    module.fn_def(op_fn_def("-", move |args| {
+        with_number_op_args("-", args, |a, b| Ok(a - b))
+    }));
 
-    module.fn_def(op_fn_def(
-        "*",
-        fn_body(move |args| with_number_op_args("*", args, |a, b| Ok(a * b))),
-    ));
+    module.fn_def(op_fn_def("*", move |args| {
+        with_number_op_args("*", args, |a, b| Ok(a * b))
+    }));
 
-    module.fn_def(op_fn_def(
-        "/",
-        fn_body(move |args| with_number_op_args("/", args, |a, b| Ok(a / b))),
-    ));
+    module.fn_def(op_fn_def("/", move |args| {
+        with_number_op_args("/", args, |a, b| Ok(a / b))
+    }));
 
-    module.fn_def(op_fn_def(
-        "%",
-        fn_body(move |args| with_number_op_args("%", args, |a, b| Ok(a % b))),
-    ));
+    module.fn_def(op_fn_def("%", move |args| {
+        with_number_op_args("%", args, |a, b| Ok(a % b))
+    }));
 
-    module.fn_def(op_fn_def(
-        "^",
-        fn_body(move |args| {
-            with_number_op_args("^", args, |a, b| match u32::try_from(b) {
-                Ok(exponent) => Ok(a.pow(exponent)),
-                Err(_) => Err(invalid_args("^")),
-            })
-        }),
-    ));
+    module.fn_def(op_fn_def("^", move |args| {
+        with_number_op_args("^", args, |a, b| match u32::try_from(b) {
+            Ok(exponent) => Ok(a.pow(exponent)),
+            Err(_) => Err(invalid_args("^")),
+        })
+    }));
 
     env
 }
 
-fn op_fn_def(id: &str, body: Rc<FnDefBody>) -> Rc<FnDef> {
+fn op_fn_def(id: &str, body: NativeFn) -> Rc<FnDef> {
     FnDef::new(
         id.to_string(),
         FnDefArgs::new(vec!["left".into(), "right".into()]),
-        body,
+        Rc::new(FnDefBody::native(body)),
     )
-}
-
-fn fn_body(f: NativeFn) -> Rc<FnDefBody> {
-    Rc::new(FnDefBody::native(f))
 }
 
 fn with_number_op_args(
