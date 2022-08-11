@@ -1,4 +1,5 @@
 pub use super::fn_call::FnCallArgs;
+use super::fn_def::FnDef;
 pub use super::fn_def::FnDefArgs;
 pub use super::lambda::{Lambda, LambdaArgs};
 pub use super::let_expression::{LetBindings, LetExpression};
@@ -26,6 +27,7 @@ pub enum Expression {
     QuotedAST(Rc<AST>),
     Unquoted(Rc<Expression>),
     UnquotedAST(Rc<AST>),
+    InlineFnDef(Rc<FnDef>),
 }
 
 impl ASTDepth for Expression {
@@ -47,6 +49,7 @@ impl ASTDepth for Expression {
             Expression::QuotedAST(expr) => 1 + expr.ast_depth(),
             Expression::Unquoted(expr) => 1 + expr.ast_depth(),
             Expression::UnquotedAST(expr) => 1 + expr.ast_depth(),
+            Expression::InlineFnDef(fn_def) => 1 + fn_def.ast_depth(),
         }
     }
 }
@@ -76,6 +79,7 @@ impl Display for Expression {
             Expression::QuotedAST(ast) => display_quoted(f, ast),
             Expression::Unquoted(expr) => display_unquoted(f, expr),
             Expression::UnquotedAST(ast) => display_unquoted(f, ast),
+            Expression::InlineFnDef(fn_def) => f.write_fmt(format_args!("{}", fn_def)),
         }
     }
 }

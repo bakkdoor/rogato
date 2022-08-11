@@ -41,7 +41,8 @@ impl Module {
     #[allow(dead_code)]
     pub fn lookup_fn(&self, id: &Identifier) -> Option<Rc<FnDef>> {
         let state = self.state.borrow();
-        state.fn_defs.get(id).cloned()
+        let opt = state.fn_defs.get(id).cloned();
+        opt
     }
 
     #[allow(dead_code)]

@@ -60,3 +60,9 @@ impl ASTDepth for AST {
         }
     }
 }
+
+impl ASTDepth for Identifier {
+    fn ast_depth(&self) -> usize {
+        1
+    }
+}

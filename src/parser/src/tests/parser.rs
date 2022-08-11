@@ -1,6 +1,7 @@
 #[cfg(test)]
 use crate::{assert_parse, assert_parse_ast, assert_parse_expr};
 
+use rogato_common::ast::helpers::inline_fn_def;
 #[cfg(test)]
 use rogato_common::ast::helpers::{
     commented, const_or_type_ref, edge_prop, fn_call, fn_def, int_lit, int_type, lambda, let_expr,
@@ -462,6 +463,30 @@ fn let_expressions() {
             tuple_lit(vec![
                 var("friends"),
                 fn_call("List.count", vec![var("friends")])
+            ])
+        )
+    );
+
+    assert_parse_expr!(
+        "let
+            add a b = a + b
+            mul a b = a * b
+         in
+            { add 1 2, mul 2 3 }",
+        let_expr(
+            vec![
+                (
+                    "add",
+                    inline_fn_def("add", vec!["a", "b"], op_call("+", var("a"), var("b")))
+                ),
+                (
+                    "mul",
+                    inline_fn_def("mul", vec!["a", "b"], op_call("*", var("a"), var("b")))
+                ),
+            ],
+            tuple_lit(vec![
+                fn_call("add", vec![int_lit(1), int_lit(2)]),
+                fn_call("mul", vec![int_lit(2), int_lit(3)]),
             ])
         )
     );

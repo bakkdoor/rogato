@@ -198,3 +198,11 @@ pub fn unquoted(expr: Rc<Expression>) -> Rc<Expression> {
 pub fn unquoted_ast(ast: Rc<AST>) -> Rc<Expression> {
     Rc::new(Expression::UnquotedAST(ast))
 }
+
+pub fn inline_fn_def(id: &str, args: Vec<&str>, body: Rc<Expression>) -> Rc<Expression> {
+    Rc::new(Expression::InlineFnDef(FnDef::new(
+        id,
+        fn_def_args(args),
+        Rc::new(FnDefBody::rogato(body)),
+    )))
+}

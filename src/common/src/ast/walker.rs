@@ -50,6 +50,7 @@ impl Walk for Expression {
             Expression::QuotedAST(ast) => v.quoted_ast(ast),
             Expression::Unquoted(expr) => v.unquoted(expr),
             Expression::UnquotedAST(ast) => v.unquoted_ast(ast),
+            Expression::InlineFnDef(fn_def) => v.inline_fn_def(fn_def),
         }
     }
 }

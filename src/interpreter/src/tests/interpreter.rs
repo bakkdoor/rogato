@@ -44,3 +44,40 @@ fn string_literals() {
         }
     }
 }
+
+#[test]
+fn let_expressions() {
+    let mut ctx = EvalContext::new();
+    let ast = parse_expr(
+        "let
+            f x = x + 1
+            g x y = x - (f (x / y))
+            x = f 101
+         in
+            {x, f x, g x 10}",
+    )
+    .unwrap();
+
+    assert_eq!(
+        ast.evaluate(&mut ctx),
+        Ok(val::tuple(vec![
+            val::int64(102),
+            val::int64(103),
+            val::int64(91)
+        ]))
+    );
+
+    let ast = parse_expr(
+        "let
+            add a b = a + b
+            mul a b = a * b
+         in
+            { add 1 2, mul 2 3 }",
+    )
+    .unwrap();
+
+    assert_eq!(
+        ast.evaluate(&mut ctx),
+        Ok(val::tuple(vec![val::int64(3), val::int64(6)]))
+    )
+}

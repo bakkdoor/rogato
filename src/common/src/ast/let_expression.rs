@@ -79,11 +79,16 @@ impl Display for LetBindings {
         let fmt_str = self
             .bindings
             .iter()
-            .map(|(ident, expr)| {
-                if expr.ast_depth() > 5 {
-                    format!("{} =\n{}", ident, indent(expr))
-                } else {
-                    format!("{} = {}", ident, expr)
+            .map(|(ident, expr)| match &**expr {
+                Expression::InlineFnDef(fn_def) => {
+                    format!("{}", indent(fn_def))
+                }
+                _ => {
+                    if expr.ast_depth() > 5 {
+                        format!("{} =\n{}", ident, indent(expr))
+                    } else {
+                        format!("{} = {}", ident, expr)
+                    }
                 }
             })
             .fold(String::from(""), |acc, fmt| {

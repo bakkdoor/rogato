@@ -71,4 +71,7 @@ pub trait Visitor<T: Default> {
     fn unquoted_ast(&mut self, _ast: &AST) -> T {
         T::default()
     }
+    fn inline_fn_def(&mut self, _fn_def: &FnDef) -> T {
+        T::default()
+    }
 }

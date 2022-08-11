@@ -58,6 +58,7 @@ impl Evaluate<ValueRef> for Expression {
             Expression::QuotedAST(ast) => Ok(val::string(format!("^({})", ast))),
             Expression::Unquoted(expr) => Ok(val::string(format!("~({})", expr))),
             Expression::UnquotedAST(ast) => Ok(val::string(format!("~({})", ast))),
+            Expression::InlineFnDef(fn_def) => fn_def.evaluate(context),
         }
     }
 }

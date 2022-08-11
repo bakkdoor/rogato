@@ -1,7 +1,5 @@
 use std::{fmt::Display, rc::Rc};
 
-use smol_str::SmolStr;
-
 use crate::util::indent;
 
 use super::{expression::Expression, walker::Walk, ASTDepth, Identifier};
@@ -63,12 +61,6 @@ impl Walk for Lambda {
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct LambdaArgs<A: Display + ASTDepth> {
     args: Vec<A>,
-}
-
-impl ASTDepth for SmolStr {
-    fn ast_depth(&self) -> usize {
-        1
-    }
 }
 
 impl<A: Display + ASTDepth> LambdaArgs<A> {

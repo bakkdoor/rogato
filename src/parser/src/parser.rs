@@ -330,15 +330,15 @@ grammar parser() for str {
     rule let_expr() -> Expression
         = "let" _ bindings:let_bindings() _ "in" _ body:let_body() {
             Expression::Let(
-                LetExpression::new(LetBindings::from_owned(bindings), Rc::new(body))
+                LetExpression::new(bindings, Rc::new(body))
             )
         }
 
-    rule let_bindings() -> Vec<(Identifier, Expression)>
+    rule let_bindings() -> LetBindings
         = binding:let_binding() more_bindings:(additional_let_binding())* {
             let mut bindings = more_bindings;
             bindings.insert(0, binding);
-            bindings
+            LetBindings::from_owned(bindings)
         }
 
     rule additional_let_binding() -> (Identifier, Expression)
@@ -354,6 +354,12 @@ grammar parser() for str {
         = _ id:identifier() _ "=" _ val:let_body() {
             (id, val)
         }
+        / _ id:identifier() args:inline_fn_arg()+ _ "=" _ body:let_body() {
+            (id.clone(), Expression::InlineFnDef(FnDef::new(id, FnDefArgs::new(args), Rc::new(FnDefBody::rogato(Rc::new(body))))))
+        }
+
+    rule inline_fn_arg() -> Identifier
+        = " "+ id:identifier() { id }
 
     rule let_body() -> Expression
         = lambda()

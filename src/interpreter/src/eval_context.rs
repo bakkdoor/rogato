@@ -85,7 +85,7 @@ impl EvalContext {
 
             match &*(func.body()) {
                 FnDefBody::NativeFn(f) => f(args).map_err(EvalError::from),
-                FnDefBody::RogatoFn(expr) => expr.evaluate(self),
+                FnDefBody::RogatoFn(expr) => expr.evaluate(&mut fn_ctx),
             }
         })
     }

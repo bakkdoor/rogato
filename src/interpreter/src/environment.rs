@@ -91,13 +91,14 @@ impl Environment {
 
     pub fn lookup_var(&self, id: &str) -> Option<ValueRef> {
         let state = self.state.borrow();
-        match state.variables.get(id) {
+        let res = match state.variables.get(id) {
             Some(expr) => Some(expr.clone()),
             None => match &state.parent {
                 Some(parent_env) => parent_env.lookup_var(id),
                 None => None,
             },
-        }
+        };
+        res
     }
 
     pub fn define_module(&mut self, id: &Identifier, module: Module) -> &mut Self {
