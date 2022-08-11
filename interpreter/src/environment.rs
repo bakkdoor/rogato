@@ -217,13 +217,13 @@ impl Environment {
                         Imports::Specific(imported_ids) => {
                             for iid in imported_ids.iter() {
                                 if import_id_matches(iid, id) {
-                                    let module = self.lookup_module(module_id).expect(
-                                        format!(
-                                            "module should exist: {} for fn: {}",
-                                            module_id, id
-                                        )
-                                        .as_str(),
-                                    );
+                                    let module =
+                                        self.lookup_module(module_id).unwrap_or_else(|| {
+                                            panic!(
+                                                "module should exist: {} for fn: {}",
+                                                module_id, id
+                                            )
+                                        });
                                     return Some(module);
                                 }
                             }
@@ -254,13 +254,13 @@ impl Environment {
                         Imports::Specific(imported_ids) => {
                             for iid in imported_ids.iter() {
                                 if import_id_matches(iid, id) {
-                                    let module = self.lookup_module(module_id).expect(
-                                        format!(
-                                            "module should exist: {} for type: {}",
-                                            module_id, id
-                                        )
-                                        .as_str(),
-                                    );
+                                    let module =
+                                        self.lookup_module(module_id).unwrap_or_else(|| {
+                                            panic!(
+                                                "module should exist: {} for type: {}",
+                                                module_id, id
+                                            )
+                                        });
                                     return Some(module);
                                 }
                             }
@@ -291,13 +291,13 @@ impl Environment {
                         Imports::Specific(imported_ids) => {
                             for iid in imported_ids.iter() {
                                 if import_id_matches(iid, id) {
-                                    let module = self.lookup_module(module_id).expect(
-                                        format!(
-                                            "module should exist: {} for const: {}",
-                                            module_id, id
-                                        )
-                                        .as_str(),
-                                    );
+                                    let module =
+                                        self.lookup_module(module_id).unwrap_or_else(|| {
+                                            panic!(
+                                                "module should exist: {} for const: {}",
+                                                module_id, id
+                                            )
+                                        });
                                     return Some(module);
                                 }
                             }
