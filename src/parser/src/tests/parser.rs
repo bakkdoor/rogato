@@ -145,7 +145,11 @@ fn arithmetic_expressions() {
 
 #[test]
 fn literals() {
+    assert_parse_expr!("0", int_lit(0));
     assert_parse_expr!("1", int_lit(1));
+    assert_parse_expr!("-1", int_lit(-1));
+    assert_parse_expr!("-10", int_lit(-10));
+    assert_parse_expr!("10", int_lit(10));
 
     assert_parse_expr!("\"Hello, world!\"", string_lit("Hello, world!"));
 

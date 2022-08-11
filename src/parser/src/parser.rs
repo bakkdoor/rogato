@@ -383,7 +383,7 @@ grammar parser() for str {
         / list_lit()
 
     rule number_lit() -> Expression
-        = n:$(['0'..='9']+) {
+        = n:$("-"? ['0'..='9']+) {
             Expression::Lit(Literal::Int64(n.parse().unwrap()))
         }
 

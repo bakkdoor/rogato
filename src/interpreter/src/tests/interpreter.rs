@@ -7,8 +7,12 @@ fn basic_arithmetic() {
     let mut ctx = EvalContext::new();
     let expressions_and_values = vec![
         ("3 + 4", val::int64(7)),
+        ("-3 + 4", val::int64(1)),
         ("100 - 90", val::int64(10)),
+        ("-100 - 90", val::int64(-190)),
         ("10 * 500", val::int64(5000)),
+        ("-10 * 500", val::int64(-5000)),
+        ("10 * -500", val::int64(-5000)),
         ("10 / 3", val::int64(3)),
         ("500 / 25", val::int64(20)),
         ("10 % 3", val::int64(1)),
