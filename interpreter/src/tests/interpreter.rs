@@ -108,6 +108,25 @@ fn std_math_module() {
         ("Std.Math.abs -10", val::int64(10)),
         ("Std.Math.abs (10 * -10)", val::int64(100)),
         ("Std.Math.abs (100 - 1000)", val::int64(900)),
+        ("abs -10", val::int64(10)),
+        ("abs (10 * -10)", val::int64(100)),
+        ("abs (100 - 1000)", val::int64(900)),
+    ];
+
+    for (code, val) in code_with_vals.iter() {
+        let ast = parse_expr(code).unwrap();
+        assert_eq!(ast.evaluate(&mut ctx), Ok(val.clone()));
+    }
+}
+
+#[test]
+fn std_string_module() {
+    let mut ctx = EvalContext::new();
+    let code_with_vals = vec![
+        ("Std.String.length \"\"", val::int64(0)),
+        ("Std.String.length \" \"", val::int64(1)),
+        ("Std.String.length \"hello\"", val::int64(5)),
+        ("Std.String.length \"hello, world\"", val::int64(12)),
     ];
 
     for (code, val) in code_with_vals.iter() {

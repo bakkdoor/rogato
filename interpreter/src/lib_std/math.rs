@@ -1,10 +1,7 @@
-use std::ops::Deref;
-
-use rogato_common::val::{self, Value};
-
-use crate::module::Module;
-
 use super::{fn_def, invalid_args};
+use crate::module::Module;
+use rogato_common::val::{self, Value};
+use std::ops::Deref;
 
 pub fn module() -> Module {
     let mut module = Module::new("Std.Math");

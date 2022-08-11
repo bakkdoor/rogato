@@ -24,7 +24,6 @@ pub fn env() -> Environment {
     let string_mod = string::module();
 
     env.import(&math_mod, Imports::All);
-    env.import(&string_mod, Imports::All);
 
     env.define_module(std_mod);
     env.define_module(math_mod);
