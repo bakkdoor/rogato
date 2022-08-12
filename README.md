@@ -1,4 +1,5 @@
-# rogātō 📜 🏷
+# rogātō ⌘ 🏷
+
 ## A functional, declarative query-oriented programming language with an integrated graph database.
 
 🛠 (Still WIP) 🛠
