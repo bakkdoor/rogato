@@ -75,12 +75,10 @@ impl QueryGuards {
         QueryGuards { guards }
     }
 
-    #[allow(dead_code)]
     pub fn prepend_guard(&mut self, arg: Rc<Expression>) {
         self.guards.insert(0, arg);
     }
 
-    #[allow(dead_code)]
     pub fn len(&self) -> usize {
         self.guards.len()
     }
@@ -176,7 +174,6 @@ impl QueryBindings {
         Self { bindings }
     }
 
-    #[allow(dead_code)]
     pub fn len(&self) -> usize {
         self.bindings.len()
     }

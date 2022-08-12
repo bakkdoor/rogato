@@ -76,7 +76,6 @@ impl<A: Display + ASTDepth> LambdaArgs<A> {
         self.len() == 0
     }
 
-    #[allow(dead_code)]
     pub fn iter(&self) -> std::slice::Iter<A> {
         self.args.iter()
     }

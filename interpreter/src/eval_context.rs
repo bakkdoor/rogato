@@ -35,7 +35,6 @@ impl EvalContext {
         }
     }
 
-    #[allow(dead_code)]
     pub fn from_env(env: Environment) -> EvalContext {
         EvalContext {
             env,
@@ -102,12 +101,10 @@ impl EvalContext {
         self.env.lookup_var(id)
     }
 
-    #[allow(dead_code)]
     pub fn define_module(&mut self, module: Module) {
         self.env.define_module(module);
     }
 
-    #[allow(dead_code)]
     pub fn lookup_module(&self, id: &Identifier) -> Option<Module> {
         self.env.lookup_module(id)
     }

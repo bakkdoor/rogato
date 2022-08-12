@@ -1,6 +1,3 @@
-#![allow(dead_code)]
-#![allow(clippy::vec_box)]
-
 use crate::ast::expression::{
     FnCallArgs, Lambda, LambdaArgs, LetBindings, LetExpression, Query, QueryBinding, QueryBindings,
     QueryGuards, StructProps, TupleItems,

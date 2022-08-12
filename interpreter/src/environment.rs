@@ -42,7 +42,6 @@ impl Default for Environment {
 }
 
 impl Environment {
-    #[allow(dead_code)]
     pub fn new() -> Environment {
         let modules = Rc::new(RefCell::new(HashMap::new()));
         let mod_name: Identifier = "Std".into();
@@ -62,7 +61,6 @@ impl Environment {
         }
     }
 
-    #[allow(dead_code)]
     pub fn new_with_imported_modules(imported_modules: ImportedModules) -> Environment {
         let modules = Rc::new(RefCell::new(HashMap::new()));
         let mod_name: Identifier = "Std".into();
@@ -96,7 +94,6 @@ impl Environment {
         }
     }
 
-    #[allow(dead_code)]
     pub fn child_with_imported_modules(&self, imported_modules: ImportedModules) -> Environment {
         let curr_state = self.state.borrow();
         let state = State {

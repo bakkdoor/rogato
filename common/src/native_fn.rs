@@ -3,7 +3,6 @@ use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq, Eq, Clone)]
 pub enum NativeFnError {
-    #[allow(dead_code)]
     #[error("NativeFnError: Unknown error: {0}")]
     Unknown(String),
 

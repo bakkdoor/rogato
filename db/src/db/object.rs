@@ -20,7 +20,6 @@ impl Object {
         }
     }
 
-    #[allow(dead_code)]
     pub fn new_boxed<Props: IntoIterator<Item = (String, Value)>>(
         type_id: Identifier,
         props: Props,

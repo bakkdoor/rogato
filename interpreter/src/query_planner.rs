@@ -7,7 +7,7 @@ use thiserror::Error;
 pub struct QueryPlanner {}
 
 #[derive(Error, Debug, PartialEq, Eq, Clone)]
-#[allow(dead_code)]
+
 pub enum QueryError {
     #[error("QueryError: Unknown error: {0}")]
     Unknown(String),

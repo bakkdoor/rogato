@@ -12,7 +12,6 @@ pub fn list(vec: Vec<ValueRef>) -> ValueRef {
     Rc::new(Value::List(vec))
 }
 
-#[allow(dead_code)]
 pub fn bool(b: bool) -> ValueRef {
     Rc::new(Value::Bool(b))
 }
@@ -45,7 +44,6 @@ pub enum Value {
     Int64(i64),
     Tuple(usize, Vec<ValueRef>),
     List(Vec<ValueRef>),
-    #[allow(dead_code)]
     Map(HashMap<String, ValueRef>),
     Object(HashMap<String, ValueRef>),
 }

@@ -43,14 +43,12 @@ impl Module {
         state.fn_defs.insert(fn_def.id().clone(), fn_def);
     }
 
-    #[allow(dead_code)]
     pub fn lookup_fn(&self, id: &Identifier) -> Option<Rc<FnDef>> {
         let state = self.state.borrow();
         let opt = state.fn_defs.get(id).cloned();
         opt
     }
 
-    #[allow(dead_code)]
     pub fn type_def(&mut self, id: Identifier, type_def: Rc<TypeDef>) {
         let mut state = self.state.borrow_mut();
         state.type_defs.insert(id, type_def);
@@ -61,7 +59,6 @@ impl Module {
         state.type_defs.get(id).cloned()
     }
 
-    #[allow(dead_code)]
     pub fn const_def(&mut self, id: &Identifier, val: ValueRef) {
         let mut state = self.state.borrow_mut();
         state.constants.insert(id.clone(), val);

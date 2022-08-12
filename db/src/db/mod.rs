@@ -17,10 +17,8 @@ pub use object_storage::ObjectStorage;
 
 pub type DBResult<T> = Result<T, indradb::Error>;
 
-#[allow(dead_code)]
 pub type ValidationResult<T> = Result<T, indradb::ValidationError>;
 
-#[allow(dead_code)]
 pub fn open<P: AsRef<Path>>(db_path: P) -> DBResult<RocksdbDatastore> {
     RocksdbDatastore::new(db_path, None)
 }

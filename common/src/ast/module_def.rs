@@ -50,7 +50,6 @@ impl ModuleExports {
         self.len() == 0
     }
 
-    #[allow(dead_code)]
     pub fn iter(&self) -> std::slice::Iter<Identifier> {
         self.exports.iter()
     }

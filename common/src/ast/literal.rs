@@ -80,7 +80,6 @@ impl<I: Display> TupleItems<I> {
         TupleItems { items }
     }
 
-    #[allow(dead_code)]
     pub fn len(&self) -> usize {
         self.items.len()
     }
@@ -140,7 +139,6 @@ impl StructProps {
         StructProps { props }
     }
 
-    #[allow(dead_code)]
     pub fn len(&self) -> usize {
         self.props.len()
     }

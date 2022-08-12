@@ -46,7 +46,6 @@ impl ObjectStorage {
         }
     }
 
-    #[allow(dead_code)]
     pub fn store_object<DB: Datastore>(
         &mut self,
         db: &DB,

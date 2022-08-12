@@ -20,7 +20,6 @@ use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq, Eq, Clone)]
 pub enum EvalError {
-    #[allow(dead_code)]
     #[error("Unknown evaluation error: {0}")]
     Unknown(String),
 

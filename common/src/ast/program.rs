@@ -12,7 +12,6 @@ impl Program {
         Program { nodes }
     }
 
-    #[allow(dead_code)]
     pub fn len(&self) -> usize {
         self.nodes.len()
     }
