@@ -1,7 +1,6 @@
 extern crate peg;
 
-use std::rc::Rc;
-
+use super::ParserContext;
 use peg::{error::ParseError, parser, str::LineCol};
 use rogato_common::ast::{
     expression::{
@@ -14,10 +13,11 @@ use rogato_common::ast::{
     Identifier, Program, AST,
 };
 use smol_str::SmolStr;
+use std::rc::Rc;
 
 parser! {
 /// Doc comment
-grammar parser() for str {
+grammar parser(context: &ParserContext) for str {
     rule traced<T>(e: rule<T>) -> T =
     &(input:$([_]*) {
         #[cfg(feature = "trace")]
@@ -509,25 +509,25 @@ grammar parser() for str {
 pub type ParseResult = Result<Program, ParseError<LineCol>>;
 
 #[cfg(not(feature = "trace"))]
-pub fn parse(str: &str) -> ParseResult {
-    parser::program(str)
+pub fn parse(str: &str, context: &ParserContext) -> ParseResult {
+    parser::program(str, context)
 }
 
 #[cfg(feature = "trace")]
-pub fn parse(str: &str) -> ParseResult {
-    parser::traced_program(str)
+pub fn parse(str: &str, context: &ParserContext) -> ParseResult {
+    parser::traced_program(str, context)
 }
 
 pub type ParseASTResult = Result<Rc<AST>, ParseError<LineCol>>;
 
-pub fn parse_ast(str: &str) -> ParseASTResult {
-    parser::program_root_def(str)
+pub fn parse_ast(str: &str, context: &ParserContext) -> ParseASTResult {
+    parser::program_root_def(str, context)
 }
 
 pub type ParseExprResult = Result<Rc<Expression>, ParseError<LineCol>>;
 
-pub fn parse_expr(str: &str) -> ParseExprResult {
-    match parser::expression(str) {
+pub fn parse_expr(str: &str, context: &ParserContext) -> ParseExprResult {
+    match parser::expression(str, context) {
         Ok(expr) => Ok(Rc::new(expr)),
         Err(err) => Err(err),
     }

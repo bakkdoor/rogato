@@ -1,10 +1,9 @@
 use crate::{EvalContext, Evaluate};
 use rogato_common::val;
-use rogato_parser::parse_expr;
+use rogato_parser::{parse_expr, ParserContext};
 
 #[test]
 fn basic_arithmetic() {
-    let mut ctx = EvalContext::new();
     let expressions_and_values = vec![
         ("3 + 4", val::int64(7)),
         ("-3 + 4", val::int64(1)),
@@ -21,8 +20,11 @@ fn basic_arithmetic() {
         ("10 ^ 10", val::int64(10_000_000_000)),
     ];
 
+    let mut ctx = EvalContext::new();
+    let p_ctx = ParserContext::new();
+
     for (code, value) in expressions_and_values.iter() {
-        let ast = parse_expr(code).unwrap();
+        let ast = parse_expr(code, &p_ctx).unwrap();
         assert_eq!(ast.evaluate(&mut ctx), Ok(value.clone()))
     }
 }
@@ -30,11 +32,12 @@ fn basic_arithmetic() {
 #[test]
 fn multiplication() {
     let mut ctx = EvalContext::new();
+    let p_ctx = ParserContext::new();
 
     for i in -100..100 {
         let a = i * 10;
         let b = i * 100;
-        let ast = parse_expr(format!("{} * {}", a, b).as_str()).unwrap();
+        let ast = parse_expr(format!("{} * {}", a, b).as_str(), &p_ctx).unwrap();
         assert_eq!(ast.evaluate(&mut ctx), Ok(val::int64(a * b)));
     }
 }
@@ -42,6 +45,7 @@ fn multiplication() {
 #[test]
 fn string_literals() {
     let mut ctx = EvalContext::new();
+    let p_ctx = ParserContext::new();
 
     let string_literals = vec![
         "",
@@ -53,7 +57,7 @@ fn string_literals() {
     ];
 
     for string_lit in string_literals.iter() {
-        let parse_result = parse_expr(format!("{:?}", string_lit).as_str());
+        let parse_result = parse_expr(format!("{:?}", string_lit).as_str(), &p_ctx);
         assert!(parse_result.is_ok());
         if let Ok(ast) = parse_result {
             assert_eq!(ast.evaluate(&mut ctx), Ok(val::string(string_lit)));
@@ -64,6 +68,8 @@ fn string_literals() {
 #[test]
 fn let_expressions() {
     let mut ctx = EvalContext::new();
+    let p_ctx = ParserContext::new();
+
     let ast = parse_expr(
         "let
             f x =
@@ -74,6 +80,7 @@ fn let_expressions() {
                 f 101
          in
             {x, f x, g x 10}",
+        &p_ctx,
     )
     .unwrap();
 
@@ -92,6 +99,7 @@ fn let_expressions() {
             mul a b = a * b
          in
             { add 1 2, mul 2 3 }",
+        &p_ctx,
     )
     .unwrap();
 
@@ -103,7 +111,6 @@ fn let_expressions() {
 
 #[test]
 fn std_math_module() {
-    let mut ctx = EvalContext::new();
     let code_with_vals = vec![
         ("Std.Math.abs -10", val::int64(10)),
         ("Std.Math.abs (10 * -10)", val::int64(100)),
@@ -113,15 +120,17 @@ fn std_math_module() {
         ("abs (100 - 1000)", val::int64(900)),
     ];
 
+    let mut ctx = EvalContext::new();
+    let p_ctx = ParserContext::new();
+
     for (code, val) in code_with_vals.iter() {
-        let ast = parse_expr(code).unwrap();
+        let ast = parse_expr(code, &p_ctx).unwrap();
         assert_eq!(ast.evaluate(&mut ctx), Ok(val.clone()));
     }
 }
 
 #[test]
 fn std_string_module() {
-    let mut ctx = EvalContext::new();
     let code_with_vals = vec![
         ("Std.String.length \"\"", val::int64(0)),
         ("Std.String.length \" \"", val::int64(1)),
@@ -129,8 +138,11 @@ fn std_string_module() {
         ("Std.String.length \"hello, world\"", val::int64(12)),
     ];
 
+    let mut ctx = EvalContext::new();
+    let p_ctx = ParserContext::new();
+
     for (code, val) in code_with_vals.iter() {
-        let ast = parse_expr(code).unwrap();
+        let ast = parse_expr(code, &p_ctx).unwrap();
         assert_eq!(ast.evaluate(&mut ctx), Ok(val.clone()));
     }
 }

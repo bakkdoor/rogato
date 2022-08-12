@@ -1,3 +1,4 @@
+use crate::ParserContext;
 #[cfg(test)]
 use crate::{assert_parse, assert_parse_ast, assert_parse_expr};
 
@@ -136,11 +137,11 @@ fn arithmetic_expressions() {
         )
     );
 
-    assert!(parse_expr("(22+)+1").is_err());
+    let ctx = ParserContext::new();
 
-    assert!(parse_expr("1++1").is_err());
-
-    assert!(parse_expr("3)+1").is_err());
+    assert!(parse_expr("(22+)+1", &ctx).is_err());
+    assert!(parse_expr("1++1", &ctx).is_err());
+    assert!(parse_expr("3)+1", &ctx).is_err());
 }
 
 #[test]

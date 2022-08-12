@@ -24,6 +24,52 @@ pub type Identifier = SmolStr;
 
 pub use program::Program;
 
+type ASTId = usize;
+
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct NodeFactory {
+    current_id: ASTId,
+}
+
+impl NodeFactory {
+    pub fn new() -> NodeFactory {
+        NodeFactory { current_id: 0 }
+    }
+
+    pub fn next_id(&mut self) -> ASTId {
+        self.current_id += 1;
+        self.current_id
+    }
+
+    pub fn ast_node(&mut self, ast: Rc<AST>) -> ASTNode {
+        let id = self.next_id();
+        ASTNode { id, ast }
+    }
+
+    pub fn expr_node(&mut self, expr: Rc<Expression>) -> ExprNode {
+        let id = self.next_id();
+        ExprNode { id, expr }
+    }
+}
+
+impl Default for NodeFactory {
+    fn default() -> Self {
+        NodeFactory::new()
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct ASTNode {
+    id: ASTId,
+    ast: Rc<AST>,
+}
+
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct ExprNode {
+    id: ASTId,
+    expr: Rc<Expression>,
+}
+
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum AST {
     RootComment(String),

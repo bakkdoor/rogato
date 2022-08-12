@@ -7,7 +7,7 @@ use indent_write::indentable::Indentable;
 
 #[allow(unused_imports)]
 use rogato_interpreter::{EvalContext, Evaluate};
-use rogato_parser::{parse, parse_expr};
+use rogato_parser::{parse, parse_expr, ParserContext};
 use std::fs::File;
 
 use clap::Parser;
@@ -31,6 +31,7 @@ fn main() -> anyhow::Result<()> {
         return Ok(());
     }
     let mut help_required = false;
+    let p_ctx = ParserContext::new();
     for arg in args {
         match arg.as_str() {
             "help" => help_required = true,
@@ -48,7 +49,7 @@ fn main() -> anyhow::Result<()> {
                 println!("Attempting file parse: {}", file);
                 let file_path = Path::new(file);
                 if file_path.exists() {
-                    read_parse_file(file_path);
+                    read_parse_file(file_path, &p_ctx);
                 } else {
                     eprintln!("File not found: {:?}. Aborting.", file);
                     help_required = true;
@@ -65,13 +66,13 @@ fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn read_parse_file(file_path: &Path) {
+fn read_parse_file(file_path: &Path, p_ctx: &ParserContext) {
     match File::open(file_path) {
         Ok(mut file) => {
             let mut buf = String::new();
             file.read_to_string(&mut buf).unwrap();
             println!("\n📂\t{}", file_path.display());
-            let parse_result = parse(buf.as_str());
+            let parse_result = parse(buf.as_str(), p_ctx);
             print_parse_result(buf.as_str(), &parse_result);
         }
         Err(error) => {
@@ -108,7 +109,9 @@ fn print_parse_result<T: Display, E: Display>(code: &str, result: &Result<T, E>)
 
 fn run_repl() {
     let mut context = EvalContext::new();
+    let p_ctx = ParserContext::new();
     let mut counter = 0;
+
     loop {
         counter += 1;
         let mut buffer = String::new();
@@ -119,7 +122,7 @@ fn run_repl() {
             println!("\n{:03} > ", counter);
             io::stdin().read_line(&mut buffer).unwrap();
         }
-        match parse(buffer.as_str()) {
+        match parse(buffer.as_str(), &p_ctx) {
             Ok(ast) => {
                 println!("{:03} AST> {:?}\n\n{}\n", counter, ast, ast);
                 match ast.evaluate(&mut context) {
@@ -131,7 +134,7 @@ fn run_repl() {
                     }
                 }
             }
-            Err(_) => match parse_expr(buffer.as_str()) {
+            Err(_) => match parse_expr(buffer.as_str(), &p_ctx) {
                 Ok(ast) => {
                     println!("{:03} EXPR> {:?}\n\n{}\n", counter, ast, ast);
                     match ast.evaluate(&mut context) {
