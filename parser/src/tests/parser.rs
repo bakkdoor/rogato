@@ -1,7 +1,6 @@
-use crate::ParserContext;
 #[cfg(test)]
-use crate::{assert_parse, assert_parse_ast, assert_parse_expr};
-
+use crate::{assert_parse, assert_parse_ast, assert_parse_expr, parse_expr, ParserContext};
+#[cfg(test)]
 use rogato_common::ast::helpers::inline_fn_def;
 #[cfg(test)]
 use rogato_common::ast::helpers::{
@@ -10,9 +9,6 @@ use rogato_common::ast::helpers::{
     string_lit, string_type, struct_lit, struct_type, symbol, tuple_lit, tuple_type, type_def,
     type_ref, unquoted, unquoted_ast, var,
 };
-
-#[cfg(test)]
-use crate::parse_expr;
 
 #[test]
 fn fn_defs() {
