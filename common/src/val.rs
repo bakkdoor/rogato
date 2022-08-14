@@ -1,5 +1,6 @@
 use std::{collections::HashMap, fmt::Display, rc::Rc};
 
+use rust_decimal::Decimal;
 pub use serde_json::Number;
 
 use crate::ast::{expression::TupleItems, ASTDepth};
@@ -24,6 +25,10 @@ pub fn int64(n: i64) -> ValueRef {
     Rc::new(Value::Int64(n))
 }
 
+pub fn decimal(n: Decimal) -> ValueRef {
+    Rc::new(Value::Decimal(n))
+}
+
 pub fn object<S: ToString>(props: Vec<(S, ValueRef)>) -> ValueRef {
     let props: Vec<(String, ValueRef)> = props
         .iter()
@@ -42,6 +47,7 @@ pub enum Value {
     String(String),
     Bool(bool),
     Int64(i64),
+    Decimal(Decimal),
     Tuple(usize, Vec<ValueRef>),
     List(Vec<ValueRef>),
     Map(HashMap<String, ValueRef>),
@@ -86,6 +92,7 @@ impl Display for Value {
             Value::String(s) => f.write_fmt(format_args!("\"{}\"", s)),
             Value::Bool(b) => f.write_fmt(format_args!("{}", b)),
             Value::Int64(i) => f.write_fmt(format_args!("{}", i)),
+            Value::Decimal(d) => f.write_fmt(format_args!("{}", d)),
             Value::Tuple(size, items) => f.write_fmt(format_args!(
                 "{{{}}}{{ {} }}",
                 size,
@@ -107,6 +114,7 @@ impl ASTDepth for Value {
             Value::String(_) => 1,
             Value::Bool(_) => 1,
             Value::Int64(_) => 1,
+            Value::Decimal(_) => 1,
             Value::Tuple(size, _) => 1 + size,
             Value::List(items) => 1 + items.len(),
             Value::Map(items) => 1 + items.len(),

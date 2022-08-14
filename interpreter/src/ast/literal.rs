@@ -10,6 +10,7 @@ impl Evaluate<ValueRef> for Literal {
     fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
         match self {
             Literal::Int64(number) => Ok(val::int64(*number)),
+            Literal::Decimal(number) => Ok(val::decimal(*number)),
             Literal::String(string) => Ok(val::string(string)),
             Literal::Tuple(items) => {
                 let mut values = vec![];

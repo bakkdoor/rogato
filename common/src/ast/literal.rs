@@ -1,3 +1,5 @@
+use rust_decimal::Decimal;
+
 use super::{expression::Expression, ASTDepth, Identifier};
 use crate::util::indent;
 use std::{fmt::Display, rc::Rc};
@@ -5,6 +7,7 @@ use std::{fmt::Display, rc::Rc};
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum Literal {
     Int64(i64),
+    Decimal(Decimal),
     String(String),
     Tuple(TupleItems<Expression>),
     List(TupleItems<Expression>),
@@ -15,6 +18,7 @@ impl Display for Literal {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Literal::Int64(num) => f.write_fmt(format_args!("{}", num)),
+            Literal::Decimal(num) => f.write_fmt(format_args!("{}", num)),
             Literal::String(string) => f.write_fmt(format_args!("\"{}\"", string)),
             Literal::Tuple(items) => {
                 if items.ast_depth() > 6 {
@@ -49,6 +53,7 @@ impl ASTDepth for Literal {
     fn ast_depth(&self) -> usize {
         match self {
             Literal::Int64(_) => 1,
+            Literal::Decimal(_) => 1,
             Literal::String(_) => 1,
             Literal::Tuple(items) => 1 + items.iter().map(|i| i.ast_depth()).sum::<usize>(),
             Literal::List(items) => 1 + items.iter().map(|i| i.ast_depth()).sum::<usize>(),
