@@ -50,5 +50,49 @@ pub fn module() -> Module {
         }
     }));
 
+    module.fn_def(fn_def("trunc", vec!["num"], move |args| {
+        let error = Err(invalid_args("trunc"));
+        match args.get(0) {
+            Some(val) => match val.deref() {
+                Value::Decimal(num) => Ok(val::decimal(num.trunc())),
+                _ => error,
+            },
+            _ => error,
+        }
+    }));
+
+    module.fn_def(fn_def("fract", vec!["num"], move |args| {
+        let error = Err(invalid_args("fract"));
+        match args.get(0) {
+            Some(val) => match val.deref() {
+                Value::Decimal(num) => Ok(val::decimal(num.fract())),
+                _ => error,
+            },
+            _ => error,
+        }
+    }));
+
+    module.fn_def(fn_def("max", vec!["a", "b"], move |args| {
+        let error = Err(invalid_args("max"));
+        match (args.get(0), args.get(1)) {
+            (Some(a), Some(b)) => match (a.deref(), b.deref()) {
+                (Value::Decimal(ad), Value::Decimal(bd)) => Ok(val::decimal((*ad).max(*bd))),
+                _ => error,
+            },
+            _ => error,
+        }
+    }));
+
+    module.fn_def(fn_def("min", vec!["a", "b"], move |args| {
+        let error = Err(invalid_args("min"));
+        match (args.get(0), args.get(1)) {
+            (Some(a), Some(b)) => match (a.deref(), b.deref()) {
+                (Value::Decimal(ad), Value::Decimal(bd)) => Ok(val::decimal((*ad).min(*bd))),
+                _ => error,
+            },
+            _ => error,
+        }
+    }));
+
     module
 }
