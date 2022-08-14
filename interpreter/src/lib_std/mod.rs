@@ -55,7 +55,9 @@ pub fn std_module() -> Module {
     }));
 
     module.fn_def(op_fn_def("%", move |args| {
-        with_number_op_args("%", args, |a, b| Ok(a % b))
+        with_number_op_args("%", args, |a, b| {
+            a.checked_rem(b).map_or(Err(invalid_args("%")), Ok)
+        })
     }));
 
     module.fn_def(op_fn_def("^", move |args| {
