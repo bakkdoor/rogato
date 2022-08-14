@@ -53,7 +53,7 @@ impl Evaluate<ValueRef> for Expression {
             Expression::Let(let_expr) => let_expr.evaluate(context),
             Expression::Lambda(lambda) => lambda.evaluate(context),
             Expression::Query(query) => query.evaluate(context),
-            Expression::Symbol(id) => Ok(val::string(format!("Symbol ^{}", id))), // likely need custom value types besides just json values to properly support symbol
+            Expression::Symbol(id) => Ok(val::symbol(id.clone())),
             Expression::Quoted(expr) => Ok(val::string(format!("^({})", expr))),
             Expression::QuotedAST(ast) => Ok(val::string(format!("^({})", ast))),
             Expression::Unquoted(expr) => Ok(val::string(format!("~({})", expr))),

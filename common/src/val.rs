@@ -4,7 +4,7 @@ use std::{collections::HashMap, fmt::Display, rc::Rc};
 use rust_decimal::Decimal;
 pub use serde_json::Number;
 
-use crate::ast::{expression::TupleItems, ASTDepth};
+use crate::ast::{expression::TupleItems, ASTDepth, Identifier};
 
 pub fn tuple(vec: Vec<ValueRef>) -> ValueRef {
     Rc::new(Value::Tuple(vec.len(), vec))
@@ -45,10 +45,15 @@ pub fn string<S: ToString>(s: S) -> ValueRef {
     Rc::new(Value::String(s.to_string()))
 }
 
+pub fn symbol(s: Identifier) -> ValueRef {
+    Rc::new(Value::Symbol(s))
+}
+
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum Value {
     Null,
     String(String),
+    Symbol(Identifier),
     Bool(bool),
     Decimal(Decimal),
     Tuple(usize, Vec<ValueRef>),
@@ -93,6 +98,7 @@ impl Display for Value {
         match self {
             Value::Null => f.write_str("null"),
             Value::String(s) => f.write_fmt(format_args!("\"{}\"", s)),
+            Value::Symbol(s) => f.write_fmt(format_args!("^{}", s)),
             Value::Bool(b) => f.write_fmt(format_args!("{}", b)),
             Value::Decimal(d) => f.write_fmt(format_args!("{}", d)),
             Value::Tuple(size, items) => f.write_fmt(format_args!(
@@ -114,6 +120,7 @@ impl ASTDepth for Value {
         match self {
             Value::Null => 1,
             Value::String(_) => 1,
+            Value::Symbol(_) => 1,
             Value::Bool(_) => 1,
             Value::Decimal(_) => 1,
             Value::Tuple(size, _) => 1 + size,
