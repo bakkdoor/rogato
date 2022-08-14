@@ -12,6 +12,7 @@ use rogato_common::{
     val::{Value, ValueRef},
 };
 use rust_decimal::{Decimal, MathematicalOps};
+use std::fmt::Debug;
 use std::ops::Deref;
 use std::rc::Rc;
 pub mod math;
@@ -119,4 +120,8 @@ fn with_string_op_args(
 
 pub fn invalid_args(id: &str) -> NativeFnError {
     NativeFnError::InvalidArguments(id.into())
+}
+
+pub fn unknown_err<E: Debug>(id: &str, error: E) -> NativeFnError {
+    NativeFnError::Unknown(id.into(), format!("{:?}", error))
 }
