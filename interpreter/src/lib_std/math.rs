@@ -8,7 +8,7 @@ pub fn module() -> Module {
 
     module.fn_def(fn_def("abs", vec!["num"], move |args| match args.get(0) {
         Some(val) => match val.deref() {
-            Value::Int64(num) => Ok(val::int64(num.abs())),
+            Value::Decimal(num) => Ok(val::decimal(num.abs())),
             _ => Err(invalid_args("abs")),
         },
         _ => Err(invalid_args("abs")),

@@ -12,6 +12,7 @@ use rogato_common::ast::{
     type_expression::{TypeDef, TypeExpression},
     Identifier, Program, AST,
 };
+use rust_decimal::Decimal;
 use smol_str::SmolStr;
 use std::rc::Rc;
 
@@ -384,7 +385,7 @@ grammar parser(context: &ParserContext) for str {
 
     rule number_lit() -> Expression
         = n:$("-"? ['0'..='9']+) {
-            Expression::Lit(Literal::Int64(n.parse().unwrap()))
+            Expression::Lit(Literal::Decimal(Decimal::from_str_exact(n).unwrap()))
         }
 
     rule string_lit() -> Expression

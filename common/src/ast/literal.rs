@@ -6,7 +6,6 @@ use std::{fmt::Display, rc::Rc};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum Literal {
-    Int64(i64),
     Decimal(Decimal),
     String(String),
     Tuple(TupleItems<Expression>),
@@ -17,7 +16,6 @@ pub enum Literal {
 impl Display for Literal {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Literal::Int64(num) => f.write_fmt(format_args!("{}", num)),
             Literal::Decimal(num) => f.write_fmt(format_args!("{}", num)),
             Literal::String(string) => f.write_fmt(format_args!("\"{}\"", string)),
             Literal::Tuple(items) => {
@@ -52,7 +50,6 @@ impl Display for Literal {
 impl ASTDepth for Literal {
     fn ast_depth(&self) -> usize {
         match self {
-            Literal::Int64(_) => 1,
             Literal::Decimal(_) => 1,
             Literal::String(_) => 1,
             Literal::Tuple(items) => 1 + items.iter().map(|i| i.ast_depth()).sum::<usize>(),

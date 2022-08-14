@@ -1,3 +1,5 @@
+use rust_decimal::Decimal;
+
 use crate::ast::expression::{
     FnCallArgs, Lambda, LambdaArgs, LetBindings, LetExpression, Query, QueryBinding, QueryBindings,
     QueryGuards, StructProps, TupleItems,
@@ -27,8 +29,11 @@ pub fn lit(lit: Literal) -> Rc<Expression> {
     Rc::new(Lit(lit))
 }
 
-pub fn int_lit(val: i64) -> Rc<Expression> {
-    lit(Int64(val))
+pub fn number_lit<Num>(val: Num) -> Rc<Expression>
+where
+    Decimal: From<Num>,
+{
+    lit(Decimal(Decimal::from(val)))
 }
 
 pub fn string_lit(val: &str) -> Rc<Expression> {

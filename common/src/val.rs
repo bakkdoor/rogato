@@ -1,3 +1,4 @@
+use rust_decimal::prelude::*;
 use std::{collections::HashMap, fmt::Display, rc::Rc};
 
 use rust_decimal::Decimal;
@@ -21,12 +22,15 @@ pub fn null() -> ValueRef {
     Rc::new(Value::Null)
 }
 
-pub fn int64(n: i64) -> ValueRef {
-    Rc::new(Value::Int64(n))
+pub fn decimal<Num>(n: Num) -> ValueRef
+where
+    Decimal: From<Num>,
+{
+    Rc::new(Value::Decimal(Decimal::from(n)))
 }
 
-pub fn decimal(n: Decimal) -> ValueRef {
-    Rc::new(Value::Decimal(n))
+pub fn decimal_str(s: &str) -> ValueRef {
+    Rc::new(Value::Decimal(Decimal::from_str(s).unwrap()))
 }
 
 pub fn object<S: ToString>(props: Vec<(S, ValueRef)>) -> ValueRef {
@@ -46,7 +50,6 @@ pub enum Value {
     Null,
     String(String),
     Bool(bool),
-    Int64(i64),
     Decimal(Decimal),
     Tuple(usize, Vec<ValueRef>),
     List(Vec<ValueRef>),
@@ -73,7 +76,7 @@ impl From<serde_json::Value> for Value {
             ),
             serde_json::Value::Bool(b) => Value::Bool(b),
             serde_json::Value::Null => Value::Null,
-            serde_json::Value::Number(n) => Value::Int64(n.as_i64().unwrap()),
+            serde_json::Value::Number(n) => Value::Decimal(Decimal::from(n.as_i64().unwrap())),
             serde_json::Value::Object(props) => Value::Object(HashMap::from_iter(
                 props
                     .iter()
@@ -91,7 +94,6 @@ impl Display for Value {
             Value::Null => f.write_str("null"),
             Value::String(s) => f.write_fmt(format_args!("\"{}\"", s)),
             Value::Bool(b) => f.write_fmt(format_args!("{}", b)),
-            Value::Int64(i) => f.write_fmt(format_args!("{}", i)),
             Value::Decimal(d) => f.write_fmt(format_args!("{}", d)),
             Value::Tuple(size, items) => f.write_fmt(format_args!(
                 "{{{}}}{{ {} }}",
@@ -113,7 +115,6 @@ impl ASTDepth for Value {
             Value::Null => 1,
             Value::String(_) => 1,
             Value::Bool(_) => 1,
-            Value::Int64(_) => 1,
             Value::Decimal(_) => 1,
             Value::Tuple(size, _) => 1 + size,
             Value::List(items) => 1 + items.len(),

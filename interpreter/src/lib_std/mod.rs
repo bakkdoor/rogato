@@ -11,6 +11,7 @@ use rogato_common::{
     val,
     val::{Value, ValueRef},
 };
+use rust_decimal::{Decimal, MathematicalOps};
 use std::ops::Deref;
 use std::rc::Rc;
 pub mod math;
@@ -36,19 +37,22 @@ pub fn std_module() -> Module {
     let mut module = Module::new("Std");
 
     module.fn_def(op_fn_def("+", move |args| {
-        with_number_op_args("+", args, |a, b| Ok(a + b))
+        with_number_op_args("+", args, |a, b| Ok(a.saturating_add(b)))
     }));
 
     module.fn_def(op_fn_def("-", move |args| {
-        with_number_op_args("-", args, |a, b| Ok(a - b))
+        with_number_op_args("-", args, |a, b| Ok(a.saturating_sub(b)))
     }));
 
     module.fn_def(op_fn_def("*", move |args| {
-        with_number_op_args("*", args, |a, b| Ok(a * b))
+        with_number_op_args("*", args, |a, b| Ok(a.saturating_mul(b)))
     }));
 
     module.fn_def(op_fn_def("/", move |args| {
-        with_number_op_args("/", args, |a, b| Ok(a / b))
+        with_number_op_args("/", args, |a, b| match a.checked_div(b) {
+            Some(val) => Ok(val),
+            None => Err(invalid_args("/")),
+        })
     }));
 
     module.fn_def(op_fn_def("%", move |args| {
@@ -56,9 +60,9 @@ pub fn std_module() -> Module {
     }));
 
     module.fn_def(op_fn_def("^", move |args| {
-        with_number_op_args("^", args, |a, b| match u32::try_from(b) {
-            Ok(exponent) => Ok(a.pow(exponent)),
-            Err(_) => Err(invalid_args("^")),
+        with_number_op_args("^", args, |a, b| match a.checked_powd(b) {
+            Some(val) => Ok(val),
+            None => Err(invalid_args("^")),
         })
     }));
 
@@ -88,11 +92,11 @@ pub fn op_fn_def(id: &str, body: NativeFn) -> Rc<FnDef> {
 pub fn with_number_op_args(
     id: &str,
     args: &[ValueRef],
-    func: fn(i64, i64) -> Result<i64, NativeFnError>,
+    func: fn(Decimal, Decimal) -> Result<Decimal, NativeFnError>,
 ) -> Result<ValueRef, NativeFnError> {
     match (args.get(0), args.get(1)) {
         (Some(a), Some(b)) => match ((*a).deref(), (*b).deref()) {
-            (Value::Int64(a), Value::Int64(b)) => func(*a, *b).map(val::int64),
+            (Value::Decimal(a), Value::Decimal(b)) => func(*a, *b).map(val::decimal),
             _ => Err(invalid_args(id)),
         },
         _ => Err(invalid_args(id)),
