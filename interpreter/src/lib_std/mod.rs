@@ -49,9 +49,8 @@ pub fn std_module() -> Module {
     }));
 
     module.fn_def(op_fn_def("/", move |args| {
-        with_number_op_args("/", args, |a, b| match a.checked_div(b) {
-            Some(val) => Ok(val),
-            None => Err(invalid_args("/")),
+        with_number_op_args("/", args, |a, b| {
+            a.checked_div(b).map_or(Err(invalid_args("/")), Ok)
         })
     }));
 
@@ -60,9 +59,8 @@ pub fn std_module() -> Module {
     }));
 
     module.fn_def(op_fn_def("^", move |args| {
-        with_number_op_args("^", args, |a, b| match a.checked_powd(b) {
-            Some(val) => Ok(val),
-            None => Err(invalid_args("^")),
+        with_number_op_args("^", args, |a, b| {
+            a.checked_powd(b).map_or(Err(invalid_args("^")), Ok)
         })
     }));
 
