@@ -9,6 +9,7 @@ use rogato_common::ast::helpers::{
     string_lit, string_type, struct_lit, struct_type, symbol, tuple_lit, tuple_type, type_def,
     type_ref, unquoted, unquoted_ast, var,
 };
+use rust_decimal_macros::dec;
 
 #[test]
 fn fn_defs() {
@@ -159,9 +160,11 @@ fn literals() {
     assert_parse_expr!("-1", number_lit(-1));
     assert_parse_expr!("-10", number_lit(-10));
     assert_parse_expr!("10", number_lit(10));
-
+    assert_parse_expr!("0.0", number_lit(dec!(0.0)));
+    assert_parse_expr!("1.5", number_lit(dec!(1.5)));
+    assert_parse_expr!("-1.2457", number_lit(dec!(-1.2457)));
+    assert_parse_expr!("-10.8558", number_lit(dec!(-10.8558)));
     assert_parse_expr!("\"Hello, world!\"", string_lit("Hello, world!"));
-
     assert_parse_expr!(
         "{1,2,3}",
         tuple_lit(vec![number_lit(1), number_lit(2), number_lit(3)])
