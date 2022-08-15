@@ -78,6 +78,20 @@ pub fn std_module() -> Module {
         }
     }));
 
+    module.fn_def(fn_def("==", vec!["a", "b"], move |args| {
+        match (args.len(), args.get(0), args.get(1)) {
+            (2, Some(a), Some(b)) => Ok(val::bool(a.eq(b))),
+            _ => Err(invalid_args("==")),
+        }
+    }));
+
+    module.fn_def(fn_def("!=", vec!["a", "b"], move |args| {
+        match (args.len(), args.get(0), args.get(1)) {
+            (2, Some(a), Some(b)) => Ok(val::bool(a.ne(b))),
+            _ => Err(invalid_args("!=")),
+        }
+    }));
+
     module
 }
 

@@ -148,8 +148,6 @@ grammar parser(context: &ParserContext) for str {
 
     pub rule expression() -> Expression
         = fn_pipe()
-        / tuple_lit()
-        / list_lit()
         / let_expr()
         / query()
         / lambda()

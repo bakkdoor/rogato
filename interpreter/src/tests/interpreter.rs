@@ -146,3 +146,36 @@ fn std_string_module() {
         assert_eq!(ast.evaluate(&mut ctx), Ok(val.clone()));
     }
 }
+
+#[test]
+fn equality() {
+    let not_equal = vec![
+        "1 == 2",
+        "1 == \"foo\"",
+        "^foo == ^bar",
+        "{1,2,3} == {3,4,5}",
+        "{1, 1 + 1, 2 + 1} == {3,4,5}",
+    ];
+
+    let equal = vec![
+        "1 == 1",
+        "\"foo\" == \"foo\"",
+        "^foo == ^foo",
+        "{1,2,3} == {1,2,3}",
+        "{1, 1 + 1, 2 + 1} == {1,2,3}",
+    ];
+
+    let mut ctx = EvalContext::new();
+    let p_ctx = ParserContext::new();
+
+    for code in not_equal.iter() {
+        println!("{}", code);
+        let ast = parse_expr(code, &p_ctx).unwrap();
+        assert_eq!(ast.evaluate(&mut ctx), Ok(val::bool(false)));
+    }
+
+    for code in equal.iter() {
+        let ast = parse_expr(code, &p_ctx).unwrap();
+        assert_eq!(ast.evaluate(&mut ctx), Ok(val::bool(true)));
+    }
+}
