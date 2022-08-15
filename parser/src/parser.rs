@@ -383,7 +383,11 @@ grammar parser(context: &ParserContext) for str {
         / list_lit()
 
     rule number_lit() -> Expression
-        = n:$("-"? ['0'..='9']+ ("." ['0'..='9']+)?) {
+        = n:$("-"? ['0'..='9']+ "." ['0'..='9']+) {
+            let decimal = Decimal::from_str(n).unwrap();
+            Expression::Lit(Literal::Number(decimal))
+        }
+        / n:$("-"? ['0'..='9']+) {
             let decimal = Decimal::from_str(n).unwrap();
             Expression::Lit(Literal::Number(decimal))
         }
