@@ -116,8 +116,8 @@ pub fn with_number_op_args(
     args: &[ValueRef],
     func: fn(Decimal, Decimal) -> Result<Decimal, NativeFnError>,
 ) -> Result<ValueRef, NativeFnError> {
-    match (args.get(0), args.get(1)) {
-        (Some(a), Some(b)) => match ((*a).deref(), (*b).deref()) {
+    match (args.len(), args.get(0), args.get(1)) {
+        (2, Some(a), Some(b)) => match ((*a).deref(), (*b).deref()) {
             (Value::Number(a), Value::Number(b)) => func(*a, *b).map(val::number),
             _ => Err(invalid_args(id)),
         },
@@ -130,8 +130,8 @@ fn with_string_op_args(
     args: &[ValueRef],
     func: fn(&String, &String) -> Result<String, NativeFnError>,
 ) -> Result<ValueRef, NativeFnError> {
-    match (args.get(0), args.get(1)) {
-        (Some(a), Some(b)) => match ((*a).deref(), (*b).deref()) {
+    match (args.len(), args.get(0), args.get(1)) {
+        (2, Some(a), Some(b)) => match ((*a).deref(), (*b).deref()) {
             (Value::String(a), Value::String(b)) => func(a, b).map(val::string),
             _ => Err(invalid_args(id)),
         },
