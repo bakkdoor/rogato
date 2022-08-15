@@ -5,19 +5,19 @@ use rogato_parser::{parse_expr, ParserContext};
 #[test]
 fn basic_arithmetic() {
     let expressions_and_values = vec![
-        ("3 + 4", val::decimal(7)),
-        ("-3 + 4", val::decimal(1)),
-        ("100 - 90", val::decimal(10)),
-        ("-100 - 90", val::decimal(-190)),
-        ("10 * 500", val::decimal(5000)),
-        ("-10 * 500", val::decimal(-5000)),
-        ("10 * -500", val::decimal(-5000)),
+        ("3 + 4", val::number(7)),
+        ("-3 + 4", val::number(1)),
+        ("100 - 90", val::number(10)),
+        ("-100 - 90", val::number(-190)),
+        ("10 * 500", val::number(5000)),
+        ("-10 * 500", val::number(-5000)),
+        ("10 * -500", val::number(-5000)),
         ("10 / 3", val::decimal_str("3.3333333333333333333333333333")),
-        ("500 / 25", val::decimal(20)),
-        ("10 % 3", val::decimal(1)),
-        ("500 % 28", val::decimal(24)),
-        ("10 ^ 2", val::decimal(100)),
-        ("10 ^ 10", val::decimal(10000000000i64)),
+        ("500 / 25", val::number(20)),
+        ("10 % 3", val::number(1)),
+        ("500 % 28", val::number(24)),
+        ("10 ^ 2", val::number(100)),
+        ("10 ^ 10", val::number(10000000000i64)),
     ];
 
     let mut ctx = EvalContext::new();
@@ -38,7 +38,7 @@ fn multiplication() {
         let a = i * 10;
         let b = i * 100;
         let ast = parse_expr(format!("{} * {}", a, b).as_str(), &p_ctx).unwrap();
-        assert_eq!(ast.evaluate(&mut ctx), Ok(val::decimal(a * b)));
+        assert_eq!(ast.evaluate(&mut ctx), Ok(val::number(a * b)));
     }
 }
 
@@ -87,8 +87,8 @@ fn let_expressions() {
     assert_eq!(
         ast.evaluate(&mut ctx),
         Ok(val::tuple(vec![
-            val::decimal(102),
-            val::decimal(103),
+            val::number(102),
+            val::number(103),
             val::decimal_str("90.8")
         ]))
     );
@@ -105,19 +105,19 @@ fn let_expressions() {
 
     assert_eq!(
         ast.evaluate(&mut ctx),
-        Ok(val::tuple(vec![val::decimal(3), val::decimal(6)]))
+        Ok(val::tuple(vec![val::number(3), val::number(6)]))
     )
 }
 
 #[test]
 fn std_math_module() {
     let code_with_vals = vec![
-        ("Std.Math.abs -10", val::decimal(10)),
-        ("Std.Math.abs (10 * -10)", val::decimal(100)),
-        ("Std.Math.abs (100 - 1000)", val::decimal(900)),
-        ("abs -10", val::decimal(10)),
-        ("abs (10 * -10)", val::decimal(100)),
-        ("abs (100 - 1000)", val::decimal(900)),
+        ("Std.Math.abs -10", val::number(10)),
+        ("Std.Math.abs (10 * -10)", val::number(100)),
+        ("Std.Math.abs (100 - 1000)", val::number(900)),
+        ("abs -10", val::number(10)),
+        ("abs (10 * -10)", val::number(100)),
+        ("abs (100 - 1000)", val::number(900)),
     ];
 
     let mut ctx = EvalContext::new();
@@ -132,10 +132,10 @@ fn std_math_module() {
 #[test]
 fn std_string_module() {
     let code_with_vals = vec![
-        ("Std.String.length \"\"", val::decimal(0)),
-        ("Std.String.length \" \"", val::decimal(1)),
-        ("Std.String.length \"hello\"", val::decimal(5)),
-        ("Std.String.length \"hello, world\"", val::decimal(12)),
+        ("Std.String.length \"\"", val::number(0)),
+        ("Std.String.length \" \"", val::number(1)),
+        ("Std.String.length \"hello\"", val::number(5)),
+        ("Std.String.length \"hello, world\"", val::number(12)),
     ];
 
     let mut ctx = EvalContext::new();

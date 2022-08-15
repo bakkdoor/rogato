@@ -10,7 +10,7 @@ pub fn module() -> Module {
         let error = Err(invalid_args("abs"));
         match args.get(0) {
             Some(val) => match val.deref() {
-                Value::Decimal(num) => Ok(val::decimal(num.abs())),
+                Value::Number(num) => Ok(val::number(num.abs())),
                 _ => error,
             },
             _ => error,
@@ -21,7 +21,7 @@ pub fn module() -> Module {
         let error = Err(invalid_args("round"));
         match args.get(0) {
             Some(val) => match val.deref() {
-                Value::Decimal(num) => Ok(val::decimal(num.round())),
+                Value::Number(num) => Ok(val::number(num.round())),
                 _ => error,
             },
             _ => error,
@@ -32,7 +32,7 @@ pub fn module() -> Module {
         let error = Err(invalid_args("ceil"));
         match args.get(0) {
             Some(val) => match val.deref() {
-                Value::Decimal(num) => Ok(val::decimal(num.ceil())),
+                Value::Number(num) => Ok(val::number(num.ceil())),
                 _ => error,
             },
             _ => error,
@@ -43,7 +43,7 @@ pub fn module() -> Module {
         let error = Err(invalid_args("floor"));
         match args.get(0) {
             Some(val) => match val.deref() {
-                Value::Decimal(num) => Ok(val::decimal(num.floor())),
+                Value::Number(num) => Ok(val::number(num.floor())),
                 _ => error,
             },
             _ => error,
@@ -54,7 +54,7 @@ pub fn module() -> Module {
         let error = Err(invalid_args("trunc"));
         match args.get(0) {
             Some(val) => match val.deref() {
-                Value::Decimal(num) => Ok(val::decimal(num.trunc())),
+                Value::Number(num) => Ok(val::number(num.trunc())),
                 _ => error,
             },
             _ => error,
@@ -65,7 +65,7 @@ pub fn module() -> Module {
         let error = Err(invalid_args("fract"));
         match args.get(0) {
             Some(val) => match val.deref() {
-                Value::Decimal(num) => Ok(val::decimal(num.fract())),
+                Value::Number(num) => Ok(val::number(num.fract())),
                 _ => error,
             },
             _ => error,
@@ -76,7 +76,7 @@ pub fn module() -> Module {
         let error = Err(invalid_args("max"));
         match (args.get(0), args.get(1)) {
             (Some(a), Some(b)) => match (a.deref(), b.deref()) {
-                (Value::Decimal(ad), Value::Decimal(bd)) => Ok(val::decimal((*ad).max(*bd))),
+                (Value::Number(ad), Value::Number(bd)) => Ok(val::number((*ad).max(*bd))),
                 _ => error,
             },
             _ => error,
@@ -87,7 +87,7 @@ pub fn module() -> Module {
         let error = Err(invalid_args("min"));
         match (args.get(0), args.get(1)) {
             (Some(a), Some(b)) => match (a.deref(), b.deref()) {
-                (Value::Decimal(ad), Value::Decimal(bd)) => Ok(val::decimal((*ad).min(*bd))),
+                (Value::Number(ad), Value::Number(bd)) => Ok(val::number((*ad).min(*bd))),
                 _ => error,
             },
             _ => error,

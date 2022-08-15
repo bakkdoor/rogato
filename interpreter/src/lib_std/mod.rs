@@ -104,7 +104,7 @@ pub fn with_number_op_args(
 ) -> Result<ValueRef, NativeFnError> {
     match (args.get(0), args.get(1)) {
         (Some(a), Some(b)) => match ((*a).deref(), (*b).deref()) {
-            (Value::Decimal(a), Value::Decimal(b)) => func(*a, *b).map(val::decimal),
+            (Value::Number(a), Value::Number(b)) => func(*a, *b).map(val::number),
             _ => Err(invalid_args(id)),
         },
         _ => Err(invalid_args(id)),

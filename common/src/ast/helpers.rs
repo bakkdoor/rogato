@@ -33,7 +33,7 @@ pub fn number_lit<Num>(val: Num) -> Rc<Expression>
 where
     Decimal: From<Num>,
 {
-    lit(Decimal(Decimal::from(val)))
+    lit(Number(Decimal::from(val)))
 }
 
 pub fn string_lit(val: &str) -> Rc<Expression> {

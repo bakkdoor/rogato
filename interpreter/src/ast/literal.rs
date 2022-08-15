@@ -9,7 +9,7 @@ use rogato_common::{
 impl Evaluate<ValueRef> for Literal {
     fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
         match self {
-            Literal::Decimal(number) => Ok(val::decimal(*number)),
+            Literal::Number(number) => Ok(val::number(*number)),
             Literal::String(string) => Ok(val::string(string)),
             Literal::Tuple(items) => {
                 let mut values = vec![];

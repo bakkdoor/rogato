@@ -6,39 +6,8 @@ pub use serde_json::Number;
 
 use crate::ast::{expression::TupleItems, ASTDepth, Identifier};
 
-pub fn tuple(vec: Vec<ValueRef>) -> ValueRef {
-    Rc::new(Value::Tuple(vec.len(), vec))
-}
-
-pub fn list(vec: Vec<ValueRef>) -> ValueRef {
-    Rc::new(Value::List(vec))
-}
-
-pub fn bool(b: bool) -> ValueRef {
-    Rc::new(Value::Bool(b))
-}
-
 pub fn null() -> ValueRef {
     Rc::new(Value::Null)
-}
-
-pub fn decimal<Num>(n: Num) -> ValueRef
-where
-    Decimal: From<Num>,
-{
-    Rc::new(Value::Decimal(Decimal::from(n)))
-}
-
-pub fn decimal_str(s: &str) -> ValueRef {
-    Rc::new(Value::Decimal(Decimal::from_str(s).unwrap()))
-}
-
-pub fn object<S: ToString>(props: Vec<(S, ValueRef)>) -> ValueRef {
-    let props: Vec<(String, ValueRef)> = props
-        .iter()
-        .map(|(prop, val)| (prop.to_string(), val.clone()))
-        .collect();
-    Rc::new(Value::Object(HashMap::from_iter(props)))
 }
 
 pub fn string<S: ToString>(s: S) -> ValueRef {
@@ -49,13 +18,44 @@ pub fn symbol(s: Identifier) -> ValueRef {
     Rc::new(Value::Symbol(s))
 }
 
+pub fn bool(b: bool) -> ValueRef {
+    Rc::new(Value::Bool(b))
+}
+
+pub fn tuple(vec: Vec<ValueRef>) -> ValueRef {
+    Rc::new(Value::Tuple(vec.len(), vec))
+}
+
+pub fn list(vec: Vec<ValueRef>) -> ValueRef {
+    Rc::new(Value::List(vec))
+}
+
+pub fn number<Num>(n: Num) -> ValueRef
+where
+    Decimal: From<Num>,
+{
+    Rc::new(Value::Number(Decimal::from(n)))
+}
+
+pub fn decimal_str(s: &str) -> ValueRef {
+    Rc::new(Value::Number(Decimal::from_str(s).unwrap()))
+}
+
+pub fn object<S: ToString>(props: Vec<(S, ValueRef)>) -> ValueRef {
+    let props: Vec<(String, ValueRef)> = props
+        .iter()
+        .map(|(prop, val)| (prop.to_string(), val.clone()))
+        .collect();
+    Rc::new(Value::Object(HashMap::from_iter(props)))
+}
+
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum Value {
     Null,
     String(String),
     Symbol(Identifier),
     Bool(bool),
-    Decimal(Decimal),
+    Number(Decimal),
     Tuple(usize, Vec<ValueRef>),
     List(Vec<ValueRef>),
     Map(HashMap<String, ValueRef>),
@@ -81,7 +81,7 @@ impl From<serde_json::Value> for Value {
             ),
             serde_json::Value::Bool(b) => Value::Bool(b),
             serde_json::Value::Null => Value::Null,
-            serde_json::Value::Number(n) => Value::Decimal(Decimal::from(n.as_i64().unwrap())),
+            serde_json::Value::Number(n) => Value::Number(Decimal::from(n.as_i64().unwrap())),
             serde_json::Value::Object(props) => Value::Object(HashMap::from_iter(
                 props
                     .iter()
@@ -100,7 +100,7 @@ impl Display for Value {
             Value::String(s) => f.write_fmt(format_args!("\"{}\"", s)),
             Value::Symbol(s) => f.write_fmt(format_args!("^{}", s)),
             Value::Bool(b) => f.write_fmt(format_args!("{}", b)),
-            Value::Decimal(d) => f.write_fmt(format_args!("{}", d)),
+            Value::Number(d) => f.write_fmt(format_args!("{}", d)),
             Value::Tuple(size, items) => f.write_fmt(format_args!(
                 "{{{}}}{{ {} }}",
                 size,
@@ -122,7 +122,7 @@ impl ASTDepth for Value {
             Value::String(_) => 1,
             Value::Symbol(_) => 1,
             Value::Bool(_) => 1,
-            Value::Decimal(_) => 1,
+            Value::Number(_) => 1,
             Value::Tuple(size, _) => 1 + size,
             Value::List(items) => 1 + items.len(),
             Value::Map(items) => 1 + items.len(),
