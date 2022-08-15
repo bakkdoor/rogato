@@ -150,32 +150,49 @@ fn std_string_module() {
 #[test]
 fn equality() {
     let not_equal = vec![
-        "1 == 2",
-        "1 == \"foo\"",
-        "^foo == ^bar",
-        "{1,2,3} == {3,4,5}",
-        "{1, 1 + 1, 2 + 1} == {3,4,5}",
+        ("1", "2"),
+        ("1", "\"foo\""),
+        ("^foo", "^bar"),
+        ("{1,2}", "{2,1}"),
+        ("{1,2,3}", "{3,4,5}"),
+        ("{1, 1 + 1, 2 + 1}", "{3,4,5}"),
+        ("[^foo, ^bar, 1 + 2]", "[^bar, 3, ^foo]"),
     ];
 
     let equal = vec![
-        "1 == 1",
-        "\"foo\" == \"foo\"",
-        "^foo == ^foo",
-        "{1,2,3} == {1,2,3}",
-        "{1, 1 + 1, 2 + 1} == {1,2,3}",
+        ("1", "1"),
+        ("\"foo\"", "\"foo\""),
+        ("^foo", "^foo"),
+        ("{1,2,3}", "{1,2,3}"),
+        ("{1, 1 + 1, 2 + 1}", "{1,2,3}"),
+        ("[]", "[]"),
+        ("[1]", "[1]"),
+        (
+            "[^foo, ^bar, 1 + 2, \"hello\" ++ \", world!\"]",
+            "[^foo, ^bar, 3, \"hello, world!\"]",
+        ),
     ];
 
     let mut ctx = EvalContext::new();
     let p_ctx = ParserContext::new();
 
-    for code in not_equal.iter() {
-        println!("{}", code);
-        let ast = parse_expr(code, &p_ctx).unwrap();
+    for (left, right) in not_equal.iter() {
+        let code = format!("{} == {}", left, right);
+        let ast = parse_expr(code.as_str(), &p_ctx).unwrap();
         assert_eq!(ast.evaluate(&mut ctx), Ok(val::bool(false)));
+
+        let code = format!("{} != {}", left, right);
+        let ast = parse_expr(code.as_str(), &p_ctx).unwrap();
+        assert_eq!(ast.evaluate(&mut ctx), Ok(val::bool(true)));
     }
 
-    for code in equal.iter() {
-        let ast = parse_expr(code, &p_ctx).unwrap();
+    for (left, right) in equal.iter() {
+        let code = format!("{} == {}", left, right);
+        let ast = parse_expr(code.as_str(), &p_ctx).unwrap();
         assert_eq!(ast.evaluate(&mut ctx), Ok(val::bool(true)));
+
+        let code = format!("{} != {}", left, right);
+        let ast = parse_expr(code.as_str(), &p_ctx).unwrap();
+        assert_eq!(ast.evaluate(&mut ctx), Ok(val::bool(false)));
     }
 }
