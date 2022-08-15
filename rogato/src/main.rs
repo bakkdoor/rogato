@@ -134,7 +134,7 @@ fn run_repl() {
                     }
                 }
             }
-            Err(_) => match parse_expr(buffer.as_str(), &p_ctx) {
+            Err(_) => match parse_expr(buffer.as_str().trim(), &p_ctx) {
                 Ok(ast) => {
                     println!("{:03} EXPR> {:?}\n\n{}\n", counter, ast, ast);
                     match ast.evaluate(&mut context) {
