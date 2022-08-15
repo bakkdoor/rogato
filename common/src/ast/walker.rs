@@ -1,4 +1,8 @@
-use super::{expression::Expression, visitor::Visitor, AST};
+use super::{
+    expression::{Expression, Literal},
+    visitor::Visitor,
+    AST,
+};
 
 pub trait Walk {
     fn walk<V: Visitor<()>>(&self, v: &mut V);
@@ -26,7 +30,28 @@ impl Walk for Expression {
                 v.commented(c, expr);
                 expr.walk(v);
             }
-            Expression::Lit(lit_exp) => v.lit(lit_exp),
+            Expression::Lit(lit_exp) => {
+                v.lit(lit_exp);
+                match lit_exp {
+                    Literal::Number(_) => {}
+                    Literal::String(_) => {}
+                    Literal::List(vals) => {
+                        for val in vals.iter() {
+                            val.walk(v)
+                        }
+                    }
+                    Literal::Tuple(vals) => {
+                        for val in vals.iter() {
+                            val.walk(v)
+                        }
+                    }
+                    Literal::Struct(_id, props) => {
+                        for (_prop_name, val) in props.iter() {
+                            val.walk(v)
+                        }
+                    }
+                }
+            }
             Expression::FnCall(id, args) => {
                 v.fn_call(id, args);
                 for a in args.iter() {
