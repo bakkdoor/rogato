@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::{EvalContext, EvalError, Evaluate};
 use rogato_common::{
     ast::{
@@ -68,8 +70,8 @@ impl Evaluate<ValueRef> for Expression {
             Expression::Lambda(lambda) => lambda.evaluate(context),
             Expression::Query(query) => query.evaluate(context),
             Expression::Symbol(id) => Ok(val::symbol(id.clone())),
-            Expression::Quoted(expr) => Ok(val::string(format!("^({})", expr))),
-            Expression::QuotedAST(ast) => Ok(val::string(format!("^({})", ast))),
+            Expression::Quoted(expr) => Ok(val::quoted(Rc::clone(expr))),
+            Expression::QuotedAST(ast) => Ok(val::quoted_ast(Rc::clone(ast))),
             Expression::Unquoted(expr) => Ok(val::string(format!("~({})", expr))),
             Expression::UnquotedAST(ast) => Ok(val::string(format!("~({})", ast))),
             Expression::InlineFnDef(fn_def) => fn_def.evaluate(context),

@@ -5,9 +5,9 @@ use rust_decimal::Decimal;
 pub use serde_json::Number;
 
 use crate::ast::{
-    expression::{Lambda, TupleItems},
+    expression::{Expression, Lambda, TupleItems},
     fn_def::FnDef,
-    ASTDepth, Identifier,
+    ASTDepth, Identifier, AST,
 };
 
 pub fn null() -> ValueRef {
@@ -61,6 +61,13 @@ pub fn fn_ref(fn_def: Rc<FnDef>) -> ValueRef {
     Rc::new(Value::FunctionRef(fn_def))
 }
 
+pub fn quoted(expr: Rc<Expression>) -> ValueRef {
+    Rc::new(Value::Quoted(expr))
+}
+pub fn quoted_ast(ast: Rc<AST>) -> ValueRef {
+    Rc::new(Value::QuotedAST(ast))
+}
+
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum Value {
     Null,
@@ -74,6 +81,8 @@ pub enum Value {
     Object(HashMap<String, ValueRef>),
     Lambda(Rc<Lambda>),
     FunctionRef(Rc<FnDef>),
+    Quoted(Rc<Expression>),
+    QuotedAST(Rc<AST>),
 }
 
 impl Value {
@@ -127,6 +136,8 @@ impl Display for Value {
             Value::Object(props) => f.write_fmt(format_args!("Object{{ {:?} }}", props)),
             Value::Lambda(lambda) => f.write_fmt(format_args!("{}", lambda)),
             Value::FunctionRef(fn_def) => f.write_fmt(format_args!("{}", fn_def)),
+            Value::Quoted(expr) => f.write_fmt(format_args!("^{}", expr)),
+            Value::QuotedAST(ast) => f.write_fmt(format_args!("^({})", ast)),
         }
     }
 }
@@ -145,6 +156,8 @@ impl ASTDepth for Value {
             Value::Object(props) => 1 + props.len(),
             Value::Lambda(lambda) => 1 + lambda.ast_depth(),
             Value::FunctionRef(_) => 1,
+            Value::Quoted(expr) => 1 + expr.ast_depth(),
+            Value::QuotedAST(ast) => 1 + ast.ast_depth(),
         }
     }
 }

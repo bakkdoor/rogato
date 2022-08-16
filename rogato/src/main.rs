@@ -127,7 +127,7 @@ fn run_repl() {
                 println!("{:03} AST> {:?}\n\n{}\n", counter, ast, ast);
                 match ast.evaluate(&mut context) {
                     Ok(val) => {
-                        println!("{:03} EVAL> {}", counter, val);
+                        println!("{:03} EVAL>\n{}", counter, val);
                     }
                     Err(e) => {
                         eprintln!("{:03} EVAL ERROR> {}", counter, e)
@@ -139,7 +139,7 @@ fn run_repl() {
                     println!("{:03} EXPR> {:?}\n\n{}\n", counter, ast, ast);
                     match ast.evaluate(&mut context) {
                         Ok(val) => {
-                            println!("{:03} EVAL> {}", counter, val)
+                            println!("{:03} EVAL>\n{}", counter, val)
                         }
                         Err(e) => {
                             eprintln!("{:03} EVAL ERROR> {}", counter, e)
