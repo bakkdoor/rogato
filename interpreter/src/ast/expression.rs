@@ -22,9 +22,6 @@ impl Evaluate<ValueRef> for Expression {
                     None => match context.lookup_var(fn_ident) {
                         Some(val2) => match &*val2 {
                             Value::Lambda(lambda) => context.call_lambda(lambda, &call_args),
-                            Value::FunctionRef(fn_def) => {
-                                context.call_function_direct(fn_def, &call_args)
-                            }
                             Value::Symbol(fn_id) => {
                                 context.call_function(fn_id, &call_args).unwrap_or_else(|| {
                                     Err(EvalError::FunctionNotDefined(fn_id.clone()))

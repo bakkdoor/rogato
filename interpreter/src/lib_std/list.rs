@@ -16,15 +16,6 @@ pub fn module() -> Module {
             let error = Err(invalid_args("Std.List.map"));
             match (args.len(), args.get(0), args.get(1)) {
                 (2, Some(a), Some(b)) => match (a.deref(), b.deref()) {
-                    (Value::List(items), Value::FunctionRef(fn_def)) => {
-                        let mut result: Vec<ValueRef> = Vec::new();
-                        let mut context = EvalContext::new();
-                        for item in items.iter() {
-                            let val = context.call_function_direct(fn_def, &[Rc::clone(item)])?;
-                            result.push(val)
-                        }
-                        Ok(val::list(result))
-                    }
                     (Value::List(items), Value::Symbol(fn_id)) => {
                         let mut result: Vec<ValueRef> = Vec::new();
                         let mut context = EvalContext::new();

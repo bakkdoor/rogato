@@ -6,7 +6,6 @@ pub use serde_json::Number;
 
 use crate::ast::{
     expression::{Expression, Lambda, TupleItems},
-    fn_def::FnDef,
     ASTDepth, Identifier, AST,
 };
 
@@ -57,10 +56,6 @@ pub fn lambda(l: Rc<Lambda>) -> ValueRef {
     Rc::new(Value::Lambda(l))
 }
 
-pub fn fn_ref(fn_def: Rc<FnDef>) -> ValueRef {
-    Rc::new(Value::FunctionRef(fn_def))
-}
-
 pub fn quoted(expr: Rc<Expression>) -> ValueRef {
     Rc::new(Value::Quoted(expr))
 }
@@ -80,7 +75,6 @@ pub enum Value {
     Map(HashMap<String, ValueRef>),
     Object(HashMap<String, ValueRef>),
     Lambda(Rc<Lambda>),
-    FunctionRef(Rc<FnDef>),
     Quoted(Rc<Expression>),
     QuotedAST(Rc<AST>),
 }
@@ -135,7 +129,6 @@ impl Display for Value {
             Value::Map(items) => f.write_fmt(format_args!("{{ {:?} }}", items)),
             Value::Object(props) => f.write_fmt(format_args!("Object{{ {:?} }}", props)),
             Value::Lambda(lambda) => f.write_fmt(format_args!("{}", lambda)),
-            Value::FunctionRef(fn_def) => f.write_fmt(format_args!("{}", fn_def)),
             Value::Quoted(expr) => f.write_fmt(format_args!("^{}", expr)),
             Value::QuotedAST(ast) => f.write_fmt(format_args!("^({})", ast)),
         }
@@ -155,7 +148,6 @@ impl ASTDepth for Value {
             Value::Map(items) => 1 + items.len(),
             Value::Object(props) => 1 + props.len(),
             Value::Lambda(lambda) => 1 + lambda.ast_depth(),
-            Value::FunctionRef(_) => 1,
             Value::Quoted(expr) => 1 + expr.ast_depth(),
             Value::QuotedAST(ast) => 1 + ast.ast_depth(),
         }
