@@ -24,7 +24,7 @@ pub type Identifier = SmolStr;
 
 pub use program::Program;
 
-type ASTId = usize;
+pub type ASTId = usize;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct NodeFactory {

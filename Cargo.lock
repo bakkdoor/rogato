@@ -549,6 +549,7 @@ dependencies = [
  "rogato-db",
  "rogato-interpreter",
  "rogato-parser",
+ "rogato-type-checker",
 ]
 
 [[package]]
@@ -591,6 +592,14 @@ dependencies = [
  "rust_decimal",
  "rust_decimal_macros",
  "smol_str",
+]
+
+[[package]]
+name = "rogato-type-checker"
+version = "0.1.0"
+dependencies = [
+ "rogato-common",
+ "thiserror",
 ]
 
 [[package]]
