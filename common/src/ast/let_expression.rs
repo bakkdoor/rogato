@@ -81,7 +81,7 @@ impl Display for LetBindings {
             .iter()
             .map(|(ident, expr)| match &**expr {
                 Expression::InlineFnDef(fn_def) => {
-                    format!("{}", indent(fn_def))
+                    format!("{}", fn_def)
                 }
                 _ => {
                     if expr.ast_depth() > 5 {

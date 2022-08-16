@@ -361,7 +361,7 @@ grammar parser(context: &ParserContext) for str {
             (id, val)
         }
         / _ id:identifier() args:inline_fn_arg()+ _ "=" _ body:let_body() {
-            (id.clone(), Expression::InlineFnDef(FnDef::new(id, FnDefArgs::new(args), Rc::new(FnDefBody::rogato(Rc::new(body))))))
+            (id.clone(), Expression::InlineFnDef(FnDef::new_inline(id, FnDefArgs::new(args), Rc::new(FnDefBody::rogato(Rc::new(body))))))
         }
 
     rule inline_fn_arg() -> Identifier

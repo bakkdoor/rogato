@@ -42,7 +42,7 @@ let friendsAndFamilyWithin people person =
       ? p <- person#Related
       !> p
 
-    friends = p ->
+    friends p =
       ? f <- people
       ? f <- p#Friend
       !> f

@@ -4,6 +4,7 @@ use std::{borrow::Borrow, fmt::Display, rc::Rc};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct FnDef {
+    is_inline: bool,
     id: Identifier,
     args: FnDefArgs,
     body: Rc<FnDefBody>,
@@ -12,6 +13,20 @@ pub struct FnDef {
 impl FnDef {
     pub fn new<ID: Into<Identifier>>(id: ID, args: FnDefArgs, body: Rc<FnDefBody>) -> Rc<FnDef> {
         Rc::new(FnDef {
+            is_inline: false,
+            id: id.into(),
+            args,
+            body,
+        })
+    }
+
+    pub fn new_inline<ID: Into<Identifier>>(
+        id: ID,
+        args: FnDefArgs,
+        body: Rc<FnDefBody>,
+    ) -> Rc<FnDef> {
+        Rc::new(FnDef {
+            is_inline: true,
             id: id.into(),
             args,
             body,
@@ -34,18 +49,40 @@ impl FnDef {
 impl Display for FnDef {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self.body.borrow() {
-            FnDefBody::NativeFn(_) => f.write_fmt(format_args!(
-                "let {}{} =\n{}",
-                self.id,
-                self.args,
-                indent("[NativeFn]")
-            )),
-            FnDefBody::RogatoFn(body_expr) => f.write_fmt(format_args!(
-                "let {}{} =\n{}",
-                self.id,
-                self.args,
-                indent(body_expr.to_owned())
-            )),
+            FnDefBody::NativeFn(_) => {
+                if self.is_inline {
+                    f.write_fmt(format_args!(
+                        "{}{} =\n{}",
+                        self.id,
+                        self.args,
+                        indent("[NativeFn]")
+                    ))
+                } else {
+                    f.write_fmt(format_args!(
+                        "let {}{} =\n{}",
+                        self.id,
+                        self.args,
+                        indent("[NativeFn]")
+                    ))
+                }
+            }
+            FnDefBody::RogatoFn(body_expr) => {
+                if self.is_inline {
+                    f.write_fmt(format_args!(
+                        "{}{} =\n{}",
+                        self.id,
+                        self.args,
+                        indent(body_expr.to_owned())
+                    ))
+                } else {
+                    f.write_fmt(format_args!(
+                        "let {}{} =\n{}",
+                        self.id,
+                        self.args,
+                        indent(body_expr.to_owned())
+                    ))
+                }
+            }
         }
     }
 }
