@@ -196,3 +196,39 @@ fn equality() {
         assert_eq!(ast.evaluate(&mut ctx), Ok(val::bool(false)));
     }
 }
+
+#[test]
+fn std_list_module() {
+    let code_with_vals = vec![
+        (
+            "Std.List.map [1,2,3] ^inspect",
+            val::list(vec![val::string("1"), val::string("2"), val::string("3")]),
+        ),
+        (
+            "Std.List.map [1,2,3] (x -> inspect x)",
+            val::list(vec![val::string("1"), val::string("2"), val::string("3")]),
+        ),
+        (
+            "let
+                insp  = x -> inspect x
+                add10 = x -> x + 10
+             in
+                {
+                    Std.List.map [1,2,3] insp,
+                    Std.List.map [10,20,30] add10
+                }",
+            val::tuple(vec![
+                val::list(vec![val::string("1"), val::string("2"), val::string("3")]),
+                val::list(vec![val::number(20), val::number(30), val::number(40)]),
+            ]),
+        ),
+    ];
+
+    let mut ctx = EvalContext::new();
+    let p_ctx = ParserContext::new();
+
+    for (code, val) in code_with_vals.iter() {
+        let ast = parse_expr(code, &p_ctx).unwrap();
+        assert_eq!(ast.evaluate(&mut ctx), Ok(val.clone()));
+    }
+}

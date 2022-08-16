@@ -17,13 +17,28 @@ pub fn module() -> Module {
             match (args.len(), args.get(0), args.get(1)) {
                 (2, Some(a), Some(b)) => match (a.deref(), b.deref()) {
                     (Value::List(items), Value::FunctionRef(fn_def)) => {
-                        //context.call_function(fn_def.id())
                         let mut result: Vec<ValueRef> = Vec::new();
                         let mut context = EvalContext::new();
                         for item in items.iter() {
                             let val =
                                 context.call_function_direct(fn_def, &vec![Rc::clone(&item)])?;
                             result.push(val)
+                        }
+                        Ok(val::list(result))
+                    }
+                    (Value::List(items), Value::Symbol(fn_id)) => {
+                        let mut result: Vec<ValueRef> = Vec::new();
+                        let mut context = EvalContext::new();
+                        for item in items.iter() {
+                            match context.call_function(fn_id, &vec![Rc::clone(&item)]) {
+                                Some(val) => result.push(Rc::clone(&val?)),
+                                None => {
+                                    return Err(NativeFnError::EvaluationFailed(format!(
+                                        "FunctionRef invalid: {}",
+                                        fn_id
+                                    )))
+                                }
+                            }
                         }
                         Ok(val::list(result))
                     }
