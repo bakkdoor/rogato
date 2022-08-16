@@ -4,8 +4,8 @@ use rogato_common::{
         expression::Expression,
         helpers::{fn_call, lambda, var},
     },
-    val,
     val::ValueRef,
+    val::{self, Value},
 };
 
 impl Evaluate<ValueRef> for Expression {
@@ -17,7 +17,21 @@ impl Evaluate<ValueRef> for Expression {
                 let call_args = args.evaluate(context)?;
                 match context.call_function(fn_ident, &call_args) {
                     Some(val) => Ok(val?),
-                    None => Err(EvalError::FunctionNotDefined(fn_ident.clone())),
+                    None => match context.lookup_var(fn_ident) {
+                        Some(val2) => match &*val2 {
+                            Value::Lambda(lambda) => {
+                                context.call_lambda(lambda.as_ref(), &call_args)
+                            }
+                            Value::FunctionRef(fn_def) => {
+                                context.call_function_direct(&fn_def, &call_args)
+                            }
+                            Value::Symbol(fn_id) => context
+                                .call_function(fn_id, &call_args)
+                                .unwrap_or(Err(EvalError::FunctionNotDefined(fn_id.clone()))),
+                            _ => Err(EvalError::FunctionNotDefined(fn_ident.clone())),
+                        },
+                        None => Err(EvalError::FunctionNotDefined(fn_ident.clone())),
+                    },
                 }
             }
             Expression::OpCall(op_ident, left, right) => {
