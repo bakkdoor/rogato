@@ -100,8 +100,9 @@ grammar parser(context: &ParserContext) for str {
         }
 
     rule type_expr() -> TypeExpression
-        = "String" { TypeExpression::StringType }
-        / "Int" { TypeExpression::IntType }
+        = "Bool" { TypeExpression::BoolType }
+        / "Int" { TypeExpression::NumberType }
+        / "String" { TypeExpression::StringType }
         / tuple_type()
         / list_type()
         / function_type()

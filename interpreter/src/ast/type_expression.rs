@@ -26,7 +26,8 @@ fn type_ref<ID: ToString>(id: ID) -> ValueRef {
 impl Evaluate<ValueRef> for TypeExpression {
     fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
         Ok(match self {
-            TypeExpression::IntType => type_ref("Int"),
+            TypeExpression::BoolType => type_ref("Bool"),
+            TypeExpression::NumberType => type_ref("Int"),
             TypeExpression::StringType => type_ref("String"),
             TypeExpression::TypeRef(id) => type_ref(id),
             TypeExpression::FunctionType(arg_types, return_type) => val::object(vec![

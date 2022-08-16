@@ -40,7 +40,8 @@ impl ASTDepth for TypeDef {
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum TypeExpression {
-    IntType,
+    BoolType,
+    NumberType,
     StringType,
     TypeRef(Identifier),
     FunctionType(LambdaArgs<TypeExpression>, Rc<TypeExpression>), // args & return type
@@ -52,7 +53,8 @@ pub enum TypeExpression {
 impl Display for TypeExpression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            TypeExpression::IntType => f.write_fmt(format_args!("{}", "Int")),
+            TypeExpression::BoolType => f.write_fmt(format_args!("{}", "Bool")),
+            TypeExpression::NumberType => f.write_fmt(format_args!("{}", "Number")),
             TypeExpression::StringType => f.write_fmt(format_args!("{}", "String")),
             TypeExpression::TypeRef(id) => f.write_fmt(format_args!("{}", id)),
             TypeExpression::FunctionType(arg_types, return_type) => {
@@ -83,7 +85,8 @@ impl Display for TypeExpression {
 impl ASTDepth for TypeExpression {
     fn ast_depth(&self) -> usize {
         match self {
-            TypeExpression::IntType => 1,
+            TypeExpression::BoolType => 1,
+            TypeExpression::NumberType => 1,
             TypeExpression::StringType => 1,
             TypeExpression::TypeRef(_) => 1,
             TypeExpression::FunctionType(arg_types, return_type) => {

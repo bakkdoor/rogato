@@ -138,7 +138,7 @@ pub fn struct_type(props: Vec<(&str, Rc<TypeExpression>)>) -> Rc<TypeExpression>
 }
 
 pub fn int_type() -> Rc<TypeExpression> {
-    Rc::new(TypeExpression::IntType)
+    Rc::new(TypeExpression::NumberType)
 }
 
 pub fn string_type() -> Rc<TypeExpression> {
