@@ -23,11 +23,13 @@ impl Evaluate<ValueRef> for Expression {
                                 context.call_lambda(lambda.as_ref(), &call_args)
                             }
                             Value::FunctionRef(fn_def) => {
-                                context.call_function_direct(&fn_def, &call_args)
+                                context.call_function_direct(fn_def, &call_args)
                             }
-                            Value::Symbol(fn_id) => context
-                                .call_function(fn_id, &call_args)
-                                .unwrap_or(Err(EvalError::FunctionNotDefined(fn_id.clone()))),
+                            Value::Symbol(fn_id) => {
+                                context.call_function(fn_id, &call_args).unwrap_or_else(|| {
+                                    Err(EvalError::FunctionNotDefined(fn_id.clone()))
+                                })
+                            }
                             _ => Err(EvalError::FunctionNotDefined(fn_ident.clone())),
                         },
                         None => Err(EvalError::FunctionNotDefined(fn_ident.clone())),
