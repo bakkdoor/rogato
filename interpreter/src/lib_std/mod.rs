@@ -97,10 +97,9 @@ pub fn std_module() -> Module {
         }
     }));
 
-    module.fn_def(fn_def(
-        "range",
-        vec!["start", "finish"],
-        move |args| match (args.len(), args.get(0), args.get(1)) {
+    module.fn_def(fn_def("range", vec!["start", "finish"], move |args| {
+        let error = Err(invalid_args("range"));
+        match (args.len(), args.get(0), args.get(1)) {
             (2, Some(a), Some(b)) => match ((*a).deref(), (*b).deref()) {
                 (Value::Number(start), Value::Number(end)) => {
                     let mut numbers: Vec<ValueRef> = vec![];
@@ -111,29 +110,30 @@ pub fn std_module() -> Module {
                     }
                     Ok(val::list(numbers))
                 }
-                _ => Err(invalid_args("range")),
+                _ => error,
             },
-            _ => Err(invalid_args("range")),
-        },
-    ));
+            _ => error,
+        }
+    }));
 
     module.fn_def(fn_def("random", vec!["min", "?max"], move |args| {
+        let error = Err(invalid_args("random"));
         match (args.len(), args.get(0), args.get(1)) {
             (1, Some(a), None) => match (*a).deref() {
                 Value::Number(max) => {
                     let mut rng = rand::rngs::OsRng;
                     Ok(val::number(rng.gen_range(Decimal::from(0)..*max)))
                 }
-                _ => Err(invalid_args("range")),
+                _ => error,
             },
             (2, Some(a), Some(b)) => match ((*a).deref(), (*b).deref()) {
                 (Value::Number(min), Value::Number(max)) => {
                     let mut rng = rand::rngs::OsRng;
                     Ok(val::number(rng.gen_range(*min..*max)))
                 }
-                _ => Err(invalid_args("range")),
+                _ => error,
             },
-            _ => Err(invalid_args("range")),
+            _ => error,
         }
     }));
 
