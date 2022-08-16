@@ -215,11 +215,13 @@ fn std_list_module() {
              in
                 {
                     Std.List.map [1,2,3] insp,
-                    Std.List.map [10,20,30] add10
+                    Std.List.map [10,20,30] add10,
+                    add10 1
                 }",
             val::tuple(vec![
                 val::list(vec![val::string("1"), val::string("2"), val::string("3")]),
                 val::list(vec![val::number(20), val::number(30), val::number(40)]),
+                val::number(11),
             ]),
         ),
     ];
