@@ -11,7 +11,7 @@ use rogato_common::{
     val,
     val::{Value, ValueRef},
 };
-use rust_decimal::{Decimal, MathematicalOps};
+use rust_decimal::{prelude::ToPrimitive, Decimal, MathematicalOps};
 use std::fmt::Debug;
 use std::ops::Deref;
 use std::rc::Rc;
@@ -95,6 +95,26 @@ pub fn std_module() -> Module {
             _ => Err(invalid_args("!=")),
         }
     }));
+
+    module.fn_def(fn_def(
+        "range",
+        vec!["start", "finish"],
+        move |args| match (args.len(), args.get(0), args.get(1)) {
+            (2, Some(a), Some(b)) => match ((*a).deref(), (*b).deref()) {
+                (Value::Number(start), Value::Number(end)) => {
+                    let mut numbers: Vec<ValueRef> = vec![];
+                    let start: i64 = start.trunc().to_i64().unwrap();
+                    let end = end.trunc().to_i64().unwrap();
+                    for i in start..end {
+                        numbers.push(val::number(i))
+                    }
+                    Ok(val::list(numbers))
+                }
+                _ => Err(invalid_args("range")),
+            },
+            _ => Err(invalid_args("range")),
+        },
+    ));
 
     module
 }
