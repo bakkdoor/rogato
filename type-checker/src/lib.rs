@@ -21,7 +21,7 @@ impl TypeCheckContext {
             return None;
         }
         self.types.insert(id, type_def);
-        return Some(id);
+        Some(id)
     }
 
     pub fn lookup_type(&mut self, id: ASTId) -> Option<Rc<TypeDef>> {

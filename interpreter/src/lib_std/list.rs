@@ -20,8 +20,7 @@ pub fn module() -> Module {
                         let mut result: Vec<ValueRef> = Vec::new();
                         let mut context = EvalContext::new();
                         for item in items.iter() {
-                            let val =
-                                context.call_function_direct(fn_def, &vec![Rc::clone(&item)])?;
+                            let val = context.call_function_direct(fn_def, &[Rc::clone(item)])?;
                             result.push(val)
                         }
                         Ok(val::list(result))
@@ -30,7 +29,7 @@ pub fn module() -> Module {
                         let mut result: Vec<ValueRef> = Vec::new();
                         let mut context = EvalContext::new();
                         for item in items.iter() {
-                            match context.call_function(fn_id, &vec![Rc::clone(&item)]) {
+                            match context.call_function(fn_id, &[Rc::clone(item)]) {
                                 Some(val) => result.push(Rc::clone(&val?)),
                                 None => {
                                     return Err(NativeFnError::EvaluationFailed(format!(
@@ -46,7 +45,7 @@ pub fn module() -> Module {
                         let mut result: Vec<ValueRef> = Vec::new();
                         let mut context = EvalContext::new();
                         for item in items.iter() {
-                            let val = context.call_lambda(lambda, &vec![Rc::clone(&item)])?;
+                            let val = context.call_lambda(lambda, &[Rc::clone(item)])?;
                             result.push(val)
                         }
                         Ok(val::list(result))
