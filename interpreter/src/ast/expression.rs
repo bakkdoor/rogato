@@ -19,9 +19,7 @@ impl Evaluate<ValueRef> for Expression {
                     Some(val) => Ok(val?),
                     None => match context.lookup_var(fn_ident) {
                         Some(val2) => match &*val2 {
-                            Value::Lambda(lambda) => {
-                                context.call_lambda(lambda.as_ref(), &call_args)
-                            }
+                            Value::Lambda(lambda) => context.call_lambda(lambda, &call_args),
                             Value::FunctionRef(fn_def) => {
                                 context.call_function_direct(fn_def, &call_args)
                             }
