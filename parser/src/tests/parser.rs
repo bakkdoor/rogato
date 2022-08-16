@@ -338,6 +338,23 @@ fn op_calls() {
             number_lit(2)
         )
     );
+
+    assert_parse_expr!(
+        "1 >> 2 >> 5 >> (a << b << (c >> d))",
+        op_call(
+            ">>",
+            op_call(
+                ">>",
+                op_call(">>", number_lit(1), number_lit(2)),
+                number_lit(5)
+            ),
+            op_call(
+                "<<",
+                op_call("<<", var("a"), var("b")),
+                op_call(">>", var("c"), var("d"))
+            )
+        )
+    );
 }
 
 #[test]

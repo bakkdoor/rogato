@@ -20,7 +20,7 @@ pub enum Expression {
     PropFnRef(Identifier),
     EdgeProp(Rc<Expression>, Identifier),
     Let(LetExpression),
-    Lambda(Lambda),
+    Lambda(Rc<Lambda>),
     Query(Query),
     Symbol(Identifier),
     Quoted(Rc<Expression>),

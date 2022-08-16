@@ -15,6 +15,8 @@ use rust_decimal::{Decimal, MathematicalOps};
 use std::fmt::Debug;
 use std::ops::Deref;
 use std::rc::Rc;
+
+pub mod list;
 pub mod math;
 pub mod string;
 
@@ -24,12 +26,14 @@ pub fn env() -> Environment {
     let std_mod = std_module();
     let math_mod = math::module();
     let string_mod = string::module();
+    let list_mod = list::module();
 
     env.import(&math_mod, Imports::All);
 
     env.define_module(std_mod);
     env.define_module(math_mod);
     env.define_module(string_mod);
+    env.define_module(list_mod);
 
     env
 }

@@ -63,6 +63,12 @@ impl From<NativeFnError> for EvalError {
     }
 }
 
+impl From<EvalError> for NativeFnError {
+    fn from(e: EvalError) -> Self {
+        NativeFnError::EvaluationFailed(format!("{}", e))
+    }
+}
+
 pub type Identifier = rogato_common::ast::Identifier;
 
 pub trait Evaluate<T> {

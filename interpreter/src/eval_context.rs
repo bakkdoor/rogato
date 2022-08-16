@@ -1,4 +1,4 @@
-use rogato_common::ast::fn_def::FnDefBody;
+use rogato_common::ast::{fn_def::FnDefBody, lambda::Lambda};
 
 use super::{environment::Environment, module::Module, EvalError, Identifier, ValueRef};
 use crate::{
@@ -62,35 +62,66 @@ impl EvalContext {
         self.env.lookup_fn(id)
     }
 
+    pub fn call_lambda(
+        &mut self,
+        lambda: &Lambda,
+        args: &[ValueRef],
+    ) -> Result<ValueRef, EvalError> {
+        let given_argc = args.len();
+        let expected_argc = lambda.args().len();
+        if given_argc != expected_argc {
+            eprintln!(
+                "Lambda arity mismatch: Expected {} but got {}",
+                expected_argc, given_argc
+            );
+            return Err(EvalError::LambdaArityMismatch(expected_argc, given_argc));
+        }
+        let mut fn_ctx = self.with_child_env();
+        for (arg_name, arg_val) in lambda.args().iter().zip(args) {
+            fn_ctx.define_var(arg_name, arg_val.clone())
+        }
+
+        lambda.body().evaluate(&mut fn_ctx)
+    }
+
+    pub fn call_function_direct(
+        &mut self,
+        func: &FnDef,
+        args: &[ValueRef],
+    ) -> Result<ValueRef, EvalError> {
+        let given_argc = args.len();
+        let expected_argc = func.args().len();
+        if given_argc != expected_argc {
+            eprintln!(
+                "Function arity mismatch for {}: Expected {} but got {}",
+                func.id().clone(),
+                expected_argc,
+                given_argc
+            );
+            return Err(EvalError::FunctionArityMismatch(
+                func.id().clone(),
+                expected_argc,
+                given_argc,
+            ));
+        }
+        let mut fn_ctx = self.with_child_env();
+        for (arg_name, arg_val) in func.args().iter().zip(args) {
+            fn_ctx.define_var(arg_name, arg_val.clone())
+        }
+
+        match &*(func.body()) {
+            FnDefBody::NativeFn(f) => f(args).map_err(EvalError::from),
+            FnDefBody::RogatoFn(expr) => expr.evaluate(&mut fn_ctx),
+        }
+    }
+
     pub fn call_function(
         &mut self,
         id: &Identifier,
         args: &[ValueRef],
     ) -> Option<Result<ValueRef, EvalError>> {
-        self.lookup_fn(id).map(|func| {
-            let given_argc = args.len();
-            let expected_argc = func.args().len();
-            if given_argc != expected_argc {
-                eprintln!(
-                    "Function arity mismatch for {}: Expected {} but got {}",
-                    id, expected_argc, given_argc
-                );
-                return Err(EvalError::FunctionArityMismatch(
-                    id.clone(),
-                    expected_argc,
-                    given_argc,
-                ));
-            }
-            let mut fn_ctx = self.with_child_env();
-            for (arg_name, arg_val) in func.args().iter().zip(args) {
-                fn_ctx.define_var(arg_name, arg_val.clone())
-            }
-
-            match &*(func.body()) {
-                FnDefBody::NativeFn(f) => f(args).map_err(EvalError::from),
-                FnDefBody::RogatoFn(expr) => expr.evaluate(&mut fn_ctx),
-            }
-        })
+        self.lookup_fn(id)
+            .map(|func| self.call_function_direct(func.as_ref(), args))
     }
 
     pub fn define_var(&mut self, id: &Identifier, val: ValueRef) {

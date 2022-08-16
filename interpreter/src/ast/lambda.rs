@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{fmt::Display, rc::Rc};
 
 use rogato_common::{
     ast::{
@@ -10,22 +10,9 @@ use rogato_common::{
 
 use crate::{EvalContext, EvalError, Evaluate, Identifier};
 
-impl Evaluate<ValueRef> for Lambda {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
-        let evaluated_args: Vec<ValueRef> = self.args().evaluate(context)?;
-        let mut fn_context = context.with_child_env();
-        let given_args = evaluated_args.len();
-        let expected_args = self.arg_count();
-
-        if given_args != expected_args {
-            return Err(EvalError::LambdaArityMismatch(expected_args, given_args));
-        }
-
-        for (i, arg_val) in evaluated_args.iter().enumerate().take(self.arg_count()) {
-            let arg_name = self.get_arg(i).unwrap().clone();
-            fn_context.define_var(&arg_name, arg_val.clone())
-        }
-        self.body().evaluate(&mut fn_context)
+impl Evaluate<ValueRef> for Rc<Lambda> {
+    fn evaluate(&self, _context: &mut EvalContext) -> Result<ValueRef, EvalError> {
+        Ok(val::lambda(Rc::clone(&self)))
     }
 }
 

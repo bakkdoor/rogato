@@ -8,6 +8,9 @@ pub enum NativeFnError {
 
     #[error("NativeFnError: Invalid arguments for {0}")]
     InvalidArguments(Identifier),
+
+    #[error("NativeFnError: Evaluation failed with: {0}")]
+    EvaluationFailed(String),
 }
 
 pub type NativeFn = fn(args: &[ValueRef]) -> Result<ValueRef, NativeFnError>;

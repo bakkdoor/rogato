@@ -311,13 +311,18 @@ grammar parser(context: &ParserContext) for str {
             Expression::FnCall(id, args)
         }
 
+    #[cache_left_rec]
     rule op_call() -> Expression
-        = left:op_arg() " "+ id:operator() _ right:op_arg() {
+        = left:op_call() " " + id:operator() _ right: op_arg() {
+            Expression::OpCall(id, Rc::new(left), Rc::new(right))
+        }
+        / left:op_arg() " "+ id:operator() _ right:op_arg() {
             Expression::OpCall(id, Rc::new(left), Rc::new(right))
         }
         / left:op_arg() _ id:operator() " "+ right:op_arg() {
             Expression::OpCall(id, Rc::new(left), Rc::new(right))
         }
+
 
     rule fn_arg() -> Expression
         = " "+ e:atom()  { e }
@@ -451,7 +456,7 @@ grammar parser(context: &ParserContext) for str {
 
     rule lambda() -> Expression
         = args:lambda_args() " "+ "->" _ body:let_body() {
-            Expression::Lambda(Lambda::new(LambdaArgs::new(args), Rc::new(body)))
+            Expression::Lambda(Rc::new(Lambda::new(LambdaArgs::new(args), Rc::new(body))))
         }
 
     rule lambda_args() -> Vec<Identifier>

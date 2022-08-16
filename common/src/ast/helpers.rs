@@ -178,7 +178,10 @@ pub fn edge_prop(expr: Rc<Expression>, edge: &str) -> Rc<Expression> {
 
 pub fn lambda(args: Vec<&str>, body: Rc<Expression>) -> Rc<Expression> {
     let args = args.iter().map(|a| a.into()).collect();
-    Rc::new(Expression::Lambda(Lambda::new(LambdaArgs::new(args), body)))
+    Rc::new(Expression::Lambda(Rc::new(Lambda::new(
+        LambdaArgs::new(args),
+        body,
+    ))))
 }
 
 pub fn symbol(id: &str) -> Rc<Expression> {

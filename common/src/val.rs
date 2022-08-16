@@ -4,7 +4,11 @@ use std::{collections::HashMap, fmt::Display, rc::Rc};
 use rust_decimal::Decimal;
 pub use serde_json::Number;
 
-use crate::ast::{expression::TupleItems, ASTDepth, Identifier};
+use crate::ast::{
+    expression::{Lambda, TupleItems},
+    fn_def::FnDef,
+    ASTDepth, Identifier,
+};
 
 pub fn null() -> ValueRef {
     Rc::new(Value::Null)
@@ -49,6 +53,14 @@ pub fn object<S: ToString>(props: Vec<(S, ValueRef)>) -> ValueRef {
     Rc::new(Value::Object(HashMap::from_iter(props)))
 }
 
+pub fn lambda(l: Rc<Lambda>) -> ValueRef {
+    Rc::new(Value::Lambda(l))
+}
+
+pub fn fn_ref(fn_def: Rc<FnDef>) -> ValueRef {
+    Rc::new(Value::FunctionRef(fn_def))
+}
+
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum Value {
     Null,
@@ -60,6 +72,8 @@ pub enum Value {
     List(Vec<ValueRef>),
     Map(HashMap<String, ValueRef>),
     Object(HashMap<String, ValueRef>),
+    Lambda(Rc<Lambda>),
+    FunctionRef(Rc<FnDef>),
 }
 
 impl Value {
@@ -111,6 +125,8 @@ impl Display for Value {
             }
             Value::Map(items) => f.write_fmt(format_args!("{{ {:?} }}", items)),
             Value::Object(props) => f.write_fmt(format_args!("Object{{ {:?} }}", props)),
+            Value::Lambda(lambda) => f.write_fmt(format_args!("{}", lambda)),
+            Value::FunctionRef(fn_def) => f.write_fmt(format_args!("{}", fn_def)),
         }
     }
 }
@@ -127,6 +143,8 @@ impl ASTDepth for Value {
             Value::List(items) => 1 + items.len(),
             Value::Map(items) => 1 + items.len(),
             Value::Object(props) => 1 + props.len(),
+            Value::Lambda(lambda) => 1 + lambda.ast_depth(),
+            Value::FunctionRef(_) => 1,
         }
     }
 }
