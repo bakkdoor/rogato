@@ -78,7 +78,7 @@ impl EvalContext {
         }
         let mut fn_ctx = self.with_child_env();
         for (arg_name, arg_val) in lambda.args().iter().zip(args) {
-            fn_ctx.define_var(arg_name, arg_val.clone())
+            fn_ctx.define_var(arg_name, Rc::clone(arg_val))
         }
 
         lambda.body().evaluate(&mut fn_ctx)
@@ -108,7 +108,7 @@ impl EvalContext {
 
         let mut fn_ctx = self.with_child_env();
         for (arg_name, arg_val) in func.args().iter().zip(args) {
-            fn_ctx.define_var(arg_name, arg_val.clone())
+            fn_ctx.define_var(arg_name, Rc::clone(arg_val))
         }
 
         match &*(func.body()) {
