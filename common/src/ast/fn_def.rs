@@ -66,6 +66,11 @@ impl FnDefArgs {
         FnDefArgs { args }
     }
 
+    pub fn required_args(&self) -> usize {
+        let optional_args = self.args.iter().filter(|a| a.starts_with('?')).count();
+        self.len() - optional_args
+    }
+
     pub fn len(&self) -> usize {
         self.args.len()
     }

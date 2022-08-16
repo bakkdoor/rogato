@@ -10,5 +10,7 @@ repository = "https://github.com/bakkdoor/rogato"
 rogato-common = { path = "../common" }
 rogato-db = { path = "../db" }
 rogato-parser = { path = "../parser" }
-rust_decimal = { version = "1.26", features = ["maths"] }
+
+rand = { version = "0.8" }
+rust_decimal = { version = "1.26", features = ["maths", "rand"] }
 thiserror = "1.0"

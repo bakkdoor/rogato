@@ -91,7 +91,8 @@ impl EvalContext {
     ) -> Result<ValueRef, EvalError> {
         let given_argc = args.len();
         let expected_argc = func.args().len();
-        if given_argc != expected_argc {
+
+        if given_argc < func.args().required_args() {
             eprintln!(
                 "Function arity mismatch for {}: Expected {} but got {}",
                 func.id().clone(),
@@ -104,6 +105,7 @@ impl EvalContext {
                 given_argc,
             ));
         }
+
         let mut fn_ctx = self.with_child_env();
         for (arg_name, arg_val) in func.args().iter().zip(args) {
             fn_ctx.define_var(arg_name, arg_val.clone())

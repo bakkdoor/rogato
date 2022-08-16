@@ -2,6 +2,7 @@ use crate::{
     environment::{Environment, Imports},
     module::Module,
 };
+use rand::Rng;
 use rogato_common::{
     ast::{
         expression::FnDefArgs,
@@ -115,6 +116,26 @@ pub fn std_module() -> Module {
             _ => Err(invalid_args("range")),
         },
     ));
+
+    module.fn_def(fn_def("random", vec!["min", "?max"], move |args| {
+        match (args.len(), args.get(0), args.get(1)) {
+            (1, Some(a), None) => match (*a).deref() {
+                Value::Number(max) => {
+                    let mut rng = rand::rngs::OsRng;
+                    Ok(val::number(rng.gen_range(Decimal::from(0)..*max)))
+                }
+                _ => Err(invalid_args("range")),
+            },
+            (2, Some(a), Some(b)) => match ((*a).deref(), (*b).deref()) {
+                (Value::Number(min), Value::Number(max)) => {
+                    let mut rng = rand::rngs::OsRng;
+                    Ok(val::number(rng.gen_range(*min..*max)))
+                }
+                _ => Err(invalid_args("range")),
+            },
+            _ => Err(invalid_args("range")),
+        }
+    }));
 
     module
 }
