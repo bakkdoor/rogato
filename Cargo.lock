@@ -638,6 +638,7 @@ dependencies = [
  "rogato-db",
  "rogato-parser",
  "rust_decimal",
+ "rust_decimal_macros",
  "thiserror",
 ]
 
