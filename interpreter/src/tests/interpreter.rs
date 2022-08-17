@@ -110,44 +110,6 @@ fn let_expressions() {
 }
 
 #[test]
-fn std_math_module() {
-    let code_with_vals = vec![
-        ("Std.Math.abs -10", val::number(10)),
-        ("Std.Math.abs (10 * -10)", val::number(100)),
-        ("Std.Math.abs (100 - 1000)", val::number(900)),
-        ("abs -10", val::number(10)),
-        ("abs (10 * -10)", val::number(100)),
-        ("abs (100 - 1000)", val::number(900)),
-    ];
-
-    let mut ctx = EvalContext::new();
-    let p_ctx = ParserContext::new();
-
-    for (code, val) in code_with_vals.iter() {
-        let ast = parse_expr(code, &p_ctx).unwrap();
-        assert_eq!(ast.evaluate(&mut ctx), Ok(val.clone()));
-    }
-}
-
-#[test]
-fn std_string_module() {
-    let code_with_vals = vec![
-        ("Std.String.length \"\"", val::number(0)),
-        ("Std.String.length \" \"", val::number(1)),
-        ("Std.String.length \"hello\"", val::number(5)),
-        ("Std.String.length \"hello, world\"", val::number(12)),
-    ];
-
-    let mut ctx = EvalContext::new();
-    let p_ctx = ParserContext::new();
-
-    for (code, val) in code_with_vals.iter() {
-        let ast = parse_expr(code, &p_ctx).unwrap();
-        assert_eq!(ast.evaluate(&mut ctx), Ok(val.clone()));
-    }
-}
-
-#[test]
 fn equality() {
     let not_equal = vec![
         ("1", "2"),
@@ -194,6 +156,44 @@ fn equality() {
         let code = format!("{} != {}", left, right);
         let ast = parse_expr(code.as_str(), &p_ctx).unwrap();
         assert_eq!(ast.evaluate(&mut ctx), Ok(val::bool(false)));
+    }
+}
+
+#[test]
+fn std_math_module() {
+    let code_with_vals = vec![
+        ("Std.Math.abs -10", val::number(10)),
+        ("Std.Math.abs (10 * -10)", val::number(100)),
+        ("Std.Math.abs (100 - 1000)", val::number(900)),
+        ("abs -10", val::number(10)),
+        ("abs (10 * -10)", val::number(100)),
+        ("abs (100 - 1000)", val::number(900)),
+    ];
+
+    let mut ctx = EvalContext::new();
+    let p_ctx = ParserContext::new();
+
+    for (code, val) in code_with_vals.iter() {
+        let ast = parse_expr(code, &p_ctx).unwrap();
+        assert_eq!(ast.evaluate(&mut ctx), Ok(val.clone()));
+    }
+}
+
+#[test]
+fn std_string_module() {
+    let code_with_vals = vec![
+        ("Std.String.length \"\"", val::number(0)),
+        ("Std.String.length \" \"", val::number(1)),
+        ("Std.String.length \"hello\"", val::number(5)),
+        ("Std.String.length \"hello, world\"", val::number(12)),
+    ];
+
+    let mut ctx = EvalContext::new();
+    let p_ctx = ParserContext::new();
+
+    for (code, val) in code_with_vals.iter() {
+        let ast = parse_expr(code, &p_ctx).unwrap();
+        assert_eq!(ast.evaluate(&mut ctx), Ok(val.clone()));
     }
 }
 
