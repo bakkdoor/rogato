@@ -9,7 +9,7 @@ use super::{ASTDepth, Identifier, AST};
 use std::fmt::Display;
 use std::rc::Rc;
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub enum Expression {
     Commented(String, Rc<Expression>),
     Lit(Literal),

@@ -1,7 +1,7 @@
 use super::{ASTDepth, Identifier};
 use std::fmt::Display;
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub struct ModuleDef {
     id: Identifier,
     exports: ModuleExports,
@@ -32,7 +32,7 @@ impl ASTDepth for ModuleDef {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub struct ModuleExports {
     exports: Vec<Identifier>,
 }

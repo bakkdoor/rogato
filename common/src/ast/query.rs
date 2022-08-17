@@ -1,7 +1,7 @@
 use super::{expression::Expression, walker::Walk, ASTDepth, Identifier};
 use std::{fmt::Display, rc::Rc};
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub struct Query {
     bindings: QueryBindings,
     guards: QueryGuards,
@@ -65,7 +65,7 @@ impl Walk for Query {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub struct QueryGuards {
     guards: Vec<Rc<Expression>>,
 }
@@ -110,7 +110,7 @@ impl Display for QueryGuards {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub struct QueryBinding {
     ids: Vec<Identifier>,
     val: Rc<Expression>,
@@ -164,7 +164,7 @@ impl Display for QueryBinding {
         }
     }
 }
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub struct QueryBindings {
     bindings: Vec<QueryBinding>,
 }

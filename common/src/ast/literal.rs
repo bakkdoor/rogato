@@ -4,7 +4,7 @@ use super::{expression::Expression, ASTDepth, Identifier};
 use crate::util::indent;
 use std::{fmt::Display, rc::Rc};
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub enum Literal {
     Number(Decimal),
     String(String),
@@ -64,7 +64,7 @@ impl ASTDepth for Literal {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub struct TupleItems<I> {
     items: Vec<Rc<I>>,
 }
@@ -118,7 +118,7 @@ impl<I: ASTDepth> ASTDepth for TupleItems<I> {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub struct StructProps {
     props: Vec<(Identifier, Rc<Expression>)>,
 }

@@ -4,7 +4,7 @@ use crate::util::indent;
 
 use super::{expression::Expression, walker::Walk, ASTDepth, Identifier};
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub struct Lambda {
     args: LambdaArgs<Identifier>,
     body: Rc<Expression>,
@@ -58,7 +58,7 @@ impl Walk for Lambda {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub struct LambdaArgs<A: Display + ASTDepth> {
     args: Vec<A>,
 }

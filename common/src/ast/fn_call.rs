@@ -2,7 +2,7 @@ use super::expression::Expression;
 use std::fmt::Display;
 use std::rc::Rc;
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub struct FnCallArgs {
     args: Vec<Rc<Expression>>,
 }

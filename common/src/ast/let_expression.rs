@@ -4,7 +4,7 @@ use crate::util::indent;
 
 use super::{expression::Expression, visitor::Visitor, walker::Walk, ASTDepth, Identifier};
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub struct LetExpression {
     bindings: LetBindings,
     body: Rc<Expression>,
@@ -50,7 +50,7 @@ impl Walk for LetExpression {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub struct LetBindings {
     bindings: Vec<(Identifier, Rc<Expression>)>,
 }

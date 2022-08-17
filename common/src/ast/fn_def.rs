@@ -1,5 +1,6 @@
 use super::{expression::Expression, walker::Walk, ASTDepth, Identifier};
 use crate::{native_fn::NativeFn, util::indent};
+use std::hash::{Hash, Hasher};
 use std::{borrow::Borrow, fmt::Display, rc::Rc};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -8,6 +9,14 @@ pub struct FnDef {
     id: Identifier,
     args: FnDefArgs,
     body: Rc<FnDefBody>,
+}
+
+impl Hash for FnDef {
+    fn hash<H: Hasher>(&self, h: &mut H) {
+        Hash::hash(&self.id, h);
+        Hash::hash(&self.is_inline, h);
+        Hash::hash(&self.args, h);
+    }
 }
 
 impl FnDef {
@@ -93,7 +102,7 @@ impl ASTDepth for FnDef {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub struct FnDefArgs {
     args: Vec<Identifier>,
 }

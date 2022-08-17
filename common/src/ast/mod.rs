@@ -58,19 +58,19 @@ impl Default for NodeFactory {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub struct ASTNode {
     id: ASTId,
     ast: Rc<AST>,
 }
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub struct ExprNode {
     id: ASTId,
     expr: Rc<Expression>,
 }
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub enum AST {
     RootComment(String),
     FnDef(Rc<FnDef>),

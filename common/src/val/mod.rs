@@ -1,8 +1,23 @@
 use rust_decimal::prelude::*;
-use std::{collections::HashMap, fmt::Display, rc::Rc};
+use std::hash::Hash;
+use std::{fmt::Display, rc::Rc};
 
 use rust_decimal::Decimal;
 pub use serde_json::Number;
+
+pub mod map;
+pub mod object;
+pub mod queue;
+pub mod set;
+pub mod stack;
+pub mod vector;
+
+pub use map::Map;
+pub use object::Object;
+pub use queue::Queue;
+pub use set::Set;
+pub use stack::Stack;
+pub use vector::Vector;
 
 use crate::ast::{
     expression::{Expression, Lambda, TupleItems},
@@ -49,7 +64,7 @@ pub fn object<S: ToString>(props: Vec<(S, ValueRef)>) -> ValueRef {
         .iter()
         .map(|(prop, val)| (prop.to_string(), val.clone()))
         .collect();
-    Rc::new(Value::Object(HashMap::from_iter(props)))
+    Rc::new(Value::Object(Object::from_iter(props)))
 }
 
 pub fn lambda(l: Rc<Lambda>) -> ValueRef {
@@ -63,7 +78,7 @@ pub fn quoted_ast(ast: Rc<AST>) -> ValueRef {
     Rc::new(Value::QuotedAST(ast))
 }
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub enum Value {
     Null,
     String(String),
@@ -72,8 +87,12 @@ pub enum Value {
     Number(Decimal),
     Tuple(usize, Vec<ValueRef>),
     List(Vec<ValueRef>),
-    Map(HashMap<String, ValueRef>),
-    Object(HashMap<String, ValueRef>),
+    Vector(Vector),
+    Stack(Stack),
+    Queue(Queue),
+    Set(Set),
+    Map(Map),
+    Object(Object),
     Lambda(Rc<Lambda>),
     Quoted(Rc<Expression>),
     QuotedAST(Rc<AST>),
@@ -99,7 +118,7 @@ impl From<serde_json::Value> for Value {
             serde_json::Value::Bool(b) => Value::Bool(b),
             serde_json::Value::Null => Value::Null,
             serde_json::Value::Number(n) => Value::Number(Decimal::from(n.as_i64().unwrap())),
-            serde_json::Value::Object(props) => Value::Object(HashMap::from_iter(
+            serde_json::Value::Object(props) => Value::Object(Object::from_iter(
                 props
                     .iter()
                     .map(|(prop, val)| (prop.clone(), Rc::new(Value::from(val.clone()))))
@@ -126,6 +145,10 @@ impl Display for Value {
             Value::List(items) => {
                 f.write_fmt(format_args!("[ {} ]", TupleItems::from(items.clone())))
             }
+            Value::Vector(vector) => f.write_fmt(format_args!("{}", vector)),
+            Value::Stack(stack) => f.write_fmt(format_args!("{}", stack)),
+            Value::Queue(queue) => f.write_fmt(format_args!("{}", queue)),
+            Value::Set(set) => f.write_fmt(format_args!("{}", set)),
             Value::Map(items) => f.write_fmt(format_args!("{{ {:?} }}", items)),
             Value::Object(props) => f.write_fmt(format_args!("Object{{ {:?} }}", props)),
             Value::Lambda(lambda) => f.write_fmt(format_args!("{}", lambda)),
@@ -145,9 +168,13 @@ impl ASTDepth for Value {
             Value::Number(_) => 1,
             Value::Tuple(size, _) => 1 + size,
             Value::List(items) => 1 + items.len(),
-            Value::Map(items) => 1 + items.len(),
-            Value::Object(props) => 1 + props.len(),
-            Value::Lambda(lambda) => 1 + lambda.ast_depth(),
+            Value::Vector(vector) => vector.ast_depth(),
+            Value::Stack(stack) => stack.ast_depth(),
+            Value::Queue(queue) => queue.ast_depth(),
+            Value::Set(set) => set.ast_depth(),
+            Value::Map(items) => items.ast_depth(),
+            Value::Object(object) => object.ast_depth(),
+            Value::Lambda(lambda) => lambda.ast_depth(),
             Value::Quoted(expr) => 1 + expr.ast_depth(),
             Value::QuotedAST(ast) => 1 + ast.ast_depth(),
         }

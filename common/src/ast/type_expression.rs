@@ -6,7 +6,7 @@ use self::super::expression::{LambdaArgs, TupleItems};
 
 use super::{ASTDepth, Identifier};
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub struct TypeDef {
     id: Identifier,
     type_expr: Rc<TypeExpression>,
@@ -38,7 +38,7 @@ impl ASTDepth for TypeDef {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub enum TypeExpression {
     BoolType,
     NumberType,
