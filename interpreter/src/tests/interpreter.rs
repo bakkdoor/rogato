@@ -160,6 +160,49 @@ fn equality() {
 }
 
 #[test]
+fn std_module() {
+    let code_with_vals = vec![
+        (
+            "Std.range 10",
+            val::list(vec![
+                val::number(0),
+                val::number(1),
+                val::number(2),
+                val::number(3),
+                val::number(4),
+                val::number(5),
+                val::number(6),
+                val::number(7),
+                val::number(8),
+                val::number(9),
+            ]),
+        ),
+        (
+            "Std.range 1 10",
+            val::list(vec![
+                val::number(1),
+                val::number(2),
+                val::number(3),
+                val::number(4),
+                val::number(5),
+                val::number(6),
+                val::number(7),
+                val::number(8),
+                val::number(9),
+            ]),
+        ),
+    ];
+
+    let mut ctx = EvalContext::new();
+    let p_ctx = ParserContext::new();
+
+    for (code, val) in code_with_vals.iter() {
+        let ast = parse_expr(code, &p_ctx).unwrap();
+        assert_eq!(ast.evaluate(&mut ctx), Ok(val.clone()));
+    }
+}
+
+#[test]
 fn std_math_module() {
     let code_with_vals = vec![
         ("Std.Math.abs -10", val::number(10)),
