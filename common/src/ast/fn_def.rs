@@ -3,12 +3,21 @@ use crate::{native_fn::NativeFn, util::indent};
 use std::hash::{Hash, Hasher};
 use std::{borrow::Borrow, fmt::Display, rc::Rc};
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, Debug, Eq)]
 pub struct FnDef {
     is_inline: bool,
     id: Identifier,
     args: FnDefArgs,
     body: Rc<FnDefBody>,
+}
+
+impl PartialEq for FnDef {
+    fn eq(&self, other: &Self) -> bool {
+        self.is_inline.eq(&other.is_inline)
+            && self.id.eq(&other.id)
+            && self.args.eq(&other.args)
+            && self.body.eq(&other.body)
+    }
 }
 
 impl Hash for FnDef {

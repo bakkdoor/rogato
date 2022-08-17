@@ -4,9 +4,15 @@ use std::hash::{Hash, Hasher};
 
 use super::ValueRef;
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, Eq, Debug)]
 pub struct Object {
     properties: HashTrieMap<String, ValueRef>,
+}
+
+impl PartialEq for Object {
+    fn eq(&self, other: &Self) -> bool {
+        self.properties.eq(&other.properties)
+    }
 }
 
 impl Hash for Object {

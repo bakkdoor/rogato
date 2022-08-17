@@ -1,11 +1,27 @@
-use std::{fmt::Display, hash::Hash};
+use std::{
+    fmt::Display,
+    hash::{Hash, Hasher},
+};
 
 use super::ValueRef;
 use crate::ast::ASTDepth;
 
-#[derive(Clone, PartialEq, Eq, Debug, Hash)]
+#[derive(Clone, Eq, Debug)]
 pub struct Queue {
     entries: rpds::Queue<ValueRef>,
+}
+
+impl PartialEq for Queue {
+    fn eq(&self, other: &Self) -> bool {
+        self.entries.eq(&other.entries)
+    }
+}
+
+impl Hash for Queue {
+    fn hash<H: Hasher>(&self, h: &mut H) {
+        let pairs: Vec<_> = self.entries.iter().collect();
+        Hash::hash(&pairs, h);
+    }
 }
 
 impl ASTDepth for Queue {

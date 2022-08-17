@@ -5,9 +5,15 @@ use crate::ast::ASTDepth;
 
 use super::ValueRef;
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, Eq, Debug)]
 pub struct Map {
     entries: HashTrieMap<String, ValueRef>,
+}
+
+impl PartialEq for Map {
+    fn eq(&self, other: &Self) -> bool {
+        self.entries.eq(&other.entries)
+    }
 }
 
 impl Hash for Map {
