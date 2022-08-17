@@ -19,7 +19,9 @@ impl PartialEq for Set {
 
 impl Hash for Set {
     fn hash<H: Hasher>(&self, h: &mut H) {
-        let pairs: Vec<_> = self.entries.iter().collect();
+        let mut pairs: Vec<_> = self.entries.iter().collect();
+        // TODO: improve this, probably need to implement Ord for Value
+        pairs.sort_by_key(|val| val.to_string());
         Hash::hash(&pairs, h);
     }
 }
