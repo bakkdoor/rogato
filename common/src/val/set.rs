@@ -17,6 +17,10 @@ impl Set {
     pub fn iter(&self) -> SetIter {
         self.entries.iter()
     }
+
+    pub fn len(&self) -> usize {
+        self.entries.size()
+    }
 }
 
 impl FromIterator<ValueRef> for Set {

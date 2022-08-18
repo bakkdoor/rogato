@@ -19,6 +19,10 @@ impl Map {
     pub fn iter(&self) -> MapIter {
         self.entries.iter()
     }
+
+    pub fn len(&self) -> usize {
+        self.entries.size()
+    }
 }
 
 impl FromIterator<(ValueRef, ValueRef)> for Map {

@@ -153,6 +153,26 @@ pub fn std_module() -> Module {
         }
     }));
 
+    module.fn_def(fn_def(
+        "length",
+        vec!["collection"],
+        move |args| -> Result<Rc<Value>, NativeFnError> {
+            let error = Err(invalid_args("length"));
+            match (args.len(), args.get(0)) {
+                (1, Some(l)) => match (*l).deref() {
+                    Value::List(list) => Ok(val::number(list.len())),
+                    Value::Map(map) => Ok(val::number(map.len())),
+                    Value::Queue(queue) => Ok(val::number(queue.len())),
+                    Value::Set(set) => Ok(val::number(set.len())),
+                    Value::Stack(stack) => Ok(val::number(stack.len())),
+                    Value::Vector(vector) => Ok(val::number(vector.len())),
+                    _ => error,
+                },
+                _ => error,
+            }
+        },
+    ));
+
     module
 }
 

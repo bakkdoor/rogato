@@ -14,6 +14,10 @@ impl Stack {
     pub fn iter(&self) -> StackIter {
         self.entries.iter()
     }
+
+    pub fn len(&self) -> usize {
+        self.entries.size()
+    }
 }
 
 impl FromIterator<ValueRef> for Stack {

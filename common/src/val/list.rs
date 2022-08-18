@@ -14,6 +14,10 @@ impl List {
     pub fn iter(&self) -> ListIter<'_> {
         self.entries.iter()
     }
+
+    pub fn len(&self) -> usize {
+        self.entries.len()
+    }
 }
 
 impl FromIterator<ValueRef> for List {

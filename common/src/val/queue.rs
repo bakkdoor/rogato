@@ -17,6 +17,10 @@ impl Queue {
     pub fn iter(&self) -> QueueIter {
         self.entries.iter()
     }
+
+    pub fn len(&self) -> usize {
+        self.entries.len()
+    }
 }
 
 impl FromIterator<ValueRef> for Queue {
