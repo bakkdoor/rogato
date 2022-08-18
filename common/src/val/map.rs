@@ -1,5 +1,8 @@
 use rpds::HashTrieMap;
-use std::hash::{Hash, Hasher};
+use std::{
+    fmt::Display,
+    hash::{Hash, Hasher},
+};
 
 use crate::ast::ASTDepth;
 
@@ -8,6 +11,14 @@ use super::ValueRef;
 #[derive(Clone, Eq, Debug)]
 pub struct Map {
     entries: HashTrieMap<ValueRef, ValueRef>,
+}
+
+type MapIter<'a> = rpds::map::hash_trie_map::Iter<'a, ValueRef, ValueRef, archery::RcK>;
+
+impl Map {
+    pub fn iter(&self) -> MapIter {
+        self.entries.iter()
+    }
 }
 
 impl FromIterator<(ValueRef, ValueRef)> for Map {
@@ -36,5 +47,25 @@ impl Hash for Map {
 impl ASTDepth for Map {
     fn ast_depth(&self) -> usize {
         self.entries.size()
+    }
+}
+
+impl Display for Map {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut first = true;
+
+        fmt.write_str("{ ")?;
+
+        for (k, v) in self.iter() {
+            if !first {
+                fmt.write_str(", ")?;
+            }
+            k.fmt(fmt)?;
+            fmt.write_str(" => ")?;
+            v.fmt(fmt)?;
+            first = false;
+        }
+
+        fmt.write_str(" }")
     }
 }

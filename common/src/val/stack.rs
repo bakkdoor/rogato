@@ -8,6 +8,14 @@ pub struct Stack {
     entries: rpds::Stack<ValueRef>,
 }
 
+type StackIter<'a> = rpds::stack::Iter<'a, ValueRef, archery::RcK>;
+
+impl Stack {
+    pub fn iter(&self) -> StackIter {
+        self.entries.iter()
+    }
+}
+
 impl FromIterator<ValueRef> for Stack {
     fn from_iter<T: IntoIterator<Item = ValueRef>>(iter: T) -> Self {
         Self {
@@ -23,7 +31,19 @@ impl ASTDepth for Stack {
 }
 
 impl Display for Stack {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!("Stack{{ {} }}", self.entries))
+    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut first = true;
+
+        fmt.write_str("Stack[ ")?;
+
+        for v in self.iter() {
+            if !first {
+                fmt.write_str(", ")?;
+            }
+            v.fmt(fmt)?;
+            first = false;
+        }
+
+        fmt.write_str(" ]")
     }
 }

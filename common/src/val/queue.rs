@@ -11,6 +11,14 @@ pub struct Queue {
     entries: rpds::Queue<ValueRef>,
 }
 
+type QueueIter<'a> = rpds::queue::Iter<'a, ValueRef, archery::RcK>;
+
+impl Queue {
+    pub fn iter(&self) -> QueueIter {
+        self.entries.iter()
+    }
+}
+
 impl FromIterator<ValueRef> for Queue {
     fn from_iter<T: IntoIterator<Item = ValueRef>>(iter: T) -> Self {
         Self {
@@ -39,7 +47,19 @@ impl ASTDepth for Queue {
 }
 
 impl Display for Queue {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!("Queue{{ {} }}", self.entries))
+    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut first = true;
+
+        fmt.write_str("Queue[ ")?;
+
+        for v in self.iter() {
+            if !first {
+                fmt.write_str(", ")?;
+            }
+            v.fmt(fmt)?;
+            first = false;
+        }
+
+        fmt.write_str(" ]")
     }
 }

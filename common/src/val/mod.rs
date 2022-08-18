@@ -166,7 +166,7 @@ impl Display for Value {
             Value::Stack(stack) => f.write_fmt(format_args!("{}", stack)),
             Value::Queue(queue) => f.write_fmt(format_args!("{}", queue)),
             Value::Set(set) => f.write_fmt(format_args!("{}", set)),
-            Value::Map(items) => f.write_fmt(format_args!("{{ {:?} }}", items)),
+            Value::Map(map) => f.write_fmt(format_args!("{}", map)),
             Value::Object(props) => f.write_fmt(format_args!("Object{{ {:?} }}", props)),
             Value::Lambda(lambda) => f.write_fmt(format_args!("{}", lambda)),
             Value::Quoted(expr) => f.write_fmt(format_args!("^{}", expr)),

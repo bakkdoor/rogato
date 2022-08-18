@@ -11,6 +11,14 @@ pub struct Set {
     entries: rpds::HashTrieSet<ValueRef>,
 }
 
+type SetIter<'a> = rpds::set::hash_trie_set::Iter<'a, ValueRef, archery::RcK>;
+
+impl Set {
+    pub fn iter(&self) -> SetIter {
+        self.entries.iter()
+    }
+}
+
 impl FromIterator<ValueRef> for Set {
     fn from_iter<T: IntoIterator<Item = ValueRef>>(iter: T) -> Self {
         Self {
@@ -41,7 +49,19 @@ impl ASTDepth for Set {
 }
 
 impl Display for Set {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!("Set{{ {} }}", self.entries))
+    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut first = true;
+
+        fmt.write_str("Set[ ")?;
+
+        for v in self.iter() {
+            if !first {
+                fmt.write_str(", ")?;
+            }
+            v.fmt(fmt)?;
+            first = false;
+        }
+
+        fmt.write_str(" ]")
     }
 }

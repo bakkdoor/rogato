@@ -1,7 +1,5 @@
 use std::{fmt::Display, hash::Hash};
 
-use archery::{RcK, SharedPointer};
-
 use super::ValueRef;
 use crate::ast::ASTDepth;
 
@@ -10,10 +8,7 @@ pub struct List {
     entries: rpds::List<ValueRef>,
 }
 
-type ListIter<'a> = std::iter::Map<
-    rpds::list::IterPtr<'a, ValueRef, RcK>,
-    for<'r> fn(&'r SharedPointer<ValueRef, RcK>) -> &'r ValueRef,
->;
+type ListIter<'a> = rpds::list::Iter<'a, ValueRef, archery::RcK>;
 
 impl List {
     pub fn iter(&self) -> ListIter<'_> {
@@ -36,7 +31,19 @@ impl ASTDepth for List {
 }
 
 impl Display for List {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!("{}", self.entries))
+    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut first = true;
+
+        fmt.write_str("[ ")?;
+
+        for v in self.iter() {
+            if !first {
+                fmt.write_str(", ")?;
+            }
+            v.fmt(fmt)?;
+            first = false;
+        }
+
+        fmt.write_str(" ]")
     }
 }
