@@ -21,6 +21,10 @@ impl Set {
     pub fn len(&self) -> usize {
         self.entries.size()
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.entries.is_empty()
+    }
 }
 
 impl FromIterator<ValueRef> for Set {
