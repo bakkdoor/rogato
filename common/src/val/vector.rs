@@ -39,7 +39,19 @@ impl ASTDepth for Vector {
 }
 
 impl Display for Vector {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!("Vector[ {} ]", self.entries))
+    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut first = true;
+
+        fmt.write_str("Vector[ ")?;
+
+        for v in self.iter() {
+            if !first {
+                fmt.write_str(", ")?;
+            }
+            v.fmt(fmt)?;
+            first = false;
+        }
+
+        fmt.write_str(" ]")
     }
 }
