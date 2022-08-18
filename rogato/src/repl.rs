@@ -31,7 +31,18 @@ fn validated_editor() -> Result<Editor<InputValidator>, ReadlineError> {
     Ok(editor)
 }
 
+pub fn debug_enabled() -> bool {
+    if let Some((_, val)) = std::env::vars_os().find(|(k, _)| k.eq("DEBUG")) {
+        if val == "1" {
+            return true;
+        }
+    }
+    false
+}
+
 pub fn run_repl() -> anyhow::Result<()> {
+    println!("rogātō ⌘ 🏷");
+    println!("REPL>");
     let mut eval_ctx = EvalContext::new();
     let parse_ctx = ParserContext::new();
     let mut counter = 0usize;
@@ -49,7 +60,7 @@ pub fn run_repl() -> anyhow::Result<()> {
 
     loop {
         counter += 1;
-        let readline = rl.readline(format!("\n{:03} > ", counter).as_str());
+        let readline = rl.readline(format!("{:03} > ", counter).as_str());
         match readline {
             Ok(line) => {
                 rl.add_history_entry(line.as_str());
@@ -112,42 +123,46 @@ fn rep(
 ) -> anyhow::Result<()> {
     match parse(code, parse_ctx) {
         Ok(ast) => {
-            println!("{:03} 🌳 {:?}\n\n{}\n", counter, ast, ast);
+            if debug_enabled() {
+                println!("{:03} 🌳 {:?}\n\n{}\n", counter, ast, ast);
+            }
             match ast.evaluate(eval_ctx) {
                 Ok(val) => {
                     if val.ast_depth() > 5 {
-                        println!("{:03} ✅\n{}", counter, val);
+                        println!("{:03} ✅\n{}\n", counter, val);
                     } else {
-                        println!("{:03} ✅ {}", counter, val);
+                        println!("{:03} ✅ {}\n", counter, val);
                     }
                     Ok(())
                 }
                 Err(e) => {
-                    eprintln!("{:03} ❌ {}", counter, e);
+                    eprintln!("{:03} ❌ {}\n", counter, e);
                     Ok(())
                 }
             }
         }
         Err(_) => match parse_expr(code.trim(), parse_ctx) {
             Ok(ast) => {
-                println!("{:03} 🌳 {:?}\n\n{}\n", counter, ast, ast);
+                if debug_enabled() {
+                    println!("{:03} 🌳 {:?}\n\n{}\n", counter, ast, ast);
+                }
                 match ast.evaluate(eval_ctx) {
                     Ok(val) => {
                         if val.ast_depth() > 4 {
-                            println!("{:03} ✅\n{}", counter, val);
+                            println!("{:03} ✅\n{}\n", counter, val);
                         } else {
-                            println!("{:03} ✅ {}", counter, val);
+                            println!("{:03} ✅ {}\n", counter, val);
                         }
                         Ok(())
                     }
                     Err(e) => {
-                        eprintln!("{:03} ❌ {}", counter, e);
+                        eprintln!("{:03} ❌ {}\n", counter, e);
                         Ok(())
                     }
                 }
             }
             Err(e) => {
-                eprintln!("{:03} ❌ {:?}", counter, e);
+                eprintln!("{:03} ❌ {:?}\n", counter, e);
                 Ok(())
             }
         },

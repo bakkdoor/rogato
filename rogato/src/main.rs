@@ -36,7 +36,6 @@ fn main() -> anyhow::Result<()> {
         match arg.as_str() {
             "help" => help_required = true,
             "repl" => {
-                println!("Running REPL");
                 repl::run_repl()?;
             }
             "db" => {
