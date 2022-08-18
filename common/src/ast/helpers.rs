@@ -40,12 +40,12 @@ pub fn string_lit(val: &str) -> Rc<Expression> {
     lit(String(val.to_string()))
 }
 
-pub fn tuple_lit(vals: Vec<Rc<Expression>>) -> Rc<Expression> {
-    lit(Tuple(TupleItems::from(vals)))
+pub fn tuple_lit<Iter: IntoIterator<Item = Rc<Expression>>>(vals: Iter) -> Rc<Expression> {
+    lit(Tuple(TupleItems::from_iter(vals)))
 }
 
-pub fn list_lit(vals: Vec<Rc<Expression>>) -> Rc<Expression> {
-    lit(List(TupleItems::from(vals)))
+pub fn list_lit<Iter: IntoIterator<Item = Rc<Expression>>>(vals: Iter) -> Rc<Expression> {
+    lit(List(TupleItems::from_iter(vals)))
 }
 
 pub fn struct_lit<S: Into<Identifier>>(
@@ -132,8 +132,14 @@ pub fn tuple_type(items: Vec<Rc<TypeExpression>>) -> Rc<TypeExpression> {
     Rc::new(TypeExpression::TupleType(TupleItems::from(items)))
 }
 
-pub fn struct_type(props: Vec<(&str, Rc<TypeExpression>)>) -> Rc<TypeExpression> {
-    let boxed_props = Vec::from_iter(props.iter().map(|(id, expr)| (id.into(), expr.clone())));
+pub fn struct_type<Iter: IntoIterator<Item = (&'static str, Rc<TypeExpression>)>>(
+    props: Iter,
+) -> Rc<TypeExpression> {
+    let boxed_props = Vec::from_iter(
+        props
+            .into_iter()
+            .map(|(id, expr)| (id.into(), expr.clone())),
+    );
     Rc::new(TypeExpression::StructType(boxed_props))
 }
 
