@@ -1,7 +1,4 @@
 use indent_write::indentable::Indentable;
-use rogato_common::ast::ASTDepth;
-// use regex::Regex;
-use rustyline::error::ReadlineError;
 use std::fmt::{Debug, Display};
 use std::fs::File;
 use std::io::Read;
@@ -9,9 +6,11 @@ use std::path::Path;
 
 #[allow(unused_imports)]
 use rogato_interpreter::{EvalContext, Evaluate};
-use rogato_parser::{parse, parse_expr, ParserContext};
+use rogato_parser::{parse, ParserContext};
 
 use clap::Parser;
+
+mod repl;
 
 // use crate::util::print_error;
 
@@ -38,7 +37,7 @@ fn main() -> anyhow::Result<()> {
             "help" => help_required = true,
             "repl" => {
                 println!("Running REPL");
-                run_repl()?;
+                repl::run_repl()?;
             }
             "db" => {
                 // println!("Running db tests");
@@ -106,84 +105,6 @@ fn print_parse_result<T: Display, E: Display>(code: &str, result: &Result<T, E>)
         Ok(expr) => println!("🌳 ✅\n{}\n\n", expr.indented("\t")),
         Err(error) => println!("❌{}\n\n❌\t{}\n\n", code_with_line_numbers, error),
     }
-}
-
-fn run_repl() -> rustyline::Result<()> {
-    let mut context = EvalContext::new();
-    let p_ctx = ParserContext::new();
-    let mut counter = 0;
-
-    let mut rl = rustyline::Editor::<()>::new()?;
-
-    let mut path_buf = dirs::home_dir().unwrap();
-    path_buf.push(".rogato_history.txt");
-    let history_file = path_buf.as_path();
-
-    if rl.load_history(history_file).is_err() {
-        println!("No previous history.");
-    }
-
-    loop {
-        counter += 1;
-        let readline = rl.readline(format!("\n{:03} > ", counter).as_str());
-        match readline {
-            Ok(line) => {
-                rl.add_history_entry(line.as_str());
-
-                match parse(line.as_str(), &p_ctx) {
-                    Ok(ast) => {
-                        println!("{:03} 🌳 {:?}\n\n{}\n", counter, ast, ast);
-                        match ast.evaluate(&mut context) {
-                            Ok(val) => {
-                                if val.ast_depth() > 5 {
-                                    println!("{:03} ✅\n{}", counter, val);
-                                } else {
-                                    println!("{:03} ✅ {}", counter, val);
-                                }
-                            }
-                            Err(e) => {
-                                eprintln!("{:03} ❌ {}", counter, e)
-                            }
-                        }
-                    }
-                    Err(_) => match parse_expr(line.as_str().trim(), &p_ctx) {
-                        Ok(ast) => {
-                            println!("{:03} 🌳 {:?}\n\n{}\n", counter, ast, ast);
-                            match ast.evaluate(&mut context) {
-                                Ok(val) => {
-                                    if val.ast_depth() > 4 {
-                                        println!("{:03} ✅\n{}", counter, val);
-                                    } else {
-                                        println!("{:03} ✅ {}", counter, val);
-                                    }
-                                }
-                                Err(e) => {
-                                    eprintln!("{:03} ❌ {}", counter, e)
-                                }
-                            }
-                        }
-                        Err(err) => {
-                            eprintln!("{:03} ❌ {:?}", counter, err)
-                        }
-                    },
-                }
-            }
-            Err(ReadlineError::Interrupted) => {
-                println!("^C");
-                break;
-            }
-            Err(ReadlineError::Eof) => {
-                println!("^D");
-                break;
-            }
-            Err(err) => {
-                eprintln!("Error: {:?}", err);
-                break;
-            }
-        }
-    }
-
-    rl.save_history(history_file)
 }
 
 // pub fn db_stuff<DB: db::Datastore + Debug>(db: &DB) -> db::DBResult<()> {

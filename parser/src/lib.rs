@@ -1,7 +1,9 @@
 pub mod parser;
-
 pub use parser::{parse, parse_ast, parse_expr};
+
 use rogato_common::ast::NodeFactory;
+
+pub type ParseError = peg::error::ParseError<peg::str::LineCol>;
 
 #[cfg(test)]
 pub mod tests;
