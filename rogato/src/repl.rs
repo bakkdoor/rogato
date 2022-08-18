@@ -118,7 +118,7 @@ fn parse_eval_print(
 ) -> anyhow::Result<()> {
     match parse(code, parse_ctx) {
         Ok(ast) => {
-            if rogato_common::util::debug_enabled() {
+            if rogato_common::util::is_debug_enabled() {
                 println!("{:03} 🌳 {:?}\n\n{}\n", counter, ast, ast);
             }
             match ast.evaluate(eval_ctx) {
@@ -138,7 +138,7 @@ fn parse_eval_print(
         }
         Err(_) => match parse_expr(code.trim(), parse_ctx) {
             Ok(ast) => {
-                if rogato_common::util::debug_enabled() {
+                if rogato_common::util::is_debug_enabled() {
                     println!("{:03} 🌳 {:?}\n\n{}\n", counter, ast, ast);
                 }
                 match ast.evaluate(eval_ctx) {
