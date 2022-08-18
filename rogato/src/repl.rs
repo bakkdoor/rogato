@@ -64,11 +64,11 @@ pub fn run_repl() -> anyhow::Result<()> {
 
     loop {
         counter += 1;
-        let readline = rl.readline(format!("{:03} > ", counter).as_str());
+        let readline = rl.readline(format!("{:03} >  ", counter).as_str());
         match readline {
             Ok(line) => {
                 rl.add_history_entry(line.as_str());
-                rep(&parse_ctx, &mut eval_ctx, counter, &line)?;
+                parse_eval_print(&parse_ctx, &mut eval_ctx, counter, &line)?;
             }
             Err(ReadlineError::Interrupted) => {
                 println!("^C");
@@ -119,7 +119,7 @@ impl From<ReadlineError> for REPLError {
     }
 }
 
-fn rep(
+fn parse_eval_print(
     parse_ctx: &ParserContext,
     eval_ctx: &mut EvalContext,
     counter: usize,
@@ -152,7 +152,7 @@ fn rep(
                 }
                 match ast.evaluate(eval_ctx) {
                     Ok(val) => {
-                        if val.ast_depth() > 4 {
+                        if val.ast_depth() > 5 {
                             println!("{:03} ✅\n{}\n", counter, val);
                         } else {
                             println!("{:03} ✅ {}\n", counter, val);
