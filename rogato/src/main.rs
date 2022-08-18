@@ -124,30 +124,30 @@ fn run_repl() {
         }
         match parse(buffer.as_str(), &p_ctx) {
             Ok(ast) => {
-                println!("{:03} AST> {:?}\n\n{}\n", counter, ast, ast);
+                println!("{:03} 🌳 {:?}\n\n{}\n", counter, ast, ast);
                 match ast.evaluate(&mut context) {
                     Ok(val) => {
-                        println!("{:03} EVAL>\n{}", counter, val);
+                        println!("{:03} ✅ {}", counter, val);
                     }
                     Err(e) => {
-                        eprintln!("{:03} EVAL ERROR> {}", counter, e)
+                        eprintln!("{:03} ❌ {}", counter, e)
                     }
                 }
             }
             Err(_) => match parse_expr(buffer.as_str().trim(), &p_ctx) {
                 Ok(ast) => {
-                    println!("{:03} EXPR> {:?}\n\n{}\n", counter, ast, ast);
+                    println!("{:03} 🌳 {:?}\n\n{}\n", counter, ast, ast);
                     match ast.evaluate(&mut context) {
                         Ok(val) => {
-                            println!("{:03} EVAL>\n{}", counter, val)
+                            println!("{:03} ✅ {}", counter, val)
                         }
                         Err(e) => {
-                            eprintln!("{:03} EVAL ERROR> {}", counter, e)
+                            eprintln!("{:03} ❌ {}", counter, e)
                         }
                     }
                 }
                 Err(err) => {
-                    eprintln!("{:03} PARSE ERROR> {:?}", counter, err)
+                    eprintln!("{:03} ❌ {:?}", counter, err)
                 }
             },
         }
