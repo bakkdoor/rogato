@@ -161,10 +161,7 @@ impl Display for Value {
                 size,
                 TupleItems::from(items.clone())
             )),
-            Value::List(list) => f.write_fmt(format_args!(
-                "[ {} ]",
-                TupleItems::from_iter(list.iter().map(Rc::clone))
-            )),
+            Value::List(list) => f.write_fmt(format_args!("{}", list)),
             Value::Vector(vector) => f.write_fmt(format_args!("{}", vector)),
             Value::Stack(stack) => f.write_fmt(format_args!("{}", stack)),
             Value::Queue(queue) => f.write_fmt(format_args!("{}", queue)),
