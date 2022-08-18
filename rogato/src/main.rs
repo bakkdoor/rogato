@@ -1,4 +1,5 @@
 use indent_write::indentable::Indentable;
+use rogato_common::ast::ASTDepth;
 // use regex::Regex;
 use rustyline::error::ReadlineError;
 use std::fmt::{Debug, Display};
@@ -134,7 +135,11 @@ fn run_repl() -> rustyline::Result<()> {
                         println!("{:03} 🌳 {:?}\n\n{}\n", counter, ast, ast);
                         match ast.evaluate(&mut context) {
                             Ok(val) => {
-                                println!("{:03} ✅ {}", counter, val);
+                                if val.ast_depth() > 5 {
+                                    println!("{:03} ✅\n{}", counter, val);
+                                } else {
+                                    println!("{:03} ✅ {}", counter, val);
+                                }
                             }
                             Err(e) => {
                                 eprintln!("{:03} ❌ {}", counter, e)
@@ -146,7 +151,11 @@ fn run_repl() -> rustyline::Result<()> {
                             println!("{:03} 🌳 {:?}\n\n{}\n", counter, ast, ast);
                             match ast.evaluate(&mut context) {
                                 Ok(val) => {
-                                    println!("{:03} ✅ {}", counter, val)
+                                    if val.ast_depth() > 4 {
+                                        println!("{:03} ✅\n{}", counter, val);
+                                    } else {
+                                        println!("{:03} ✅ {}", counter, val);
+                                    }
                                 }
                                 Err(e) => {
                                     eprintln!("{:03} ❌ {}", counter, e)
