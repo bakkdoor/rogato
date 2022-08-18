@@ -10,3 +10,12 @@ pub fn print_error<E: std::fmt::Debug>(error: E) -> E {
 pub fn indent<T: Display>(t: T) -> indent_write::indentable::Indented<'static, T> {
     t.indented("    ")
 }
+
+pub fn debug_enabled() -> bool {
+    if let Some((_, val)) = std::env::vars_os().find(|(k, _)| k.eq("DEBUG")) {
+        if val == "1" {
+            return true;
+        }
+    }
+    false
+}

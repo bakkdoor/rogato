@@ -31,15 +31,6 @@ fn validated_editor() -> Result<Editor<InputValidator>, ReadlineError> {
     Ok(editor)
 }
 
-pub fn debug_enabled() -> bool {
-    if let Some((_, val)) = std::env::vars_os().find(|(k, _)| k.eq("DEBUG")) {
-        if val == "1" {
-            return true;
-        }
-    }
-    false
-}
-
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub fn run_repl() -> anyhow::Result<()> {
@@ -127,7 +118,7 @@ fn parse_eval_print(
 ) -> anyhow::Result<()> {
     match parse(code, parse_ctx) {
         Ok(ast) => {
-            if debug_enabled() {
+            if rogato_common::util::debug_enabled() {
                 println!("{:03} 🌳 {:?}\n\n{}\n", counter, ast, ast);
             }
             match ast.evaluate(eval_ctx) {
@@ -147,7 +138,7 @@ fn parse_eval_print(
         }
         Err(_) => match parse_expr(code.trim(), parse_ctx) {
             Ok(ast) => {
-                if debug_enabled() {
+                if rogato_common::util::debug_enabled() {
                     println!("{:03} 🌳 {:?}\n\n{}\n", counter, ast, ast);
                 }
                 match ast.evaluate(eval_ctx) {
