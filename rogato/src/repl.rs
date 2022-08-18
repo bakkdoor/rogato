@@ -40,9 +40,13 @@ pub fn debug_enabled() -> bool {
     false
 }
 
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 pub fn run_repl() -> anyhow::Result<()> {
-    println!("rogātō ⌘ 🏷");
-    println!("REPL>");
+    println!("👾 rogātō ⌘ 🏷 ");
+    print!("🖥  Interactive Shell ");
+    println!("{} 🦀 \n", VERSION);
+    println!("Enter rogātō expressions below. You can add new lines via SHIFT-DOWN.\n");
     let mut eval_ctx = EvalContext::new();
     let parse_ctx = ParserContext::new();
     let mut counter = 0usize;
