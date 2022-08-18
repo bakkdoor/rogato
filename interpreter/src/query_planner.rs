@@ -72,7 +72,7 @@ impl QueryPlanner {
         match binding.val().evaluate(context) {
             Ok(value) => {
                 // todo: actual query logic needed here
-                if value.is_null() {
+                if value.is_none() {
                     if !binding.is_negated() {
                         return Err(QueryBindingError::BindingFailed(binding.clone()));
                     }

@@ -26,8 +26,12 @@ use crate::ast::{
     ASTDepth, Identifier, AST,
 };
 
-pub fn null() -> ValueRef {
-    Rc::new(Value::Null)
+pub fn none() -> ValueRef {
+    Rc::new(Value::Option(None))
+}
+
+pub fn some(val: ValueRef) -> ValueRef {
+    Rc::new(Value::Option(Some(val)))
 }
 
 pub fn string<S: ToString>(s: S) -> ValueRef {
@@ -103,7 +107,7 @@ pub fn quoted_ast(ast: Rc<AST>) -> ValueRef {
 
 #[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub enum Value {
-    Null,
+    Option(Option<ValueRef>),
     String(String),
     Symbol(Identifier),
     Bool(bool),
@@ -122,8 +126,8 @@ pub enum Value {
 }
 
 impl Value {
-    pub fn is_null(&self) -> bool {
-        matches!(self, Value::Null)
+    pub fn is_none(&self) -> bool {
+        matches!(self, Value::Option(None))
     }
 }
 
@@ -132,11 +136,11 @@ pub type ValueRef = Rc<Value>;
 impl From<serde_json::Value> for Value {
     fn from(json_val: serde_json::Value) -> Self {
         match json_val {
+            serde_json::Value::Null => Value::Option(None),
             serde_json::Value::Array(items) => Value::List(List::from_iter(
                 items.iter().map(|item| Rc::new(Value::from(item.clone()))),
             )),
             serde_json::Value::Bool(b) => Value::Bool(b),
-            serde_json::Value::Null => Value::Null,
             serde_json::Value::Number(n) => Value::Number(Decimal::from(n.as_i64().unwrap())),
             serde_json::Value::Object(props) => Value::Object(Object::from_iter(
                 props
@@ -152,7 +156,8 @@ impl From<serde_json::Value> for Value {
 impl Display for Value {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Value::Null => f.write_str("null"),
+            Value::Option(None) => f.write_str("None"),
+            Value::Option(Some(val)) => f.write_fmt(format_args!("Some({})", val)),
             Value::String(s) => f.write_fmt(format_args!("\"{}\"", s)),
             Value::Symbol(s) => f.write_fmt(format_args!("^{}", s)),
             Value::Bool(b) => f.write_fmt(format_args!("{}", b)),
@@ -179,7 +184,8 @@ impl Display for Value {
 impl ASTDepth for Value {
     fn ast_depth(&self) -> usize {
         match self {
-            Value::Null => 1,
+            Value::Option(None) => 1,
+            Value::Option(Some(val)) => 1 + val.ast_depth(),
             Value::String(_) => 1,
             Value::Symbol(_) => 1,
             Value::Bool(_) => 1,

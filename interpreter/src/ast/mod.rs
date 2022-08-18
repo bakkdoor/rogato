@@ -19,10 +19,10 @@ pub mod type_expression;
 impl Evaluate<ValueRef> for AST {
     fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
         match self {
-            AST::RootComment(_) => Ok(val::null()),
+            AST::RootComment(_) => Ok(val::none()),
             AST::FnDef(fn_def) => fn_def.evaluate(context),
             AST::ModuleDef(mod_def) => mod_def.evaluate(context),
-            AST::Use(_id) => Ok(val::null()),
+            AST::Use(_id) => Ok(val::none()),
             AST::TypeDef(type_def) => type_def.evaluate(context),
         }
     }
