@@ -11,6 +11,14 @@ pub struct Queue {
     entries: rpds::Queue<ValueRef>,
 }
 
+impl FromIterator<ValueRef> for Queue {
+    fn from_iter<T: IntoIterator<Item = ValueRef>>(iter: T) -> Self {
+        Self {
+            entries: rpds::Queue::from_iter(iter),
+        }
+    }
+}
+
 impl PartialEq for Queue {
     fn eq(&self, other: &Self) -> bool {
         self.entries.eq(&other.entries)

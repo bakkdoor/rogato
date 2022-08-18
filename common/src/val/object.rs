@@ -9,6 +9,14 @@ pub struct Object {
     properties: HashTrieMap<String, ValueRef>,
 }
 
+impl FromIterator<(String, ValueRef)> for Object {
+    fn from_iter<T: IntoIterator<Item = (String, ValueRef)>>(iter: T) -> Self {
+        Object {
+            properties: HashTrieMap::from_iter(iter),
+        }
+    }
+}
+
 impl PartialEq for Object {
     fn eq(&self, other: &Self) -> bool {
         self.properties.eq(&other.properties)
@@ -26,13 +34,5 @@ impl Hash for Object {
 impl ASTDepth for Object {
     fn ast_depth(&self) -> usize {
         1 + self.properties.size()
-    }
-}
-
-impl FromIterator<(String, ValueRef)> for Object {
-    fn from_iter<T: IntoIterator<Item = (String, ValueRef)>>(iter: T) -> Self {
-        Object {
-            properties: HashTrieMap::from_iter(iter),
-        }
     }
 }

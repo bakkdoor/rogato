@@ -95,6 +95,12 @@ impl<I: Display> TupleItems<I> {
     }
 }
 
+impl<I: Display> FromIterator<Rc<I>> for TupleItems<I> {
+    fn from_iter<T: IntoIterator<Item = Rc<I>>>(iter: T) -> Self {
+        TupleItems::from(iter.into_iter().collect())
+    }
+}
+
 impl<I: Display + ASTDepth> Display for TupleItems<I> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let indent_items = self.items.iter().any(|i| i.ast_depth() > 6);

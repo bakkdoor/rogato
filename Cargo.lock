@@ -612,6 +612,7 @@ dependencies = [
 name = "rogato-common"
 version = "0.1.0"
 dependencies = [
+ "archery",
  "indent_write",
  "rpds",
  "rust_decimal",

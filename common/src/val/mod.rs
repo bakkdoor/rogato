@@ -5,6 +5,7 @@ use std::{fmt::Display, rc::Rc};
 use rust_decimal::Decimal;
 pub use serde_json::Number;
 
+pub mod list;
 pub mod map;
 pub mod object;
 pub mod queue;
@@ -12,6 +13,7 @@ pub mod set;
 pub mod stack;
 pub mod vector;
 
+pub use list::List;
 pub use map::Map;
 pub use object::Object;
 pub use queue::Queue;
@@ -40,14 +42,6 @@ pub fn bool(b: bool) -> ValueRef {
     Rc::new(Value::Bool(b))
 }
 
-pub fn tuple(vec: Vec<ValueRef>) -> ValueRef {
-    Rc::new(Value::Tuple(vec.len(), vec))
-}
-
-pub fn list(vec: Vec<ValueRef>) -> ValueRef {
-    Rc::new(Value::List(vec))
-}
-
 pub fn number<Num>(n: Num) -> ValueRef
 where
     Decimal: From<Num>,
@@ -57,6 +51,34 @@ where
 
 pub fn decimal_str(s: &str) -> ValueRef {
     Rc::new(Value::Number(Decimal::from_str(s).unwrap()))
+}
+
+pub fn tuple(vec: Vec<ValueRef>) -> ValueRef {
+    Rc::new(Value::Tuple(vec.len(), vec))
+}
+
+pub fn list<I: IntoIterator<Item = ValueRef>>(items: I) -> ValueRef {
+    Rc::new(Value::List(List::from_iter(items.into_iter())))
+}
+
+pub fn queue<I: IntoIterator<Item = ValueRef>>(items: I) -> ValueRef {
+    Rc::new(Value::Queue(Queue::from_iter(items.into_iter())))
+}
+
+pub fn set<I: IntoIterator<Item = ValueRef>>(items: I) -> ValueRef {
+    Rc::new(Value::Set(Set::from_iter(items.into_iter())))
+}
+
+pub fn stack<I: IntoIterator<Item = ValueRef>>(items: I) -> ValueRef {
+    Rc::new(Value::Stack(Stack::from_iter(items.into_iter())))
+}
+
+pub fn vector<I: IntoIterator<Item = ValueRef>>(items: I) -> ValueRef {
+    Rc::new(Value::Vector(Vector::from_iter(items.into_iter())))
+}
+
+pub fn map<I: IntoIterator<Item = (ValueRef, ValueRef)>>(items: I) -> ValueRef {
+    Rc::new(Value::Map(Map::from_iter(items.into_iter())))
 }
 
 pub fn object<S: ToString>(props: Vec<(S, ValueRef)>) -> ValueRef {
@@ -86,7 +108,7 @@ pub enum Value {
     Bool(bool),
     Number(Decimal),
     Tuple(usize, Vec<ValueRef>),
-    List(Vec<ValueRef>),
+    List(List),
     Vector(Vector),
     Stack(Stack),
     Queue(Queue),
@@ -109,12 +131,9 @@ pub type ValueRef = Rc<Value>;
 impl From<serde_json::Value> for Value {
     fn from(json_val: serde_json::Value) -> Self {
         match json_val {
-            serde_json::Value::Array(items) => Value::List(
-                items
-                    .iter()
-                    .map(|item| Rc::new(Value::from(item.clone())))
-                    .collect(),
-            ),
+            serde_json::Value::Array(items) => Value::List(List::from_iter(
+                items.iter().map(|item| Rc::new(Value::from(item.clone()))),
+            )),
             serde_json::Value::Bool(b) => Value::Bool(b),
             serde_json::Value::Null => Value::Null,
             serde_json::Value::Number(n) => Value::Number(Decimal::from(n.as_i64().unwrap())),
@@ -142,9 +161,10 @@ impl Display for Value {
                 size,
                 TupleItems::from(items.clone())
             )),
-            Value::List(items) => {
-                f.write_fmt(format_args!("[ {} ]", TupleItems::from(items.clone())))
-            }
+            Value::List(list) => f.write_fmt(format_args!(
+                "[ {} ]",
+                TupleItems::from_iter(list.iter().map(Rc::clone))
+            )),
             Value::Vector(vector) => f.write_fmt(format_args!("{}", vector)),
             Value::Stack(stack) => f.write_fmt(format_args!("{}", stack)),
             Value::Queue(queue) => f.write_fmt(format_args!("{}", queue)),
@@ -167,7 +187,7 @@ impl ASTDepth for Value {
             Value::Bool(_) => 1,
             Value::Number(_) => 1,
             Value::Tuple(size, _) => 1 + size,
-            Value::List(items) => 1 + items.len(),
+            Value::List(list) => list.ast_depth(),
             Value::Vector(vector) => vector.ast_depth(),
             Value::Stack(stack) => stack.ast_depth(),
             Value::Queue(queue) => queue.ast_depth(),

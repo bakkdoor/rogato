@@ -8,6 +8,14 @@ pub struct Vector {
     entries: rpds::Vector<ValueRef>,
 }
 
+impl FromIterator<ValueRef> for Vector {
+    fn from_iter<T: IntoIterator<Item = ValueRef>>(iter: T) -> Self {
+        Self {
+            entries: rpds::Vector::from_iter(iter),
+        }
+    }
+}
+
 impl ASTDepth for Vector {
     fn ast_depth(&self) -> usize {
         1 + self.entries.len()

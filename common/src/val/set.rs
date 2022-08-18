@@ -11,6 +11,14 @@ pub struct Set {
     entries: rpds::HashTrieSet<ValueRef>,
 }
 
+impl FromIterator<ValueRef> for Set {
+    fn from_iter<T: IntoIterator<Item = ValueRef>>(iter: T) -> Self {
+        Self {
+            entries: rpds::HashTrieSet::from_iter(iter),
+        }
+    }
+}
+
 impl PartialEq for Set {
     fn eq(&self, other: &Self) -> bool {
         self.entries.eq(&other.entries)

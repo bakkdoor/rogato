@@ -8,6 +8,14 @@ pub struct Stack {
     entries: rpds::Stack<ValueRef>,
 }
 
+impl FromIterator<ValueRef> for Stack {
+    fn from_iter<T: IntoIterator<Item = ValueRef>>(iter: T) -> Self {
+        Self {
+            entries: rpds::Stack::from_iter(iter),
+        }
+    }
+}
+
 impl ASTDepth for Stack {
     fn ast_depth(&self) -> usize {
         1 + self.entries.size()
