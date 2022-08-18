@@ -77,30 +77,30 @@ pub fn run_repl() -> anyhow::Result<()> {
 #[derive(Error, Debug)]
 pub enum REPLError {
     #[error("EvalError: {0}")]
-    EvalError(EvalError),
+    Eval(EvalError),
 
     #[error("ParseError: {0}")]
-    ParseError(rogato_parser::ParseError),
+    Parse(rogato_parser::ParseError),
 
     #[error("ReadlineError: {0}")]
-    ReadlineError(ReadlineError),
+    Readline(ReadlineError),
 }
 
 impl From<EvalError> for REPLError {
     fn from(e: EvalError) -> Self {
-        REPLError::EvalError(e)
+        REPLError::Eval(e)
     }
 }
 
 impl From<ParseError> for REPLError {
     fn from(e: ParseError) -> Self {
-        REPLError::ParseError(e)
+        REPLError::Parse(e)
     }
 }
 
 impl From<ReadlineError> for REPLError {
     fn from(e: ReadlineError) -> Self {
-        REPLError::ReadlineError(e)
+        REPLError::Readline(e)
     }
 }
 
@@ -110,7 +110,7 @@ fn rep(
     counter: usize,
     code: &str,
 ) -> anyhow::Result<()> {
-    match parse(code, &parse_ctx) {
+    match parse(code, parse_ctx) {
         Ok(ast) => {
             println!("{:03} 🌳 {:?}\n\n{}\n", counter, ast, ast);
             match ast.evaluate(eval_ctx) {
@@ -128,7 +128,7 @@ fn rep(
                 }
             }
         }
-        Err(_) => match parse_expr(code.trim(), &parse_ctx) {
+        Err(_) => match parse_expr(code.trim(), parse_ctx) {
             Ok(ast) => {
                 println!("{:03} 🌳 {:?}\n\n{}\n", counter, ast, ast);
                 match ast.evaluate(eval_ctx) {
