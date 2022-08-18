@@ -21,8 +21,8 @@ use std::rc::Rc;
 use super::fn_def::FnDefBody;
 use super::Identifier;
 
-pub fn program(nodes: Vec<Rc<AST>>) -> Program {
-    Program::new(nodes)
+pub fn program<Nodes: IntoIterator<Item = Rc<AST>>>(nodes: Nodes) -> Program {
+    Program::from_iter(nodes)
 }
 
 pub fn lit(lit: Literal) -> Rc<Expression> {
@@ -71,7 +71,11 @@ pub fn prop_fn_ref(id: &str) -> Rc<Expression> {
     Rc::new(PropFnRef(id.into()))
 }
 
-pub fn fn_def(id: &str, args: Vec<&str>, body: Rc<Expression>) -> Rc<AST> {
+pub fn fn_def<Args: IntoIterator<Item = &'static str>>(
+    id: &str,
+    args: Args,
+    body: Rc<Expression>,
+) -> Rc<AST> {
     Rc::new(AST::FnDef(FnDef::new(
         id,
         fn_def_args(args),
@@ -79,14 +83,19 @@ pub fn fn_def(id: &str, args: Vec<&str>, body: Rc<Expression>) -> Rc<AST> {
     )))
 }
 
-pub fn fn_def_args(args: Vec<&str>) -> FnDefArgs {
-    FnDefArgs::new(Vec::from_iter(args.iter().map(|a| a.into())))
+pub fn fn_def_args<Args: IntoIterator<Item = &'static str>>(args: Args) -> FnDefArgs {
+    FnDefArgs::new(Vec::from_iter(args.into_iter().map(|a| a.into())))
 }
 
-pub fn let_expr(bindings: Vec<(&str, Rc<Expression>)>, body: Rc<Expression>) -> Rc<Expression> {
+pub fn let_expr<
+    VarName: Into<Identifier>,
+    Bindings: IntoIterator<Item = (VarName, Rc<Expression>)>,
+>(
+    bindings: Bindings,
+    body: Rc<Expression>,
+) -> Rc<Expression> {
     let bindings: Vec<(Identifier, Rc<Expression>)> = bindings
-        .iter()
-        .cloned()
+        .into_iter()
         .map(|(name, expr)| (name.into(), expr))
         .collect();
 
@@ -135,12 +144,9 @@ pub fn tuple_type(items: Vec<Rc<TypeExpression>>) -> Rc<TypeExpression> {
 pub fn struct_type<Iter: IntoIterator<Item = (&'static str, Rc<TypeExpression>)>>(
     props: Iter,
 ) -> Rc<TypeExpression> {
-    let boxed_props = Vec::from_iter(
-        props
-            .into_iter()
-            .map(|(id, expr)| (id.into(), expr.clone())),
-    );
-    Rc::new(TypeExpression::StructType(boxed_props))
+    Rc::new(TypeExpression::StructType(Vec::from_iter(
+        props.into_iter().map(|(id, expr)| (id.into(), expr)),
+    )))
 }
 
 pub fn int_type() -> Rc<TypeExpression> {
@@ -210,7 +216,11 @@ pub fn unquoted_ast(ast: Rc<AST>) -> Rc<Expression> {
     Rc::new(Expression::UnquotedAST(ast))
 }
 
-pub fn inline_fn_def(id: &str, args: Vec<&str>, body: Rc<Expression>) -> Rc<Expression> {
+pub fn inline_fn_def<Args: IntoIterator<Item = &'static str>>(
+    id: &str,
+    args: Args,
+    body: Rc<Expression>,
+) -> Rc<Expression> {
     Rc::new(Expression::InlineFnDef(FnDef::new_inline(
         id,
         fn_def_args(args),

@@ -72,16 +72,16 @@ fn fn_defs() {
             "foo",
             vec!["a", "b"],
             let_expr(
-                vec![
+                [
                     ("x", op_call("+", var("a"), var("b"))),
                     ("y", op_call("*", var("x"), var("a"))),
                     ("z", op_call("*", var("y"), var("b"))),
                 ],
-                tuple_lit(vec![
+                tuple_lit([
                     var("x"),
                     var("y"),
                     var("z"),
-                    tuple_lit(vec![var("x"), var("y")])
+                    tuple_lit([var("x"), var("y")])
                 ])
             )
         )
@@ -141,7 +141,7 @@ fn arithmetic_expressions() {
     assert_parse_expr!(
         "let x = 1, y = 2 in x + y",
         let_expr(
-            vec![("x", number_lit(1)), ("y", number_lit(2))],
+            [("x", number_lit(1)), ("y", number_lit(2))],
             op_call("+", var("x"), var("y")),
         )
     );
@@ -167,12 +167,12 @@ fn literals() {
     assert_parse_expr!("\"Hello, world!\"", string_lit("Hello, world!"));
     assert_parse_expr!(
         "{1,2,3}",
-        tuple_lit(vec![number_lit(1), number_lit(2), number_lit(3)])
+        tuple_lit([number_lit(1), number_lit(2), number_lit(3)])
     );
 
     assert_parse_expr!(
         "{ 1, (2 + 3), 4 }",
-        tuple_lit(vec![
+        tuple_lit([
             number_lit(1),
             op_call("+", number_lit(2), number_lit(3)),
             number_lit(4)
@@ -181,7 +181,7 @@ fn literals() {
 
     assert_parse_expr!(
         "{ 1, 2 + 3, 4 * 5 }",
-        tuple_lit(vec![
+        tuple_lit([
             number_lit(1),
             op_call("+", number_lit(2), number_lit(3)),
             op_call("*", number_lit(4), number_lit(5))
@@ -190,7 +190,7 @@ fn literals() {
 
     assert_parse_expr!(
         "{ 1, a + b, c * d }",
-        tuple_lit(vec![
+        tuple_lit([
             number_lit(1),
             op_call("+", var("a"), var("b")),
             op_call("*", var("c"), var("d"))
@@ -199,8 +199,8 @@ fn literals() {
 
     assert_parse_expr!(
         "{{x, x > y}, x == 0, x + y}",
-        tuple_lit(vec![
-            tuple_lit(vec![var("x"), op_call(">", var("x"), var("y"))]),
+        tuple_lit([
+            tuple_lit([var("x"), op_call(">", var("x"), var("y"))]),
             op_call("==", var("x"), number_lit(0)),
             op_call("+", var("x"), var("y"))
         ])
@@ -218,41 +218,38 @@ fn literals() {
         )
     );
 
-    assert_parse_expr!("[]", list_lit(vec![]));
+    assert_parse_expr!("[]", list_lit([]));
 
     assert_parse_expr!(
         "[
         ]",
-        list_lit(vec![])
+        list_lit([])
     );
 
     assert_parse_expr!(
         "[
             // empty with comment
         ]",
-        list_lit(vec![])
+        list_lit([])
     );
 
-    assert_parse_expr!("[1]", list_lit(vec![number_lit(1)]));
+    assert_parse_expr!("[1]", list_lit([number_lit(1)]));
 
-    assert_parse_expr!(
-        "[1, \"foo\"]",
-        list_lit(vec![number_lit(1), string_lit("foo")])
-    );
+    assert_parse_expr!("[1, \"foo\"]", list_lit([number_lit(1), string_lit("foo")]));
 
     assert_parse_expr!(
         "[1, \"foo\", {2, \"bar\"}]",
-        list_lit(vec![
+        list_lit([
             number_lit(1),
             string_lit("foo"),
-            tuple_lit(vec![number_lit(2), string_lit("bar")])
+            tuple_lit([number_lit(2), string_lit("bar")])
         ])
     );
 
     assert_parse_expr!(
         "[[x, x > y], x == 0, x + y]",
-        list_lit(vec![
-            list_lit(vec![var("x"), op_call(">", var("x"), var("y"))]),
+        list_lit([
+            list_lit([var("x"), op_call(">", var("x"), var("y"))]),
             op_call("==", var("x"), number_lit(0)),
             op_call("+", var("x"), var("y"))
         ])
@@ -359,19 +356,16 @@ fn op_calls() {
 
 #[test]
 fn comments() {
-    assert_parse!("// a comment", program(vec![root_comment(" a comment")]));
+    assert_parse!("// a comment", program([root_comment(" a comment")]));
 
     assert_parse!(
         "// a comment\n       // another comment",
-        program(vec![
-            root_comment(" a comment"),
-            root_comment(" another comment")
-        ])
+        program([root_comment(" a comment"), root_comment(" another comment")])
     );
 
     assert_parse!(
         "// a comment\n\t // \n\n\t //what ok         \n       // another comment",
-        program(vec![
+        program([
             root_comment(" a comment"),
             root_comment(" "),
             root_comment("what ok         "),
@@ -384,7 +378,7 @@ fn comments() {
         commented(
             " a comment yo!",
             let_expr(
-                vec![("x", number_lit(1))],
+                [("x", number_lit(1))],
                 op_call("*", var("x"), number_lit(2))
             )
         )
@@ -448,12 +442,12 @@ fn let_expressions() {
         in
             {name, age, city}",
         let_expr(
-            vec![
+            [
                 ("name", string_lit("John Connor")),
                 ("age", number_lit(12)),
                 ("city", string_lit("Los Angeles"))
             ],
-            tuple_lit(vec![var("name"), var("age"), var("city")])
+            tuple_lit([var("name"), var("age"), var("city")])
         )
     );
 
@@ -464,7 +458,7 @@ fn let_expressions() {
         in
             Person{name: name, age: age, city: city}",
         let_expr(
-            vec![
+            [
                 ("name", string_lit("John Connor")),
                 ("age", number_lit(12)),
                 ("city", string_lit("Los Angeles"))
@@ -492,7 +486,7 @@ fn let_expressions() {
          in
             { friends, List.count friends }",
         let_expr(
-            vec![
+            [
                 (
                     "friendsOfFriends",
                     query(
@@ -510,10 +504,7 @@ fn let_expressions() {
                     fn_call("List.map", vec![var("friendsOfFriends"), var("name")])
                 )
             ],
-            tuple_lit(vec![
-                var("friends"),
-                fn_call("List.count", vec![var("friends")])
-            ])
+            tuple_lit([var("friends"), fn_call("List.count", vec![var("friends")])])
         )
     );
 
@@ -525,7 +516,7 @@ fn let_expressions() {
          in
             { add 1 2, mul 2 3 }",
         let_expr(
-            vec![
+            [
                 (
                     "add",
                     inline_fn_def("add", vec!["a", "b"], op_call("+", var("a"), var("b")))
@@ -535,7 +526,7 @@ fn let_expressions() {
                     inline_fn_def("mul", vec!["a", "b"], op_call("*", var("a"), var("b")))
                 ),
             ],
-            tuple_lit(vec![
+            tuple_lit([
                 fn_call("add", vec![number_lit(1), number_lit(2)]),
                 fn_call("mul", vec![number_lit(2), number_lit(3)]),
             ])
@@ -577,7 +568,7 @@ fn queries() {
                 fn_call("isPopular", vec![var("p")]),
                 fn_call("isFriendOf", vec![var("p"), var("p2")])
             ],
-            tuple_lit(vec![var("p"), var("p2")])
+            tuple_lit([var("p"), var("p2")])
         )
     );
 
@@ -596,7 +587,7 @@ fn queries() {
                 fn_call("age", vec![var("p")]),
                 op_call("+", fn_call("age", vec![var("p2")]), number_lit(1))
             ),],
-            tuple_lit(vec![var("p"), var("p2")])
+            tuple_lit([var("p"), var("p2")])
         )
     );
 
@@ -655,10 +646,7 @@ fn queries() {
                 number_lit(0),
                 op_call("+", var("a"), op_call("+", var("b"), var("c")))
             )],
-            tuple_lit(vec![
-                var("diff"),
-                tuple_lit(vec![var("a"), var("b"), var("c")])
-            ]),
+            tuple_lit([var("diff"), tuple_lit([var("a"), var("b"), var("c")])]),
         )
     );
 
@@ -674,7 +662,7 @@ fn queries() {
                 (vec!["bob"], edge_prop(var("job"), "Friend"), false)
             ],
             vec![],
-            tuple_lit(vec![var("bob"), var("joe")])
+            tuple_lit([var("bob"), var("joe")])
         )
     );
 
@@ -770,7 +758,7 @@ fn variables() {
 
     assert_parse_expr!(
         "{.foo, .bar}",
-        tuple_lit(vec![prop_fn_ref("foo"), prop_fn_ref("bar")])
+        tuple_lit([prop_fn_ref("foo"), prop_fn_ref("bar")])
     );
 }
 
@@ -795,9 +783,9 @@ fn lambdas() {
                 vec![
                     lambda(
                         vec!["z"],
-                        tuple_lit(vec![
+                        tuple_lit([
                             op_call("*", var("x"), op_call("*", var("y"), var("z"))),
-                            tuple_lit(vec![var("x"), var("y"), var("z")])
+                            tuple_lit([var("x"), var("y"), var("z")])
                         ])
                     ),
                     var("x"),
@@ -815,7 +803,7 @@ fn lambdas() {
                 vec!["y"],
                 lambda(
                     vec!["z"],
-                    tuple_lit(vec![var("w"), var("x"), var("y"), var("z")])
+                    tuple_lit([var("w"), var("x"), var("y"), var("z")])
                 )
             )
         )
@@ -857,8 +845,8 @@ fn fn_pipes() {
                         fn_call(
                             "joinWith",
                             vec![
-                                list_lit(vec![number_lit(1), number_lit(2)]),
-                                tuple_lit(vec![number_lit(1), number_lit(2), number_lit(3)])
+                                list_lit([number_lit(1), number_lit(2)]),
+                                tuple_lit([number_lit(1), number_lit(2), number_lit(3)])
                             ]
                         ),
                         lambda(vec!["x"], fn_call("isHappy", vec![var("x")]))
@@ -889,7 +877,7 @@ fn fn_pipes() {
                             "doStuff",
                             vec![
                                 var("x"),
-                                tuple_lit(vec![number_lit(2), number_lit(3), number_lit(4)])
+                                tuple_lit([number_lit(2), number_lit(3), number_lit(4)])
                             ]
                         ),
                         lambda(
@@ -901,11 +889,7 @@ fn fn_pipes() {
                                     "join",
                                     vec![
                                         fn_call("toString", vec![var("y")],),
-                                        tuple_lit(vec![
-                                            number_lit(1),
-                                            number_lit(2),
-                                            number_lit(3)
-                                        ])
+                                        tuple_lit([number_lit(1), number_lit(2), number_lit(3)])
                                     ]
                                 )
                             )
@@ -937,7 +921,7 @@ fn symbols_and_quotes() {
                 "expression",
                 vec![
                     string_lit("in quotes"),
-                    tuple_lit(vec![number_lit(1), number_lit(2), number_lit(3)])
+                    tuple_lit([number_lit(1), number_lit(2), number_lit(3)])
                 ]
             )]
         ))
@@ -957,7 +941,7 @@ fn symbols_and_quotes() {
             "quoted",
             vec![unquoted(fn_call(
                 "var",
-                vec![tuple_lit(vec![
+                vec![tuple_lit([
                     unquoted(var("var2")),
                     number_lit(123),
                     unquoted(var("var3")),

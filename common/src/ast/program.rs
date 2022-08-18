@@ -41,3 +41,13 @@ impl Display for Program {
         f.write_fmt(format_args!("{}", fmt_str))
     }
 }
+
+impl FromIterator<Rc<AST>> for Program {
+    fn from_iter<T: IntoIterator<Item = Rc<AST>>>(iter: T) -> Self {
+        let mut nodes = vec![];
+        for val in iter.into_iter() {
+            nodes.push(val)
+        }
+        Program { nodes }
+    }
+}

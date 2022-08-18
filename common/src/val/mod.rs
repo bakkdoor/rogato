@@ -53,7 +53,8 @@ pub fn decimal_str(s: &str) -> ValueRef {
     Rc::new(Value::Number(Decimal::from_str(s).unwrap()))
 }
 
-pub fn tuple(vec: Vec<ValueRef>) -> ValueRef {
+pub fn tuple<I: IntoIterator<Item = ValueRef>>(items: I) -> ValueRef {
+    let vec: Vec<ValueRef> = items.into_iter().collect();
     Rc::new(Value::Tuple(vec.len(), vec))
 }
 
