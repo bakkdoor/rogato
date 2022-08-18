@@ -190,7 +190,7 @@ impl ASTDepth for Value {
             Value::Symbol(_) => 1,
             Value::Bool(_) => 1,
             Value::Number(_) => 1,
-            Value::Tuple(size, _) => 1 + size,
+            Value::Tuple(_, items) => 1 + items.iter().map(|i| i.ast_depth()).sum::<usize>(),
             Value::List(list) => list.ast_depth(),
             Value::Vector(vector) => vector.ast_depth(),
             Value::Stack(stack) => stack.ast_depth(),
