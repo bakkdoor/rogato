@@ -19,6 +19,7 @@ use crate::ast::{type_expression::TypeExpression, Program};
 use std::rc::Rc;
 
 use super::fn_def::FnDefBody;
+use super::type_expression::StructTypeProperties;
 use super::Identifier;
 
 pub fn program<Nodes: IntoIterator<Item = Rc<AST>>>(nodes: Nodes) -> Program {
@@ -144,7 +145,7 @@ pub fn tuple_type(items: Vec<Rc<TypeExpression>>) -> Rc<TypeExpression> {
 pub fn struct_type<Iter: IntoIterator<Item = (&'static str, Rc<TypeExpression>)>>(
     props: Iter,
 ) -> Rc<TypeExpression> {
-    Rc::new(TypeExpression::StructType(Vec::from_iter(
+    Rc::new(TypeExpression::StructType(StructTypeProperties::new(
         props.into_iter().map(|(id, expr)| (id.into(), expr)),
     )))
 }

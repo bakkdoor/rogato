@@ -9,7 +9,7 @@ use rogato_common::ast::{
     },
     fn_def::{FnDef, FnDefBody},
     module_def::{ModuleDef, ModuleExports},
-    type_expression::{TypeDef, TypeExpression},
+    type_expression::{StructTypeProperties, TypeDef, TypeExpression},
     Identifier, Program, AST,
 };
 use rust_decimal::prelude::*;
@@ -136,7 +136,7 @@ grammar parser(context: &ParserContext) for str {
 
     rule struct_type() -> TypeExpression
         = "{" _ properties:(struct_prop_type())+ "}" {
-            TypeExpression::StructType(properties)
+            TypeExpression::StructType(StructTypeProperties::new(properties))
         }
 
     rule struct_prop_type() -> (Identifier, Rc<TypeExpression>)

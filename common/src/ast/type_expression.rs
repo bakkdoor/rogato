@@ -47,7 +47,7 @@ pub enum TypeExpression {
     FunctionType(LambdaArgs<TypeExpression>, Rc<TypeExpression>), // args & return type
     TupleType(TupleItems<TypeExpression>),
     ListType(Rc<TypeExpression>),
-    StructType(Vec<(Identifier, Rc<TypeExpression>)>),
+    StructType(StructTypeProperties),
 }
 
 impl Display for TypeExpression {
@@ -72,19 +72,10 @@ impl Display for TypeExpression {
                 type_expr.fmt(f)?;
                 f.write_str(" ]")
             }
-            TypeExpression::StructType(property_types) => {
-                let fmt_str = property_types
-                    .iter()
-                    .map(|(id, expr)| format!("{} :: {}", id, expr))
-                    .fold(String::from(""), |acc, fmt| {
-                        if acc.is_empty() {
-                            fmt
-                        } else {
-                            format!("{}\n{}", acc, fmt)
-                        }
-                    });
-
-                f.write_fmt(format_args!("{{\n{}\n}}", indent(fmt_str)))
+            TypeExpression::StructType(struct_type_props) => {
+                f.write_str("{\n")?;
+                indent(struct_type_props).fmt(f)?;
+                f.write_str("\n}")
             }
         }
     }
@@ -104,12 +95,54 @@ impl ASTDepth for TypeExpression {
                 1 + el_types.iter().map(|t| t.ast_depth()).sum::<usize>()
             }
             TypeExpression::ListType(type_expr) => 1 + type_expr.ast_depth(),
-            TypeExpression::StructType(prop_types) => {
-                1 + prop_types
-                    .iter()
-                    .map(|(_id, type_expr)| type_expr.ast_depth())
-                    .sum::<usize>()
-            }
+            TypeExpression::StructType(struct_type) => 1 + struct_type.ast_depth(),
         }
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, Debug, Hash)]
+pub struct StructTypeProperties {
+    prop_types: Vec<(Identifier, Rc<TypeExpression>)>,
+}
+
+impl StructTypeProperties {
+    pub fn new<Props: IntoIterator<Item = (Identifier, Rc<TypeExpression>)>>(props: Props) -> Self {
+        let prop_types = props.into_iter().collect();
+        StructTypeProperties { prop_types }
+    }
+
+    pub fn iter(&self) -> std::slice::Iter<(Identifier, Rc<TypeExpression>)> {
+        self.prop_types.iter()
+    }
+}
+
+impl FromIterator<(Identifier, Rc<TypeExpression>)> for StructTypeProperties {
+    fn from_iter<T: IntoIterator<Item = (Identifier, Rc<TypeExpression>)>>(iter: T) -> Self {
+        StructTypeProperties::new(iter)
+    }
+}
+
+impl Display for StructTypeProperties {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut is_first = true;
+        for (id, expr) in self.prop_types.iter() {
+            if !is_first {
+                f.write_str("\n")?;
+            }
+            id.fmt(f)?;
+            f.write_str(" :: ")?;
+            expr.fmt(f)?;
+            is_first = false;
+        }
+        Ok(())
+    }
+}
+
+impl ASTDepth for StructTypeProperties {
+    fn ast_depth(&self) -> usize {
+        self.prop_types
+            .iter()
+            .map(|(_id, type_expr)| type_expr.ast_depth())
+            .sum::<usize>()
     }
 }

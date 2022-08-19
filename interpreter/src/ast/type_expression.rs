@@ -1,8 +1,6 @@
-use std::rc::Rc;
-
-use crate::{EvalContext, EvalError, Evaluate, Identifier, ValueRef};
+use crate::{EvalContext, EvalError, Evaluate, ValueRef};
 use rogato_common::{
-    ast::type_expression::{TypeDef, TypeExpression},
+    ast::type_expression::{StructTypeProperties, TypeDef, TypeExpression},
     val,
 };
 
@@ -51,7 +49,7 @@ impl Evaluate<ValueRef> for TypeExpression {
     }
 }
 
-impl Evaluate<ValueRef> for Vec<(Identifier, Rc<TypeExpression>)> {
+impl Evaluate<ValueRef> for StructTypeProperties {
     fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
         let mut vec = Vec::new();
         for (_id, type_expr) in self.iter() {
