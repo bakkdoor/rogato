@@ -66,41 +66,18 @@ impl FnDef {
 
 impl Display for FnDef {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if !self.is_inline {
+            f.write_str("let ")?;
+        }
+
+        self.id.fmt(f)?;
+        f.write_str(" ")?;
+        self.args.fmt(f)?;
+        f.write_str(" =\n")?;
+
         match self.body.borrow() {
-            FnDefBody::NativeFn(_) => {
-                if self.is_inline {
-                    f.write_fmt(format_args!(
-                        "{}{} =\n{}",
-                        self.id,
-                        self.args,
-                        indent("[NativeFn]")
-                    ))
-                } else {
-                    f.write_fmt(format_args!(
-                        "let {}{} =\n{}",
-                        self.id,
-                        self.args,
-                        indent("[NativeFn]")
-                    ))
-                }
-            }
-            FnDefBody::RogatoFn(body_expr) => {
-                if self.is_inline {
-                    f.write_fmt(format_args!(
-                        "{}{} =\n{}",
-                        self.id,
-                        self.args,
-                        indent(body_expr.to_owned())
-                    ))
-                } else {
-                    f.write_fmt(format_args!(
-                        "let {}{} =\n{}",
-                        self.id,
-                        self.args,
-                        indent(body_expr.to_owned())
-                    ))
-                }
-            }
+            FnDefBody::NativeFn(_) => indent("[NativeFn]").fmt(f),
+            FnDefBody::RogatoFn(body_expr) => indent(body_expr.to_owned()).fmt(f),
         }
     }
 }
@@ -141,12 +118,15 @@ impl FnDefArgs {
 
 impl Display for FnDefArgs {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let fmt_str = self
-            .iter()
-            .map(|arg| arg.to_string())
-            .fold(String::from(""), |acc, fmt| format!("{} {}", acc, fmt));
-
-        f.write_fmt(format_args!("{}", fmt_str))
+        let mut is_first = false;
+        for arg in self.iter() {
+            if is_first {
+                f.write_str(" ")?;
+            }
+            arg.fmt(f)?;
+            is_first = true;
+        }
+        Ok(())
     }
 }
 

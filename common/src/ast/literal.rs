@@ -104,17 +104,21 @@ impl<I: Display> FromIterator<Rc<I>> for TupleItems<I> {
 impl<I: Display + ASTDepth> Display for TupleItems<I> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let indent_items = self.items.iter().any(|i| i.ast_depth() > 6);
-        let fmt_str = self.items.iter().fold(String::from(""), |acc, item| {
-            if acc.is_empty() {
-                format!("{}", item)
-            } else if indent_items {
-                format!("{},\n{}", acc, item)
-            } else {
-                format!("{}, {}", acc, item)
+        let mut is_first = true;
+        for item in self.items.iter() {
+            if !is_first {
+                if indent_items {
+                    f.write_str(",\n")?;
+                } else {
+                    f.write_str(", ")?;
+                }
             }
-        });
 
-        f.write_fmt(format_args!("{}", fmt_str))
+            item.fmt(f)?;
+
+            is_first = false;
+        }
+        Ok(())
     }
 }
 

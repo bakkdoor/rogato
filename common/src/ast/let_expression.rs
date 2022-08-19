@@ -26,11 +26,10 @@ impl LetExpression {
 
 impl Display for LetExpression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!(
-            "let\n{}\nin\n{}",
-            indent(self.bindings.clone()),
-            indent(self.body.clone())
-        ))
+        f.write_str("let\n")?;
+        indent(self.bindings.clone()).fmt(f)?;
+        f.write_str("\nin\n")?;
+        indent(self.body.clone()).fmt(f)
     }
 }
 

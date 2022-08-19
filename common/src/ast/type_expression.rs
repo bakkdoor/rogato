@@ -53,17 +53,25 @@ pub enum TypeExpression {
 impl Display for TypeExpression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            TypeExpression::BoolType => f.write_fmt(format_args!("{}", "Bool")),
-            TypeExpression::NumberType => f.write_fmt(format_args!("{}", "Number")),
-            TypeExpression::StringType => f.write_fmt(format_args!("{}", "String")),
-            TypeExpression::TypeRef(id) => f.write_fmt(format_args!("{}", id)),
+            TypeExpression::BoolType => f.write_str("Bool"),
+            TypeExpression::NumberType => f.write_str("Number"),
+            TypeExpression::StringType => f.write_str("String"),
+            TypeExpression::TypeRef(id) => f.write_str(id),
             TypeExpression::FunctionType(arg_types, return_type) => {
-                f.write_fmt(format_args!("{} -> {}", arg_types, return_type))
+                arg_types.fmt(f)?;
+                f.write_str(" -> ")?;
+                return_type.fmt(f)
             }
             TypeExpression::TupleType(element_types) => {
-                f.write_fmt(format_args!("{{ {} }}", element_types))
+                f.write_str("{ ")?;
+                element_types.fmt(f)?;
+                f.write_str(" }")
             }
-            TypeExpression::ListType(type_expr) => f.write_fmt(format_args!("[ {} ]", type_expr)),
+            TypeExpression::ListType(type_expr) => {
+                f.write_str("[ ")?;
+                type_expr.fmt(f)?;
+                f.write_str(" ]")
+            }
             TypeExpression::StructType(property_types) => {
                 let fmt_str = property_types
                     .iter()

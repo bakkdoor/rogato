@@ -37,12 +37,14 @@ impl FnCallArgs {
 
 impl Display for FnCallArgs {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let fmt_str = self
-            .args
-            .iter()
-            .map(|arg| format!("{}", arg))
-            .fold(String::from(""), |acc, fmt| format!("{} {}", acc, fmt));
-
-        f.write_fmt(format_args!("{}", fmt_str))
+        let mut is_first = true;
+        for arg in self.args.iter() {
+            if !is_first {
+                f.write_str(" ")?;
+            }
+            arg.fmt(f)?;
+            is_first = false;
+        }
+        Ok(())
     }
 }

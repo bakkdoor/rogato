@@ -33,15 +33,18 @@ impl Lambda {
 
 impl Display for Lambda {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("(")?;
+        self.args.fmt(f)?;
+
         if self.ast_depth() > 5 {
-            f.write_fmt(format_args!(
-                "({} ->\n{})",
-                self.args,
-                indent(self.body.clone())
-            ))
+            f.write_str(" ->\n")?;
+            indent(self.body.clone()).fmt(f)?;
         } else {
-            f.write_fmt(format_args!("({} -> {})", self.args, self.body))
+            f.write_str(" -> ")?;
+            self.body.fmt(f)?;
         }
+
+        f.write_str(")")
     }
 }
 
@@ -87,15 +90,16 @@ impl<A: Display + ASTDepth> LambdaArgs<A> {
 
 impl<A: Display + ASTDepth> Display for LambdaArgs<A> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let fmt_str = self.args.iter().fold(String::from(""), |acc, arg| {
-            if acc.is_empty() {
-                arg.to_string()
-            } else {
-                format!("{} {}", acc, arg)
+        let mut is_first = true;
+        for arg in self.args.iter() {
+            if !is_first {
+                f.write_str(" ")?;
             }
-        });
+            arg.fmt(f)?;
+            is_first = false;
+        }
 
-        f.write_fmt(format_args!("{}", fmt_str))
+        Ok(())
     }
 }
 

@@ -94,19 +94,16 @@ impl QueryGuards {
 
 impl Display for QueryGuards {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let fmt_str =
-            self.guards
-                .iter()
-                .map(|g| format!("! {}", g))
-                .fold(String::from(""), |acc, fmt| {
-                    if acc.is_empty() {
-                        fmt
-                    } else {
-                        format!("{}\n{}", acc, fmt)
-                    }
-                });
-
-        f.write_fmt(format_args!("{}", fmt_str))
+        let mut is_first = true;
+        for guard in self.guards.iter() {
+            if !is_first {
+                f.write_str("\n")?;
+            }
+            f.write_str("! ")?;
+            guard.fmt(f)?;
+            is_first = false;
+        }
+        Ok(())
     }
 }
 
@@ -149,19 +146,24 @@ impl QueryBinding {
 
 impl Display for QueryBinding {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let fmt_str = self.ids.iter().fold(String::from(""), |acc, id| {
-            if acc.is_empty() {
-                id.to_string()
-            } else {
-                format!("{}, {}", acc, id)
+        f.write_str("? ")?;
+
+        let mut is_first = true;
+        for id in self.ids.iter() {
+            if !is_first {
+                f.write_str(", ")?;
             }
-        });
+            id.fmt(f)?;
+            is_first = false;
+        }
 
         if self.is_negated {
-            f.write_fmt(format_args!("? {} <!- {}", fmt_str, self.val))
+            f.write_str(" <!- ")?;
         } else {
-            f.write_fmt(format_args!("? {} <- {}", fmt_str, self.val))
+            f.write_str(" <- ")?;
         }
+
+        self.val.fmt(f)
     }
 }
 #[derive(Clone, PartialEq, Eq, Debug, Hash)]
@@ -195,19 +197,15 @@ impl ASTDepth for QueryBinding {
 
 impl Display for QueryBindings {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let fmt_str = self
-            .bindings
-            .iter()
-            .map(|binding| format!("{}", binding))
-            .fold(String::from(""), |acc, fmt| {
-                if acc.is_empty() {
-                    fmt
-                } else {
-                    format!("{}\n{}", acc, fmt)
-                }
-            });
-
-        f.write_fmt(format_args!("{}", fmt_str))
+        let mut is_first = true;
+        for binding in self.bindings.iter() {
+            if !is_first {
+                f.write_str("\n")?;
+            }
+            binding.fmt(f)?;
+            is_first = false;
+        }
+        Ok(())
     }
 }
 

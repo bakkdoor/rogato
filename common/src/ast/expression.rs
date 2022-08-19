@@ -67,6 +67,7 @@ impl Display for Expression {
             Expression::FnCall(fn_ident, args) => {
                 f.write_str("(")?;
                 fn_ident.fmt(f)?;
+                f.write_str(" ")?;
                 args.fmt(f)?;
                 f.write_str(")")
             }
@@ -75,8 +76,8 @@ impl Display for Expression {
                 left.fmt(f)?;
                 f.write_str(" ")?;
                 f.write_str(&op_ident)?;
-                right.fmt(f)?;
                 f.write_str(" ")?;
+                right.fmt(f)?;
                 f.write_str(")")
             }
             Expression::Var(id) => f.write_str(id),

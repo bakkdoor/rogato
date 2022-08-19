@@ -86,11 +86,17 @@ pub trait ASTDepth {
 impl Display for AST {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            AST::RootComment(comment) => f.write_fmt(format_args!("//{}", comment)),
-            AST::FnDef(fn_def) => f.write_fmt(format_args!("{}", fn_def)),
-            AST::ModuleDef(mod_def) => f.write_fmt(format_args!("{}", mod_def)),
-            AST::Use(id) => f.write_fmt(format_args!("use {}", id)),
-            AST::TypeDef(type_def) => f.write_fmt(format_args!("{}", type_def)),
+            AST::RootComment(comment) => {
+                f.write_str("//")?;
+                comment.fmt(f)
+            }
+            AST::FnDef(fn_def) => fn_def.fmt(f),
+            AST::ModuleDef(mod_def) => mod_def.fmt(f),
+            AST::Use(id) => {
+                f.write_str("use ")?;
+                id.fmt(f)
+            }
+            AST::TypeDef(type_def) => type_def.fmt(f),
         }
     }
 }

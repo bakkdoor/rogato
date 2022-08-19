@@ -22,7 +22,11 @@ impl ModuleDef {
 
 impl Display for ModuleDef {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!("module {} {{ {} }}", self.id, self.exports))
+        f.write_str("module ")?;
+        self.id.fmt(f)?;
+        f.write_str(" { ")?;
+        self.exports.fmt(f)?;
+        f.write_str(" }")
     }
 }
 
@@ -57,19 +61,15 @@ impl ModuleExports {
 
 impl Display for ModuleExports {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let fmt_str =
-            self.exports
-                .iter()
-                .map(|e| e.to_string())
-                .fold(String::from(""), |acc, fmt| {
-                    if acc.is_empty() {
-                        fmt
-                    } else {
-                        format!("{}, {}", acc, fmt)
-                    }
-                });
-
-        f.write_fmt(format_args!("{}", fmt_str))
+        let mut is_first = true;
+        for export in self.exports.iter() {
+            if !is_first {
+                f.write_str(", ")?;
+            }
+            export.fmt(f)?;
+            is_first = false;
+        }
+        Ok(())
     }
 }
 
