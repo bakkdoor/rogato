@@ -75,7 +75,7 @@ impl Display for Expression {
                 f.write_str("(")?;
                 left.fmt(f)?;
                 f.write_str(" ")?;
-                f.write_str(&op_ident)?;
+                f.write_str(op_ident)?;
                 f.write_str(" ")?;
                 right.fmt(f)?;
                 f.write_str(")")
