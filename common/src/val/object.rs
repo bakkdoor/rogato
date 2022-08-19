@@ -1,6 +1,9 @@
 use crate::ast::ASTDepth;
 use rpds::HashTrieMap;
-use std::hash::{Hash, Hasher};
+use std::{
+    fmt::Display,
+    hash::{Hash, Hasher},
+};
 
 use super::ValueRef;
 
@@ -34,5 +37,11 @@ impl Hash for Object {
 impl ASTDepth for Object {
     fn ast_depth(&self) -> usize {
         1 + self.properties.size()
+    }
+}
+
+impl Display for Object {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("Object{{ {:?} }}", self.properties))
     }
 }

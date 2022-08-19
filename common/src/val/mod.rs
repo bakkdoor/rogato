@@ -105,7 +105,7 @@ pub fn quoted_ast(ast: Rc<AST>) -> ValueRef {
     Rc::new(Value::QuotedAST(ast))
 }
 
-#[derive(Clone, PartialEq, Eq, Debug, Hash)]
+#[derive(Clone, PartialEq, Eq, std::fmt::Debug, Hash)]
 pub enum Value {
     Option(Option<ValueRef>),
     String(String),
@@ -157,26 +157,46 @@ impl Display for Value {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Value::Option(None) => f.write_str("None"),
-            Value::Option(Some(val)) => f.write_fmt(format_args!("Some({})", val)),
-            Value::String(s) => f.write_fmt(format_args!("\"{}\"", s)),
-            Value::Symbol(s) => f.write_fmt(format_args!("^{}", s)),
-            Value::Bool(b) => f.write_fmt(format_args!("{}", b)),
-            Value::Number(d) => f.write_fmt(format_args!("{}", d)),
-            Value::Tuple(size, items) => f.write_fmt(format_args!(
-                "{{{}}}{{ {} }}",
-                size,
-                TupleItems::from(items.clone())
-            )),
-            Value::List(list) => f.write_fmt(format_args!("{}", list)),
-            Value::Vector(vector) => f.write_fmt(format_args!("{}", vector)),
-            Value::Stack(stack) => f.write_fmt(format_args!("{}", stack)),
-            Value::Queue(queue) => f.write_fmt(format_args!("{}", queue)),
-            Value::Set(set) => f.write_fmt(format_args!("{}", set)),
-            Value::Map(map) => f.write_fmt(format_args!("{}", map)),
-            Value::Object(props) => f.write_fmt(format_args!("Object{{ {:?} }}", props)),
-            Value::Lambda(lambda) => f.write_fmt(format_args!("{}", lambda)),
-            Value::Quoted(expr) => f.write_fmt(format_args!("^{}", expr)),
-            Value::QuotedAST(ast) => f.write_fmt(format_args!("^({})", ast)),
+            Value::Option(Some(val)) => {
+                f.write_str("Some{ ")?;
+                val.fmt(f)?;
+                f.write_str(" }")
+            }
+            Value::String(s) => {
+                f.write_str("\"")?;
+                s.fmt(f)?;
+                f.write_str("\"")
+            }
+            Value::Symbol(s) => {
+                f.write_str("^")?;
+                s.fmt(f)
+            }
+            Value::Bool(b) => b.fmt(f),
+            Value::Number(d) => d.fmt(f),
+            Value::Tuple(size, items) => {
+                f.write_str("{")?;
+                size.fmt(f)?;
+                f.write_str("}{ ")?;
+                TupleItems::from(items.clone()).fmt(f)?;
+                f.write_str(" }")
+            }
+            Value::List(list) => list.fmt(f),
+            Value::Vector(vector) => vector.fmt(f),
+            Value::Stack(stack) => stack.fmt(f),
+            Value::Queue(queue) => queue.fmt(f),
+            Value::Set(set) => set.fmt(f),
+            Value::Map(map) => map.fmt(f),
+            Value::Object(object) => object.fmt(f),
+            Value::Lambda(lambda) => lambda.fmt(f),
+            Value::Quoted(expr) => {
+                f.write_str("^")?;
+                expr.fmt(f)
+            }
+            Value::QuotedAST(ast) => {
+                f.write_str("^(")?;
+                ast.fmt(f)?;
+                f.write_str(")")
+            }
         }
     }
 }
