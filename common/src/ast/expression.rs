@@ -58,33 +58,58 @@ impl Display for Expression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Expression::Commented(comment, exp) => {
-                f.write_fmt(format_args!("//{}\n{}", comment, exp))
+                f.write_str("//")?;
+                f.write_str(comment)?;
+                f.write_str("\n")?;
+                exp.fmt(f)
             }
             Expression::Lit(lit_exp) => lit_exp.fmt(f),
             Expression::FnCall(fn_ident, args) => {
-                f.write_fmt(format_args!("({}{})", fn_ident, args))
+                f.write_str("(")?;
+                fn_ident.fmt(f)?;
+                args.fmt(f)?;
+                f.write_str(")")
             }
             Expression::OpCall(op_ident, left, right) => {
-                f.write_fmt(format_args!("({} {} {})", left, op_ident, right))
+                f.write_str("(")?;
+                left.fmt(f)?;
+                f.write_str(" ")?;
+                f.write_str(&op_ident)?;
+                right.fmt(f)?;
+                f.write_str(" ")?;
+                f.write_str(")")
             }
             Expression::Var(id) => f.write_str(id),
             Expression::ConstOrTypeRef(id) => f.write_str(id),
-            Expression::PropFnRef(id) => f.write_fmt(format_args!(".{}", id)),
-            Expression::EdgeProp(id, edge) => f.write_fmt(format_args!("{}#{}", id, edge)),
+            Expression::PropFnRef(id) => {
+                f.write_str(".")?;
+                f.write_str(id)
+            }
+            Expression::EdgeProp(expr, edge) => {
+                expr.fmt(f)?;
+                f.write_str("#")?;
+                edge.fmt(f)
+            }
             Expression::Let(let_expr) => let_expr.fmt(f),
             Expression::Lambda(lambda) => lambda.fmt(f),
             Expression::Query(query) => query.fmt(f),
-            Expression::Symbol(id) => f.write_fmt(format_args!("^{}", id)),
-            Expression::Quoted(expr) => display_quoted(f, expr),
-            Expression::QuotedAST(ast) => display_quoted(f, ast),
-            Expression::Unquoted(expr) => display_unquoted(f, expr),
-            Expression::UnquotedAST(ast) => display_unquoted(f, ast),
-            Expression::InlineFnDef(fn_def) => f.write_fmt(format_args!("{}", fn_def)),
+            Expression::Symbol(id) => {
+                f.write_str("^")?;
+                f.write_str(id)
+            }
+            Expression::Quoted(expr) => display_quoted_expr(f, expr),
+            Expression::QuotedAST(ast) => display_quoted_expr(f, ast),
+            Expression::Unquoted(expr) => display_unquoted_expr(f, expr),
+            Expression::UnquotedAST(ast) => display_unquoted_expr(f, ast),
+            Expression::InlineFnDef(fn_def) => fn_def.fmt(f),
         }
     }
 }
 
-fn display_quoted<Expr: Display>(f: &mut std::fmt::Formatter<'_>, expr: &Expr) -> std::fmt::Result {
+fn display_quoted_expr<Expr: Display>(
+    f: &mut std::fmt::Formatter<'_>,
+    expr: &Expr,
+) -> std::fmt::Result {
     let expr_fmt = format!("{}", expr);
     if expr_fmt.starts_with('(') && expr_fmt.ends_with(')') {
         f.write_fmt(format_args!("^{}", expr_fmt))
@@ -93,7 +118,7 @@ fn display_quoted<Expr: Display>(f: &mut std::fmt::Formatter<'_>, expr: &Expr) -
     }
 }
 
-fn display_unquoted<Expr: Display>(
+fn display_unquoted_expr<Expr: Display>(
     f: &mut std::fmt::Formatter<'_>,
     expr: &Expr,
 ) -> std::fmt::Result {
