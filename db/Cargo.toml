@@ -8,5 +8,5 @@ repository = "https://github.com/bakkdoor/rogato"
 
 [dependencies]
 uuid = { version = "~1.1.2", features = ["v1", "serde"] }
-indradb-lib = { version = "3.0.2", features = ["rocksdb-datastore"] }
+indradb-lib = { version = "*", features = ["rocksdb-datastore"] }
 serde_json = "1.0.82"
