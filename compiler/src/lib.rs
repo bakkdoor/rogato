@@ -14,7 +14,7 @@ impl Compiler {
         Self {}
     }
 
-    pub fn gen_self_calling_f(&self) {
+    pub fn gen_self_calling_fn(&self) {
         use inkwell::context::Context;
 
         // A simple function which calls itself:
