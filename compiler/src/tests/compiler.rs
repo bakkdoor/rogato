@@ -1,4 +1,7 @@
+use crate::Compiler;
+
 #[test]
 fn compile_arithmetic() {
-    // TODO
+    let compiler = Compiler::new();
+    compiler.gen_self_calling_f();
 }
