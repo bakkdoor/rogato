@@ -30,14 +30,14 @@ jobs:
       - name: Install LLVM and Clang
         uses: KyleMayes/install-llvm-action@v1.5.2
         with:
-          version: 13.0.1
+          version: 14.0
       - name: environment
         run: |
-          echo "export LLVM_SYS_130_PREFIX=$LLVM_PATH" > ~/.bashrc
+          echo "export LLVM_SYS_140_PREFIX=$LLVM_PATH" > ~/.bashrc
       - name: get_env
         run: |
           source ~/.bashrc
-          echo $LLVM_SYS_130_PREFIX
+          echo $LLVM_SYS_140_PREFIX
       - uses: actions-rs/cargo@v1
         with:
           command: test
@@ -72,15 +72,14 @@ jobs:
       - name: Install LLVM and Clang
         uses: KyleMayes/install-llvm-action@v1.5.2
         with:
-          version: 13.0.1
+          version: 14.0
       - name: Set LLVM envars
         run: |
-          echo "export LLVM_SYS_130_PREFIX=$LLVM_PATH" > ~/.bashrc
           echo "export LLVM_SYS_140_PREFIX=$LLVM_PATH" > ~/.bashrc
       - name: get_env
         run: |
           source ~/.bashrc
-          echo $LLVM_SYS_130_PREFIX
+          echo $LLVM_SYS_140_PREFIX
       - uses: actions-rs/cargo@v1
         with:
           command: clippy
