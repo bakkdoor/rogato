@@ -12,11 +12,11 @@ rogato-interpreter = { path = "../interpreter" }
 rogato-parser = { path = "../parser" }
 rogato-type-checker = { path = "../type-checker" }
 
-anyhow = "1.0.13"
-clap = { version = "3.2.8", features = ["derive"] }
-dirs = "4.0.0"
-indent_write = "2.2.0"
-regex = "1"
-rustyline = "10.0.0"
-rustyline-derive = "0.7.0"
-thiserror = "1.0"
+anyhow = "*"
+clap = { version = "*", features = ["derive"] }
+dirs = "*"
+indent_write = "*"
+regex = "*"
+rustyline = "*"
+rustyline-derive = "*"
+thiserror = "*"

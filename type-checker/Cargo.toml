@@ -8,4 +8,5 @@ repository = "https://github.com/bakkdoor/rogato"
 
 [dependencies]
 rogato-common = { path = "../common" }
-thiserror = "1.0"
+
+thiserror = "*"

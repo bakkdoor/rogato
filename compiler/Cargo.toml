@@ -10,4 +10,4 @@ repository = "https://github.com/bakkdoor/rogato"
 rogato-common = { path = "../common" }
 
 inkwell = { git = "https://github.com/TheDan64/inkwell", branch = "master", features = ["llvm13-0"] }
-thiserror = "1.0"
+thiserror = "*"

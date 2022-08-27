@@ -11,7 +11,7 @@ rogato-common = { path = "../common" }
 rogato-db = { path = "../db" }
 rogato-parser = { path = "../parser" }
 
-rand = { version = "0.8" }
-rust_decimal = { version = "1.26", features = ["maths", "rand"] }
-rust_decimal_macros = "1.26"
-thiserror = "1.0"
+rand = { version = "*" }
+rust_decimal = { version = "*", features = ["maths", "rand"] }
+rust_decimal_macros = "*"
+thiserror = "*"
