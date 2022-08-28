@@ -38,8 +38,8 @@ pub fn string<S: ToString>(s: S) -> ValueRef {
     Rc::new(Value::String(s.to_string()))
 }
 
-pub fn symbol(s: Identifier) -> ValueRef {
-    Rc::new(Value::Symbol(s))
+pub fn symbol<ID: Into<Identifier>>(s: ID) -> ValueRef {
+    Rc::new(Value::Symbol(s.into()))
 }
 
 pub fn bool(b: bool) -> ValueRef {

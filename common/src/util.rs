@@ -7,7 +7,7 @@ pub fn print_error<E: std::fmt::Debug>(error: E) -> E {
     error
 }
 
-pub fn indent<T: Display>(t: T) -> indent_write::indentable::Indented<'static, T> {
+pub fn indent<'a, T: Display>(t: &'a T) -> indent_write::indentable::Indented<'static, &'a T> {
     t.indented("    ")
 }
 

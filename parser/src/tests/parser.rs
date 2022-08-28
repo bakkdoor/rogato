@@ -4,10 +4,10 @@ use crate::{assert_parse, assert_parse_ast, assert_parse_expr, parse_expr, Parse
 use rogato_common::ast::helpers::inline_fn_def;
 #[cfg(test)]
 use rogato_common::ast::helpers::{
-    commented, const_or_type_ref, edge_prop, fn_call, fn_def, int_type, lambda, let_expr, list_lit,
-    module_def, number_lit, op_call, program, prop_fn_ref, query, quoted, quoted_ast, root_comment,
-    string_lit, string_type, struct_lit, struct_type, symbol, tuple_lit, tuple_type, type_def,
-    type_ref, unquoted, unquoted_ast, var,
+    commented, const_or_type_ref, edge_prop, fn_call, fn_def, if_else, int_type, lambda, let_expr,
+    list_lit, module_def, number_lit, op_call, program, prop_fn_ref, query, quoted, quoted_ast,
+    root_comment, string_lit, string_type, struct_lit, struct_type, symbol, tuple_lit, tuple_type,
+    type_def, type_ref, unquoted, unquoted_ast, var,
 };
 use rust_decimal_macros::dec;
 
@@ -950,5 +950,28 @@ fn symbols_and_quotes() {
     assert_parse_expr!(
         "~(let f x = x + 1)",
         unquoted_ast(fn_def("f", ["x"], op_call("+", var("x"), number_lit(1))))
+    );
+}
+
+#[test]
+fn if_else_expr() {
+    assert_parse_expr!(
+        "if (x > y) then x else y",
+        if_else(op_call(">", var("x"), var("y")), var("x"), var("y"))
+    );
+
+    assert_parse_expr!("if x then x else y", if_else(var("x"), var("x"), var("y")));
+
+    assert_parse_ast!(
+        "let f x y = if (x > y) then {x, y} else {y, x}",
+        fn_def(
+            "f",
+            ["x", "y"],
+            if_else(
+                op_call(">", var("x"), var("y")),
+                tuple_lit([var("x"), var("y")]),
+                tuple_lit([var("y"), var("x")])
+            )
+        )
     );
 }

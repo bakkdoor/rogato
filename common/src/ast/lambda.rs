@@ -38,7 +38,7 @@ impl Display for Lambda {
 
         if self.ast_depth() > 5 {
             f.write_str(" ->\n")?;
-            indent(self.body.clone()).fmt(f)?;
+            indent(&self.body).fmt(f)?;
         } else {
             f.write_str(" -> ")?;
             self.body.fmt(f)?;

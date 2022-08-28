@@ -282,3 +282,33 @@ fn std_list_module() {
         assert_eq!(ast.evaluate(&mut ctx), Ok(val.clone()));
     }
 }
+
+#[test]
+fn if_else_expr() {
+    let code_with_vals = [
+        ("if (2 < 3) then ^ok else ^fail", val::symbol("ok")),
+        ("if (2 > 3) then ^ok else ^fail", val::symbol("fail")),
+        (
+            "let
+                greater a b = if (a > b) then a else b
+             in
+                greater 10 20",
+            val::number(20),
+        ),
+        (
+            "let
+                greater a b = if (a > b) then a else b
+             in
+                greater 100 20",
+            val::number(100),
+        ),
+    ];
+
+    let mut ctx = EvalContext::new();
+    let p_ctx = ParserContext::new();
+
+    for (code, val) in code_with_vals.iter() {
+        let ast = parse_expr(code, &p_ctx).unwrap();
+        assert_eq!(ast.evaluate(&mut ctx), Ok(val.clone()));
+    }
+}

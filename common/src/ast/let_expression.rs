@@ -27,9 +27,9 @@ impl LetExpression {
 impl Display for LetExpression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str("let\n")?;
-        indent(self.bindings.clone()).fmt(f)?;
+        indent(&self.bindings).fmt(f)?;
         f.write_str("\nin\n")?;
-        indent(self.body.clone()).fmt(f)
+        indent(&self.body).fmt(f)
     }
 }
 

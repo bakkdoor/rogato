@@ -1,6 +1,7 @@
 pub use super::fn_call::FnCallArgs;
 use super::fn_def::FnDef;
 pub use super::fn_def::FnDefArgs;
+pub use super::if_else::IfElse;
 pub use super::lambda::{Lambda, LambdaArgs};
 pub use super::let_expression::{LetBindings, LetExpression};
 pub use super::literal::*;
@@ -19,6 +20,7 @@ pub enum Expression {
     ConstOrTypeRef(Identifier),
     PropFnRef(Identifier),
     EdgeProp(Rc<Expression>, Identifier),
+    IfElse(IfElse),
     Let(LetExpression),
     Lambda(Rc<Lambda>),
     Query(Query),
@@ -41,6 +43,7 @@ impl ASTDepth for Expression {
             Expression::ConstOrTypeRef(_id) => 1,
             Expression::PropFnRef(_id) => 1,
             Expression::EdgeProp(expr, _edge) => 1 + expr.ast_depth(),
+            Expression::IfElse(if_else) => if_else.ast_depth(),
             Expression::Let(let_expr) => let_expr.ast_depth(),
             Expression::Lambda(lambda) => lambda.ast_depth(),
             Expression::Query(query) => query.ast_depth(),
@@ -91,6 +94,7 @@ impl Display for Expression {
                 f.write_str("#")?;
                 edge.fmt(f)
             }
+            Expression::IfElse(if_else) => if_else.fmt(f),
             Expression::Let(let_expr) => let_expr.fmt(f),
             Expression::Lambda(lambda) => lambda.fmt(f),
             Expression::Query(query) => query.fmt(f),

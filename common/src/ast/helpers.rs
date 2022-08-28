@@ -18,6 +18,7 @@ use crate::ast::{
 use crate::ast::{type_expression::TypeExpression, Program};
 use std::rc::Rc;
 
+use super::expression::IfElse;
 use super::fn_def::FnDefBody;
 use super::type_expression::StructTypeProperties;
 use super::Identifier;
@@ -88,6 +89,13 @@ pub fn fn_def_args<Args: IntoIterator<Item = &'static str>>(args: Args) -> FnDef
     FnDefArgs::new(Vec::from_iter(args.into_iter().map(|a| a.into())))
 }
 
+pub fn if_else(
+    cond: Rc<Expression>,
+    then_expr: Rc<Expression>,
+    else_expr: Rc<Expression>,
+) -> Rc<Expression> {
+    Rc::new(Expression::IfElse(IfElse::new(cond, then_expr, else_expr)))
+}
 pub fn let_expr<
     VarName: Into<Identifier>,
     Bindings: IntoIterator<Item = (VarName, Rc<Expression>)>,

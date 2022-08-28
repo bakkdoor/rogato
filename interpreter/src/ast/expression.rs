@@ -63,6 +63,7 @@ impl Evaluate<ValueRef> for Expression {
                 lambda.evaluate(context)
             }
             Expression::EdgeProp(_id, _edge) => Ok(val::string("eval edge prop")),
+            Expression::IfElse(if_else) => if_else.evaluate(context),
             Expression::Let(let_expr) => let_expr.evaluate(context),
             Expression::Lambda(lambda) => lambda.evaluate(context),
             Expression::Query(query) => query.evaluate(context),

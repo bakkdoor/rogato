@@ -84,6 +84,50 @@ pub fn std_module() -> Module {
         }
     }));
 
+    module.fn_def(fn_def(">", vec!["a", "b"], move |args| {
+        let error = Err(invalid_args(">"));
+        match (args.len(), args.get(0), args.get(1)) {
+            (2, Some(a), Some(b)) => match ((*a).deref(), (*b).deref()) {
+                (Value::Number(a), Value::Number(b)) => Ok(val::bool(a.gt(b))),
+                _ => error,
+            },
+            _ => error,
+        }
+    }));
+
+    module.fn_def(fn_def("<", vec!["a", "b"], move |args| {
+        let error = Err(invalid_args(">"));
+        match (args.len(), args.get(0), args.get(1)) {
+            (2, Some(a), Some(b)) => match ((*a).deref(), (*b).deref()) {
+                (Value::Number(a), Value::Number(b)) => Ok(val::bool(a.lt(b))),
+                _ => error,
+            },
+            _ => error,
+        }
+    }));
+
+    module.fn_def(fn_def(">=", vec!["a", "b"], move |args| {
+        let error = Err(invalid_args(">"));
+        match (args.len(), args.get(0), args.get(1)) {
+            (2, Some(a), Some(b)) => match ((*a).deref(), (*b).deref()) {
+                (Value::Number(a), Value::Number(b)) => Ok(val::bool(a.ge(b))),
+                _ => error,
+            },
+            _ => error,
+        }
+    }));
+
+    module.fn_def(fn_def("<=", vec!["a", "b"], move |args| {
+        let error = Err(invalid_args(">"));
+        match (args.len(), args.get(0), args.get(1)) {
+            (2, Some(a), Some(b)) => match ((*a).deref(), (*b).deref()) {
+                (Value::Number(a), Value::Number(b)) => Ok(val::bool(a.le(b))),
+                _ => error,
+            },
+            _ => error,
+        }
+    }));
+
     module.fn_def(fn_def("==", vec!["a", "b"], move |args| {
         match (args.len(), args.get(0), args.get(1)) {
             (2, Some(a), Some(b)) => Ok(val::bool(a.eq(b))),

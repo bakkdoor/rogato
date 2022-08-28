@@ -8,6 +8,7 @@ use rogato_common::ast::{
         Query, QueryBinding, QueryBindings, QueryGuards, StructProps, TupleItems,
     },
     fn_def::{FnDef, FnDefBody},
+    if_else::IfElse,
     module_def::{ModuleDef, ModuleExports},
     type_expression::{StructTypeProperties, TypeDef, TypeExpression},
     Identifier, Program, AST,
@@ -148,7 +149,8 @@ grammar parser(context: &ParserContext) for str {
         }
 
     pub rule expression() -> Expression
-        = fn_pipe()
+        = if_else()
+        / fn_pipe()
         / let_expr()
         / query()
         / lambda()
@@ -190,7 +192,8 @@ grammar parser(context: &ParserContext) for str {
         }
 
     rule atom() -> Expression
-        = literal_expr()
+        = if_else()
+        / literal_expr()
         / edge_prop()
         / variable()
         / constant_or_type_ref()
@@ -369,6 +372,7 @@ grammar parser(context: &ParserContext) for str {
 
     rule let_body() -> Expression
         = lambda()
+        / if_else()
         / query()
         / fn_pipe()
         / fn_call()
@@ -380,6 +384,15 @@ grammar parser(context: &ParserContext) for str {
         = c:comment() _ body:let_body() {
             Expression::Commented(c, Rc::new(body))
         }
+
+    rule if_else() -> Expression
+        = "if" " "+ cond:if_else_condition() " "+ "then" _ then_expr:atom() _ "else" _ else_expr:atom() {
+            Expression::IfElse(IfElse::new(Rc::new(cond), Rc::new(then_expr), Rc::new(else_expr)))
+        }
+
+    rule if_else_condition() -> Expression
+        = variable()
+        / tuple_item()
 
     rule literal_expr() -> Expression
         = number_lit()

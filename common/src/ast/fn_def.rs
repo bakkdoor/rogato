@@ -76,8 +76,8 @@ impl Display for FnDef {
         f.write_str(" =\n")?;
 
         match self.body.borrow() {
-            FnDefBody::NativeFn(_) => indent("[NativeFn]").fmt(f),
-            FnDefBody::RogatoFn(body_expr) => indent(body_expr.to_owned()).fmt(f),
+            FnDefBody::NativeFn(_) => indent(&"[NativeFn]").fmt(f),
+            FnDefBody::RogatoFn(body_expr) => indent(body_expr).fmt(f),
         }
     }
 }

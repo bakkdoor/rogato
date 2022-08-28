@@ -3,6 +3,7 @@ use let_expression::LetExpression;
 
 use super::{
     expression::{Lambda, Literal, Query},
+    if_else::IfElse,
     *,
 };
 
@@ -45,6 +46,9 @@ pub trait Visitor<T: Default> {
         T::default()
     }
     fn edge_prop(&mut self, _expr: &Expression, _edge: &Identifier) -> T {
+        T::default()
+    }
+    fn if_else(&mut self, _if_else: &IfElse) -> T {
         T::default()
     }
     fn let_(&mut self, _let_expr: &LetExpression) -> T {
