@@ -89,7 +89,7 @@ pub fn map<I: IntoIterator<Item = (ValueRef, ValueRef)>>(items: I) -> ValueRef {
 pub fn object<S: ToString, Props: IntoIterator<Item = (S, ValueRef)>>(props: Props) -> ValueRef {
     let props: Vec<(String, ValueRef)> = props
         .into_iter()
-        .map(|(prop, val)| (prop.to_string(), val.clone()))
+        .map(|(prop, val)| (prop.to_string(), val))
         .collect();
     Rc::new(Value::Object(Object::from_iter(props)))
 }

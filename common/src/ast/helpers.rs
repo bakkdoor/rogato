@@ -183,9 +183,9 @@ pub fn query<
         .map(|(ids, expr, is_negated)| {
             let qb_ids = ids.into().iter().map(|id| id.into()).collect();
             if is_negated {
-                QueryBinding::new_negated(qb_ids, expr.clone())
+                QueryBinding::new_negated(qb_ids, expr)
             } else {
-                QueryBinding::new(qb_ids, expr.clone())
+                QueryBinding::new(qb_ids, expr)
             }
         })
         .collect();
