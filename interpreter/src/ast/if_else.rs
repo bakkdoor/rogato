@@ -10,7 +10,7 @@ impl Evaluate<ValueRef> for IfElse {
             Value::Bool(true) => self.then_expr().evaluate(context),
             Value::Bool(false) => self.else_expr().evaluate(context),
             val => Err(EvalError::Unknown(format!(
-                "IFElse condition is not a boolean: {:?}",
+                "IfElse condition is not a boolean: {:?}",
                 val
             ))),
         }
