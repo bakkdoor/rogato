@@ -1,4 +1,5 @@
 use std::ops::Deref;
+use std::rc::Rc;
 
 use crate::{EvalContext, EvalError, Evaluate};
 use rogato_common::ast::if_else::IfElse;
@@ -6,13 +7,11 @@ use rogato_common::val::{Value, ValueRef};
 
 impl Evaluate<ValueRef> for IfElse {
     fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
-        match self.condition().evaluate(context)?.deref() {
+        let val = self.condition().evaluate(context)?;
+        match val.deref() {
             Value::Bool(true) => self.then_expr().evaluate(context),
             Value::Bool(false) => self.else_expr().evaluate(context),
-            val => Err(EvalError::Unknown(format!(
-                "IfElse condition is not a boolean: {:?}",
-                val
-            ))),
+            _ => Err(EvalError::IFElseConditionNotBool(Rc::clone(&val))),
         }
     }
 }

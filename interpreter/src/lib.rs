@@ -49,6 +49,9 @@ pub enum EvalError {
 
     #[error("EvalError: {0}")]
     NativeFnFailed(NativeFnError),
+
+    #[error("EvalError: IfElse condition is not a Bool value: {0}")]
+    IFElseConditionNotBool(ValueRef),
 }
 
 impl From<QueryError> for EvalError {
