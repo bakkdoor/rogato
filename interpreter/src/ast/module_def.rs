@@ -7,7 +7,7 @@ use crate::{EvalContext, EvalError, Evaluate};
 
 impl Evaluate<ValueRef> for ModuleDef {
     fn evaluate(&self, _context: &mut EvalContext) -> Result<ValueRef, EvalError> {
-        Ok(val::object(vec![
+        Ok(val::object([
             ("type", val::string("Module")),
             ("name", val::string(self.id().clone())),
             (

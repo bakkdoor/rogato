@@ -8,8 +8,10 @@ pub struct FnCallArgs {
 }
 
 impl FnCallArgs {
-    pub fn new(args: Vec<Rc<Expression>>) -> Self {
-        FnCallArgs { args }
+    pub fn new<Args: IntoIterator<Item = Rc<Expression>>>(args: Args) -> Self {
+        FnCallArgs {
+            args: args.into_iter().collect(),
+        }
     }
 
     pub fn from_owned(args: Vec<Expression>) -> Self {

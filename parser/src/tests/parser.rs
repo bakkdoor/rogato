@@ -13,18 +13,18 @@ use rust_decimal_macros::dec;
 
 #[test]
 fn fn_defs() {
-    assert_parse_ast!("let id x = x", fn_def("id", vec!["x"], var("x")));
+    assert_parse_ast!("let id x = x", fn_def("id", ["x"], var("x")));
 
     assert_parse_ast!(
         "let add a b = a + b",
-        fn_def("add", vec!["a", "b"], op_call("+", var("a"), var("b")))
+        fn_def("add", ["a", "b"], op_call("+", var("a"), var("b")))
     );
 
     assert_parse_ast!(
         "let add a b c = (a + b) * (c * a)",
         fn_def(
             "add",
-            vec!["a", "b", "c"],
+            ["a", "b", "c"],
             op_call(
                 "*",
                 op_call("+", var("a"), var("b")),
@@ -35,24 +35,20 @@ fn fn_defs() {
 
     assert_parse_ast!(
         "let add1 a = 1 + a",
-        fn_def("add1", vec!["a"], op_call("+", number_lit(1), var("a")))
+        fn_def("add1", ["a"], op_call("+", number_lit(1), var("a")))
     );
 
     assert_parse_ast!(
         "\nlet add1and2 = 1 + 2\n",
-        fn_def(
-            "add1and2",
-            vec![],
-            op_call("+", number_lit(1), number_lit(2))
-        )
+        fn_def("add1and2", [], op_call("+", number_lit(1), number_lit(2)))
     );
 
     assert_parse_ast!(
         "let foo a b = bar a (baz 1)",
         fn_def(
             "foo",
-            vec!["a", "b"],
-            fn_call("bar", vec![var("a"), fn_call("baz", vec![number_lit(1)])]),
+            ["a", "b"],
+            fn_call("bar", [var("a"), fn_call("baz", [number_lit(1)])]),
         )
     );
 
@@ -70,7 +66,7 @@ fn fn_defs() {
         ",
         fn_def(
             "foo",
-            vec!["a", "b"],
+            ["a", "b"],
             let_expr(
                 [
                     ("x", op_call("+", var("a"), var("b"))),
@@ -90,27 +86,27 @@ fn fn_defs() {
 
 #[test]
 fn module_defs() {
-    assert_parse_ast!("module MyModule", module_def("MyModule", vec![]));
+    assert_parse_ast!("module MyModule", module_def("MyModule", []));
 
-    assert_parse_ast!("module MyModule {}", module_def("MyModule", vec![]));
+    assert_parse_ast!("module MyModule {}", module_def("MyModule", []));
 
-    assert_parse_ast!("module MyModule {    }", module_def("MyModule", vec![]));
+    assert_parse_ast!("module MyModule {    }", module_def("MyModule", []));
 
-    assert_parse_ast!("module MyModule {\n\n}", module_def("MyModule", vec![]));
+    assert_parse_ast!("module MyModule {\n\n}", module_def("MyModule", []));
 
     assert_parse_ast!(
         "module MyModule {Foo_bar-baz}",
-        module_def("MyModule", vec!["Foo_bar-baz"])
+        module_def("MyModule", ["Foo_bar-baz"])
     );
 
     assert_parse_ast!(
         "module MyModule {foo, bar}",
-        module_def("MyModule", vec!["foo", "bar"])
+        module_def("MyModule", ["foo", "bar"])
     );
 
     assert_parse_ast!(
         "module MyModule { func1, func2, func3 }",
-        module_def("MyModule", vec!["func1", "func2", "func3"])
+        module_def("MyModule", ["func1", "func2", "func3"])
     );
 }
 
@@ -210,7 +206,7 @@ fn literals() {
         "Person{id: 1, age: 35, country: \"Germany\"}",
         struct_lit(
             "Person",
-            vec![
+            [
                 ("id", number_lit(1)),
                 ("age", number_lit(35)),
                 ("country", string_lit("Germany"))
@@ -258,22 +254,19 @@ fn literals() {
 
 #[test]
 fn fn_calls() {
-    assert_parse_expr!(
-        "add 1 2",
-        fn_call("add", vec![number_lit(1), number_lit(2)])
-    );
+    assert_parse_expr!("add 1 2", fn_call("add", [number_lit(1), number_lit(2)]));
 
-    assert_parse_expr!("add 1 a", fn_call("add", vec![number_lit(1), var("a")]));
+    assert_parse_expr!("add 1 a", fn_call("add", [number_lit(1), var("a")]));
 
-    assert_parse_expr!("add a 1", fn_call("add", vec![var("a"), number_lit(1)]));
+    assert_parse_expr!("add a 1", fn_call("add", [var("a"), number_lit(1)]));
 
     assert_parse_expr!(
         "add 1 (add 2 3)",
         fn_call(
             "add",
-            vec![
+            [
                 number_lit(1),
-                fn_call("add", vec![number_lit(2), number_lit(3)]),
+                fn_call("add", [number_lit(2), number_lit(3)]),
             ],
         )
     );
@@ -282,7 +275,7 @@ fn fn_calls() {
         "add 1 (add a 3)",
         fn_call(
             "add",
-            vec![number_lit(1), fn_call("add", vec![var("a"), number_lit(3)]),],
+            [number_lit(1), fn_call("add", [var("a"), number_lit(3)]),],
         )
     );
 }
@@ -331,7 +324,7 @@ fn op_calls() {
         "(foo bar 1) != 2",
         op_call(
             "!=",
-            fn_call("foo", vec![var("bar"), number_lit(1)]),
+            fn_call("foo", [var("bar"), number_lit(1)]),
             number_lit(2)
         )
     );
@@ -389,7 +382,7 @@ fn comments() {
 fn type_defs() {
     let person_type_def = type_def(
         "Person",
-        struct_type(vec![
+        struct_type([
             ("name", string_type()),
             ("age", int_type()),
             ("country", type_ref("Country")),
@@ -429,7 +422,7 @@ fn type_defs() {
 
     assert_parse_ast!(
         "type Pair :: {A, B}",
-        type_def("Pair", tuple_type(vec![type_ref("A"), type_ref("B")]))
+        type_def("Pair", tuple_type([type_ref("A"), type_ref("B")]))
     );
 }
 
@@ -465,7 +458,7 @@ fn let_expressions() {
             ],
             struct_lit(
                 "Person",
-                vec![
+                [
                     ("name", var("name")),
                     ("age", var("age")),
                     ("city", var("city"))
@@ -490,21 +483,21 @@ fn let_expressions() {
                 (
                     "friendsOfFriends",
                     query(
-                        vec![
+                        [
                             (vec!["f1", "f2"], var("people"), false),
-                            (vec!["f1"], fn_call("friends", vec![var("person")]), false),
-                            (vec!["f2"], fn_call("friends", vec![var("f1")]), false)
+                            (vec!["f1"], fn_call("friends", [var("person")]), false),
+                            (vec!["f2"], fn_call("friends", [var("f1")]), false)
                         ],
-                        vec![],
+                        [],
                         var("f2")
                     )
                 ),
                 (
                     "friendsNames",
-                    fn_call("List.map", vec![var("friendsOfFriends"), var("name")])
+                    fn_call("List.map", [var("friendsOfFriends"), var("name")])
                 )
             ],
-            tuple_lit([var("friends"), fn_call("List.count", vec![var("friends")])])
+            tuple_lit([var("friends"), fn_call("List.count", [var("friends")])])
         )
     );
 
@@ -519,16 +512,16 @@ fn let_expressions() {
             [
                 (
                     "add",
-                    inline_fn_def("add", vec!["a", "b"], op_call("+", var("a"), var("b")))
+                    inline_fn_def("add", ["a", "b"], op_call("+", var("a"), var("b")))
                 ),
                 (
                     "mul",
-                    inline_fn_def("mul", vec!["a", "b"], op_call("*", var("a"), var("b")))
+                    inline_fn_def("mul", ["a", "b"], op_call("*", var("a"), var("b")))
                 ),
             ],
             tuple_lit([
-                fn_call("add", vec![number_lit(1), number_lit(2)]),
-                fn_call("mul", vec![number_lit(2), number_lit(3)]),
+                fn_call("add", [number_lit(1), number_lit(2)]),
+                fn_call("mul", [number_lit(2), number_lit(3)]),
             ])
         )
     );
@@ -542,10 +535,10 @@ fn queries() {
         ! isPopular p
         !> p",
         query(
-            vec![(vec!["p"], const_or_type_ref("Person"), false)],
-            vec![
-                fn_call("isOlderThan", vec![var("p"), number_lit(42)]),
-                fn_call("isPopular", vec![var("p")])
+            [(["p"], const_or_type_ref("Person"), false)],
+            [
+                fn_call("isOlderThan", [var("p"), number_lit(42)]),
+                fn_call("isPopular", [var("p")])
             ],
             var("p")
         )
@@ -559,14 +552,14 @@ fn queries() {
         ! isFriendOf p p2
         !> {p, p2}",
         query(
-            vec![
-                (vec!["p"], const_or_type_ref("Person"), false),
-                (vec!["p2"], const_or_type_ref("Person"), false)
+            [
+                (["p"], const_or_type_ref("Person"), false),
+                (["p2"], const_or_type_ref("Person"), false)
             ],
-            vec![
-                fn_call("isOlderThan", vec![var("p"), number_lit(42)]),
-                fn_call("isPopular", vec![var("p")]),
-                fn_call("isFriendOf", vec![var("p"), var("p2")])
+            [
+                fn_call("isOlderThan", [var("p"), number_lit(42)]),
+                fn_call("isPopular", [var("p")]),
+                fn_call("isFriendOf", [var("p"), var("p2")])
             ],
             tuple_lit([var("p"), var("p2")])
         )
@@ -578,14 +571,14 @@ fn queries() {
         ! ((age p) == ((age p2) + 1))
         !> {p, p2}",
         query(
-            vec![
-                (vec!["p"], const_or_type_ref("Person"), false),
-                (vec!["p2"], const_or_type_ref("Person"), false)
+            [
+                (["p"], const_or_type_ref("Person"), false),
+                (["p2"], const_or_type_ref("Person"), false)
             ],
-            vec![op_call(
+            [op_call(
                 "==",
-                fn_call("age", vec![var("p")]),
-                op_call("+", fn_call("age", vec![var("p2")]), number_lit(1))
+                fn_call("age", [var("p")]),
+                op_call("+", fn_call("age", [var("p2")]), number_lit(1))
             ),],
             tuple_lit([var("p"), var("p2")])
         )
@@ -598,13 +591,13 @@ fn queries() {
          ? f <- friends p2
          !> f",
         query(
-            vec![
-                (vec!["p1"], var("people"), false),
-                (vec!["p2"], var("people"), false),
-                (vec!["f"], fn_call("friends", vec![var("p1")]), false),
-                (vec!["f"], fn_call("friends", vec![var("p2")]), false),
+            [
+                (["p1"], var("people"), false),
+                (["p2"], var("people"), false),
+                (["f"], fn_call("friends", [var("p1")]), false),
+                (["f"], fn_call("friends", [var("p2")]), false),
             ],
-            vec![],
+            [],
             var("f"),
         )
     );
@@ -615,12 +608,12 @@ fn queries() {
          ? f <- friends p2
          !> f",
         query(
-            vec![
+            [
                 (vec!["p1", "p2"], var("people"), false),
-                (vec!["f"], fn_call("friends", vec![var("p1")]), false),
-                (vec!["f"], fn_call("friends", vec![var("p2")]), false),
+                (vec!["f"], fn_call("friends", [var("p1")]), false),
+                (vec!["f"], fn_call("friends", [var("p2")]), false),
             ],
-            vec![],
+            [],
             var("f"),
         )
     );
@@ -633,15 +626,15 @@ fn queries() {
          ! 0 < (a + (b + c))
          !> {diff, {a, b, c}}",
         query(
-            vec![
+            [
                 (vec!["a", "b", "c"], const_or_type_ref("Data"), false),
                 (
                     vec!["diff"],
-                    fn_call("dataDiff", vec![var("a"), var("b"), var("c")]),
+                    fn_call("dataDiff", [var("a"), var("b"), var("c")]),
                     false
                 )
             ],
-            vec![op_call(
+            [op_call(
                 "<",
                 number_lit(0),
                 op_call("+", var("a"), op_call("+", var("b"), var("c")))
@@ -656,12 +649,12 @@ fn queries() {
          ? bob <- job#Friend
          !> {bob, joe}",
         query(
-            vec![
-                (vec!["bob"], const_or_type_ref("Person"), false),
-                (vec!["joe"], const_or_type_ref("Person"), false),
-                (vec!["bob"], edge_prop(var("job"), "Friend"), false)
+            [
+                (["bob"], const_or_type_ref("Person"), false),
+                (["joe"], const_or_type_ref("Person"), false),
+                (["bob"], edge_prop(var("job"), "Friend"), false)
             ],
-            vec![],
+            [],
             tuple_lit([var("bob"), var("joe")])
         )
     );
@@ -671,11 +664,11 @@ fn queries() {
          ? p <!- oldPeople
          !> p",
         query(
-            vec![
-                (vec!["p"], const_or_type_ref("Person"), false),
-                (vec!["p"], var("oldPeople"), true)
+            [
+                (["p"], const_or_type_ref("Person"), false),
+                (["p"], var("oldPeople"), true)
             ],
-            vec![],
+            [],
             var("p")
         )
     );
@@ -686,21 +679,21 @@ fn queries() {
          ? p <!- (a | b)#Friend
          !> inspect p",
         query(
-            vec![
-                (vec!["p"], const_or_type_ref("Person"), false),
+            [
+                (["p"], const_or_type_ref("Person"), false),
                 (
-                    vec!["p"],
-                    fn_call("hello", vec![number_lit(1), number_lit(2)]),
+                    ["p"],
+                    fn_call("hello", [number_lit(1), number_lit(2)]),
                     false
                 ),
                 (
-                    vec!["p"],
+                    ["p"],
                     edge_prop(op_call("|", var("a"), var("b")), "Friend"),
                     true
                 )
             ],
-            vec![],
-            fn_call("inspect", vec![var("p")])
+            [],
+            fn_call("inspect", [var("p")])
         )
     );
 
@@ -717,33 +710,29 @@ fn queries() {
          )
          !> inspect p",
         query(
-            vec![
-                (vec!["p"], const_or_type_ref("Person"), false),
+            [
+                (["p"], const_or_type_ref("Person"), false),
                 (
-                    vec!["p"],
-                    fn_call("hello", vec![number_lit(1), number_lit(2)]),
+                    ["p"],
+                    fn_call("hello", [number_lit(1), number_lit(2)]),
                     false
                 ),
                 (
-                    vec!["p"],
+                    ["p"],
                     edge_prop(
                         query(
-                            vec![(vec!["p2"], op_call("|", var("a"), var("b")), false)],
-                            vec![],
+                            [(["p2"], op_call("|", var("a"), var("b")), false)],
+                            [],
                             var("p2")
                         ),
                         "Friend"
                     ),
                     true
                 ),
-                (
-                    vec!["p"],
-                    fn_call("friendsWithoutFriends", vec![var("p")]),
-                    true
-                )
+                (["p"], fn_call("friendsWithoutFriends", [var("p")]), true)
             ],
-            vec![],
-            fn_call("inspect", vec![var("p")])
+            [],
+            fn_call("inspect", [var("p")])
         )
     );
 }
@@ -766,23 +755,23 @@ fn variables() {
 fn lambdas() {
     assert_parse_expr!(
         "x -> x + 1",
-        lambda(vec!["x"], op_call("+", var("x"), number_lit(1)))
+        lambda(["x"], op_call("+", var("x"), number_lit(1)))
     );
 
     assert_parse_expr!(
         "x y -> x + y",
-        lambda(vec!["x", "y"], op_call("+", var("x"), var("y")))
+        lambda(["x", "y"], op_call("+", var("x"), var("y")))
     );
 
     assert_parse_expr!(
         "x y -> inspect (z -> {x * (y * z), {x, y, z}}) x y",
         lambda(
-            vec!["x", "y"],
+            ["x", "y"],
             fn_call(
                 "inspect",
-                vec![
+                [
                     lambda(
-                        vec!["z"],
+                        ["z"],
                         tuple_lit([
                             op_call("*", var("x"), op_call("*", var("y"), var("z"))),
                             tuple_lit([var("x"), var("y"), var("z")])
@@ -798,13 +787,10 @@ fn lambdas() {
     assert_parse_expr!(
         "w x -> y -> z -> {w, x, y, z}",
         lambda(
-            vec!["w", "x"],
+            ["w", "x"],
             lambda(
-                vec!["y"],
-                lambda(
-                    vec!["z"],
-                    tuple_lit([var("w"), var("x"), var("y"), var("z")])
-                )
+                ["y"],
+                lambda(["z"], tuple_lit([var("w"), var("x"), var("y"), var("z")]))
             )
         )
     );
@@ -816,9 +802,9 @@ fn fn_pipes() {
         "2 |> inspect |> MyMod.doStuff |> repeat",
         fn_call(
             "repeat",
-            vec![fn_call(
+            [fn_call(
                 "MyMod.doStuff",
-                vec![fn_call("inspect", vec![number_lit(2)])]
+                [fn_call("inspect", [number_lit(2)])]
             )]
         )
     );
@@ -827,7 +813,7 @@ fn fn_pipes() {
         "2 |> inspect |> repeat 10",
         fn_call(
             "repeat",
-            vec![fn_call("inspect", vec![number_lit(2)]), number_lit(10)]
+            [fn_call("inspect", [number_lit(2)]), number_lit(10)]
         )
     );
 
@@ -838,21 +824,21 @@ fn fn_pipes() {
          |> sumBy (delta 1)",
         fn_call(
             "sumBy",
-            vec![
+            [
                 fn_call(
                     "select",
-                    vec![
+                    [
                         fn_call(
                             "joinWith",
-                            vec![
+                            [
                                 list_lit([number_lit(1), number_lit(2)]),
                                 tuple_lit([number_lit(1), number_lit(2), number_lit(3)])
                             ]
                         ),
-                        lambda(vec!["x"], fn_call("isHappy", vec![var("x")]))
+                        lambda(["x"], fn_call("isHappy", [var("x")]))
                     ]
                 ),
-                fn_call("delta", vec![number_lit(1)])
+                fn_call("delta", [number_lit(1)])
             ]
         )
     );
@@ -867,28 +853,28 @@ fn fn_pipes() {
             !> p",
         fn_def(
             "f",
-            vec!["x"],
+            ["x"],
             query(
-                vec![(vec!["p"], const_or_type_ref("Person"), false)],
-                vec![fn_call(
+                [(["p"], const_or_type_ref("Person"), false)],
+                [fn_call(
                     "thenDo",
-                    vec![
+                    [
                         fn_call(
                             "doStuff",
-                            vec![
+                            [
                                 var("x"),
                                 tuple_lit([number_lit(2), number_lit(3), number_lit(4)])
                             ]
                         ),
                         lambda(
-                            vec!["y"],
+                            ["y"],
                             op_call(
                                 "+",
                                 var("x"),
                                 fn_call(
                                     "join",
-                                    vec![
-                                        fn_call("toString", vec![var("y")],),
+                                    [
+                                        fn_call("toString", [var("y")],),
                                         tuple_lit([number_lit(1), number_lit(2), number_lit(3)])
                                     ]
                                 )
@@ -910,16 +896,16 @@ fn symbols_and_quotes() {
 
     assert_parse_expr!(
         "^(quoted expression)",
-        quoted(fn_call("quoted", vec![var("expression")]))
+        quoted(fn_call("quoted", [var("expression")]))
     );
 
     assert_parse_expr!(
         "^(quoted (expression \"in quotes\" {1, 2, 3}))",
         quoted(fn_call(
             "quoted",
-            vec![fn_call(
+            [fn_call(
                 "expression",
-                vec![
+                [
                     string_lit("in quotes"),
                     tuple_lit([number_lit(1), number_lit(2), number_lit(3)])
                 ]
@@ -931,7 +917,7 @@ fn symbols_and_quotes() {
         "^(quoted ~var in ~var2)",
         quoted(fn_call(
             "quoted",
-            vec![unquoted(var("var")), var("in"), unquoted(var("var2"))]
+            [unquoted(var("var")), var("in"), unquoted(var("var2"))]
         ))
     );
 
@@ -939,9 +925,9 @@ fn symbols_and_quotes() {
         "^(quoted ~(var {~var2, 123, ~var3, ^Cool}))",
         quoted(fn_call(
             "quoted",
-            vec![unquoted(fn_call(
+            [unquoted(fn_call(
                 "var",
-                vec![tuple_lit([
+                [tuple_lit([
                     unquoted(var("var2")),
                     number_lit(123),
                     unquoted(var("var3")),
@@ -953,24 +939,16 @@ fn symbols_and_quotes() {
 
     assert_parse_expr!(
         "^(quoted ^Cool)",
-        quoted(fn_call("quoted", vec![symbol("Cool")]))
+        quoted(fn_call("quoted", [symbol("Cool")]))
     );
 
     assert_parse_expr!(
         "^(let f x = x + 1)",
-        quoted_ast(fn_def(
-            "f",
-            vec!["x"],
-            op_call("+", var("x"), number_lit(1))
-        ))
+        quoted_ast(fn_def("f", ["x"], op_call("+", var("x"), number_lit(1))))
     );
 
     assert_parse_expr!(
         "~(let f x = x + 1)",
-        unquoted_ast(fn_def(
-            "f",
-            vec!["x"],
-            op_call("+", var("x"), number_lit(1))
-        ))
+        unquoted_ast(fn_def("f", ["x"], op_call("+", var("x"), number_lit(1))))
     );
 }

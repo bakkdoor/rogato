@@ -4,7 +4,7 @@ use rogato_parser::{parse_expr, ParserContext};
 
 #[test]
 fn basic_arithmetic() {
-    let expressions_and_values = vec![
+    let expressions_and_values = [
         ("3 + 4", val::number(7)),
         ("-3 + 4", val::number(1)),
         ("100 - 90", val::number(10)),
@@ -47,7 +47,7 @@ fn string_literals() {
     let mut ctx = EvalContext::new();
     let p_ctx = ParserContext::new();
 
-    let string_literals = vec![
+    let string_literals = [
         "",
         "!",
         " ",
@@ -86,7 +86,7 @@ fn let_expressions() {
 
     assert_eq!(
         ast.evaluate(&mut ctx),
-        Ok(val::tuple(vec![
+        Ok(val::tuple([
             val::number(102),
             val::number(103),
             val::decimal_str("90.8")
@@ -105,13 +105,13 @@ fn let_expressions() {
 
     assert_eq!(
         ast.evaluate(&mut ctx),
-        Ok(val::tuple(vec![val::number(3), val::number(6)]))
+        Ok(val::tuple([val::number(3), val::number(6)]))
     )
 }
 
 #[test]
 fn equality() {
-    let not_equal = vec![
+    let not_equal = [
         ("1", "2"),
         ("1", "\"foo\""),
         ("^foo", "^bar"),
@@ -121,7 +121,7 @@ fn equality() {
         ("[^foo, ^bar, 1 + 2]", "[^bar, 3, ^foo]"),
     ];
 
-    let equal = vec![
+    let equal = [
         ("1", "1"),
         ("\"foo\"", "\"foo\""),
         ("^foo", "^foo"),
@@ -161,10 +161,10 @@ fn equality() {
 
 #[test]
 fn std_module() {
-    let code_with_vals = vec![
+    let code_with_vals = [
         (
             "Std.range 10",
-            val::list(vec![
+            val::list([
                 val::number(0),
                 val::number(1),
                 val::number(2),
@@ -179,7 +179,7 @@ fn std_module() {
         ),
         (
             "Std.range 1 10",
-            val::list(vec![
+            val::list([
                 val::number(1),
                 val::number(2),
                 val::number(3),
@@ -204,7 +204,7 @@ fn std_module() {
 
 #[test]
 fn std_math_module() {
-    let code_with_vals = vec![
+    let code_with_vals = [
         ("Std.Math.abs -10", val::number(10)),
         ("Std.Math.abs (10 * -10)", val::number(100)),
         ("Std.Math.abs (100 - 1000)", val::number(900)),
@@ -224,7 +224,7 @@ fn std_math_module() {
 
 #[test]
 fn std_string_module() {
-    let code_with_vals = vec![
+    let code_with_vals = [
         ("Std.String.length \"\"", val::number(0)),
         ("Std.String.length \" \"", val::number(1)),
         ("Std.String.length \"hello\"", val::number(5)),
@@ -242,14 +242,14 @@ fn std_string_module() {
 
 #[test]
 fn std_list_module() {
-    let code_with_vals = vec![
+    let code_with_vals = [
         (
             "Std.List.map [1,2,3] ^inspect",
-            val::list(vec![val::string("1"), val::string("2"), val::string("3")]),
+            val::list([val::string("1"), val::string("2"), val::string("3")]),
         ),
         (
             "Std.List.map [1,2,3] (x -> inspect x)",
-            val::list(vec![val::string("1"), val::string("2"), val::string("3")]),
+            val::list([val::string("1"), val::string("2"), val::string("3")]),
         ),
         (
             "let
@@ -264,14 +264,10 @@ fn std_list_module() {
                     add10 1,
                     add1 1000
                 }",
-            val::tuple(vec![
-                val::list(vec![val::string("1"), val::string("2"), val::string("3")]),
-                val::list(vec![
-                    val::string("10"),
-                    val::string("20"),
-                    val::string("30"),
-                ]),
-                val::list(vec![val::number(20), val::number(30), val::number(40)]),
+            val::tuple([
+                val::list([val::string("1"), val::string("2"), val::string("3")]),
+                val::list([val::string("10"), val::string("20"), val::string("30")]),
+                val::list([val::number(20), val::number(30), val::number(40)]),
                 val::number(11),
                 val::number(1001),
             ]),

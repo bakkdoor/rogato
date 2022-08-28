@@ -71,8 +71,10 @@ pub struct QueryGuards {
 }
 
 impl QueryGuards {
-    pub fn new(guards: Vec<Rc<Expression>>) -> Self {
-        QueryGuards { guards }
+    pub fn new<Guards: IntoIterator<Item = Rc<Expression>>>(guards: Guards) -> Self {
+        QueryGuards {
+            guards: guards.into_iter().collect(),
+        }
     }
 
     pub fn prepend_guard(&mut self, arg: Rc<Expression>) {

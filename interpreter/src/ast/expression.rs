@@ -34,7 +34,7 @@ impl Evaluate<ValueRef> for Expression {
                 }
             }
             Expression::OpCall(op_ident, left, right) => {
-                let call_args = vec![left.evaluate(context)?, right.evaluate(context)?];
+                let call_args = [left.evaluate(context)?, right.evaluate(context)?];
                 match context.call_function(op_ident, &call_args) {
                     Some(val) => Ok(val?),
                     None => Err(EvalError::OperatorNotDefined(op_ident.clone())),
@@ -50,7 +50,7 @@ impl Evaluate<ValueRef> for Expression {
             Expression::ConstOrTypeRef(id) => match context.lookup_const(id) {
                 Some(val) => Ok(val),
                 None => match context.lookup_type(id) {
-                    Some(type_) => Ok(val::object(vec![
+                    Some(type_) => Ok(val::object([
                         ("type", val::string("TypeExpression")),
                         ("id", val::string(type_.id())),
                         ("expression", val::string(format!("{}", type_))),
@@ -59,7 +59,7 @@ impl Evaluate<ValueRef> for Expression {
                 },
             },
             Expression::PropFnRef(id) => {
-                let lambda = lambda(vec!["object"], fn_call(id, vec![var("object")]));
+                let lambda = lambda(["object"], fn_call(id, [var("object")]));
                 lambda.evaluate(context)
             }
             Expression::EdgeProp(_id, _edge) => Ok(val::string("eval edge prop")),

@@ -49,12 +49,12 @@ pub fn list_lit<Iter: IntoIterator<Item = Rc<Expression>>>(vals: Iter) -> Rc<Exp
     lit(List(TupleItems::from_iter(vals)))
 }
 
-pub fn struct_lit<S: Into<Identifier>>(
+pub fn struct_lit<S: Into<Identifier>, Props: IntoIterator<Item = (S, Rc<Expression>)>>(
     id: S,
-    raw_props: Vec<(S, Rc<Expression>)>,
+    raw_props: Props,
 ) -> Rc<Expression> {
     let mut props = Vec::new();
-    for (id, expr) in raw_props {
+    for (id, expr) in raw_props.into_iter() {
         props.push((id.into(), expr))
     }
     lit(Struct(id.into(), Rc::new(StructProps::from(props))))
@@ -103,22 +103,27 @@ pub fn let_expr<
     Rc::new(Let(LetExpression::new(LetBindings::new(bindings), body)))
 }
 
-pub fn module_def(id: &str, exports: Vec<&str>) -> Rc<AST> {
+pub fn module_def<Exports: IntoIterator<Item = &'static str>>(
+    id: &str,
+    exports: Exports,
+) -> Rc<AST> {
     Rc::new(AST::ModuleDef(ModuleDef::new(
         id.into(),
         module_def_exports(exports),
     )))
 }
 
-pub fn module_def_exports(exports: Vec<&str>) -> ModuleExports {
-    ModuleExports::new(Vec::from_iter(exports.iter().map(|e| e.into())))
+pub fn module_def_exports<Exports: IntoIterator<Item = &'static str>>(
+    exports: Exports,
+) -> ModuleExports {
+    ModuleExports::new(Vec::from_iter(exports.into_iter().map(|e| e.into())))
 }
 
-pub fn call_args(args: Vec<Rc<Expression>>) -> FnCallArgs {
+pub fn call_args<Args: IntoIterator<Item = Rc<Expression>>>(args: Args) -> FnCallArgs {
     FnCallArgs::new(args)
 }
 
-pub fn fn_call(id: &str, args: Vec<Rc<Expression>>) -> Rc<Expression> {
+pub fn fn_call<Args: IntoIterator<Item = Rc<Expression>>>(id: &str, args: Args) -> Rc<Expression> {
     Rc::new(Expression::FnCall(id.into(), call_args(args)))
 }
 
@@ -138,8 +143,10 @@ pub fn type_def(id: &str, type_expr: Rc<TypeExpression>) -> Rc<AST> {
     Rc::new(AST::TypeDef(TypeDef::new(id.into(), type_expr)))
 }
 
-pub fn tuple_type(items: Vec<Rc<TypeExpression>>) -> Rc<TypeExpression> {
-    Rc::new(TypeExpression::TupleType(TupleItems::from(items)))
+pub fn tuple_type<Items: IntoIterator<Item = Rc<TypeExpression>>>(
+    items: Items,
+) -> Rc<TypeExpression> {
+    Rc::new(TypeExpression::TupleType(TupleItems::from_iter(items)))
 }
 
 pub fn struct_type<Iter: IntoIterator<Item = (&'static str, Rc<TypeExpression>)>>(
@@ -162,16 +169,20 @@ pub fn type_ref(id: &str) -> Rc<TypeExpression> {
     Rc::new(TypeExpression::TypeRef(id.into()))
 }
 
-pub fn query(
-    bindings: Vec<(Vec<&str>, Rc<Expression>, bool)>,
-    guards: Vec<Rc<Expression>>,
+pub fn query<
+    BindIds: Into<Vec<&'static str>>,
+    Binds: IntoIterator<Item = (BindIds, Rc<Expression>, bool)>,
+    Guards: IntoIterator<Item = Rc<Expression>>,
+>(
+    bindings: Binds,
+    guards: Guards,
     production: Rc<Expression>,
 ) -> Rc<Expression> {
     let query_bindings = bindings
-        .iter()
+        .into_iter()
         .map(|(ids, expr, is_negated)| {
-            let qb_ids = ids.iter().map(|id| id.into()).collect();
-            if *is_negated {
+            let qb_ids = ids.into().iter().map(|id| id.into()).collect();
+            if is_negated {
                 QueryBinding::new_negated(qb_ids, expr.clone())
             } else {
                 QueryBinding::new(qb_ids, expr.clone())
@@ -189,8 +200,11 @@ pub fn edge_prop(expr: Rc<Expression>, edge: &str) -> Rc<Expression> {
     Rc::new(Expression::EdgeProp(expr, edge.into()))
 }
 
-pub fn lambda(args: Vec<&str>, body: Rc<Expression>) -> Rc<Expression> {
-    let args = args.iter().map(|a| a.into()).collect();
+pub fn lambda<Args: IntoIterator<Item = &'static str>>(
+    args: Args,
+    body: Rc<Expression>,
+) -> Rc<Expression> {
+    let args = args.into_iter().map(|a| a.into()).collect();
     Rc::new(Expression::Lambda(Rc::new(Lambda::new(
         LambdaArgs::new(args),
         body,
