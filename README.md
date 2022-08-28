@@ -33,6 +33,10 @@ Build with cargo, Rust's package and build manager:
 
     cargo b -r
 
+#### Build and run tests (debug/test mode)
+
+    cargo t
+
 #### Build with parser tracing enabled
 
     cargo b --features trace
