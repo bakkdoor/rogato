@@ -316,13 +316,13 @@ grammar parser(context: &ParserContext) for str {
 
     #[cache_left_rec]
     rule op_call() -> Expression
-        = left:op_call() " " + id:operator() _ right: op_arg() {
+        = left:op_call() " "+ id:operator() ws() right:op_arg() {
             Expression::OpCall(id, Rc::new(left), Rc::new(right))
         }
-        / left:op_arg() " "+ id:operator() _ right:op_arg() {
+        / left:op_arg() " "+ id:operator() ws() right:op_arg() {
             Expression::OpCall(id, Rc::new(left), Rc::new(right))
         }
-        / left:op_arg() _ id:operator() " "+ right:op_arg() {
+        / left:op_arg() ws() id:operator() " "+ right:op_arg() {
             Expression::OpCall(id, Rc::new(left), Rc::new(right))
         }
 
