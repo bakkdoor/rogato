@@ -9,16 +9,16 @@ pub struct QueryPlanner {}
 #[derive(Error, Debug, PartialEq, Eq, Clone)]
 
 pub enum QueryError {
-    #[error("QueryError: Unknown error: {0}")]
+    #[error("Unknown QueryError: {0}")]
     Unknown(String),
 
-    #[error("QueryError: Guard failed: {0}")]
+    #[error("Query guard failed: {0}")]
     GuardFailed(Box<EvalError>),
 
-    #[error("QueryError: Binding failed: {0:?}")]
+    #[error("Query binding failed: {0:?}")]
     BindingFailed(QueryBindingError),
 
-    #[error("QueryError: Production failed: {0}")]
+    #[error("Query production failed: {0}")]
     ProductionFailed(Box<EvalError>),
 }
 

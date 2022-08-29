@@ -3,13 +3,13 @@ use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq, Eq, Clone)]
 pub enum NativeFnError {
-    #[error("NativeFnError: Unknown error for {0}: {1}")]
+    #[error("Unknown error in NativeFn {0}: {1}")]
     Unknown(Identifier, String),
 
-    #[error("NativeFnError: Invalid arguments for {0}")]
+    #[error("Invalid arguments for NativeFn {0}")]
     InvalidArguments(Identifier),
 
-    #[error("NativeFnError: Evaluation failed with: {0}")]
+    #[error("Evaluation failed for NativeFn with: {0}")]
     EvaluationFailed(String),
 }
 
