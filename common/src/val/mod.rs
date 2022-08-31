@@ -173,10 +173,8 @@ impl Display for Value {
             }
             Value::Bool(b) => b.fmt(f),
             Value::Number(d) => d.fmt(f),
-            Value::Tuple(size, items) => {
-                f.write_str("{")?;
-                size.fmt(f)?;
-                f.write_str("}{ ")?;
+            Value::Tuple(_size, items) => {
+                f.write_str("{ ")?;
                 TupleItems::from(items.clone()).fmt(f)?;
                 f.write_str(" }")
             }
