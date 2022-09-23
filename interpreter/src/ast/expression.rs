@@ -58,6 +58,14 @@ impl Evaluate<ValueRef> for Expression {
                     None => Err(EvalError::ConstOrTypeNotFound(id.clone())),
                 },
             },
+            Expression::DBTypeRef(id) => match context.lookup_db_type(id) {
+                Some(type_) => Ok(val::object([
+                    ("type", val::string("DBType")),
+                    ("id", val::string(type_.id())),
+                    ("expression", val::string(format!("{}", type_))),
+                ])),
+                None => Err(EvalError::DBTypeNotFound(id.clone())),
+            },
             Expression::PropFnRef(id) => {
                 let lambda = lambda(["object"], fn_call(id, [var("object")]));
                 lambda.evaluate(context)

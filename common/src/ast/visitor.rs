@@ -42,6 +42,9 @@ pub trait Visitor<T: Default> {
     fn const_or_type_ref(&mut self, _id: &Identifier) -> T {
         T::default()
     }
+    fn db_type_ref(&mut self, _id: &Identifier) -> T {
+        T::default()
+    }
     fn prop_fn_ref(&mut self, _id: &Identifier) -> T {
         T::default()
     }

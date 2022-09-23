@@ -18,6 +18,7 @@ pub enum Expression {
     OpCall(Identifier, Rc<Expression>, Rc<Expression>),
     Var(Identifier),
     ConstOrTypeRef(Identifier),
+    DBTypeRef(Identifier),
     PropFnRef(Identifier),
     EdgeProp(Rc<Expression>, Identifier),
     IfElse(IfElse),
@@ -41,6 +42,7 @@ impl ASTDepth for Expression {
             Expression::OpCall(_id, left, right) => left.ast_depth() + right.ast_depth(),
             Expression::Var(_id) => 1,
             Expression::ConstOrTypeRef(_id) => 1,
+            Expression::DBTypeRef(_id) => 1,
             Expression::PropFnRef(_id) => 1,
             Expression::EdgeProp(expr, _edge) => 1 + expr.ast_depth(),
             Expression::IfElse(if_else) => if_else.ast_depth(),
@@ -85,6 +87,10 @@ impl Display for Expression {
             }
             Expression::Var(id) => f.write_str(id),
             Expression::ConstOrTypeRef(id) => f.write_str(id),
+            Expression::DBTypeRef(id) => {
+                f.write_str("@")?;
+                f.write_str(id)
+            }
             Expression::PropFnRef(id) => {
                 f.write_str(".")?;
                 f.write_str(id)

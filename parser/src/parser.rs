@@ -488,6 +488,9 @@ grammar parser(context: &ParserContext) for str {
         = id:struct_identifier() {
             Expression::ConstOrTypeRef(id)
         }
+        / "@" id:struct_identifier() {
+            Expression::DBTypeRef(id)
+        }
 
     rule struct_identifier() -> Identifier
         = id1:$([ 'A'..='Z' ]) id2:$(['a'..='z' | 'A'..='Z' | '-' | '_' | '0'..='9' | '.' | '@' | '$'])* {

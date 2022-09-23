@@ -69,6 +69,10 @@ pub fn const_or_type_ref(id: &str) -> Rc<Expression> {
     Rc::new(ConstOrTypeRef(id.into()))
 }
 
+pub fn db_type_ref(id: &str) -> Rc<Expression> {
+    Rc::new(DBTypeRef(id.into()))
+}
+
 pub fn prop_fn_ref(id: &str) -> Rc<Expression> {
     Rc::new(PropFnRef(id.into()))
 }
@@ -148,6 +152,10 @@ pub fn commented(comment: &str, exp: Rc<Expression>) -> Rc<Expression> {
 }
 
 pub fn type_def(id: &str, type_expr: Rc<TypeExpression>) -> Rc<AST> {
+    Rc::new(AST::TypeDef(TypeDef::new(id.into(), type_expr)))
+}
+
+pub fn db_type_def(id: &str, type_expr: Rc<TypeExpression>) -> Rc<AST> {
     Rc::new(AST::TypeDef(TypeDef::new(id.into(), type_expr)))
 }
 

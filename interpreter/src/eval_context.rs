@@ -150,6 +150,11 @@ impl EvalContext {
         self.env.lookup_type(id)
     }
 
+    pub fn lookup_db_type(&self, id: &Identifier) -> Option<Rc<TypeDef>> {
+        // TODO: do lookup / verfication with DB instead
+        self.env.lookup_type(id)
+    }
+
     pub fn current_module(&self) -> Module {
         self.env.current_module()
     }

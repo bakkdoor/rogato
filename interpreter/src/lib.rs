@@ -32,6 +32,9 @@ pub enum EvalError {
     #[error("Constant or Type not found: {0}")]
     ConstOrTypeNotFound(Identifier),
 
+    #[error("DB Type not found: {0}")]
+    DBTypeNotFound(Identifier),
+
     #[error("Operator not defined: {0}")]
     OperatorNotDefined(Identifier),
 
