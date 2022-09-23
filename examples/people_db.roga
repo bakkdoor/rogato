@@ -81,19 +81,19 @@ let locationsWithin loc maxDistance =
   |> where (l -> (Location.distance l loc) <= maxDistance)
 
 let locationsInGermany =
-  l <- @Locations
+  ? l <- @Locations
   ! l#{country: Germany}
 
 let hasPlaceForUpTo maxNum query =
-  l <- query
+  ? l <- query
   ! l.maxCapacity >= maxNum
 
 let funPlaces city =
-  l <- @Locations
+  ? l <- @Locations
   ! l#{isFun | relaxing | (hasPlaceForUpTo 20)}
 
 let funLocationsInBerlinOrHamburg =
-  l <- @Locations
+  ? l <- @Locations
   ! l#{city: (Berlin | Hamburg)}
   ! l <- funPlaces (Berlin | Hamburg)
 
