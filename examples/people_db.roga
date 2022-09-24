@@ -71,7 +71,7 @@ let locationsNearOsna =
   locationsWithin Osnabrueck.location (10 |> km)
 
 let locationsWithin loc maxDistance =
-  (l <- @Locations)
+  ? l <- @Locations
   ! ((Location.distance l loc) <= maxDistance)
 
 // same as:
