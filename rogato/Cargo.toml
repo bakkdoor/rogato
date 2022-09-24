@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 rogato-common = { path = "../common" }
+rogato-compiler = { path = "../compiler" }
 rogato-db = { path = "../db" }
 rogato-interpreter = { path = "../interpreter" }
 rogato-parser = { path = "../parser" }

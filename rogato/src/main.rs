@@ -4,11 +4,11 @@ use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 
+use clap::Parser;
+use rogato_compiler::Compiler;
 #[allow(unused_imports)]
 use rogato_interpreter::{EvalContext, Evaluate};
 use rogato_parser::{parse, ParserContext};
-
-use clap::Parser;
 
 mod repl;
 
@@ -43,6 +43,10 @@ fn main() -> anyhow::Result<()> {
                 // println!("Opening DB @ {}", DB_PATH);
                 // let datastore = db::open(Path::new(DB_PATH)).map_err(print_error).unwrap();
                 // db_stuff(&datastore).unwrap();
+            }
+            "compile" => {
+                let comp = Compiler::new();
+                comp.gen_self_calling_fn();
             }
             file => {
                 println!("Attempting file parse: {}", file);
