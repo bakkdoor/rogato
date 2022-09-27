@@ -286,6 +286,14 @@ fn std_list_module() {
 #[test]
 fn if_else_expr() {
     let code_with_vals = [
+        (
+            "if (2 == 2) then ^equal else ^unequal",
+            val::symbol("equal"),
+        ),
+        (
+            "if (2 == 3) then ^equal else ^unequal",
+            val::symbol("unequal"),
+        ),
         ("if (2 < 3) then ^ok else ^fail", val::symbol("ok")),
         ("if (2 > 3) then ^ok else ^fail", val::symbol("fail")),
         (
