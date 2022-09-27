@@ -253,8 +253,8 @@ fn std_list_module() {
         ),
         (
             "let
-                insp  = x -> inspect x
-                add10 = x -> x + 10
+                insp   = x -> inspect x
+                add10  = x -> x + 10
                 add1 x = x + 1
              in
                 {
