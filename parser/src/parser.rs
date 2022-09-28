@@ -96,7 +96,7 @@ grammar parser(context: &ParserContext) for str {
         }
 
     rule type_def() -> AST
-        = _ "type " _ id:identifier() _ "::" _ t_expr:type_expr() {
+        = _ "type " _ id:type_identifier() _ "::" _ t_expr:type_expr() {
             AST::TypeDef(TypeDef::new(id, Rc::new(t_expr)))
         }
 
@@ -495,6 +495,12 @@ grammar parser(context: &ParserContext) for str {
     rule struct_identifier() -> Identifier
         = id1:$([ 'A'..='Z' ]) id2:$(['a'..='z' | 'A'..='Z' | '-' | '_' | '0'..='9' | '.' | '@' | '$'])* {
             join_string(id1, id2)
+        }
+
+    rule type_identifier() -> Identifier
+        = struct_identifier()
+        / "@" id:struct_identifier() {
+            join_string("@", vec![id.as_str()])
         }
 
     rule variable_identifier() -> Identifier

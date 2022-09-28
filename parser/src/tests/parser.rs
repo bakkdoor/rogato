@@ -5,9 +5,9 @@ use rogato_common::ast::helpers::inline_fn_def;
 #[cfg(test)]
 use rogato_common::ast::helpers::{
     commented, const_or_type_ref, db_type_ref, edge_prop, fn_call, fn_def, if_else, int_type,
-    lambda, let_expr, list_lit, module_def, number_lit, op_call, program, prop_fn_ref, query,
-    quoted, quoted_ast, root_comment, string_lit, string_type, struct_lit, struct_type, symbol,
-    tuple_lit, tuple_type, type_def, type_ref, unquoted, unquoted_ast, var,
+    lambda, let_expr, list_lit, list_type, module_def, number_lit, op_call, program, prop_fn_ref,
+    query, quoted, quoted_ast, root_comment, string_lit, string_type, struct_lit, struct_type,
+    symbol, tuple_lit, tuple_type, type_def, type_ref, unquoted, unquoted_ast, var,
 };
 use rust_decimal_macros::dec;
 
@@ -423,6 +423,11 @@ fn type_defs() {
     assert_parse_ast!(
         "type Pair :: {A, B}",
         type_def("Pair", tuple_type([type_ref("A"), type_ref("B")]))
+    );
+
+    assert_parse_ast!(
+        "type @People :: [Person]",
+        type_def("@People", list_type(type_ref("Person")))
     );
 }
 

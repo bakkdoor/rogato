@@ -165,6 +165,10 @@ pub fn tuple_type<Items: IntoIterator<Item = Rc<TypeExpression>>>(
     Rc::new(TypeExpression::TupleType(TupleItems::from_iter(items)))
 }
 
+pub fn list_type(type_expr: Rc<TypeExpression>) -> Rc<TypeExpression> {
+    Rc::new(TypeExpression::ListType(type_expr))
+}
+
 pub fn struct_type<Iter: IntoIterator<Item = (&'static str, Rc<TypeExpression>)>>(
     props: Iter,
 ) -> Rc<TypeExpression> {
