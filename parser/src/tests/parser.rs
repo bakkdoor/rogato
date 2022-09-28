@@ -142,11 +142,11 @@ fn arithmetic_expressions() {
         )
     );
 
-    let ctx = ParserContext::new();
+    let parser_ctx = ParserContext::new();
 
-    assert!(parse_expr("(22+)+1", &ctx).is_err());
-    assert!(parse_expr("1++1", &ctx).is_err());
-    assert!(parse_expr("3)+1", &ctx).is_err());
+    assert!(parse_expr("(22+)+1", &parser_ctx).is_err());
+    assert!(parse_expr("1++1", &parser_ctx).is_err());
+    assert!(parse_expr("3)+1", &parser_ctx).is_err());
 }
 
 #[test]

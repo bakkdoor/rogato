@@ -31,7 +31,7 @@ fn main() -> anyhow::Result<()> {
         return Ok(());
     }
     let mut help_required = false;
-    let p_ctx = ParserContext::new();
+    let parser_ctx = ParserContext::new();
     for arg in args {
         match arg.as_str() {
             "help" => help_required = true,
@@ -52,7 +52,7 @@ fn main() -> anyhow::Result<()> {
                 println!("Attempting file parse: {}", file);
                 let file_path = Path::new(file);
                 if file_path.exists() {
-                    read_parse_file(file_path, &p_ctx);
+                    read_parse_file(file_path, &parser_ctx);
                 } else {
                     eprintln!("File not found: {:?}. Aborting.", file);
                     help_required = true;
@@ -69,13 +69,13 @@ fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn read_parse_file(file_path: &Path, p_ctx: &ParserContext) {
+fn read_parse_file(file_path: &Path, parser_ctx: &ParserContext) {
     match File::open(file_path) {
         Ok(mut file) => {
             let mut buf = String::new();
             file.read_to_string(&mut buf).unwrap();
             println!("\n📂\t{}", file_path.display());
-            let parse_result = parse(buf.as_str(), p_ctx);
+            let parse_result = parse(buf.as_str(), parser_ctx);
             print_parse_result(buf.as_str(), &parse_result);
         }
         Err(error) => {

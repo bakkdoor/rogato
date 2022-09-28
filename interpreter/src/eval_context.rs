@@ -160,7 +160,7 @@ impl EvalContext {
     }
 
     pub fn schedule_query(&mut self, query: &Query) -> QueryResult {
-        let mut ctx = self.with_child_env();
-        self.query_planner.query(&mut ctx, query)
+        let mut eval_ctx = self.with_child_env();
+        self.query_planner.query(&mut eval_ctx, query)
     }
 }

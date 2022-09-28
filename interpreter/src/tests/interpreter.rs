@@ -20,32 +20,32 @@ fn basic_arithmetic() {
         ("10 ^ 10", val::number(10000000000i64)),
     ];
 
-    let mut ctx = EvalContext::new();
-    let p_ctx = ParserContext::new();
+    let mut eval_ctx = EvalContext::new();
+    let parser_ctx = ParserContext::new();
 
     for (code, value) in expressions_and_values.iter() {
-        let ast = parse_expr(code, &p_ctx).unwrap();
-        assert_eq!(ast.evaluate(&mut ctx), Ok(value.clone()))
+        let ast = parse_expr(code, &parser_ctx).unwrap();
+        assert_eq!(ast.evaluate(&mut eval_ctx), Ok(value.clone()))
     }
 }
 
 #[test]
 fn multiplication() {
-    let mut ctx = EvalContext::new();
-    let p_ctx = ParserContext::new();
+    let mut eval_ctx = EvalContext::new();
+    let parser_ctx = ParserContext::new();
 
     for i in -100..100 {
         let a = i * 10;
         let b = i * 100;
-        let ast = parse_expr(format!("{} * {}", a, b).as_str(), &p_ctx).unwrap();
-        assert_eq!(ast.evaluate(&mut ctx), Ok(val::number(a * b)));
+        let ast = parse_expr(format!("{} * {}", a, b).as_str(), &parser_ctx).unwrap();
+        assert_eq!(ast.evaluate(&mut eval_ctx), Ok(val::number(a * b)));
     }
 }
 
 #[test]
 fn string_literals() {
-    let mut ctx = EvalContext::new();
-    let p_ctx = ParserContext::new();
+    let mut eval_ctx = EvalContext::new();
+    let parser_ctx = ParserContext::new();
 
     let string_literals = [
         "",
@@ -57,18 +57,18 @@ fn string_literals() {
     ];
 
     for string_lit in string_literals.iter() {
-        let parse_result = parse_expr(format!("{:?}", string_lit).as_str(), &p_ctx);
+        let parse_result = parse_expr(format!("{:?}", string_lit).as_str(), &parser_ctx);
         assert!(parse_result.is_ok());
         if let Ok(ast) = parse_result {
-            assert_eq!(ast.evaluate(&mut ctx), Ok(val::string(string_lit)));
+            assert_eq!(ast.evaluate(&mut eval_ctx), Ok(val::string(string_lit)));
         }
     }
 }
 
 #[test]
 fn let_expressions() {
-    let mut ctx = EvalContext::new();
-    let p_ctx = ParserContext::new();
+    let mut eval_ctx = EvalContext::new();
+    let parser_ctx = ParserContext::new();
 
     let ast = parse_expr(
         "let
@@ -80,12 +80,12 @@ fn let_expressions() {
                 f 101
          in
             {x, f x, g x 10}",
-        &p_ctx,
+        &parser_ctx,
     )
     .unwrap();
 
     assert_eq!(
-        ast.evaluate(&mut ctx),
+        ast.evaluate(&mut eval_ctx),
         Ok(val::tuple([
             val::number(102),
             val::number(103),
@@ -99,12 +99,12 @@ fn let_expressions() {
             mul a b = a * b
          in
             { add 1 2, mul 2 3 }",
-        &p_ctx,
+        &parser_ctx,
     )
     .unwrap();
 
     assert_eq!(
-        ast.evaluate(&mut ctx),
+        ast.evaluate(&mut eval_ctx),
         Ok(val::tuple([val::number(3), val::number(6)]))
     )
 }
@@ -135,27 +135,27 @@ fn equality() {
         ),
     ];
 
-    let mut ctx = EvalContext::new();
-    let p_ctx = ParserContext::new();
+    let mut eval_ctx = EvalContext::new();
+    let parser_ctx = ParserContext::new();
 
     for (left, right) in not_equal.iter() {
         let code = format!("{} == {}", left, right);
-        let ast = parse_expr(code.as_str(), &p_ctx).unwrap();
-        assert_eq!(ast.evaluate(&mut ctx), Ok(val::bool(false)));
+        let ast = parse_expr(code.as_str(), &parser_ctx).unwrap();
+        assert_eq!(ast.evaluate(&mut eval_ctx), Ok(val::bool(false)));
 
         let code = format!("{} != {}", left, right);
-        let ast = parse_expr(code.as_str(), &p_ctx).unwrap();
-        assert_eq!(ast.evaluate(&mut ctx), Ok(val::bool(true)));
+        let ast = parse_expr(code.as_str(), &parser_ctx).unwrap();
+        assert_eq!(ast.evaluate(&mut eval_ctx), Ok(val::bool(true)));
     }
 
     for (left, right) in equal.iter() {
         let code = format!("{} == {}", left, right);
-        let ast = parse_expr(code.as_str(), &p_ctx).unwrap();
-        assert_eq!(ast.evaluate(&mut ctx), Ok(val::bool(true)));
+        let ast = parse_expr(code.as_str(), &parser_ctx).unwrap();
+        assert_eq!(ast.evaluate(&mut eval_ctx), Ok(val::bool(true)));
 
         let code = format!("{} != {}", left, right);
-        let ast = parse_expr(code.as_str(), &p_ctx).unwrap();
-        assert_eq!(ast.evaluate(&mut ctx), Ok(val::bool(false)));
+        let ast = parse_expr(code.as_str(), &parser_ctx).unwrap();
+        assert_eq!(ast.evaluate(&mut eval_ctx), Ok(val::bool(false)));
     }
 }
 
@@ -193,12 +193,12 @@ fn std_module() {
         ),
     ];
 
-    let mut ctx = EvalContext::new();
-    let p_ctx = ParserContext::new();
+    let mut eval_ctx = EvalContext::new();
+    let parser_ctx = ParserContext::new();
 
     for (code, val) in code_with_vals.iter() {
-        let ast = parse_expr(code, &p_ctx).unwrap();
-        assert_eq!(ast.evaluate(&mut ctx), Ok(val.clone()));
+        let ast = parse_expr(code, &parser_ctx).unwrap();
+        assert_eq!(ast.evaluate(&mut eval_ctx), Ok(val.clone()));
     }
 }
 
@@ -213,12 +213,12 @@ fn std_math_module() {
         ("abs (100 - 1000)", val::number(900)),
     ];
 
-    let mut ctx = EvalContext::new();
-    let p_ctx = ParserContext::new();
+    let mut eval_ctx = EvalContext::new();
+    let parser_ctx = ParserContext::new();
 
     for (code, val) in code_with_vals.iter() {
-        let ast = parse_expr(code, &p_ctx).unwrap();
-        assert_eq!(ast.evaluate(&mut ctx), Ok(val.clone()));
+        let ast = parse_expr(code, &parser_ctx).unwrap();
+        assert_eq!(ast.evaluate(&mut eval_ctx), Ok(val.clone()));
     }
 }
 
@@ -231,12 +231,12 @@ fn std_string_module() {
         ("Std.String.length \"hello, world\"", val::number(12)),
     ];
 
-    let mut ctx = EvalContext::new();
-    let p_ctx = ParserContext::new();
+    let mut eval_ctx = EvalContext::new();
+    let parser_ctx = ParserContext::new();
 
     for (code, val) in code_with_vals.iter() {
-        let ast = parse_expr(code, &p_ctx).unwrap();
-        assert_eq!(ast.evaluate(&mut ctx), Ok(val.clone()));
+        let ast = parse_expr(code, &parser_ctx).unwrap();
+        assert_eq!(ast.evaluate(&mut eval_ctx), Ok(val.clone()));
     }
 }
 
@@ -274,12 +274,12 @@ fn std_list_module() {
         ),
     ];
 
-    let mut ctx = EvalContext::new();
-    let p_ctx = ParserContext::new();
+    let mut eval_ctx = EvalContext::new();
+    let parser_ctx = ParserContext::new();
 
     for (code, val) in code_with_vals.iter() {
-        let ast = parse_expr(code, &p_ctx).unwrap();
-        assert_eq!(ast.evaluate(&mut ctx), Ok(val.clone()));
+        let ast = parse_expr(code, &parser_ctx).unwrap();
+        assert_eq!(ast.evaluate(&mut eval_ctx), Ok(val.clone()));
     }
 }
 
@@ -312,11 +312,11 @@ fn if_else_expr() {
         ),
     ];
 
-    let mut ctx = EvalContext::new();
-    let p_ctx = ParserContext::new();
+    let mut eval_ctx = EvalContext::new();
+    let parser_ctx = ParserContext::new();
 
     for (code, val) in code_with_vals.iter() {
-        let ast = parse_expr(code, &p_ctx).unwrap();
-        assert_eq!(ast.evaluate(&mut ctx), Ok(val.clone()));
+        let ast = parse_expr(code, &parser_ctx).unwrap();
+        assert_eq!(ast.evaluate(&mut eval_ctx), Ok(val.clone()));
     }
 }
