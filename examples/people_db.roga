@@ -57,15 +57,15 @@ let Bremen = City{
 let addLocations =
   [
     @Cities
-      <- Osnabrueck
-      <- Bremen,
+    |> new [Bremen, Osnabrueck],
 
     // alternative:
     @Locations
-      <- Bremen.location#{city: Bremen}
-      <- Osnabrück.location#{city: Osnabrueck}
+    |> new [
+      Bremen.location#{city: Bremen},
+      Osnabrück.location#{city: Osnabrueck}
+    ]
   ]
-
 
 let locationsNearOsna =
   locationsWithin Osnabrueck.location (10 |> km)
@@ -75,9 +75,8 @@ let locationsWithin loc maxDistance =
   ! ((Location.distance l loc) <= maxDistance)
 
 // same as:
-
 let locationsWithin loc maxDistance =
-  from @Locations
+  (from @Locations)
   |> where (l -> (Location.distance l loc) <= maxDistance)
 
 let locationsInGermany =

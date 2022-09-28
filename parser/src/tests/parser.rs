@@ -345,6 +345,26 @@ fn op_calls() {
             )
         )
     );
+
+    assert_parse_expr!(
+        "1 <- 2 <- 3",
+        op_call(
+            "<-",
+            op_call("<-", number_lit(1), number_lit(2)),
+            number_lit(3),
+        )
+    );
+
+    assert_parse_expr!(
+        "1 <-
+         2 <-
+         3",
+        op_call(
+            "<-",
+            op_call("<-", number_lit(1), number_lit(2)),
+            number_lit(3),
+        )
+    );
 }
 
 #[test]
