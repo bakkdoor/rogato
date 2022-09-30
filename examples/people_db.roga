@@ -63,7 +63,7 @@ let addLocations =
     @Locations
     |> new [
       Bremen.location#{city: Bremen},
-      Osnabrück.location#{city: Osnabrueck}
+      Osnabrueck.location#{city: Osnabrueck}
     ]
   ]
 
