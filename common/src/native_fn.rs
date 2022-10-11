@@ -1,4 +1,7 @@
-use crate::{ast::Identifier, val::ValueRef};
+use crate::{
+    ast::{fn_def::FnDef, Identifier},
+    val::ValueRef,
+};
 use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq, Eq, Clone)]
@@ -13,4 +16,15 @@ pub enum NativeFnError {
     EvaluationFailed(String),
 }
 
-pub type NativeFn = fn(args: &[ValueRef]) -> Result<ValueRef, NativeFnError>;
+pub trait NativeFnContext {
+    fn lookup_var(&self, id: Identifier) -> Option<ValueRef>;
+    fn lookup_const(&self, id: &Identifier) -> Option<ValueRef>;
+    fn call_function_direct(
+        &mut self,
+        func: &FnDef,
+        args: &[ValueRef],
+    ) -> Result<ValueRef, NativeFnError>;
+}
+
+pub type NativeFn =
+    fn(ctx: &dyn NativeFnContext, args: &[ValueRef]) -> Result<ValueRef, NativeFnError>;

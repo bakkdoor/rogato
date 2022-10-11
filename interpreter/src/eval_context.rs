@@ -1,4 +1,7 @@
-use rogato_common::ast::{fn_def::FnDefBody, lambda::Lambda};
+use rogato_common::{
+    ast::{fn_def::FnDefBody, lambda::Lambda},
+    native_fn::NativeFnContext,
+};
 
 use super::{environment::Environment, module::Module, EvalError, Identifier, ValueRef};
 use crate::{
@@ -23,6 +26,25 @@ pub struct EvalContext {
 impl Default for EvalContext {
     fn default() -> Self {
         EvalContext::new()
+    }
+}
+
+impl NativeFnContext for EvalContext {
+    fn lookup_var(&self, id: rogato_common::ast::Identifier) -> Option<ValueRef> {
+        self.lookup_var(id.as_str())
+    }
+
+    fn lookup_const(&self, id: &rogato_common::ast::Identifier) -> Option<ValueRef> {
+        self.lookup_const(id)
+    }
+
+    fn call_function_direct(
+        &mut self,
+        func: &FnDef,
+        args: &[ValueRef],
+    ) -> Result<ValueRef, rogato_common::native_fn::NativeFnError> {
+        self.call_function_direct(func, args)
+            .map_err(|e| rogato_common::native_fn::NativeFnError::EvaluationFailed(e.to_string()))
     }
 }
 
@@ -112,7 +134,7 @@ impl EvalContext {
         }
 
         match &*(func.body()) {
-            FnDefBody::NativeFn(f) => f(args).map_err(EvalError::from),
+            FnDefBody::NativeFn(f) => f(&fn_ctx, args).map_err(EvalError::from),
             FnDefBody::RogatoFn(expr) => expr.evaluate(&mut fn_ctx),
         }
     }

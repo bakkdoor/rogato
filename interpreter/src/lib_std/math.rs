@@ -6,7 +6,7 @@ use std::ops::Deref;
 pub fn module() -> Module {
     let mut module = Module::new("Std.Math");
 
-    module.fn_def(fn_def("abs", vec!["num"], move |args| {
+    module.fn_def(fn_def("abs", vec!["num"], move |_ctx, args| {
         let error = Err(invalid_args("abs"));
         match args.get(0) {
             Some(val) => match val.deref() {
@@ -17,7 +17,7 @@ pub fn module() -> Module {
         }
     }));
 
-    module.fn_def(fn_def("round", vec!["num"], move |args| {
+    module.fn_def(fn_def("round", vec!["num"], move |_ctx, args| {
         let error = Err(invalid_args("round"));
         match args.get(0) {
             Some(val) => match val.deref() {
@@ -28,7 +28,7 @@ pub fn module() -> Module {
         }
     }));
 
-    module.fn_def(fn_def("ceil", vec!["num"], move |args| {
+    module.fn_def(fn_def("ceil", vec!["num"], move |_ctx, args| {
         let error = Err(invalid_args("ceil"));
         match args.get(0) {
             Some(val) => match val.deref() {
@@ -39,7 +39,7 @@ pub fn module() -> Module {
         }
     }));
 
-    module.fn_def(fn_def("floor", vec!["num"], move |args| {
+    module.fn_def(fn_def("floor", vec!["num"], move |_ctx, args| {
         let error = Err(invalid_args("floor"));
         match args.get(0) {
             Some(val) => match val.deref() {
@@ -50,7 +50,7 @@ pub fn module() -> Module {
         }
     }));
 
-    module.fn_def(fn_def("trunc", vec!["num"], move |args| {
+    module.fn_def(fn_def("trunc", vec!["num"], move |_ctx, args| {
         let error = Err(invalid_args("trunc"));
         match args.get(0) {
             Some(val) => match val.deref() {
@@ -61,7 +61,7 @@ pub fn module() -> Module {
         }
     }));
 
-    module.fn_def(fn_def("fract", vec!["num"], move |args| {
+    module.fn_def(fn_def("fract", vec!["num"], move |_ctx, args| {
         let error = Err(invalid_args("fract"));
         match args.get(0) {
             Some(val) => match val.deref() {
@@ -72,7 +72,7 @@ pub fn module() -> Module {
         }
     }));
 
-    module.fn_def(fn_def("max", vec!["a", "b"], move |args| {
+    module.fn_def(fn_def("max", vec!["a", "b"], move |_ctx, args| {
         let error = Err(invalid_args("max"));
         match (args.get(0), args.get(1)) {
             (Some(a), Some(b)) => match (a.deref(), b.deref()) {
@@ -83,7 +83,7 @@ pub fn module() -> Module {
         }
     }));
 
-    module.fn_def(fn_def("min", vec!["a", "b"], move |args| {
+    module.fn_def(fn_def("min", vec!["a", "b"], move |_ctx, args| {
         let error = Err(invalid_args("min"));
         match (args.get(0), args.get(1)) {
             (Some(a), Some(b)) => match (a.deref(), b.deref()) {

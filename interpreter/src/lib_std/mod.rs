@@ -43,48 +43,50 @@ pub fn env() -> Environment {
 pub fn std_module() -> Module {
     let mut module = Module::new("Std");
 
-    module.fn_def(op_fn_def("+", move |args| {
+    module.fn_def(op_fn_def("+", move |_ctx, args| {
         with_number_op_args("+", args, |a, b| Ok(a.saturating_add(b)))
     }));
 
-    module.fn_def(op_fn_def("-", move |args| {
+    module.fn_def(op_fn_def("-", move |_ctx, args| {
         with_number_op_args("-", args, |a, b| Ok(a.saturating_sub(b)))
     }));
 
-    module.fn_def(op_fn_def("*", move |args| {
+    module.fn_def(op_fn_def("*", move |_ctx, args| {
         with_number_op_args("*", args, |a, b| Ok(a.saturating_mul(b)))
     }));
 
-    module.fn_def(op_fn_def("/", move |args| {
+    module.fn_def(op_fn_def("/", move |_ctx, args| {
         with_number_op_args("/", args, |a, b| {
             a.checked_div(b).map_or(Err(invalid_args("/")), Ok)
         })
     }));
 
-    module.fn_def(op_fn_def("%", move |args| {
+    module.fn_def(op_fn_def("%", move |_ctx, args| {
         with_number_op_args("%", args, |a, b| {
             a.checked_rem(b).map_or(Err(invalid_args("%")), Ok)
         })
     }));
 
-    module.fn_def(op_fn_def("^", move |args| {
+    module.fn_def(op_fn_def("^", move |_ctx, args| {
         with_number_op_args("^", args, |a, b| {
             a.checked_powd(b).map_or(Err(invalid_args("^")), Ok)
         })
     }));
 
-    module.fn_def(op_fn_def("++", move |args| {
+    module.fn_def(op_fn_def("++", move |_ctx, args| {
         with_string_op_args("++", args, |a, b| Ok(format!("{}{}", a, b)))
     }));
 
-    module.fn_def(fn_def("inspect", vec!["value"], move |args| {
-        match args.get(0) {
+    module.fn_def(fn_def(
+        "inspect",
+        vec!["value"],
+        move |_ctx, args| match args.get(0) {
             Some(value) => Ok(val::string(format!("{}", value))),
             None => Err(invalid_args("inspect")),
-        }
-    }));
+        },
+    ));
 
-    module.fn_def(fn_def(">", vec!["a", "b"], move |args| {
+    module.fn_def(fn_def(">", vec!["a", "b"], move |_ctx, args| {
         let error = Err(invalid_args(">"));
         match (args.len(), args.get(0), args.get(1)) {
             (2, Some(a), Some(b)) => match ((*a).deref(), (*b).deref()) {
@@ -95,7 +97,7 @@ pub fn std_module() -> Module {
         }
     }));
 
-    module.fn_def(fn_def("<", vec!["a", "b"], move |args| {
+    module.fn_def(fn_def("<", vec!["a", "b"], move |_ctx, args| {
         let error = Err(invalid_args(">"));
         match (args.len(), args.get(0), args.get(1)) {
             (2, Some(a), Some(b)) => match ((*a).deref(), (*b).deref()) {
@@ -106,7 +108,7 @@ pub fn std_module() -> Module {
         }
     }));
 
-    module.fn_def(fn_def(">=", vec!["a", "b"], move |args| {
+    module.fn_def(fn_def(">=", vec!["a", "b"], move |_ctx, args| {
         let error = Err(invalid_args(">"));
         match (args.len(), args.get(0), args.get(1)) {
             (2, Some(a), Some(b)) => match ((*a).deref(), (*b).deref()) {
@@ -117,7 +119,7 @@ pub fn std_module() -> Module {
         }
     }));
 
-    module.fn_def(fn_def("<=", vec!["a", "b"], move |args| {
+    module.fn_def(fn_def("<=", vec!["a", "b"], move |_ctx, args| {
         let error = Err(invalid_args(">"));
         match (args.len(), args.get(0), args.get(1)) {
             (2, Some(a), Some(b)) => match ((*a).deref(), (*b).deref()) {
@@ -128,21 +130,21 @@ pub fn std_module() -> Module {
         }
     }));
 
-    module.fn_def(fn_def("==", vec!["a", "b"], move |args| {
+    module.fn_def(fn_def("==", vec!["a", "b"], move |_ctx, args| {
         match (args.len(), args.get(0), args.get(1)) {
             (2, Some(a), Some(b)) => Ok(val::bool(a.eq(b))),
             _ => Err(invalid_args("==")),
         }
     }));
 
-    module.fn_def(fn_def("!=", vec!["a", "b"], move |args| {
+    module.fn_def(fn_def("!=", vec!["a", "b"], move |_ctx, args| {
         match (args.len(), args.get(0), args.get(1)) {
             (2, Some(a), Some(b)) => Ok(val::bool(a.ne(b))),
             _ => Err(invalid_args("!=")),
         }
     }));
 
-    module.fn_def(fn_def("range", vec!["?start", "end"], move |args| {
+    module.fn_def(fn_def("range", vec!["?start", "end"], move |_ctx, args| {
         let error = Err(invalid_args("range"));
         match (args.len(), args.get(0), args.get(1)) {
             (1, Some(a), None) => match (*a).deref() {
@@ -176,7 +178,7 @@ pub fn std_module() -> Module {
         }
     }));
 
-    module.fn_def(fn_def("random", vec!["min", "?max"], move |args| {
+    module.fn_def(fn_def("random", vec!["min", "?max"], move |_ctx, args| {
         let error = Err(invalid_args("random"));
         match (args.len(), args.get(0), args.get(1)) {
             (1, Some(a), None) => match (*a).deref() {
@@ -200,7 +202,7 @@ pub fn std_module() -> Module {
     module.fn_def(fn_def(
         "length",
         vec!["collection"],
-        move |args| -> Result<Rc<Value>, NativeFnError> {
+        move |_ctx, args| -> Result<Rc<Value>, NativeFnError> {
             let error = Err(invalid_args("length"));
             match (args.len(), args.get(0)) {
                 (1, Some(l)) => match (*l).deref() {
