@@ -28,7 +28,7 @@ let reverse list =
   let
     reverse_ acc [] =
       acc
-    reverse_ acc [x :: xs =
+    reverse_ acc [x :: xs] =
       reverse_ [x :: acc] xs
   in
     reverse_ [] list
