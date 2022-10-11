@@ -106,7 +106,7 @@ pub fn quoted_ast(ast: Rc<AST>) -> ValueRef {
     Rc::new(Value::QuotedAST(ast))
 }
 
-#[derive(Clone, Eq, std::fmt::Debug, Hash)]
+#[derive(Clone, Eq, std::fmt::Debug)]
 pub enum Value {
     Option(Option<ValueRef>),
     String(String),
@@ -174,6 +174,63 @@ impl PartialEq for Value {
             (Value::Quoted(a), Value::Quoted(b)) => a.eq(b),
             (Value::QuotedAST(a), Value::QuotedAST(b)) => a.eq(b),
             _ => false,
+        }
+    }
+}
+
+impl Hash for Value {
+    fn hash<H: std::hash::Hasher>(&self, h: &mut H) {
+        match self {
+            Value::Option(o) => {
+                Hash::hash(&o, h);
+            }
+            Value::String(s) => {
+                Hash::hash(&s, h);
+            }
+            Value::Symbol(s) => {
+                Hash::hash(&s, h);
+            }
+            Value::Bool(b) => {
+                Hash::hash(&b, h);
+            }
+            Value::Number(n) => {
+                Hash::hash(&n, h);
+            }
+            Value::Tuple(size_a, items) => {
+                Hash::hash(&size_a, h);
+                Hash::hash(&items, h);
+            }
+            Value::List(l) => {
+                Hash::hash(&l, h);
+            }
+            Value::Vector(v) => {
+                Hash::hash(&v, h);
+            }
+            Value::Stack(s) => {
+                Hash::hash(&s, h);
+            }
+            Value::Queue(q) => {
+                Hash::hash(&q, h);
+            }
+            Value::Set(s) => {
+                Hash::hash(&s, h);
+            }
+            Value::Map(m) => {
+                Hash::hash(&m, h);
+            }
+            Value::Object(o) => {
+                Hash::hash(&o, h);
+            }
+            Value::Lambda(ctx, l) => {
+                Hash::hash(&ctx, h);
+                Hash::hash(&l, h);
+            }
+            Value::Quoted(q) => {
+                Hash::hash(&q, h);
+            }
+            Value::QuotedAST(q) => {
+                Hash::hash(&q, h);
+            }
         }
     }
 }

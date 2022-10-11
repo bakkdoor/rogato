@@ -208,7 +208,7 @@ impl LambdaClosureContext for EvalContext {
     }
 
     fn define_var(&mut self, id: &rogato_common::ast::Identifier, val: ValueRef) {
-        self.define_var(&id, val)
+        self.define_var(id, val)
     }
 
     fn with_child_env(&self) -> Box<dyn LambdaClosureContext> {
