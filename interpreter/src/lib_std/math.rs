@@ -1,6 +1,7 @@
 use super::{fn_def, invalid_args};
 use crate::module::Module;
 use rogato_common::val::{self, Value};
+use rust_decimal::MathematicalOps;
 use std::ops::Deref;
 
 pub fn module() -> Module {
@@ -88,6 +89,17 @@ pub fn module() -> Module {
         match (args.get(0), args.get(1)) {
             (Some(a), Some(b)) => match (a.deref(), b.deref()) {
                 (Value::Number(ad), Value::Number(bd)) => Ok(val::number((*ad).min(*bd))),
+                _ => error,
+            },
+            _ => error,
+        }
+    }));
+
+    module.fn_def(fn_def("sqrt", vec!["num"], move |_ctx, args| {
+        let error = Err(invalid_args("srqt"));
+        match args.get(0) {
+            Some(a) => match a.deref() {
+                Value::Number(num) => Ok(val::option(num.sqrt().map(val::number))),
                 _ => error,
             },
             _ => error,

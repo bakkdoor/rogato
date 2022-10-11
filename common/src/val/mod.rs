@@ -27,6 +27,10 @@ use crate::ast::{
     ASTDepth, Identifier, AST,
 };
 
+pub fn option(opt: Option<ValueRef>) -> ValueRef {
+    Rc::new(Value::Option(opt))
+}
+
 pub fn none() -> ValueRef {
     Rc::new(Value::Option(None))
 }

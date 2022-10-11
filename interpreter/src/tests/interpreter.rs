@@ -1,6 +1,7 @@
 use crate::{EvalContext, Evaluate};
 use rogato_common::val;
 use rogato_parser::{parse_expr, ParserContext};
+use rust_decimal_macros::dec;
 
 #[test]
 fn basic_arithmetic() {
@@ -211,6 +212,14 @@ fn std_math_module() {
         ("abs -10", val::number(10)),
         ("abs (10 * -10)", val::number(100)),
         ("abs (100 - 1000)", val::number(900)),
+        ("Std.Math.sqrt 9", val::some(val::number(3))),
+        (
+            "sqrt 2",
+            val::some(val::number(dec!(1.4142135623730950488016887242))),
+        ),
+        ("sqrt 4", val::some(val::number(2))),
+        ("sqrt 100", val::some(val::number(10))),
+        ("sqrt 100", val::some(val::number(10))),
     ];
 
     let mut eval_ctx = EvalContext::new();
