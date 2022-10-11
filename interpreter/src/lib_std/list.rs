@@ -32,11 +32,15 @@ pub fn module() -> Module {
                         }
                         Ok(val::list(result))
                     }
-                    (Value::List(items), Value::Lambda(lambda)) => {
+                    (Value::List(items), Value::Lambda(lambda_ctx, lambda)) => {
                         let mut result: Vec<ValueRef> = Vec::new();
                         let mut context = EvalContext::new();
                         for item in items.iter() {
-                            let val = context.call_lambda(lambda, &[Rc::clone(item)])?;
+                            let val = context.call_lambda(
+                                Rc::clone(lambda_ctx),
+                                lambda,
+                                &[Rc::clone(item)],
+                            )?;
                             result.push(val)
                         }
                         Ok(val::list(result))

@@ -21,6 +21,7 @@ pub use set::Set;
 pub use stack::Stack;
 pub use vector::Vector;
 
+use crate::ast::lambda::LambdaClosureContext;
 use crate::ast::{
     expression::{Expression, Lambda, TupleItems},
     ASTDepth, Identifier, AST,
@@ -94,8 +95,8 @@ pub fn object<S: ToString, Props: IntoIterator<Item = (S, ValueRef)>>(props: Pro
     Rc::new(Value::Object(Object::from_iter(props)))
 }
 
-pub fn lambda(l: Rc<Lambda>) -> ValueRef {
-    Rc::new(Value::Lambda(l))
+pub fn lambda(ctx: Rc<dyn LambdaClosureContext>, l: Rc<Lambda>) -> ValueRef {
+    Rc::new(Value::Lambda(ctx, l))
 }
 
 pub fn quoted(expr: Rc<Expression>) -> ValueRef {
@@ -105,7 +106,7 @@ pub fn quoted_ast(ast: Rc<AST>) -> ValueRef {
     Rc::new(Value::QuotedAST(ast))
 }
 
-#[derive(Clone, PartialEq, Eq, std::fmt::Debug, Hash)]
+#[derive(Clone, Eq, std::fmt::Debug, Hash)]
 pub enum Value {
     Option(Option<ValueRef>),
     String(String),
@@ -120,7 +121,7 @@ pub enum Value {
     Set(Set),
     Map(Map),
     Object(Object),
-    Lambda(Rc<Lambda>),
+    Lambda(Rc<dyn LambdaClosureContext>, Rc<Lambda>),
     Quoted(Rc<Expression>),
     QuotedAST(Rc<AST>),
 }
@@ -149,6 +150,30 @@ impl From<serde_json::Value> for Value {
                     .collect::<Vec<(String, ValueRef)>>(),
             )),
             serde_json::Value::String(s) => Value::String(s),
+        }
+    }
+}
+
+impl PartialEq for Value {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Value::Option(a), Value::Option(b)) => a.eq(b),
+            (Value::String(a), Value::String(b)) => a.eq(b),
+            (Value::Symbol(a), Value::Symbol(b)) => a.eq(b),
+            (Value::Bool(a), Value::Bool(b)) => a.eq(b),
+            (Value::Number(a), Value::Number(b)) => a.eq(b),
+            (Value::Tuple(size_a, a), Value::Tuple(size_b, b)) => size_a.eq(size_b) && a.eq(b),
+            (Value::List(a), Value::List(b)) => a.eq(b),
+            (Value::Vector(a), Value::Vector(b)) => a.eq(b),
+            (Value::Stack(a), Value::Stack(b)) => a.eq(b),
+            (Value::Queue(a), Value::Queue(b)) => a.eq(b),
+            (Value::Set(a), Value::Set(b)) => a.eq(b),
+            (Value::Map(a), Value::Map(b)) => a.eq(b),
+            (Value::Object(a), Value::Object(b)) => a.eq(b),
+            (Value::Lambda(_, a), Value::Lambda(_, b)) => a.eq(b),
+            (Value::Quoted(a), Value::Quoted(b)) => a.eq(b),
+            (Value::QuotedAST(a), Value::QuotedAST(b)) => a.eq(b),
+            _ => false,
         }
     }
 }
@@ -185,7 +210,7 @@ impl Display for Value {
             Value::Set(set) => set.fmt(f),
             Value::Map(map) => map.fmt(f),
             Value::Object(object) => object.fmt(f),
-            Value::Lambda(lambda) => lambda.fmt(f),
+            Value::Lambda(_, lambda) => lambda.fmt(f),
             Value::Quoted(expr) => {
                 f.write_str("^")?;
                 expr.fmt(f)
@@ -216,7 +241,7 @@ impl ASTDepth for Value {
             Value::Set(set) => set.ast_depth(),
             Value::Map(items) => items.ast_depth(),
             Value::Object(object) => object.ast_depth(),
-            Value::Lambda(lambda) => lambda.ast_depth(),
+            Value::Lambda(_, lambda) => lambda.ast_depth(),
             Value::Quoted(expr) => 1 + expr.ast_depth(),
             Value::QuotedAST(ast) => 1 + ast.ast_depth(),
         }

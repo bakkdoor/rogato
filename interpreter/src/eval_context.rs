@@ -1,5 +1,8 @@
 use rogato_common::{
-    ast::{fn_def::FnDefBody, lambda::Lambda},
+    ast::{
+        fn_def::FnDefBody,
+        lambda::{Lambda, LambdaClosureContext},
+    },
     native_fn::NativeFnContext,
 };
 
@@ -15,9 +18,11 @@ use rogato_common::{
 };
 use rogato_db::db::ObjectStorage;
 use std::rc::Rc;
+use uuid::Uuid;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct EvalContext {
+    id: Uuid,
     env: Environment,
     obj_storage: ObjectStorage,
     query_planner: QueryPlanner,
@@ -29,28 +34,10 @@ impl Default for EvalContext {
     }
 }
 
-impl NativeFnContext for EvalContext {
-    fn lookup_var(&self, id: rogato_common::ast::Identifier) -> Option<ValueRef> {
-        self.lookup_var(id.as_str())
-    }
-
-    fn lookup_const(&self, id: &rogato_common::ast::Identifier) -> Option<ValueRef> {
-        self.lookup_const(id)
-    }
-
-    fn call_function_direct(
-        &mut self,
-        func: &FnDef,
-        args: &[ValueRef],
-    ) -> Result<ValueRef, rogato_common::native_fn::NativeFnError> {
-        self.call_function_direct(func, args)
-            .map_err(|e| rogato_common::native_fn::NativeFnError::EvaluationFailed(e.to_string()))
-    }
-}
-
 impl EvalContext {
     pub fn new() -> EvalContext {
         EvalContext {
+            id: uuid::Uuid::new_v4(),
             env: lib_std::env(),
             obj_storage: ObjectStorage::new(),
             query_planner: QueryPlanner::new(),
@@ -59,6 +46,7 @@ impl EvalContext {
 
     pub fn from_env(env: Environment) -> EvalContext {
         EvalContext {
+            id: uuid::Uuid::new_v4(),
             env,
             obj_storage: ObjectStorage::new(),
             query_planner: QueryPlanner::new(),
@@ -67,6 +55,7 @@ impl EvalContext {
 
     pub fn with_child_env(&self) -> Self {
         EvalContext {
+            id: uuid::Uuid::new_v4(),
             env: self.env.child(),
             obj_storage: self.obj_storage.clone(),
             query_planner: self.query_planner.clone(),
@@ -86,6 +75,7 @@ impl EvalContext {
 
     pub fn call_lambda(
         &mut self,
+        lambda_ctx: Rc<dyn LambdaClosureContext>,
         lambda: &Lambda,
         args: &[ValueRef],
     ) -> Result<ValueRef, EvalError> {
@@ -98,12 +88,14 @@ impl EvalContext {
             );
             return Err(EvalError::LambdaArityMismatch(expected_argc, given_argc));
         }
-        let mut fn_ctx = self.with_child_env();
+        let mut fn_ctx = lambda_ctx.with_child_env();
         for (arg_name, arg_val) in lambda.args().iter().zip(args) {
-            fn_ctx.define_var(arg_name, Rc::clone(arg_val))
+            fn_ctx.define_var(arg_name, Rc::clone(arg_val));
         }
 
-        lambda.body().evaluate(&mut fn_ctx)
+        fn_ctx
+            .evaluate_lambda(lambda)
+            .map_err(|e| EvalError::Unknown(e.to_string()))
     }
 
     pub fn call_function_direct(
@@ -184,5 +176,51 @@ impl EvalContext {
     pub fn schedule_query(&mut self, query: &Query) -> QueryResult {
         let mut eval_ctx = self.with_child_env();
         self.query_planner.query(&mut eval_ctx, query)
+    }
+}
+
+impl NativeFnContext for EvalContext {
+    fn lookup_var(&self, id: rogato_common::ast::Identifier) -> Option<ValueRef> {
+        self.lookup_var(id.as_str())
+    }
+
+    fn lookup_const(&self, id: &rogato_common::ast::Identifier) -> Option<ValueRef> {
+        self.lookup_const(id)
+    }
+
+    fn call_function_direct(
+        &mut self,
+        func: &FnDef,
+        args: &[ValueRef],
+    ) -> Result<ValueRef, rogato_common::native_fn::NativeFnError> {
+        self.call_function_direct(func, args)
+            .map_err(|e| rogato_common::native_fn::NativeFnError::EvaluationFailed(e.to_string()))
+    }
+}
+
+impl LambdaClosureContext for EvalContext {
+    fn hash_id(&self) -> String {
+        self.id.to_string()
+    }
+
+    fn lookup_var(&self, id: Identifier) -> Option<ValueRef> {
+        self.lookup_var(id.as_str())
+    }
+
+    fn define_var(&mut self, id: &rogato_common::ast::Identifier, val: ValueRef) {
+        self.define_var(&id, val)
+    }
+
+    fn with_child_env(&self) -> Box<dyn LambdaClosureContext> {
+        Box::new(self.with_child_env())
+    }
+
+    fn evaluate_lambda(
+        &mut self,
+        lambda: &Lambda,
+    ) -> Result<ValueRef, rogato_common::ast::lambda::LambdaClosureEvalError> {
+        lambda.body().evaluate(self).map_err(|e| {
+            rogato_common::ast::lambda::LambdaClosureEvalError::EvaluationFailed(e.to_string())
+        })
     }
 }

@@ -320,3 +320,26 @@ fn if_else_expr() {
         assert_eq!(ast.evaluate(&mut eval_ctx), Ok(val.clone()));
     }
 }
+
+#[test]
+fn lambda_closures() {
+    let code_with_vals = vec![(
+        "let
+            f x = [1, 2, 3] |> Std.List.map (y -> x + y)
+        in
+            {f 1, f 10, f 100}",
+        val::tuple(vec![
+            val::list(vec![val::number(2), val::number(3), val::number(4)]),
+            val::list(vec![val::number(11), val::number(12), val::number(13)]),
+            val::list(vec![val::number(101), val::number(102), val::number(103)]),
+        ]),
+    )];
+
+    let mut eval_ctx = EvalContext::new();
+    let parser_ctx = ParserContext::new();
+
+    for (code, val) in code_with_vals.iter() {
+        let ast = parse_expr(code, &parser_ctx).unwrap();
+        assert_eq!(ast.evaluate(&mut eval_ctx), Ok(val.clone()));
+    }
+}

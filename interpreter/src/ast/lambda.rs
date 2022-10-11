@@ -11,8 +11,8 @@ use rogato_common::{
 use crate::{EvalContext, EvalError, Evaluate, Identifier};
 
 impl Evaluate<ValueRef> for Rc<Lambda> {
-    fn evaluate(&self, _context: &mut EvalContext) -> Result<ValueRef, EvalError> {
-        Ok(val::lambda(Rc::clone(self)))
+    fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
+        Ok(val::lambda(Rc::new(context.clone()), Rc::clone(self)))
     }
 }
 
