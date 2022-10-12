@@ -219,7 +219,7 @@ fn std_math_module() {
         ),
         ("sqrt 4", val::some(val::number(2))),
         ("sqrt 100", val::some(val::number(10))),
-        ("sqrt 100", val::some(val::number(10))),
+        ("sqrt 10000", val::some(val::number(100))),
     ];
 
     let mut eval_ctx = EvalContext::new();
