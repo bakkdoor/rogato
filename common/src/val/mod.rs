@@ -1,4 +1,5 @@
 use rust_decimal::prelude::*;
+use std::cell::RefCell;
 use std::hash::Hash;
 use std::{fmt::Display, rc::Rc};
 
@@ -99,7 +100,7 @@ pub fn object<S: ToString, Props: IntoIterator<Item = (S, ValueRef)>>(props: Pro
     Rc::new(Value::Object(Object::from_iter(props)))
 }
 
-pub fn lambda(ctx: Rc<dyn LambdaClosureContext>, l: Rc<Lambda>) -> ValueRef {
+pub fn lambda(ctx: Rc<RefCell<dyn LambdaClosureContext>>, l: Rc<Lambda>) -> ValueRef {
     Rc::new(Value::Lambda(ctx, l))
 }
 
@@ -125,7 +126,7 @@ pub enum Value {
     Set(Set),
     Map(Map),
     Object(Object),
-    Lambda(Rc<dyn LambdaClosureContext>, Rc<Lambda>),
+    Lambda(Rc<RefCell<dyn LambdaClosureContext>>, Rc<Lambda>),
     Quoted(Rc<Expression>),
     QuotedAST(Rc<AST>),
 }
@@ -226,7 +227,7 @@ impl Hash for Value {
                 Hash::hash(&o, h);
             }
             Value::Lambda(ctx, l) => {
-                Hash::hash(&ctx, h);
+                Hash::hash(&ctx.as_ptr(), h);
                 Hash::hash(&l, h);
             }
             Value::Quoted(q) => {

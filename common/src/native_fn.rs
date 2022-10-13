@@ -1,5 +1,5 @@
 use crate::{
-    ast::{fn_def::FnDef, Identifier},
+    ast::{fn_def::FnDef, lambda::LambdaClosureEvalError, Identifier},
     val::ValueRef,
 };
 use thiserror::Error;
@@ -14,6 +14,12 @@ pub enum NativeFnError {
 
     #[error("Evaluation failed for NativeFn with: {0}")]
     EvaluationFailed(String),
+}
+
+impl From<LambdaClosureEvalError> for NativeFnError {
+    fn from(e: LambdaClosureEvalError) -> Self {
+        NativeFnError::EvaluationFailed(e.to_string())
+    }
 }
 
 pub trait NativeFnContext {

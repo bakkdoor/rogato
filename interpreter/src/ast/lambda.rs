@@ -1,4 +1,4 @@
-use std::{fmt::Display, rc::Rc};
+use std::{cell::RefCell, fmt::Display, rc::Rc};
 
 use rogato_common::{
     ast::{
@@ -12,7 +12,10 @@ use crate::{EvalContext, EvalError, Evaluate, Identifier};
 
 impl Evaluate<ValueRef> for Rc<Lambda> {
     fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
-        Ok(val::lambda(Rc::new(context.clone()), Rc::clone(self)))
+        Ok(val::lambda(
+            Rc::new(RefCell::new(context.clone())),
+            Rc::clone(self),
+        ))
     }
 }
 

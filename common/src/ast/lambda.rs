@@ -122,6 +122,9 @@ pub enum LambdaClosureEvalError {
 
     #[error("Evaluation failed for LambdaClosure with: {0}")]
     EvaluationFailed(String),
+
+    #[error("Lambda arity mismatch: Expected: {0} but got: {1}")]
+    LambdaArityMismatch(usize, usize),
 }
 
 pub trait LambdaClosureContext {
@@ -129,7 +132,11 @@ pub trait LambdaClosureContext {
     fn lookup_var(&self, id: Identifier) -> Option<ValueRef>;
     fn define_var(&mut self, id: &Identifier, val: ValueRef);
     fn with_child_env(&self) -> Box<dyn LambdaClosureContext>;
-    fn evaluate_lambda(&mut self, lambda: &Lambda) -> Result<ValueRef, LambdaClosureEvalError>;
+    fn evaluate_lambda_call(
+        &mut self,
+        lambda: &Lambda,
+        args: &[ValueRef],
+    ) -> Result<ValueRef, LambdaClosureEvalError>;
 }
 
 impl PartialEq for dyn LambdaClosureContext {

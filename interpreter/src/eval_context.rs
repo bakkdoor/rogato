@@ -1,7 +1,7 @@
 use rogato_common::{
     ast::{
         fn_def::FnDefBody,
-        lambda::{Lambda, LambdaClosureContext},
+        lambda::{Lambda, LambdaClosureContext, LambdaClosureEvalError},
     },
     native_fn::NativeFnContext,
 };
@@ -17,7 +17,7 @@ use rogato_common::{
     val,
 };
 use rogato_db::db::ObjectStorage;
-use std::rc::Rc;
+use std::{cell::RefCell, rc::Rc};
 use uuid::Uuid;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -75,26 +75,13 @@ impl EvalContext {
 
     pub fn call_lambda(
         &mut self,
-        lambda_ctx: Rc<dyn LambdaClosureContext>,
+        lambda_ctx: Rc<RefCell<dyn LambdaClosureContext>>,
         lambda: &Lambda,
         args: &[ValueRef],
     ) -> Result<ValueRef, EvalError> {
-        let given_argc = args.len();
-        let expected_argc = lambda.args().len();
-        if given_argc != expected_argc {
-            eprintln!(
-                "Lambda arity mismatch: Expected {} but got {}",
-                expected_argc, given_argc
-            );
-            return Err(EvalError::LambdaArityMismatch(expected_argc, given_argc));
-        }
-        let mut fn_ctx = lambda_ctx.with_child_env();
-        for (arg_name, arg_val) in lambda.args().iter().zip(args) {
-            fn_ctx.define_var(arg_name, Rc::clone(arg_val));
-        }
-
-        fn_ctx
-            .evaluate_lambda(lambda)
+        lambda_ctx
+            .borrow_mut()
+            .evaluate_lambda_call(lambda, args)
             .map_err(|e| EvalError::Unknown(e.to_string()))
     }
 
@@ -215,11 +202,31 @@ impl LambdaClosureContext for EvalContext {
         Box::new(self.with_child_env())
     }
 
-    fn evaluate_lambda(
+    fn evaluate_lambda_call(
         &mut self,
         lambda: &Lambda,
-    ) -> Result<ValueRef, rogato_common::ast::lambda::LambdaClosureEvalError> {
-        lambda.body().evaluate(self).map_err(|e| {
+        args: &[ValueRef],
+    ) -> Result<ValueRef, LambdaClosureEvalError> {
+        let given_argc = args.len();
+        let expected_argc = lambda.args().len();
+        if given_argc != expected_argc {
+            eprintln!(
+                "Lambda arity mismatch: Expected {} but got {}",
+                expected_argc, given_argc
+            );
+            return Err(LambdaClosureEvalError::LambdaArityMismatch(
+                expected_argc,
+                given_argc,
+            ));
+        }
+
+        let mut call_ctx = self.with_child_env();
+
+        for (arg_id, arg_val) in lambda.args().iter().zip(args.into_iter()) {
+            call_ctx.define_var(arg_id, Rc::clone(arg_val))
+        }
+
+        lambda.body().evaluate(&mut call_ctx).map_err(|e| {
             rogato_common::ast::lambda::LambdaClosureEvalError::EvaluationFailed(e.to_string())
         })
     }
