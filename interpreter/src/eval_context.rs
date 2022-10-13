@@ -235,8 +235,9 @@ impl LambdaClosureContext for EvalContext {
             call_ctx.define_var(arg_id, Rc::clone(arg_val))
         }
 
-        lambda.body().evaluate(&mut call_ctx).map_err(|e| {
-            rogato_common::ast::lambda::LambdaClosureEvalError::EvaluationFailed(e.to_string())
-        })
+        lambda
+            .body()
+            .evaluate(&mut call_ctx)
+            .map_err(|e| LambdaClosureEvalError::EvaluationFailed(e.to_string()))
     }
 }
