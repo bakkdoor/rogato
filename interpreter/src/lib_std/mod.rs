@@ -85,6 +85,24 @@ pub fn std_module() -> Module {
         }
     }));
 
+    module.fn_def(fn_def("apply", vec!["func", "?args"], move |_ctx, args| {
+        let error = Err(invalid_args("apply"));
+        match (args.len(), args.get(0), args.get(1)) {
+            (1, Some(func), None) => Ok(Rc::clone(func)),
+            (2, Some(func), Some(args)) => match (func.deref(), args.deref()) {
+                (Value::Lambda(lambda_ctx, lambda), Value::List(args)) => {
+                    let args: Vec<ValueRef> = args.iter().map(|a| Rc::clone(a)).collect();
+                    lambda_ctx
+                        .borrow_mut()
+                        .evaluate_lambda_call(lambda, &args)
+                        .map_err(|e| NativeFnError::EvaluationFailed(e.to_string()))
+                }
+                _ => error,
+            },
+            _ => error,
+        }
+    }));
+
     module.fn_def(fn_def(
         "inspect",
         vec!["value"],
