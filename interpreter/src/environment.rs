@@ -19,7 +19,44 @@ pub enum Imports {
     Specific(Vec<ImportedIdentifier>),
 }
 
-type ImportedModules = HashMap<Identifier, Imports>;
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct ImportedModules {
+    imports: HashMap<Identifier, Imports>,
+}
+
+impl ImportedModules {
+    pub fn new() -> Self {
+        Self {
+            imports: HashMap::new(),
+        }
+    }
+
+    pub fn iter(&self) -> std::collections::hash_map::Iter<'_, Identifier, Imports> {
+        self.imports.iter()
+    }
+
+    pub fn import(&mut self, module: &Module, imports: Imports) -> &mut Self {
+        self.imports.insert(module.id(), imports);
+        self
+    }
+}
+
+impl FromIterator<(Identifier, Imports)> for ImportedModules {
+    fn from_iter<T: IntoIterator<Item = (Identifier, Imports)>>(iter: T) -> Self {
+        ImportedModules {
+            imports: HashMap::from_iter(iter.into_iter()),
+        }
+    }
+}
+
+impl Default for ImportedModules {
+    fn default() -> Self {
+        ImportedModules::from_iter([(
+            "Std.List".into(),
+            Imports::Specific(vec![ImportedIdentifier::Func("map".into())]),
+        )])
+    }
+}
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 struct State {
@@ -53,7 +90,7 @@ impl Environment {
             parent: None,
             variables: HashMap::new(),
             modules,
-            imported_modules: HashMap::new(),
+            imported_modules: ImportedModules::new(),
             current_module_name: mod_name,
         };
         Environment {
@@ -116,7 +153,7 @@ impl Environment {
         self.state
             .borrow_mut()
             .imported_modules
-            .insert(module.id(), imports);
+            .import(module, imports);
     }
 
     pub fn define_var(&mut self, id: &Identifier, val: ValueRef) {
