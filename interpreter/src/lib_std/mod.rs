@@ -183,15 +183,29 @@ pub fn std_module() -> Module {
         match (args.len(), args.get(0), args.get(1)) {
             (1, Some(a), None) => match (*a).deref() {
                 Value::Number(max) => {
+                    if *max == dec!(0) {
+                        return Ok(val::number(0));
+                    }
                     let mut rng = rand::rngs::OsRng;
-                    Ok(val::number(rng.gen_range(Decimal::from(0)..*max)))
+                    if *max < dec!(0) {
+                        Ok(val::number(rng.gen_range(Decimal::from(*max)..dec!(0))))
+                    } else {
+                        Ok(val::number(rng.gen_range(Decimal::from(0)..*max)))
+                    }
                 }
                 _ => error,
             },
             (2, Some(a), Some(b)) => match ((*a).deref(), (*b).deref()) {
                 (Value::Number(min), Value::Number(max)) => {
                     let mut rng = rand::rngs::OsRng;
-                    Ok(val::number(rng.gen_range(*min..*max)))
+                    if *min == *max {
+                        return Ok(val::number(*min));
+                    }
+                    if *min < *max {
+                        Ok(val::number(rng.gen_range(*min..*max)))
+                    } else {
+                        Ok(val::number(rng.gen_range(*max..*min)))
+                    }
                 }
                 _ => error,
             },

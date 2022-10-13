@@ -192,6 +192,13 @@ fn std_module() {
                 val::number(9),
             ]),
         ),
+        ("Std.random 0", val::number(0)),
+        ("random 0", val::number(0)),
+        ("random 0 0", val::number(0)),
+        ("random 1 1", val::number(1)),
+        ("random 1.0 1", val::number(1)),
+        ("random 1 1.0", val::number(1)),
+        ("random 1.0 1.0", val::number(1)),
     ];
 
     let mut eval_ctx = EvalContext::new();
