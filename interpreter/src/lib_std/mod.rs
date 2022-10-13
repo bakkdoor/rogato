@@ -31,6 +31,7 @@ pub fn env() -> Environment {
     let list_mod = list::module();
 
     env.import(&math_mod, Imports::All);
+    env.import(&list_mod, Imports::All);
 
     env.define_module(std_mod);
     env.define_module(math_mod);
