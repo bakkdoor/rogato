@@ -78,6 +78,13 @@ pub fn std_module() -> Module {
         with_string_op_args("++", args, |a, b| Ok(format!("{}{}", a, b)))
     }));
 
+    module.fn_def(fn_def("id", vec!["value"], move |_ctx, args| {
+        match args.get(0) {
+            Some(value) => Ok(Rc::clone(value)),
+            None => Err(invalid_args("id")),
+        }
+    }));
+
     module.fn_def(fn_def(
         "inspect",
         vec!["value"],
