@@ -222,7 +222,7 @@ impl LambdaClosureContext for EvalContext {
 
         let mut call_ctx = self.with_child_env();
 
-        for (arg_id, arg_val) in lambda.args().iter().zip(args.into_iter()) {
+        for (arg_id, arg_val) in lambda.args().iter().zip(args.iter()) {
             call_ctx.define_var(arg_id, Rc::clone(arg_val))
         }
 

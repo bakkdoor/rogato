@@ -91,7 +91,7 @@ pub fn std_module() -> Module {
             (1, Some(func), None) => Ok(Rc::clone(func)),
             (2, Some(func), Some(args)) => match (func.deref(), args.deref()) {
                 (Value::Lambda(lambda_ctx, lambda), Value::List(args)) => {
-                    let args: Vec<ValueRef> = args.iter().map(|a| Rc::clone(a)).collect();
+                    let args: Vec<ValueRef> = args.iter().map(Rc::clone).collect();
                     lambda_ctx
                         .borrow_mut()
                         .evaluate_lambda_call(lambda, &args)
@@ -214,9 +214,9 @@ pub fn std_module() -> Module {
                     }
                     let mut rng = rand::rngs::OsRng;
                     if *max < dec!(0) {
-                        Ok(val::number(rng.gen_range(Decimal::from(*max)..dec!(0))))
+                        Ok(val::number(rng.gen_range(*max..dec!(0))))
                     } else {
-                        Ok(val::number(rng.gen_range(Decimal::from(0)..*max)))
+                        Ok(val::number(rng.gen_range(dec!(0)..*max)))
                     }
                 }
                 _ => error,
