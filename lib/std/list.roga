@@ -49,3 +49,8 @@ let take list n =
   in
     take_ [] list n
 
+let repeat count func =
+  x ->
+    count
+    |> range
+    |> Std.List.map (_ -> func x)
