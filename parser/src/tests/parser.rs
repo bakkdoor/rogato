@@ -457,13 +457,15 @@ fn let_expressions() {
         "let name = \"John Connor\"
              age = 12
              city = \"Los Angeles\"
+             _ = ^ignored
         in
             {name, age, city}",
         let_expr(
             [
                 ("name", string_lit("John Connor")),
                 ("age", number_lit(12)),
-                ("city", string_lit("Los Angeles"))
+                ("city", string_lit("Los Angeles")),
+                ("_", symbol("ignored"))
             ],
             tuple_lit([var("name"), var("age"), var("city")])
         )
@@ -764,6 +766,7 @@ fn queries() {
 
 #[test]
 fn variables() {
+    assert_parse_expr!("_", var("_"));
     assert_parse_expr!("foo", var("foo"));
 
     assert_parse_expr!(".foo", prop_fn_ref("foo"));
@@ -829,6 +832,11 @@ fn lambdas() {
                 lambda(["z"], tuple_lit([var("w"), var("x"), var("y"), var("z")]))
             )
         )
+    );
+
+    assert_parse_expr!(
+        "_ -> {1, 2}",
+        lambda(["_"], tuple_lit([number_lit(1), number_lit(2),]))
     );
 }
 

@@ -507,6 +507,9 @@ grammar parser(context: &ParserContext) for str {
         = id1:$([ 'a'..='z' ]) id2:$(['a'..='z' | 'A'..='Z' | '-' | '_' | '0'..='9' | '.' | '@' | '$'])* {
             join_string(id1, id2)
         }
+        / id:"_" {
+            SmolStr::from("_")
+        }
 
     rule symbol_identifier() -> Identifier
         = variable_identifier()
