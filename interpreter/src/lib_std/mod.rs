@@ -101,12 +101,10 @@ pub fn std_module() -> Module {
                     let args: Vec<ValueRef> = args.iter().map(Rc::clone).collect();
                     match ctx.call_function(fn_id, &args) {
                         Some(val) => Ok(Rc::clone(&val?)),
-                        None => {
-                            return Err(NativeFnError::EvaluationFailed(format!(
-                                "FunctionRef invalid: {}",
-                                fn_id
-                            )))
-                        }
+                        None => Err(NativeFnError::EvaluationFailed(format!(
+                            "FunctionRef invalid: {}",
+                            fn_id
+                        ))),
                     }
                 }
                 _ => error,
