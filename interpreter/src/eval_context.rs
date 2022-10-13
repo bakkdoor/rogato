@@ -3,7 +3,7 @@ use rogato_common::{
         fn_def::FnDefBody,
         lambda::{Lambda, LambdaClosureContext, LambdaClosureEvalError},
     },
-    native_fn::NativeFnContext,
+    native_fn::{NativeFnContext, NativeFnError},
 };
 
 use super::{environment::Environment, module::Module, EvalError, Identifier, ValueRef};
@@ -113,7 +113,7 @@ impl EvalContext {
         }
 
         match &*(func.body()) {
-            FnDefBody::NativeFn(f) => f(&fn_ctx, args).map_err(EvalError::from),
+            FnDefBody::NativeFn(f) => f(&mut fn_ctx, args).map_err(EvalError::from),
             FnDefBody::RogatoFn(expr) => expr.evaluate(&mut fn_ctx),
         }
     }
@@ -173,6 +173,15 @@ impl NativeFnContext for EvalContext {
 
     fn lookup_const(&self, id: &rogato_common::ast::Identifier) -> Option<ValueRef> {
         self.lookup_const(id)
+    }
+
+    fn call_function(
+        &mut self,
+        id: &Identifier,
+        args: &[ValueRef],
+    ) -> Option<Result<ValueRef, NativeFnError>> {
+        self.call_function(id, args)
+            .map(|res| res.map_err(|e| NativeFnError::EvaluationFailed(e.to_string())))
     }
 
     fn call_function_direct(

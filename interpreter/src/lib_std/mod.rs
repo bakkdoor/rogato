@@ -85,7 +85,7 @@ pub fn std_module() -> Module {
         }
     }));
 
-    module.fn_def(fn_def("apply", &["func", "?args"], move |_ctx, args| {
+    module.fn_def(fn_def("apply", &["func", "?args"], move |ctx, args| {
         let error = Err(invalid_args("apply"));
         match (args.len(), args.get(0), args.get(1)) {
             (1, Some(func), None) => Ok(Rc::clone(func)),
@@ -96,6 +96,18 @@ pub fn std_module() -> Module {
                         .borrow_mut()
                         .evaluate_lambda_call(lambda, &args)
                         .map_err(|e| NativeFnError::EvaluationFailed(e.to_string()))
+                }
+                (Value::Symbol(fn_id), Value::List(args)) => {
+                    let args: Vec<ValueRef> = args.iter().map(Rc::clone).collect();
+                    match ctx.call_function(fn_id, &args) {
+                        Some(val) => Ok(Rc::clone(&val?)),
+                        None => {
+                            return Err(NativeFnError::EvaluationFailed(format!(
+                                "FunctionRef invalid: {}",
+                                fn_id
+                            )))
+                        }
+                    }
                 }
                 _ => error,
             },

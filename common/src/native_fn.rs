@@ -25,6 +25,13 @@ impl From<LambdaClosureEvalError> for NativeFnError {
 pub trait NativeFnContext {
     fn lookup_var(&self, id: Identifier) -> Option<ValueRef>;
     fn lookup_const(&self, id: &Identifier) -> Option<ValueRef>;
+
+    fn call_function(
+        &mut self,
+        id: &Identifier,
+        args: &[ValueRef],
+    ) -> Option<Result<ValueRef, NativeFnError>>;
+
     fn call_function_direct(
         &mut self,
         func: &FnDef,
@@ -33,4 +40,4 @@ pub trait NativeFnContext {
 }
 
 pub type NativeFn =
-    fn(ctx: &dyn NativeFnContext, args: &[ValueRef]) -> Result<ValueRef, NativeFnError>;
+    fn(ctx: &mut dyn NativeFnContext, args: &[ValueRef]) -> Result<ValueRef, NativeFnError>;
