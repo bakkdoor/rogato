@@ -1,6 +1,11 @@
+use std::rc::Rc;
+
 use crate::{EvalContext, EvalError, Evaluate, ValueRef};
 
-use rogato_common::ast::{expression::Query, query::QueryBinding};
+use rogato_common::ast::{
+    expression::{Expression, Query},
+    query::QueryBinding,
+};
 use thiserror::Error;
 
 #[derive(Clone, PartialEq, Eq, Debug, Default)]
@@ -12,8 +17,17 @@ pub enum QueryError {
     #[error("Unknown QueryError: {0}")]
     Unknown(String),
 
+    #[error("Unknown QueryError due to EvalError: {0}")]
+    UnknownEvalError(Box<EvalError>),
+
     #[error("Query guard failed: {0}")]
     GuardFailed(Box<EvalError>),
+
+    #[error("Query guard condition was false: {0}")]
+    GuardConditionFalse(Rc<Expression>),
+
+    #[error("Query guard condition was None: {0}")]
+    GuardConditionNone(Rc<Expression>),
 
     #[error("Query binding failed: {0:?}")]
     BindingFailed(QueryBindingError),
@@ -24,7 +38,10 @@ pub enum QueryError {
 
 impl From<EvalError> for QueryError {
     fn from(e: EvalError) -> Self {
-        Self::GuardFailed(Box::new(e))
+        match e {
+            EvalError::QueryFailed(qfe) => qfe,
+            _ => Self::UnknownEvalError(Box::new(e)),
+        }
     }
 }
 
