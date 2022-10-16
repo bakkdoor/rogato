@@ -24,7 +24,11 @@ impl TypeCheckContext {
         Some(id)
     }
 
-    pub fn lookup_type(&mut self, id: ASTId) -> Option<Rc<TypeDef>> {
+    pub fn lookup_type(&mut self, id: ASTId) -> Option<&Rc<TypeDef>> {
+        self.types.get(&id)
+    }
+
+    pub fn lookup_type_rc(&mut self, id: ASTId) -> Option<Rc<TypeDef>> {
         self.types.get(&id).map(Rc::clone)
     }
 }
