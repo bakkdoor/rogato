@@ -1,6 +1,20 @@
 #[cfg(test)]
 pub mod tests;
 
+use thiserror::Error;
+
+#[derive(Error, Debug, PartialEq, Eq, Clone)]
+pub enum CodeGenError {
+    #[error("Unknown codegen error: {0}")]
+    Unknown(String),
+}
+
+pub struct CompilerContext {}
+
+pub trait Compile<T> {
+    fn compile(&self, context: &mut CompilerContext) -> Result<T, CodeGenError>;
+}
+
 pub struct Compiler {}
 
 impl Default for Compiler {
