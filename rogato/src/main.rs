@@ -1,4 +1,7 @@
 use indent_write::indentable::Indentable;
+// use rogato_common::util::print_error;
+// use rogato_common::val;
+// use rogato_db::db::{self, VertexQueryExt};
 use std::fmt::{Debug, Display};
 use std::fs::File;
 use std::io::Read;
@@ -11,8 +14,6 @@ use rogato_interpreter::{EvalContext, Evaluate};
 use rogato_parser::{parse, ParserContext};
 
 mod repl;
-
-// use crate::util::print_error;
 
 // const DB_PATH: &str = "./rogato.db";
 
@@ -45,8 +46,9 @@ fn main() -> anyhow::Result<()> {
                 // db_stuff(&datastore).unwrap();
             }
             "compile" => {
-                let comp = Compiler::new();
-                comp.gen_self_calling_fn();
+                let compiler = Compiler::new();
+                println!("Compiler: {:?}", compiler);
+                todo!()
             }
             file => {
                 println!("Attempting file parse: {}", file);
@@ -117,102 +119,102 @@ fn print_parse_result<T: Display, E: Display>(code: &str, result: &Result<T, E>)
 
 // pub fn basic_db_example<DB: db::Datastore + Debug>(db: &DB) -> db::DBResult<()> {
 //     println!("DB: do stuff with {:?}", db);
-//     let person_type_id = db::id("Person");
-//     let name_prop_id = db::id("name");
-//     let age_prop_id = db::id("name");
-//     let friendship_edge_id = db::id("FriendShip");
-//     let bff_tag_id = db::id("bff");
-//     let nickname_prop_id = db::id("nickname");
+// let person_type_id = db::id("Person");
+// let name_prop_id = db::id("name");
+// let age_prop_id = db::id("name");
+// let friendship_edge_id = db::id("FriendShip");
+// let bff_tag_id = db::id("bff");
+// let nickname_prop_id = db::id("nickname");
 
-//     db.index_property(name_prop_id.to_owned())?;
-//     db.index_property(age_prop_id.to_owned())?;
-//     db.index_property(bff_tag_id.clone())?;
-//     db.index_property(nickname_prop_id.clone())?;
+// db.index_property(name_prop_id.to_owned())?;
+// db.index_property(age_prop_id.to_owned())?;
+// db.index_property(bff_tag_id.clone())?;
+// db.index_property(nickname_prop_id.clone())?;
 
-//     for i in 0..1000 {
-//         let id1 = db.create_vertex_from_type(person_type_id.to_owned())?;
-//         let id2 = db.create_vertex_from_type(person_type_id.to_owned())?;
+// for i in 0..1000 {
+//     let id1 = db.create_vertex_from_type(person_type_id.to_owned())?;
+//     let id2 = db.create_vertex_from_type(person_type_id.to_owned())?;
 
-//         let friendship_edge_key = db::EdgeKey::new(id1, friendship_edge_id.clone(), id2);
+//     let friendship_edge_key = db::EdgeKey::new(id1, friendship_edge_id.clone(), id2);
 
-//         db.bulk_insert(vec![
-//             db::BulkInsertItem::VertexProperty(
-//                 id1,
-//                 name_prop_id.clone(),
-//                 db::val::string(format!("John Connor {}", i)),
-//             ),
-//             db::BulkInsertItem::VertexProperty(
-//                 id2,
-//                 name_prop_id.clone(),
-//                 db::val::string(format!("John Connor {}", i)),
-//             ),
-//             db::BulkInsertItem::VertexProperty(id1, age_prop_id.clone(), db::val::number(i * 1000)),
-//             db::BulkInsertItem::VertexProperty(id2, age_prop_id.clone(), db::val::number(i * 9999)),
-//             db::BulkInsertItem::Edge(friendship_edge_key.clone()),
-//             db::BulkInsertItem::EdgeProperty(
-//                 friendship_edge_key.clone(),
-//                 bff_tag_id.clone(),
-//                 db::val::bool(true),
-//             ),
-//             db::BulkInsertItem::VertexProperty(
-//                 id2,
-//                 nickname_prop_id.clone(),
-//                 db::val::string(format!("Johnny {}", i)),
-//             ),
-//         ])?;
-//     }
+//     db.bulk_insert(vec![
+//         db::BulkInsertItem::VertexProperty(
+//             id1,
+//             name_prop_id.clone(),
+//             val::string(format!("John Connor {}", i)),
+//         ),
+//         db::BulkInsertItem::VertexProperty(
+//             id2,
+//             name_prop_id.clone(),
+//             val::string(format!("John Connor {}", i)),
+//         ),
+//         db::BulkInsertItem::VertexProperty(id1, age_prop_id.clone(), val::number(i * 1000)),
+//         db::BulkInsertItem::VertexProperty(id2, age_prop_id.clone(), val::number(i * 9999)),
+//         db::BulkInsertItem::Edge(friendship_edge_key.clone()),
+//         db::BulkInsertItem::EdgeProperty(
+//             friendship_edge_key.clone(),
+//             bff_tag_id.clone(),
+//             val::bool(true),
+//         ),
+//         db::BulkInsertItem::VertexProperty(
+//             id2,
+//             nickname_prop_id.clone(),
+//             val::string(format!("Johnny {}", i)),
+//         ),
+//     ])?;
+// }
 
-//     let prop_val_vtx_q =
-//         db::PropertyValueVertexQuery::new(nickname_prop_id.clone(), db::val::string("Johnny 101"));
+// let prop_val_vtx_q =
+//     db::PropertyValueVertexQuery::new(nickname_prop_id.clone(), val::string("Johnny 101"));
 
-//     let vtx = db.get_vertices(db::VertexQuery::PropertyValue(prop_val_vtx_q.clone()))?;
-//     let vtx_props = db.get_vertex_properties(prop_val_vtx_q.property(nickname_prop_id))?;
+// let vtx = db.get_vertices(db::VertexQuery::PropertyValue(prop_val_vtx_q.clone()))?;
+// let vtx_props = db.get_vertex_properties(prop_val_vtx_q.property(nickname_prop_id))?;
 
-//     println!("vtx: {:?}", vtx);
-//     println!("vtx_props: {:?}", vtx_props);
+// println!("vtx: {:?}", vtx);
+// println!("vtx_props: {:?}", vtx_props);
 
-//     let vertices = db.get_vertices(
-//         db::RangeVertexQuery::new()
-//             .t(person_type_id.to_owned())
-//             .into(),
-//     )?;
-//     println!(
-//         "Vertex query results for type {} : {}",
-//         person_type_id.as_str(),
-//         vertices.len()
-//     );
+// let vertices = db.get_vertices(
+//     db::RangeVertexQuery::new()
+//         .t(person_type_id.to_owned())
+//         .into(),
+// )?;
+// println!(
+//     "Vertex query results for type {} : {}",
+//     person_type_id.as_str(),
+//     vertices.len()
+// );
 
-//     let vertices_with_name = db.get_vertices(indradb::VertexQuery::PropertyValue(
-//         db::PropertyValueVertexQuery::new(name_prop_id.clone(), db::val::string("John Connor 1")),
-//     ))?;
-//     println!(
-//         "vertices_with_name query results: {}",
-//         vertices_with_name.len()
-//     );
+// let vertices_with_name = db.get_vertices(db::VertexQuery::PropertyValue(
+//     db::PropertyValueVertexQuery::new(name_prop_id.clone(), val::string("John Connor 1")),
+// ))?;
+// println!(
+//     "vertices_with_name query results: {}",
+//     vertices_with_name.len()
+// );
 
-//     let vertex_props = db.get_vertex_properties(db::VertexPropertyQuery::new(
-//         db::VertexQuery::PropertyPresence(db::PropertyPresenceVertexQuery::new(age_prop_id)),
-//         name_prop_id.clone(),
-//     ))?;
-//     println!(
-//         "vertex_props query (age presence) result count: {}",
-//         vertex_props.len()
-//     );
+// let vertex_props = db.get_vertex_properties(db::VertexPropertyQuery::new(
+//     db::VertexQuery::PropertyPresence(db::PropertyPresenceVertexQuery::new(age_prop_id)),
+//     name_prop_id.clone(),
+// ))?;
+// println!(
+//     "vertex_props query (age presence) result count: {}",
+//     vertex_props.len()
+// );
 
-//     let edge_query =
-//         db::EdgeQuery::PropertyPresence(db::PropertyPresenceEdgeQuery::new(bff_tag_id));
+// let edge_query =
+//     db::EdgeQuery::PropertyPresence(db::PropertyPresenceEdgeQuery::new(bff_tag_id));
 
-//     let vertex_props = db.get_vertex_properties(db::VertexPropertyQuery::new(
-//         db::VertexQuery::Pipe(db::PipeVertexQuery::new(
-//             Box::new(edge_query),
-//             db::EdgeDirection::Inbound,
-//         )),
-//         name_prop_id,
-//     ))?;
-//     println!(
-//         "vertex_props query (age presence, incoming Friendship edge) result count: {}",
-//         vertex_props.len()
-//     );
+// let vertex_props = db.get_vertex_properties(db::VertexPropertyQuery::new(
+//     db::VertexQuery::Pipe(db::PipeVertexQuery::new(
+//         Box::new(edge_query),
+//         db::EdgeDirection::Inbound,
+//     )),
+//     name_prop_id,
+// ))?;
+// println!(
+//     "vertex_props query (age presence, incoming Friendship edge) result count: {}",
+//     vertex_props.len()
+// );
 
 //     Ok(())
 // }
