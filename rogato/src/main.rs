@@ -46,7 +46,8 @@ fn main() -> anyhow::Result<()> {
                 // db_stuff(&datastore).unwrap();
             }
             "compile" => {
-                let compiler = Compiler::new();
+                let context = Compiler::new_context();
+                let compiler = Compiler::new_with_module_name(&context, "test");
                 println!("Compiler: {:?}", compiler);
                 todo!()
             }

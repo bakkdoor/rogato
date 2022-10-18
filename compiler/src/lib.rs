@@ -1,6 +1,7 @@
 #[cfg(test)]
 pub mod tests;
 
+use inkwell::{context::Context, module::Module};
 use rogato_common::ast::expression::Expression;
 use thiserror::Error;
 
@@ -19,26 +20,34 @@ pub enum CodeGenError {
 }
 
 #[derive(Debug)]
-pub struct Compiler {
-    llvm: inkwell::context::Context,
+pub struct Compiler<'ctx> {
+    context: &'ctx Context,
+
+    #[allow(dead_code)]
+    module: Module<'ctx>,
 }
 
-impl Compiler {
-    pub fn new() -> Self {
-        let compiler = Self {
-            llvm: inkwell::context::Context::create(),
-        };
-        println!("New compiler with llvm context: {:?}", compiler.llvm);
-        compiler
+impl<'ctx> Compiler<'ctx> {
+    pub fn new(context: &'ctx Context, module: Module<'ctx>) -> Self {
+        Self { context, module }
+    }
+
+    pub fn new_with_module_name<S: ToString>(context: &'ctx Context, module_name: S) -> Self {
+        Self {
+            context,
+            module: context.create_module(module_name.to_string().as_str()),
+        }
+    }
+
+    pub fn new_context() -> Context {
+        Context::create()
+    }
+
+    pub fn new_module(&self, name: &str) -> Module<'ctx> {
+        self.context.create_module(name)
     }
 
     pub fn lookup_var(&self) -> Option<Expression> {
         None
-    }
-}
-
-impl Default for Compiler {
-    fn default() -> Self {
-        Compiler::new()
     }
 }
