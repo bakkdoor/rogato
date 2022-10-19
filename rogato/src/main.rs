@@ -1,4 +1,5 @@
 use indent_write::indentable::Indentable;
+use rogato_common::ast::helpers::{fn_def, op_call, var};
 // use rogato_common::util::print_error;
 // use rogato_common::val;
 // use rogato_db::db::{self, VertexQueryExt};
@@ -8,7 +9,7 @@ use std::io::Read;
 use std::path::Path;
 
 use clap::Parser;
-use rogato_compiler::Compiler;
+use rogato_compiler::{Compile, Compiler};
 #[allow(unused_imports)]
 use rogato_interpreter::{EvalContext, Evaluate};
 use rogato_parser::{parse, ParserContext};
@@ -47,9 +48,17 @@ fn main() -> anyhow::Result<()> {
             }
             "compile" => {
                 let context = Compiler::new_context();
-                let compiler = Compiler::new_with_module_name(&context, "test");
-                println!("Compiler: {:?}", compiler);
-                todo!()
+                let mut compiler = Compiler::new_with_module_name(&context, "compile_test");
+                println!("{:?}", compiler);
+                let fn_def = fn_def(
+                    "add3",
+                    ["x", "y", "z"],
+                    op_call("+", op_call("+", var("x"), var("y")), var("z")),
+                );
+                for i in 0..100 {
+                    let compile_res = Compile::compile(&fn_def, &mut compiler);
+                    println!("compile {}: {:?}", i, compile_res);
+                }
             }
             file => {
                 println!("Attempting file parse: {}", file);

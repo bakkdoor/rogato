@@ -29,15 +29,16 @@ impl Compile<()> for FnDef {
         c.builder.build_return(Some(&sum));
 
         unsafe {
-            // c.execution_engine.get_function(self.id().as_str()).ok();
             let test_fn = c
                 .execution_engine
-                .get_function::<unsafe extern "C" fn(f64, f64, f64) -> f64>(func_name.as_str())
+                .get_function::<unsafe extern "C" fn(f32, f32, f32) -> f32>(func_name.as_str())
                 .unwrap();
-            let return_value = test_fn.call(1.1f64, 2.22f64, 3.333f64);
-            assert_eq!(return_value, 6.653f64);
+
+            println!("calling JIT func: {:?}", test_fn);
+            let return_value = test_fn.call(1.1f32, 2.22f32, 3.333f32);
+            assert_eq!(return_value, 6.653f32);
         }
 
-        todo!()
+        Ok(())
     }
 }
