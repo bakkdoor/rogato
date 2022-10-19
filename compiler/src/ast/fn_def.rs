@@ -13,7 +13,8 @@ impl Compile<()> for FnDef {
             ],
             false,
         );
-        let func = c.module.add_function(self.id(), fn_type, None);
+        let func_name = self.id();
+        let func = c.module.add_function(func_name.as_str(), fn_type, None);
 
         let basic_block = c.context.append_basic_block(func, self.id());
         c.builder.position_at_end(basic_block);
@@ -31,7 +32,7 @@ impl Compile<()> for FnDef {
             // c.execution_engine.get_function(self.id().as_str()).ok();
             let test_fn = c
                 .execution_engine
-                .get_function::<unsafe extern "C" fn(f64, f64, f64) -> f64>(self.id().as_str())
+                .get_function::<unsafe extern "C" fn(f64, f64, f64) -> f64>(func_name.as_str())
                 .unwrap();
             let return_value = test_fn.call(1.1f64, 2.22f64, 3.333f64);
             assert_eq!(return_value, 6.653f64);
