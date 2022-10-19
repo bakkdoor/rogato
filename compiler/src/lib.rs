@@ -6,12 +6,19 @@ use inkwell::{
     OptimizationLevel,
 };
 use rogato_common::ast::expression::Expression;
+use std::{ops::Deref, rc::Rc};
 use thiserror::Error;
 
 pub mod ast;
 
 pub trait Compile<T> {
     fn compile(&self, compiler: &mut Compiler) -> CompilerResult<T>;
+}
+
+impl<T, Type: Compile<T>> Compile<T> for Rc<Type> {
+    fn compile(&self, compiler: &mut crate::Compiler) -> crate::CompilerResult<T> {
+        self.deref().compile(compiler)
+    }
 }
 
 pub type CompilerResult<T> = Result<T, CodeGenError>;
