@@ -5,7 +5,7 @@ use rogato_common::ast::fn_def::FnDef;
 impl Compile<()> for FnDef {
     fn compile(&self, c: &mut Compiler) -> CompilerResult<()> {
         let f32_type = c.context.f32_type();
-        let fn_type = f32_type.clone().fn_type(
+        let fn_type = f32_type.fn_type(
             &[
                 BasicMetadataTypeEnum::FloatType(f32_type),
                 BasicMetadataTypeEnum::FloatType(f32_type),
