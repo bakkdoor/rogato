@@ -56,15 +56,15 @@ fn main() -> anyhow::Result<()> {
                 compiler.compile_ast(func_def.as_ref())?;
 
                 unsafe {
-                    let add3_fn = compiler
+                    let function = compiler
                         .execution_engine()
                         .get_function::<unsafe extern "C" fn(f32, f32, f32) -> f32>(func_name)
                         .unwrap();
 
-                    let x = 1.0f32;
-                    let y = 2.0f32;
-                    let z = 3.0f32;
-                    let return_value = add3_fn.call(x, y, z);
+                    let x = 0.0;
+                    let y = 1.0;
+                    let z = 1.0;
+                    let return_value = function.call(x, y, z);
                     println!("call {} => {}", func_name, return_value);
                     assert_eq!(return_value, x + y + z);
                 }
