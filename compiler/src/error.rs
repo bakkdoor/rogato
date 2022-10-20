@@ -17,4 +17,7 @@ pub enum CompileError {
 
     #[error("Operator not defined: {0}")]
     OpNotDefined(Identifier),
+
+    #[error("FnDef compilation validation failed for: {0}")]
+    FnDefValidationFailed(Identifier),
 }

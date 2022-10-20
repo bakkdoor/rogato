@@ -50,7 +50,7 @@ fn main() -> anyhow::Result<()> {
                 let func_def = fn_def(
                     func_name,
                     ["x", "y", "z"],
-                    op_call("+", op_call("+", var("x"), var("y")), var("z")),
+                    op_call("*", op_call("+", var("x"), var("y")), var("z")),
                 );
 
                 compiler.compile_ast(func_def.as_ref())?;
@@ -61,12 +61,21 @@ fn main() -> anyhow::Result<()> {
                         .get_function::<unsafe extern "C" fn(f32, f32, f32) -> f32>(func_name)
                         .unwrap();
 
-                    let x = 0.0;
-                    let y = 1.0;
-                    let z = 1.0;
-                    let return_value = function.call(x, y, z);
-                    println!("call {} => {}", func_name, return_value);
-                    assert_eq!(return_value, x + y + z);
+                    let params_and_results = [
+                        ((1.1, 2.22, 3.333), 11.06556),
+                        ((1.0, 2.0, 3.0), 9.0),
+                        ((0.0, 0.0, 0.0), 0.0),
+                        ((1.0, 0.0, 0.0), 0.0),
+                        ((0.0, 2.2, 0.0), 0.0),
+                        ((0.0, 0.0, 3.3), 0.0),
+                        ((0.5, 10.0, 2.5), 26.25),
+                    ];
+
+                    for ((x, y, z), result) in params_and_results {
+                        let val = function.call(x, y, z);
+                        assert_eq!(val, result);
+                        println!("{}({}, {}, {}) = {}", func_name, x, y, z, val);
+                    }
                 }
             }
             file => {

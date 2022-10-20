@@ -3,7 +3,7 @@ use inkwell::{
     context::Context,
     execution_engine::ExecutionEngine,
     module::Module,
-    types::BasicMetadataTypeEnum,
+    types::{BasicMetadataTypeEnum, BasicType},
     values::{BasicMetadataValueEnum, FloatValue, FunctionValue, PointerValue},
     OptimizationLevel,
 };
@@ -89,7 +89,11 @@ impl<'ctx> Compiler<'ctx> {
         self.variables.insert(name.to_string(), pointer_val);
     }
 
-    fn create_entry_block_alloca<'a, S: Into<&'a str>>(&self, name: S) -> PointerValue<'ctx> {
+    fn create_entry_block_alloca<T: BasicType<'ctx>>(
+        &self,
+        ty: T,
+        name: &str,
+    ) -> PointerValue<'ctx> {
         let builder = self.context.create_builder();
 
         let entry = self.fn_value().get_first_basic_block().unwrap();
@@ -99,7 +103,7 @@ impl<'ctx> Compiler<'ctx> {
             None => builder.position_at_end(entry),
         }
 
-        builder.build_alloca(self.context.f64_type(), name.into())
+        builder.build_alloca(ty, name)
     }
 
     /// Returns the `FunctionValue` representing the function being compiled.
@@ -141,29 +145,21 @@ impl<'ctx> Compiler<'ctx> {
         let basic_block = self.context.append_basic_block(func, fn_def.id());
         self.builder.position_at_end(basic_block);
 
-        let args_with_idx: HashMap<Identifier, u32> = HashMap::from_iter(
-            fn_def
-                .args()
-                .iter()
-                .cloned()
-                .zip(0..fn_def.args().len().try_into().unwrap()),
-        );
-
-        for (arg, idx) in args_with_idx.iter() {
-            let pointer_val = self.create_entry_block_alloca(arg.as_str());
-            self.store_var(arg, pointer_val);
-
-            self.builder.build_store(
-                pointer_val,
-                func.get_nth_param(*idx).unwrap().into_float_value(),
-            );
+        for (arg, arg_name) in func.get_param_iter().zip(fn_def.args().iter()) {
+            let alloca = self.create_entry_block_alloca(f32_type, arg_name);
+            self.builder.build_store(alloca, arg);
+            self.variables.insert(arg_name.to_string(), alloca);
         }
 
         match fn_def.body().as_ref() {
             FnDefBody::RogatoFn(expr) => {
                 let body = self.compile_expr(expr)?;
                 self.builder.build_return(Some(&body));
-                Ok(())
+                if func.verify(true) {
+                    Ok(())
+                } else {
+                    Err(CompileError::FnDefValidationFailed(func_name.clone()))
+                }
             }
             _ => self.unknown_error("Cannot compile function with NativeFn body!"),
         }
@@ -210,6 +206,7 @@ impl<'ctx> Compiler<'ctx> {
     ) -> CompileResult<FloatValue<'ctx>> {
         let left = self.compile_expr(left)?;
         let right = self.compile_expr(right)?;
+
         match id.as_str() {
             "+" => Ok(self.builder.build_float_add(left, right, "tmpadd")),
             "-" => Ok(self.builder.build_float_sub(left, right, "tmpsub")),
@@ -241,10 +238,8 @@ impl<'ctx> Compiler<'ctx> {
         match expr {
             Expression::Commented(_c, e) => self.compile_expr(e),
             Expression::Lit(_lit_expr) => todo!(),
-            Expression::FnCall(fn_ident, args) => self.compile_fn_call(fn_ident, args),
-            Expression::OpCall(op_ident, left, right) => {
-                self.compile_op_call(op_ident, left, right)
-            }
+            Expression::FnCall(id, args) => self.compile_fn_call(id, args),
+            Expression::OpCall(id, left, right) => self.compile_op_call(id, left, right),
 
             Expression::Var(id) => match self.lookup_var(id) {
                 Some(var) => Ok(self
