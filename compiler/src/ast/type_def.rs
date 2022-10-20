@@ -1,9 +1,9 @@
+use crate::{Compile, Compiler, CompilerResult};
+use inkwell::values::FloatValue;
 use rogato_common::ast::type_expression::TypeDef;
 
-use crate::{Compile, Compiler, CompilerResult};
-
-impl Compile<()> for TypeDef {
-    fn compile(&self, _compiler: &mut Compiler) -> CompilerResult<()> {
+impl<'ctx> Compile<'ctx, FloatValue<'ctx>> for TypeDef {
+    fn compile(&self, _compiler: &'ctx mut Compiler) -> CompilerResult<FloatValue<'ctx>> {
         todo!()
     }
 }

@@ -1,4 +1,5 @@
-use crate::{Compile, Compiler, CompilerResult};
+use crate::{Compile, CompileError, Compiler, CompilerResult};
+use inkwell::values::{BasicMetadataValueEnum, FloatValue};
 use rogato_common::ast::{fn_call::FnCallArgs, Identifier};
 
 pub struct FnCall<'a> {
@@ -12,9 +13,33 @@ impl<'a> FnCall<'a> {
     }
 }
 
-impl<'a> Compile<()> for FnCall<'a> {
-    fn compile(&self, _compiler: &mut Compiler) -> CompilerResult<()> {
-        println!("Compiling function call: {}( {} )", self.id, self.args);
-        todo!()
+impl<'ctx, 'a> Compile<'ctx, FloatValue<'ctx>> for FnCall<'a> {
+    fn compile(&self, c: &'ctx mut Compiler) -> CompilerResult<FloatValue<'ctx>> {
+        match c.get_function(self.id.as_str()) {
+            Some(fun) => {
+                let mut compiled_args = Vec::with_capacity(self.args.len());
+
+                for arg in self.args.iter() {
+                    compiled_args.push(arg.compile(c)?);
+                }
+
+                let argsv: Vec<BasicMetadataValueEnum> = compiled_args
+                    .iter()
+                    .by_ref()
+                    .map(|&val| val.into())
+                    .collect();
+
+                match c
+                    .builder()
+                    .build_call(fun, argsv.as_slice(), "tmp")
+                    .try_as_basic_value()
+                    .left()
+                {
+                    Some(value) => Ok(value.into_float_value()),
+                    None => c.unknown_error("Invalid call produced."),
+                }
+            }
+            None => Err(CompileError::FnNotDefined(self.id.clone())),
+        }
     }
 }
