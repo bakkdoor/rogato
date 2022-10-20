@@ -124,7 +124,7 @@ impl<'ctx> Compiler<'ctx> {
         Err(CompileError::Unknown(message.to_string()))
     }
 
-    pub fn compile_fn_def(&mut self, fn_def: &FnDef) -> CompileResult<FloatValue<'ctx>> {
+    pub fn compile_fn_def(&mut self, fn_def: &FnDef) -> CompileResult<()> {
         let f32_type = self.context.f32_type();
         let fn_type = f32_type.fn_type(
             &[
@@ -163,7 +163,7 @@ impl<'ctx> Compiler<'ctx> {
             FnDefBody::RogatoFn(expr) => {
                 let body = self.compile_expr(expr)?;
                 self.builder.build_return(Some(&body));
-                Ok(body)
+                Ok(())
             }
             _ => self.unknown_error("Cannot compile function with NativeFn body!"),
         }
@@ -219,15 +219,15 @@ impl<'ctx> Compiler<'ctx> {
         }
     }
 
-    pub fn compile_module_def(&mut self, _mod_def: &ModuleDef) -> CompileResult<FloatValue<'ctx>> {
+    pub fn compile_module_def(&mut self, _mod_def: &ModuleDef) -> CompileResult<()> {
         todo!()
     }
 
-    pub fn compile_type_def(&mut self, _mod_def: &TypeDef) -> CompileResult<FloatValue<'ctx>> {
+    pub fn compile_type_def(&mut self, _mod_def: &TypeDef) -> CompileResult<()> {
         todo!()
     }
 
-    pub fn compile_ast(&mut self, ast: &AST) -> CompileResult<FloatValue<'ctx>> {
+    pub fn compile_ast(&mut self, ast: &AST) -> CompileResult<()> {
         match ast {
             AST::RootComment(c) => Err(CompileError::IgnoredRootComment(c.to_owned())),
             AST::FnDef(fn_def) => self.compile_fn_def(fn_def),
@@ -267,7 +267,10 @@ impl<'ctx> Compiler<'ctx> {
             Expression::QuotedAST(_ast) => todo!(),
             Expression::Unquoted(_expr) => todo!(),
             Expression::UnquotedAST(_ast) => todo!(),
-            Expression::InlineFnDef(fn_def) => self.compile_fn_def(fn_def),
+            Expression::InlineFnDef(fn_def) => {
+                self.compile_fn_def(fn_def)?;
+                Ok(self.context.f32_type().const_zero()) // TODO: Hmmm?!
+            }
         }
     }
 
