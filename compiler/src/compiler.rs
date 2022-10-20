@@ -89,7 +89,7 @@ impl<'ctx> Compiler<'ctx> {
         self.variables.insert(name.to_string(), pointer_val);
     }
 
-    fn create_entry_block_alloca(&self, name: &str) -> PointerValue<'ctx> {
+    fn create_entry_block_alloca<'a, S: Into<&'a str>>(&self, name: S) -> PointerValue<'ctx> {
         let builder = self.context.create_builder();
 
         let entry = self.fn_value().get_first_basic_block().unwrap();
@@ -99,7 +99,7 @@ impl<'ctx> Compiler<'ctx> {
             None => builder.position_at_end(entry),
         }
 
-        builder.build_alloca(self.context.f64_type(), name)
+        builder.build_alloca(self.context.f64_type(), name.into())
     }
 
     /// Returns the `FunctionValue` representing the function being compiled.
@@ -151,7 +151,7 @@ impl<'ctx> Compiler<'ctx> {
 
         for (arg, idx) in args_with_idx.iter() {
             let pointer_val = self.create_entry_block_alloca(arg.as_str());
-            self.store_var(arg.as_str(), pointer_val);
+            self.store_var(arg, pointer_val);
 
             self.builder.build_store(
                 pointer_val,
@@ -246,7 +246,7 @@ impl<'ctx> Compiler<'ctx> {
                 self.compile_op_call(op_ident, left, right)
             }
 
-            Expression::Var(id) => match self.lookup_var(id.as_str()) {
+            Expression::Var(id) => match self.lookup_var(id) {
                 Some(var) => Ok(self
                     .builder
                     .build_load(*var, id.as_str())
