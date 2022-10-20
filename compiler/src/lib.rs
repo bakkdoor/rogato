@@ -7,17 +7,17 @@ pub mod error;
 
 use std::{ops::Deref, rc::Rc};
 
-pub use compiler::{CompileResult, Compiler};
+pub use compiler::Compiler;
 pub use error::CompileError;
 
 pub trait Compile<'ctx, T> {
-    fn compile(&self, compiler: &'ctx mut Compiler) -> CompilerResult<T>;
+    fn compile(&self, compiler: &'ctx mut Compiler<'ctx>) -> CompileResult<'ctx, T>;
 }
 
 impl<'ctx, T, Type: Compile<'ctx, T>> Compile<'ctx, T> for Rc<Type> {
-    fn compile(&self, compiler: &'ctx mut crate::Compiler) -> crate::CompilerResult<T> {
+    fn compile(&self, compiler: &'ctx mut Compiler<'ctx>) -> CompileResult<'ctx, T> {
         self.deref().compile(compiler)
     }
 }
 
-pub type CompilerResult<T> = Result<T, CompileError>;
+pub type CompileResult<'ctx, T> = Result<(&'ctx mut Compiler<'ctx>, T), CompileError>;

@@ -8,9 +8,7 @@ use inkwell::{
 };
 use std::collections::HashMap;
 
-use crate::error::CompileError;
-
-pub type CompileResult<T> = Result<T, CompileError>;
+use crate::{error::CompileError, CompileResult};
 
 #[derive(Debug)]
 pub struct Compiler<'ctx> {
@@ -72,8 +70,8 @@ impl<'ctx> Compiler<'ctx> {
         self.context.create_module(name)
     }
 
-    pub fn lookup_var<S: ToString>(&self, name: S) -> Option<&PointerValue<'ctx>> {
-        self.variables.get(&name.to_string())
+    pub fn lookup_var<S: ToString>(&self, name: S) -> Option<PointerValue<'ctx>> {
+        self.variables.get(&name.to_string()).cloned()
     }
 
     pub fn store_var<S: ToString>(&mut self, name: S, pointer_val: PointerValue<'ctx>) {
@@ -121,7 +119,7 @@ impl<'ctx> Compiler<'ctx> {
         self.module.get_function(name)
     }
 
-    pub fn unknown_error<T, S: ToString>(&self, message: S) -> CompileResult<T> {
+    pub fn unknown_error<T, S: ToString>(&self, message: S) -> CompileResult<'ctx, T> {
         Err(CompileError::Unknown(message.to_string()))
     }
 }

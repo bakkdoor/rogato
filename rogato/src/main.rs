@@ -49,16 +49,14 @@ fn main() -> anyhow::Result<()> {
             "compile" => {
                 let context = Compiler::new_context();
                 let mut compiler = Compiler::new_with_module_name(&context, "compile_test");
-                println!("{:?}", compiler);
+
                 let fn_def = fn_def(
                     "add3",
                     ["x", "y", "z"],
                     op_call("+", op_call("+", var("x"), var("y")), var("z")),
                 );
-                for i in 0..100 {
-                    let compile_res = Compile::compile(&fn_def, &mut compiler);
-                    println!("compile {}: {:?}", i, compile_res);
-                }
+
+                fn_def.compile(&mut compiler);
             }
             file => {
                 println!("Attempting file parse: {}", file);

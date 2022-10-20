@@ -8,7 +8,7 @@ use rogato_common::ast::{
 };
 
 impl<'ctx> Compile<'ctx, FloatValue<'ctx>> for FnDef {
-    fn compile(&self, c: &'ctx mut Compiler) -> CompileResult<FloatValue<'ctx>> {
+    fn compile(&self, c: &'ctx mut Compiler<'ctx>) -> CompileResult<'ctx, FloatValue<'ctx>> {
         let f32_type = c.context().f32_type();
         let fn_type = f32_type.fn_type(
             &[
@@ -44,10 +44,9 @@ impl<'ctx> Compile<'ctx, FloatValue<'ctx>> for FnDef {
 
         match self.body().as_ref() {
             FnDefBody::RogatoFn(expr) => {
-                let builder = c.builder();
-                let body = expr.compile(c)?;
-                builder.build_return(Some(&body));
-                Ok(body)
+                let (c, body) = expr.compile(c)?;
+                c.builder().build_return(Some(&body));
+                Ok((c, body))
             }
             _ => c.unknown_error("Cannot compile function with NativeFn body!"),
         }

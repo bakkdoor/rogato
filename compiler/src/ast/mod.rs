@@ -1,4 +1,4 @@
-use crate::Compile;
+use crate::{Compile, CompileResult, Compiler};
 use inkwell::values::FloatValue;
 use rogato_common::ast::AST;
 
@@ -15,7 +15,7 @@ pub mod query;
 pub mod type_def;
 
 impl<'ctx> Compile<'ctx, FloatValue<'ctx>> for AST {
-    fn compile(&self, compiler: &mut crate::Compiler) -> crate::CompilerResult<FloatValue<'ctx>> {
+    fn compile(&self, compiler: &'ctx mut Compiler<'ctx>) -> CompileResult<'ctx, FloatValue<'ctx>> {
         match self {
             AST::RootComment(_) => todo!(),
             AST::FnDef(fn_def) => fn_def.compile(compiler),
