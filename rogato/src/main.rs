@@ -1,15 +1,18 @@
-use rogato_common::ast::helpers::{fn_def, op_call, var};
-use rogato_compiler::Compiler;
-#[allow(unused_imports)]
-use rogato_interpreter::{EvalContext, Evaluate};
-use rogato_parser::{parse, ParserContext};
-
-use clap::Parser;
 use indent_write::indentable::Indentable;
+use rogato_common::ast::helpers::{fn_def, op_call, var};
+// use rogato_common::util::print_error;
+// use rogato_common::val;
+// use rogato_db::db::{self, VertexQueryExt};
 use std::fmt::{Debug, Display};
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
+
+use clap::Parser;
+use rogato_compiler::{Compile, Compiler};
+#[allow(unused_imports)]
+use rogato_interpreter::{EvalContext, Evaluate};
+use rogato_parser::{parse, ParserContext};
 
 mod repl;
 
@@ -46,27 +49,15 @@ fn main() -> anyhow::Result<()> {
             "compile" => {
                 let context = Compiler::new_context();
                 let mut compiler = Compiler::new_with_module_name(&context, "compile_test");
-                let func_name = "add3";
-                let func_def = fn_def(
-                    func_name,
+                println!("{:?}", compiler);
+                let fn_def = fn_def(
+                    "add3",
                     ["x", "y", "z"],
                     op_call("+", op_call("+", var("x"), var("y")), var("z")),
                 );
-
-                compiler.compile_ast(func_def.as_ref())?;
-
-                unsafe {
-                    let add3_fn = compiler
-                        .execution_engine()
-                        .get_function::<unsafe extern "C" fn(f32, f32, f32) -> f32>(func_name)
-                        .unwrap();
-
-                    let x = 1.0f32;
-                    let y = 2.0f32;
-                    let z = 3.0f32;
-                    let return_value = add3_fn.call(x, y, z);
-                    println!("call {} => {}", func_name, return_value);
-                    assert_eq!(return_value, x + y + z);
+                for i in 0..100 {
+                    let compile_res = Compile::compile(&fn_def, &mut compiler);
+                    println!("compile {}: {:?}", i, compile_res);
                 }
             }
             file => {

@@ -3,24 +3,24 @@ use std::fmt::Display;
 use std::rc::Rc;
 
 #[derive(Clone, PartialEq, Eq, Debug, Hash)]
-pub struct FnCallArgs<T = Expression> {
-    args: Vec<Rc<T>>,
+pub struct FnCallArgs {
+    args: Vec<Rc<Expression>>,
 }
 
-impl<T: Clone> FnCallArgs<T> {
-    pub fn new<Args: IntoIterator<Item = Rc<T>>>(args: Args) -> Self {
+impl FnCallArgs {
+    pub fn new<Args: IntoIterator<Item = Rc<Expression>>>(args: Args) -> Self {
         FnCallArgs {
             args: args.into_iter().collect(),
         }
     }
 
-    pub fn from_owned(args: Vec<T>) -> Self {
+    pub fn from_owned(args: Vec<Expression>) -> Self {
         FnCallArgs {
             args: args.iter().map(|a| Rc::new(a.clone())).collect(),
         }
     }
 
-    pub fn prepend_arg(&mut self, arg: Rc<T>) {
+    pub fn prepend_arg(&mut self, arg: Rc<Expression>) {
         self.args.insert(0, arg);
     }
 
@@ -32,7 +32,7 @@ impl<T: Clone> FnCallArgs<T> {
         self.len() == 0
     }
 
-    pub fn iter(&self) -> std::slice::Iter<Rc<T>> {
+    pub fn iter(&self) -> std::slice::Iter<Rc<Expression>> {
         self.args.iter()
     }
 }
