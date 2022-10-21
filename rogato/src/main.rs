@@ -1,5 +1,3 @@
-use rogato_common::ast::helpers::{fn_def, op_call, var};
-use rogato_compiler::Compiler;
 #[allow(unused_imports)]
 use rogato_interpreter::{EvalContext, Evaluate};
 use rogato_parser::{parse, ParserContext};
