@@ -1,20 +1,27 @@
+use std::rc::Rc;
+
+use rogato_common::ast::AST;
 use rogato_parser::{parse_ast, ParserContext};
 
 use crate::Compiler;
 
+pub fn parse_fn_def(code: &str) -> Rc<AST> {
+    let mut parser_ctx = ParserContext::new();
+    parse_ast(code, &mut parser_ctx).unwrap()
+}
+
 #[test]
 fn compile_add3() {
-    let mut parser_ctx = ParserContext::new();
     let context = Compiler::new_context();
     let mut compiler = Compiler::new_with_module_name(&context, "compile_test");
 
     let func_name = "add3";
-    let func_def = parse_ast("let add3 x y z = (x + y) + z", &mut parser_ctx).unwrap();
+    let func_def = parse_fn_def("let add3 x y z = (x + y) + z");
     compiler.compile_ast(func_def.as_ref()).unwrap();
-    let ee = compiler.execution_engine();
 
     unsafe {
-        let function = ee
+        let function = compiler
+            .execution_engine()
             .get_function::<unsafe extern "C" fn(f32, f32, f32) -> f32>(func_name)
             .unwrap();
 
@@ -37,18 +44,16 @@ fn compile_add3() {
 
 #[test]
 fn compile_add2_mul() {
-    let func_name = "add2_mul";
-    let mut parser_ctx = ParserContext::new();
-
-    let func_def = parse_ast("let add2_mul x y z = (x + y) * z", &mut parser_ctx).unwrap();
-
     let context = Compiler::new_context();
     let mut compiler = Compiler::new_with_module_name(&context, "compile_test");
+
+    let func_name = "add2_mul";
+    let func_def = parse_fn_def("let add2_mul x y z = (x + y) * z");
     compiler.compile_ast(func_def.as_ref()).unwrap();
-    let ee = compiler.execution_engine();
 
     unsafe {
-        let function = ee
+        let function = compiler
+            .execution_engine()
             .get_function::<unsafe extern "C" fn(f32, f32, f32) -> f32>(func_name)
             .unwrap();
 
