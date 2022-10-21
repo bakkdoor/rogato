@@ -7,13 +7,17 @@ use inkwell::{
     values::{BasicMetadataValueEnum, FloatValue, FunctionValue, PointerValue},
     OptimizationLevel,
 };
-use rogato_common::ast::{
-    expression::Expression,
-    fn_call::FnCallArgs,
-    fn_def::{FnDef, FnDefBody},
-    module_def::ModuleDef,
-    type_expression::TypeDef,
-    Identifier, Program, AST,
+use rogato_common::{
+    ast::{
+        expression::Expression,
+        fn_call::FnCallArgs,
+        fn_def::{FnDef, FnDefBody},
+        literal::Literal,
+        module_def::ModuleDef,
+        type_expression::TypeDef,
+        Identifier, Program, AST,
+    },
+    val,
 };
 use std::collections::HashMap;
 
@@ -128,6 +132,10 @@ impl<'ctx> Compiler<'ctx> {
         Err(CompileError::Unknown(message.to_string()))
     }
 
+    pub fn not_yed_implemented_error<T, S: ToString>(&self, message: S) -> CompileResult<T> {
+        Err(CompileError::NotYetImplemented(message.to_string()))
+    }
+
     pub fn compile_fn_def(&mut self, fn_def: &FnDef) -> CompileResult<()> {
         let f32_type = self.context.f32_type();
         let fn_type = f32_type.fn_type(
@@ -224,6 +232,16 @@ impl<'ctx> Compiler<'ctx> {
         todo!()
     }
 
+    pub fn compile_lit_expr(&mut self, literal: &Literal) -> CompileResult<FloatValue<'ctx>> {
+        match literal {
+            Literal::Number(num) => {
+                let float_val = val::number_to_f64(num).unwrap();
+                Ok(self.context.f32_type().const_float(float_val))
+            }
+            _ => self.unknown_error("Literals not yet implemented!"),
+        }
+    }
+
     pub fn compile_ast(&mut self, ast: &AST) -> CompileResult<()> {
         match ast {
             AST::RootComment(c) => Err(CompileError::IgnoredRootComment(c.to_owned())),
@@ -237,7 +255,7 @@ impl<'ctx> Compiler<'ctx> {
     pub fn compile_expr(&mut self, expr: &Expression) -> CompileResult<FloatValue<'ctx>> {
         match expr {
             Expression::Commented(_c, e) => self.compile_expr(e),
-            Expression::Lit(_lit_expr) => todo!(),
+            Expression::Lit(lit_expr) => self.compile_lit_expr(lit_expr),
             Expression::FnCall(id, args) => self.compile_fn_call(id, args),
             Expression::OpCall(id, left, right) => self.compile_op_call(id, left, right),
 

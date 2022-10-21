@@ -111,6 +111,14 @@ pub fn quoted_ast(ast: Rc<AST>) -> ValueRef {
     Rc::new(Value::QuotedAST(ast))
 }
 
+pub fn number_to_f32(num: &Decimal) -> Option<f32> {
+    Decimal::to_f32(num)
+}
+
+pub fn number_to_f64(num: &Decimal) -> Option<f64> {
+    Decimal::to_f64(num)
+}
+
 #[derive(Clone, Eq, std::fmt::Debug)]
 pub enum Value {
     Option(Option<ValueRef>),

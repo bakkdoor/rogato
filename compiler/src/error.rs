@@ -6,6 +6,9 @@ pub enum CompileError {
     #[error("Unknown compiler error: {0}")]
     Unknown(String),
 
+    #[error("Compiler feature not yet implemented: {0}")]
+    NotYetImplemented(String),
+
     #[error("Could not find a matching variable with name: {0}")]
     VarNotFound(Identifier),
 
