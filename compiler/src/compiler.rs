@@ -58,6 +58,16 @@ impl<'a, 'ctx> Compiler<'a, 'ctx> {
         }
     }
 
+    pub fn new_context() -> Context {
+        Context::create()
+    }
+
+    pub fn default_execution_engine(module: &'a Module<'ctx>) -> ExecutionEngine<'ctx> {
+        module
+            .create_jit_execution_engine(OptimizationLevel::None)
+            .unwrap()
+    }
+
     pub fn default_function_pass_manager(
         module: &Module<'ctx>,
     ) -> PassManager<FunctionValue<'ctx>> {
@@ -74,88 +84,6 @@ impl<'a, 'ctx> Compiler<'a, 'ctx> {
         fpm.add_reassociate_pass();
         fpm.initialize();
         fpm
-    }
-
-    pub fn context(&self) -> &'ctx Context {
-        self.context
-    }
-    pub fn execution_engine(&self) -> &ExecutionEngine<'ctx> {
-        self.execution_engine
-    }
-
-    pub fn default_execution_engine(module: &'a Module<'ctx>) -> ExecutionEngine<'ctx> {
-        module
-            .create_jit_execution_engine(OptimizationLevel::None)
-            .unwrap()
-    }
-
-    pub fn new_context() -> Context {
-        Context::create()
-    }
-
-    pub fn new_module(&self, name: &str) -> Module<'ctx> {
-        self.context.create_module(name)
-    }
-
-    pub fn module(&self) -> &'a Module<'ctx> {
-        &self.module
-    }
-
-    pub fn lookup_var<S: ToString>(&self, name: S) -> Option<&PointerValue<'ctx>> {
-        self.variables.get(&name.to_string())
-    }
-
-    pub fn store_var<S: ToString>(&mut self, name: S, pointer_val: PointerValue<'ctx>) {
-        self.variables.insert(name.to_string(), pointer_val);
-    }
-
-    fn create_entry_block_alloca<T: BasicType<'ctx>>(
-        &self,
-        ty: T,
-        name: &str,
-    ) -> PointerValue<'ctx> {
-        let builder = self.context.create_builder();
-
-        let entry = self.current_fn_value().get_first_basic_block().unwrap();
-
-        match entry.get_first_instruction() {
-            Some(first_instr) => builder.position_before(&first_instr),
-            None => builder.position_at_end(entry),
-        }
-
-        builder.build_alloca(ty, name)
-    }
-
-    /// Returns the `FunctionValue` representing the function being compiled.
-    #[inline]
-    fn current_fn_value(&self) -> FunctionValue<'ctx> {
-        self.current_fn_value.unwrap()
-    }
-
-    /// Sets the `FunctionValue` representing the function being compiled.
-    #[inline]
-    fn set_current_fn_value(&mut self, fn_val: FunctionValue<'ctx>) {
-        self.current_fn_value = Some(fn_val)
-    }
-
-    #[inline]
-    fn clear_current_fn(&mut self) {
-        self.current_fn_value = None;
-        self.builder.clear_insertion_position();
-    }
-
-    /// Gets a defined function given its name.
-    #[inline]
-    fn get_function(&self, name: &str) -> Option<FunctionValue<'ctx>> {
-        self.module.get_function(name)
-    }
-
-    fn unknown_error<T, S: ToString>(&self, message: S) -> CompileResult<T> {
-        Err(CompileError::Unknown(message.to_string()))
-    }
-
-    pub fn not_yed_implemented_error<T, S: ToString>(&self, message: S) -> CompileResult<T> {
-        Err(CompileError::NotYetImplemented(message.to_string()))
     }
 
     pub fn compile_fn_def(&mut self, fn_def: &FnDef) -> CompileResult<FunctionValue<'ctx>> {
@@ -326,5 +254,80 @@ impl<'a, 'ctx> Compiler<'a, 'ctx> {
             self.compile_ast(ast)?;
         }
         Ok(())
+    }
+
+    /// Returns the `FunctionValue` representing the function being compiled.
+    #[inline]
+    fn current_fn_value(&self) -> FunctionValue<'ctx> {
+        self.current_fn_value.unwrap()
+    }
+
+    /// Sets the `FunctionValue` representing the function being compiled.
+    #[inline]
+    fn set_current_fn_value(&mut self, fn_val: FunctionValue<'ctx>) {
+        self.current_fn_value = Some(fn_val)
+    }
+
+    #[inline]
+    fn clear_current_fn(&mut self) {
+        self.current_fn_value = None;
+        self.builder.clear_insertion_position();
+    }
+
+    /// Gets a defined function given its name.
+    #[inline]
+    fn get_function(&self, name: &str) -> Option<FunctionValue<'ctx>> {
+        self.module.get_function(name)
+    }
+
+    #[inline]
+    fn unknown_error<T, S: ToString>(&self, message: S) -> CompileResult<T> {
+        Err(CompileError::Unknown(message.to_string()))
+    }
+
+    #[inline]
+    pub fn not_yed_implemented_error<T, S: ToString>(&self, message: S) -> CompileResult<T> {
+        Err(CompileError::NotYetImplemented(message.to_string()))
+    }
+
+    pub fn context(&self) -> &'ctx Context {
+        self.context
+    }
+
+    pub fn execution_engine(&self) -> &ExecutionEngine<'ctx> {
+        self.execution_engine
+    }
+
+    pub fn new_module(&self, name: &str) -> Module<'ctx> {
+        self.context.create_module(name)
+    }
+
+    pub fn module(&self) -> &'a Module<'ctx> {
+        &self.module
+    }
+
+    pub fn lookup_var<S: ToString>(&self, name: S) -> Option<&PointerValue<'ctx>> {
+        self.variables.get(&name.to_string())
+    }
+
+    pub fn store_var<S: ToString>(&mut self, name: S, pointer_val: PointerValue<'ctx>) {
+        self.variables.insert(name.to_string(), pointer_val);
+    }
+
+    fn create_entry_block_alloca<T: BasicType<'ctx>>(
+        &self,
+        ty: T,
+        name: &str,
+    ) -> PointerValue<'ctx> {
+        let builder = self.context.create_builder();
+
+        let entry = self.current_fn_value().get_first_basic_block().unwrap();
+
+        match entry.get_first_instruction() {
+            Some(first_instr) => builder.position_before(&first_instr),
+            None => builder.position_at_end(entry),
+        }
+
+        builder.build_alloca(ty, name)
     }
 }
