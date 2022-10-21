@@ -15,7 +15,11 @@ type F32FnType = unsafe extern "C" fn(f32, f32, f32) -> f32;
 #[test]
 fn compile_add3() {
     let context = Compiler::new_context();
-    let mut compiler = Compiler::new_with_module_name(&context, "compile_test");
+    let builder = context.create_builder();
+    let module = context.create_module("compile_test");
+    let fpm = Compiler::default_function_pass_manager(&module);
+    let ee = Compiler::default_execution_engine(&module);
+    let mut compiler = Compiler::new(&context, &module, &builder, &fpm, &ee);
 
     let func_def = parse_fn_def("let add3 x y z = (x + y) + z");
     compiler.compile_ast(func_def.as_ref()).unwrap();
@@ -45,7 +49,11 @@ fn compile_add3() {
 #[test]
 fn compile_add2_mul() {
     let context = Compiler::new_context();
-    let mut compiler = Compiler::new_with_module_name(&context, "compile_test");
+    let builder = context.create_builder();
+    let module = context.create_module("compile_test");
+    let fpm = Compiler::default_function_pass_manager(&module);
+    let ee = Compiler::default_execution_engine(&module);
+    let mut compiler = Compiler::new(&context, &module, &builder, &fpm, &ee);
 
     let func_def = parse_fn_def("let add2_mul x y z = (x + y) * z");
     compiler.compile_ast(func_def.as_ref()).unwrap();
@@ -76,7 +84,11 @@ fn compile_add2_mul() {
 #[test]
 fn compile_multiple_functions() {
     let context = Compiler::new_context();
-    let mut compiler = Compiler::new_with_module_name(&context, "compile_test");
+    let builder = context.create_builder();
+    let module = context.create_module("compile_test");
+    let fpm = Compiler::default_function_pass_manager(&module);
+    let ee = Compiler::default_execution_engine(&module);
+    let mut compiler = Compiler::new(&context, &module, &builder, &fpm, &ee);
 
     let fn_def = parse_fn_def("let tripleSum x y z = (x + y + z) * 3.0");
     compiler.compile_ast(&fn_def.as_ref()).unwrap();

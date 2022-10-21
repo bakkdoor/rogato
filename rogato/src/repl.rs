@@ -41,8 +41,13 @@ pub fn run_repl() -> anyhow::Result<()> {
     println!("Enter rogātō expressions below. You can add new lines via SHIFT-DOWN.\n");
     let mut eval_ctx = EvalContext::new();
     let parse_ctx = ParserContext::new();
+
     let context = Compiler::new_context();
-    let mut compiler = Compiler::new_with_module_name(&context, "rogato.repl");
+    let builder = context.create_builder();
+    let module = context.create_module("rogato.repl");
+    let fpm = Compiler::default_function_pass_manager(&module);
+    let ee = Compiler::default_execution_engine(&module);
+    let mut compiler = Compiler::new(&context, &module, &builder, &fpm, &ee);
 
     let mut counter = 0usize;
 

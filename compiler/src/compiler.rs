@@ -27,38 +27,26 @@ use crate::error::CompileError;
 pub type CompileResult<T> = Result<T, CompileError>;
 
 #[derive(Debug)]
-pub struct Compiler<'ctx> {
+pub struct Compiler<'a, 'ctx> {
     context: &'ctx Context,
-    module: Module<'ctx>,
-    builder: Builder<'ctx>,
-    fpm: PassManager<FunctionValue<'ctx>>,
+    module: &'a Module<'ctx>,
+    builder: &'a Builder<'ctx>,
+    fpm: &'a PassManager<FunctionValue<'ctx>>,
     #[allow(dead_code)]
-    execution_engine: ExecutionEngine<'ctx>,
+    execution_engine: &'a ExecutionEngine<'ctx>,
 
     fn_value_opt: Option<FunctionValue<'ctx>>,
     variables: HashMap<String, PointerValue<'ctx>>,
 }
 
-impl<'ctx> Compiler<'ctx> {
-    pub fn new(context: &'ctx Context, module: Module<'ctx>) -> Self {
-        let execution_engine = Compiler::new_execution_engine(&module);
-        let fpm = Compiler::default_function_pass_manager(&module);
-        Self {
-            context,
-            module,
-            builder: context.create_builder(),
-            fpm,
-            execution_engine,
-            fn_value_opt: None,
-            variables: HashMap::new(),
-        }
-    }
-
-    pub fn new_with_module_name<S: ToString>(context: &'ctx Context, module_name: S) -> Self {
-        let builder = context.create_builder();
-        let module = context.create_module(module_name.to_string().as_str());
-        let fpm = Compiler::default_function_pass_manager(&module);
-        let execution_engine = Compiler::new_execution_engine(&module);
+impl<'a, 'ctx> Compiler<'a, 'ctx> {
+    pub fn new(
+        context: &'ctx Context,
+        module: &'a Module<'ctx>,
+        builder: &'a Builder<'ctx>,
+        fpm: &'a PassManager<FunctionValue<'ctx>>,
+        execution_engine: &'a ExecutionEngine<'ctx>,
+    ) -> Self {
         Self {
             context,
             module,
@@ -92,10 +80,10 @@ impl<'ctx> Compiler<'ctx> {
         self.context
     }
     pub fn execution_engine(&self) -> &ExecutionEngine<'ctx> {
-        &self.execution_engine
+        self.execution_engine
     }
 
-    pub fn new_execution_engine(module: &Module<'ctx>) -> ExecutionEngine<'ctx> {
+    pub fn default_execution_engine(module: &'a Module<'ctx>) -> ExecutionEngine<'ctx> {
         module
             .create_jit_execution_engine(OptimizationLevel::None)
             .unwrap()
