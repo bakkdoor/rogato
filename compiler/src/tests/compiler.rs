@@ -170,26 +170,26 @@ fn compile_0_arg_fn() {
     let func_def = parse_fn_def("let test1 = 100 * 420.69");
     compiler.compile_fn_def(func_def.as_ref()).unwrap();
 
+    let func_def = parse_fn_def("let test2 = 10.0 * 42");
+    compiler.compile_fn_def(func_def.as_ref()).unwrap();
+
     unsafe {
-        let function = compiler
+        let test1 = compiler
             .execution_engine()
             .get_function::<unsafe extern "C" fn() -> f32>("test1")
             .unwrap();
 
-        assert_eq!(function.call(), 100.0 * 420.69);
-        assert_eq!(function.call(), 100.0 * 420.69);
-        assert_eq!(function.call(), 100.0 * 420.69);
+        assert_eq!(test1.call(), 100.0 * 420.69);
+        assert_eq!(test1.call(), 100.0 * 420.69);
+        assert_eq!(test1.call(), 100.0 * 420.69);
 
-        let func_def = parse_fn_def("let test2 = 10.0 * 42");
-        compiler.compile_fn_def(func_def.as_ref()).unwrap();
+        let test2 = compiler
+            .execution_engine()
+            .get_function::<unsafe extern "C" fn() -> f32>("test2")
+            .unwrap();
 
-        // let function = compiler
-        //     .execution_engine()
-        //     .get_function::<unsafe extern "C" fn() -> f32>("test2")
-        //     .unwrap();
-
-        // assert_eq!(function.call(), 420.0);
-        // assert_eq!(function.call(), 420.0);
-        // assert_eq!(function.call(), 420.0);
+        assert_eq!(test2.call(), 420.0);
+        assert_eq!(test2.call(), 420.0);
+        assert_eq!(test2.call(), 420.0);
     }
 }
