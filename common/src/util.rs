@@ -12,16 +12,15 @@ pub fn indent<'a, T: Display>(t: &'a T) -> indent_write::indentable::Indented<'s
 }
 
 pub fn is_debug_enabled() -> bool {
-    if let Some((_, val)) = std::env::vars_os().find(|(k, _)| k.eq("DEBUG")) {
-        if val == "1" {
-            return true;
-        }
-    }
-    false
+    is_envar_set("DEBUG")
 }
 
 pub fn is_compilation_enabled() -> bool {
-    if let Some((_, val)) = std::env::vars_os().find(|(k, _)| k.eq("COMPILE")) {
+    is_envar_set("COMPILE")
+}
+
+fn is_envar_set(envar: &str) -> bool {
+    if let Some((_, val)) = std::env::vars_os().find(|(k, _)| k.eq(envar)) {
         if val == "1" {
             return true;
         }
