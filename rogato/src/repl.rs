@@ -125,10 +125,12 @@ fn parse_eval_print(
             if rogato_common::util::is_debug_enabled() {
                 println!("{:03} 🌳 {:?}\n\n{}\n", counter, ast, ast);
             }
+
             if rogato_common::util::is_compilation_enabled() {
                 let compile_result = compiler.compile_program(&ast);
                 println!("Compiled: {:?}", compile_result);
             }
+
             match ast.evaluate(eval_ctx) {
                 Ok(val) => {
                     if val.ast_depth() > 5 {
@@ -144,6 +146,7 @@ fn parse_eval_print(
                 }
             }
         }
+
         Err(_) => match parse_expr(code.trim(), parse_ctx) {
             Ok(ast) => {
                 if rogato_common::util::is_debug_enabled() {
