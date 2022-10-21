@@ -43,41 +43,7 @@ fn main() -> anyhow::Result<()> {
                 // let datastore = db::open(Path::new(DB_PATH)).map_err(print_error).unwrap();
                 // db_stuff(&datastore).unwrap();
             }
-            "compile" => {
-                let context = Compiler::new_context();
-                let mut compiler = Compiler::new_with_module_name(&context, "compile_test");
-                let func_name = "add3";
-                let func_def = fn_def(
-                    func_name,
-                    ["x", "y", "z"],
-                    op_call("*", op_call("+", var("x"), var("y")), var("z")),
-                );
-
-                compiler.compile_ast(func_def.as_ref())?;
-
-                unsafe {
-                    let function = compiler
-                        .execution_engine()
-                        .get_function::<unsafe extern "C" fn(f32, f32, f32) -> f32>(func_name)
-                        .unwrap();
-
-                    let params_and_results = [
-                        ((1.1, 2.22, 3.333), 11.06556),
-                        ((1.0, 2.0, 3.0), 9.0),
-                        ((0.0, 0.0, 0.0), 0.0),
-                        ((1.0, 0.0, 0.0), 0.0),
-                        ((0.0, 2.2, 0.0), 0.0),
-                        ((0.0, 0.0, 3.3), 0.0),
-                        ((0.5, 10.0, 2.5), 26.25),
-                    ];
-
-                    for ((x, y, z), result) in params_and_results {
-                        let val = function.call(x, y, z);
-                        assert_eq!(val, result);
-                        println!("{}({}, {}, {}) = {}", func_name, x, y, z, val);
-                    }
-                }
-            }
+            "compile" => todo!(),
             file => {
                 println!("Attempting file parse: {}", file);
                 let file_path = Path::new(file);
