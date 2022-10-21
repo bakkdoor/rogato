@@ -41,6 +41,9 @@ pub fn run_repl() -> anyhow::Result<()> {
     println!("Enter rogātō expressions below. You can add new lines via SHIFT-DOWN.\n");
     let mut eval_ctx = EvalContext::new();
     let parse_ctx = ParserContext::new();
+    let context = Compiler::new_context();
+    let mut compiler = Compiler::new_with_module_name(&context, "rogato.repl");
+
     let mut counter = 0usize;
 
     // let mut rl = rustyline::Editor::<()>::new()?;
@@ -60,7 +63,15 @@ pub fn run_repl() -> anyhow::Result<()> {
         match readline {
             Ok(line) => {
                 rl.add_history_entry(line.as_str());
-                parse_eval_print(&parse_ctx, &mut eval_ctx, counter, &line)?;
+                match parse_eval_print(&parse_ctx, &mut eval_ctx, &mut compiler, counter, &line) {
+                    Ok(_) => {
+                        continue;
+                    }
+                    Err(error) => {
+                        eprintln!("REPL: {}", error);
+                        continue;
+                    }
+                }
             }
             Err(ReadlineError::Interrupted) => {
                 println!("^C");
@@ -114,12 +125,10 @@ impl From<ReadlineError> for REPLError {
 fn parse_eval_print(
     parse_ctx: &ParserContext,
     eval_ctx: &mut EvalContext,
+    compiler: &mut Compiler,
     counter: usize,
     code: &str,
 ) -> anyhow::Result<()> {
-    let context = Compiler::new_context();
-    let mut compiler = Compiler::new_with_module_name(&context, "rogato.repl");
-
     match parse(code, parse_ctx) {
         Ok(ast) => {
             if rogato_common::util::is_debug_enabled() {
@@ -147,36 +156,63 @@ fn parse_eval_print(
             }
         }
 
-        Err(_) => match parse_expr(code.trim(), parse_ctx) {
-            Ok(ast) => {
-                if rogato_common::util::is_debug_enabled() {
-                    println!("{:03} 🌳 {:?}\n\n{}\n", counter, ast, ast);
-                }
-
-                if rogato_common::util::is_compilation_enabled() {
-                    let compile_result = compiler.compile_expr(&ast);
-                    println!("Compiled: {:?}", compile_result);
-                }
-
-                match ast.evaluate(eval_ctx) {
-                    Ok(val) => {
-                        if val.ast_depth() > 5 {
-                            println!("{:03} ✅\n{}\n", counter, val);
-                        } else {
-                            println!("{:03} ✅ {}\n", counter, val);
+        Err(_) => {
+            if rogato_common::util::is_compilation_enabled() {
+                let tmp_func_name = format!("repl_{}", counter);
+                let code = format!("let {} = {}", tmp_func_name, code.trim());
+                return match parse(code.as_str(), parse_ctx) {
+                    Ok(ast) => {
+                        if rogato_common::util::is_debug_enabled() {
+                            println!("{:03} 🌳 {:?}\n\n{}\n", counter, ast, ast);
                         }
-                        Ok(())
+
+                        compiler.compile_program(&ast)?;
+
+                        unsafe {
+                            let tmp_function = compiler
+                                .execution_engine()
+                                .get_function::<unsafe extern "C" fn() -> f32>(
+                                tmp_func_name.as_str(),
+                            )?;
+
+                            let result = tmp_function.call();
+                            println!("Compiled call resulted in: {:?}", result);
+                            return Ok(());
+                        }
                     }
                     Err(e) => {
-                        eprintln!("{:03} ❌ {}\n", counter, e);
+                        eprintln!("{:03} ❌ {:?}\n", counter, e);
                         Ok(())
                     }
+                };
+            }
+
+            match parse_expr(code.trim(), parse_ctx) {
+                Ok(ast) => {
+                    if rogato_common::util::is_debug_enabled() {
+                        println!("{:03} 🌳 {:?}\n\n{}\n", counter, ast, ast);
+                    }
+
+                    match ast.evaluate(eval_ctx) {
+                        Ok(val) => {
+                            if val.ast_depth() > 5 {
+                                println!("{:03} ✅\n{}\n", counter, val);
+                            } else {
+                                println!("{:03} ✅ {}\n", counter, val);
+                            }
+                            Ok(())
+                        }
+                        Err(e) => {
+                            eprintln!("{:03} ❌ {}\n", counter, e);
+                            Ok(())
+                        }
+                    }
+                }
+                Err(e) => {
+                    eprintln!("{:03} ❌ {:?}\n", counter, e);
+                    Ok(())
                 }
             }
-            Err(e) => {
-                eprintln!("{:03} ❌ {:?}\n", counter, e);
-                Ok(())
-            }
-        },
+        }
     }
 }

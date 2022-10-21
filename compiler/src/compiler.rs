@@ -162,14 +162,14 @@ impl<'ctx> Compiler<'ctx> {
 
     pub fn compile_fn_def(&mut self, fn_def: &FnDef) -> CompileResult<()> {
         let f32_type = self.context.f32_type();
-        let fn_type = f32_type.fn_type(
-            &[
-                BasicMetadataTypeEnum::FloatType(f32_type),
-                BasicMetadataTypeEnum::FloatType(f32_type),
-                BasicMetadataTypeEnum::FloatType(f32_type),
-            ],
-            false,
-        );
+
+        let fn_arg_types: Vec<BasicMetadataTypeEnum<'ctx>> = fn_def
+            .args()
+            .iter()
+            .map(|_| BasicMetadataTypeEnum::FloatType(f32_type))
+            .collect();
+
+        let fn_type = f32_type.fn_type(&fn_arg_types, false);
         let func_name = fn_def.id();
         let func = self.module.add_function(func_name.as_str(), fn_type, None);
         self.set_fn_value(func);
@@ -188,11 +188,8 @@ impl<'ctx> Compiler<'ctx> {
                 let body = self.compile_expr(expr)?;
                 self.builder.build_return(Some(&body));
                 if func.verify(true) {
-                    if self.fpm.run_on(&func) {
-                        Ok(())
-                    } else {
-                        Err(CompileError::FnDefPassManagerFailed(func_name.clone()))
-                    }
+                    self.fpm.run_on(&func);
+                    Ok(())
                 } else {
                     Err(CompileError::FnDefValidationFailed(func_name.clone()))
                 }
