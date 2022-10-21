@@ -35,7 +35,7 @@ pub struct Compiler<'a, 'ctx> {
     #[allow(dead_code)]
     execution_engine: &'a ExecutionEngine<'ctx>,
 
-    fn_value_opt: Option<FunctionValue<'ctx>>,
+    current_fn_value: Option<FunctionValue<'ctx>>,
     variables: HashMap<String, PointerValue<'ctx>>,
 }
 
@@ -53,7 +53,7 @@ impl<'a, 'ctx> Compiler<'a, 'ctx> {
             builder,
             fpm,
             execution_engine,
-            fn_value_opt: None,
+            current_fn_value: None,
             variables: HashMap::new(),
         }
     }
@@ -112,7 +112,7 @@ impl<'a, 'ctx> Compiler<'a, 'ctx> {
     ) -> PointerValue<'ctx> {
         let builder = self.context.create_builder();
 
-        let entry = self.fn_value().get_first_basic_block().unwrap();
+        let entry = self.current_fn_value().get_first_basic_block().unwrap();
 
         match entry.get_first_instruction() {
             Some(first_instr) => builder.position_before(&first_instr),
@@ -124,19 +124,20 @@ impl<'a, 'ctx> Compiler<'a, 'ctx> {
 
     /// Returns the `FunctionValue` representing the function being compiled.
     #[inline]
-    fn fn_value(&self) -> FunctionValue<'ctx> {
-        self.fn_value_opt.unwrap()
+    fn current_fn_value(&self) -> FunctionValue<'ctx> {
+        self.current_fn_value.unwrap()
     }
 
     /// Sets the `FunctionValue` representing the function being compiled.
     #[inline]
-    fn set_fn_value(&mut self, fn_val: FunctionValue<'ctx>) {
-        self.fn_value_opt = Some(fn_val)
+    fn set_current_fn_value(&mut self, fn_val: FunctionValue<'ctx>) {
+        self.current_fn_value = Some(fn_val)
     }
 
     #[inline]
-    fn clear_fn_value(&mut self) {
-        self.fn_value_opt = None
+    fn clear_current_fn(&mut self) {
+        self.current_fn_value = None;
+        self.builder.clear_insertion_position();
     }
 
     /// Gets a defined function given its name.
@@ -165,7 +166,7 @@ impl<'a, 'ctx> Compiler<'a, 'ctx> {
         let fn_type = f32_type.fn_type(&fn_arg_types, false);
         let func_name = fn_def.id();
         let func = self.module.add_function(func_name.as_str(), fn_type, None);
-        self.set_fn_value(func);
+        self.set_current_fn_value(func);
 
         let basic_block = self.context.append_basic_block(func, fn_def.id());
         self.builder.position_at_end(basic_block);
@@ -182,10 +183,11 @@ impl<'a, 'ctx> Compiler<'a, 'ctx> {
                 self.builder.build_return(Some(&body));
                 if func.verify(true) {
                     self.fpm.run_on(&func);
-                    self.clear_fn_value();
+                    self.clear_current_fn();
                     Ok(func)
                 } else {
                     unsafe {
+                        self.clear_current_fn();
                         func.delete();
                     }
                     Err(CompileError::FnDefValidationFailed(func_name.clone()))
