@@ -19,3 +19,12 @@ pub fn is_debug_enabled() -> bool {
     }
     false
 }
+
+pub fn is_compilation_enabled() -> bool {
+    if let Some((_, val)) = std::env::vars_os().find(|(k, _)| k.eq("COMPILE")) {
+        if val == "1" {
+            return true;
+        }
+    }
+    false
+}

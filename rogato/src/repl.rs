@@ -4,6 +4,7 @@ use rustyline::{Cmd, Editor, EventHandler, KeyCode, KeyEvent, Modifiers};
 use rustyline_derive::{Completer, Helper, Highlighter, Hinter, Validator};
 
 use rogato_common::ast::ASTDepth;
+use rogato_compiler::Compiler;
 use rogato_interpreter::{EvalContext, EvalError, Evaluate};
 use rogato_parser::{parse, parse_expr, ParseError, ParserContext};
 use thiserror::Error;
@@ -116,10 +117,17 @@ fn parse_eval_print(
     counter: usize,
     code: &str,
 ) -> anyhow::Result<()> {
+    let context = Compiler::new_context();
+    let mut compiler = Compiler::new_with_module_name(&context, "rogato.repl");
+
     match parse(code, parse_ctx) {
         Ok(ast) => {
             if rogato_common::util::is_debug_enabled() {
                 println!("{:03} 🌳 {:?}\n\n{}\n", counter, ast, ast);
+            }
+            if rogato_common::util::is_compilation_enabled() {
+                let compile_result = compiler.compile_program(&ast);
+                println!("Compiled: {:?}", compile_result);
             }
             match ast.evaluate(eval_ctx) {
                 Ok(val) => {
@@ -141,6 +149,12 @@ fn parse_eval_print(
                 if rogato_common::util::is_debug_enabled() {
                     println!("{:03} 🌳 {:?}\n\n{}\n", counter, ast, ast);
                 }
+
+                if rogato_common::util::is_compilation_enabled() {
+                    let compile_result = compiler.compile_expr(&ast);
+                    println!("Compiled: {:?}", compile_result);
+                }
+
                 match ast.evaluate(eval_ctx) {
                     Ok(val) => {
                         if val.ast_depth() > 5 {
