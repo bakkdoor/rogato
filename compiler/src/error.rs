@@ -23,4 +23,7 @@ pub enum CompileError {
 
     #[error("FnDef compilation validation failed for: {0}")]
     FnDefValidationFailed(Identifier),
+
+    #[error("FnDef PassManager failed for: {0}")]
+    FnDefPassManagerFailed(Identifier),
 }

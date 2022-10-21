@@ -3,6 +3,7 @@ use inkwell::{
     context::Context,
     execution_engine::ExecutionEngine,
     module::Module,
+    passes::PassManager,
     types::{BasicMetadataTypeEnum, BasicType},
     values::{BasicMetadataValueEnum, FloatValue, FunctionValue, PointerValue},
     OptimizationLevel,
@@ -30,6 +31,7 @@ pub struct Compiler<'ctx> {
     context: &'ctx Context,
     module: Module<'ctx>,
     builder: Builder<'ctx>,
+    fpm: PassManager<FunctionValue<'ctx>>,
     #[allow(dead_code)]
     execution_engine: ExecutionEngine<'ctx>,
 
@@ -40,10 +42,12 @@ pub struct Compiler<'ctx> {
 impl<'ctx> Compiler<'ctx> {
     pub fn new(context: &'ctx Context, module: Module<'ctx>) -> Self {
         let execution_engine = Compiler::new_execution_engine(&module);
+        let fpm = Compiler::default_function_pass_manager(&module);
         Self {
             context,
             module,
             builder: context.create_builder(),
+            fpm,
             execution_engine,
             fn_value_opt: None,
             variables: HashMap::new(),
@@ -53,15 +57,35 @@ impl<'ctx> Compiler<'ctx> {
     pub fn new_with_module_name<S: ToString>(context: &'ctx Context, module_name: S) -> Self {
         let builder = context.create_builder();
         let module = context.create_module(module_name.to_string().as_str());
+        let fpm = Compiler::default_function_pass_manager(&module);
         let execution_engine = Compiler::new_execution_engine(&module);
         Self {
             context,
             module,
             builder,
+            fpm,
             execution_engine,
             fn_value_opt: None,
             variables: HashMap::new(),
         }
+    }
+
+    pub fn default_function_pass_manager(
+        module: &Module<'ctx>,
+    ) -> PassManager<FunctionValue<'ctx>> {
+        // Create FPM
+        let fpm = PassManager::create(module);
+
+        fpm.add_instruction_combining_pass();
+        fpm.add_reassociate_pass();
+        fpm.add_gvn_pass();
+        fpm.add_cfg_simplification_pass();
+        fpm.add_basic_alias_analysis_pass();
+        fpm.add_promote_memory_to_register_pass();
+        fpm.add_instruction_combining_pass();
+        fpm.add_reassociate_pass();
+        fpm.initialize();
+        fpm
     }
 
     pub fn context(&self) -> &'ctx Context {
@@ -164,7 +188,11 @@ impl<'ctx> Compiler<'ctx> {
                 let body = self.compile_expr(expr)?;
                 self.builder.build_return(Some(&body));
                 if func.verify(true) {
-                    Ok(())
+                    if self.fpm.run_on(&func) {
+                        Ok(())
+                    } else {
+                        Err(CompileError::FnDefPassManagerFailed(func_name.clone()))
+                    }
                 } else {
                     Err(CompileError::FnDefValidationFailed(func_name.clone()))
                 }
