@@ -42,13 +42,6 @@ pub fn run_repl() -> anyhow::Result<()> {
     let mut eval_ctx = EvalContext::new();
     let parse_ctx = ParserContext::new();
 
-    let context = Compiler::new_context();
-    let builder = context.create_builder();
-    let module = context.create_module("rogato.repl");
-    let fpm = Compiler::default_function_pass_manager(&module);
-    let ee = Compiler::default_execution_engine(&module);
-    let mut compiler = Compiler::new(&context, &module, &builder, &fpm, &ee);
-
     let mut counter = 0usize;
 
     // let mut rl = rustyline::Editor::<()>::new()?;
@@ -63,6 +56,13 @@ pub fn run_repl() -> anyhow::Result<()> {
     }
 
     loop {
+        let context = Compiler::new_context();
+        let builder = context.create_builder();
+        let module = context.create_module("rogato.repl");
+        let fpm = Compiler::default_function_pass_manager(&module);
+        let ee = Compiler::default_execution_engine(&module);
+        let mut compiler = Compiler::new(&context, &module, &builder, &fpm, &ee);
+
         counter += 1;
         let readline = rl.readline(format!("{:03} >  ", counter).as_str());
         match readline {
