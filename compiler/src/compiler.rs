@@ -134,6 +134,11 @@ impl<'a, 'ctx> Compiler<'a, 'ctx> {
         self.fn_value_opt = Some(fn_val)
     }
 
+    #[inline]
+    fn clear_fn_value(&mut self) {
+        self.fn_value_opt = None
+    }
+
     /// Gets a defined function given its name.
     #[inline]
     fn get_function(&self, name: &str) -> Option<FunctionValue<'ctx>> {
@@ -148,7 +153,7 @@ impl<'a, 'ctx> Compiler<'a, 'ctx> {
         Err(CompileError::NotYetImplemented(message.to_string()))
     }
 
-    pub fn compile_fn_def(&mut self, fn_def: &FnDef) -> CompileResult<()> {
+    pub fn compile_fn_def(&mut self, fn_def: &FnDef) -> CompileResult<FunctionValue<'ctx>> {
         let f32_type = self.context.f32_type();
 
         let fn_arg_types: Vec<BasicMetadataTypeEnum<'ctx>> = fn_def
@@ -177,8 +182,12 @@ impl<'a, 'ctx> Compiler<'a, 'ctx> {
                 self.builder.build_return(Some(&body));
                 if func.verify(true) {
                     self.fpm.run_on(&func);
-                    Ok(())
+                    self.clear_fn_value();
+                    Ok(func)
                 } else {
+                    unsafe {
+                        func.delete();
+                    }
                     Err(CompileError::FnDefValidationFailed(func_name.clone()))
                 }
             }
@@ -258,7 +267,10 @@ impl<'a, 'ctx> Compiler<'a, 'ctx> {
     pub fn compile_ast(&mut self, ast: &AST) -> CompileResult<()> {
         match ast {
             AST::RootComment(c) => Err(CompileError::IgnoredRootComment(c.to_owned())),
-            AST::FnDef(fn_def) => self.compile_fn_def(fn_def),
+            AST::FnDef(fn_def) => {
+                self.compile_fn_def(fn_def)?;
+                Ok(())
+            }
             AST::ModuleDef(mod_def) => self.compile_module_def(mod_def),
             AST::Use(_) => todo!(),
             AST::TypeDef(type_def) => self.compile_type_def(type_def),

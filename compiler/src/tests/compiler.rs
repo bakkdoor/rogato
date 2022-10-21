@@ -1,13 +1,17 @@
 use std::rc::Rc;
 
-use rogato_common::ast::AST;
+use rogato_common::ast::{fn_def::FnDef, AST};
 use rogato_parser::{parse_ast, ParserContext};
 
 use crate::Compiler;
 
-pub fn parse_fn_def(code: &str) -> Rc<AST> {
+pub fn parse_fn_def(code: &str) -> Rc<FnDef> {
     let mut parser_ctx = ParserContext::new();
-    parse_ast(code, &mut parser_ctx).unwrap()
+    let ast = parse_ast(code, &mut parser_ctx).unwrap();
+    match ast.as_ref() {
+        AST::FnDef(f) => Rc::clone(f),
+        _ => panic!("Invalid AST node, expected FnDef"),
+    }
 }
 
 type F32FnType = unsafe extern "C" fn(f32, f32, f32) -> f32;
@@ -22,7 +26,7 @@ fn compile_add3() {
     let mut compiler = Compiler::new(&context, &module, &builder, &fpm, &ee);
 
     let func_def = parse_fn_def("let add3 x y z = (x + y) + z");
-    compiler.compile_ast(func_def.as_ref()).unwrap();
+    compiler.compile_fn_def(func_def.as_ref()).unwrap();
 
     unsafe {
         let function = compiler
@@ -56,7 +60,7 @@ fn compile_add2_mul() {
     let mut compiler = Compiler::new(&context, &module, &builder, &fpm, &ee);
 
     let func_def = parse_fn_def("let add2_mul x y z = (x + y) * z");
-    compiler.compile_ast(func_def.as_ref()).unwrap();
+    compiler.compile_fn_def(func_def.as_ref()).unwrap();
 
     unsafe {
         let function = compiler
@@ -91,25 +95,25 @@ fn compile_multiple_functions() {
     let mut compiler = Compiler::new(&context, &module, &builder, &fpm, &ee);
 
     let fn_def = parse_fn_def("let tripleSum x y z = (x + y + z) * 3.0");
-    compiler.compile_ast(&fn_def.as_ref()).unwrap();
+    compiler.compile_fn_def(&fn_def.as_ref()).unwrap();
 
     let fn_def = parse_fn_def("let tripleProduct x y z = (x * y * z) * 3.0");
-    compiler.compile_ast(&fn_def.as_ref()).unwrap();
+    compiler.compile_fn_def(&fn_def.as_ref()).unwrap();
 
     let fn_def = parse_fn_def(
         "let tripleSumTripleProduct x y z = (tripleSum x y z) * (tripleProduct x y z)",
     );
-    compiler.compile_ast(&fn_def.as_ref()).unwrap();
+    compiler.compile_fn_def(&fn_def.as_ref()).unwrap();
 
     let fn_def = parse_fn_def(
-        "let addAllOtherTripled x y z = 
+        "let addAllOtherTripled x y z =
             3 * (
                 (tripleSum x y z) +
                 (tripleProduct x y z) +
                 (tripleSumTripleProduct x y z)
             )",
     );
-    compiler.compile_ast(&fn_def.as_ref()).unwrap();
+    compiler.compile_fn_def(&fn_def.as_ref()).unwrap();
 
     unsafe {
         let triple_sum = compiler
@@ -151,5 +155,41 @@ fn compile_multiple_functions() {
                 + triple_product.call(x, y, z)
                 + triple_sum_triple_product.call(x, y, z))
         );
+    }
+}
+
+#[test]
+fn compile_0_arg_fn() {
+    let context = Compiler::new_context();
+    let builder = context.create_builder();
+    let module = context.create_module("compile_test");
+    let fpm = Compiler::default_function_pass_manager(&module);
+    let ee = Compiler::default_execution_engine(&module);
+    let mut compiler = Compiler::new(&context, &module, &builder, &fpm, &ee);
+
+    let func_def = parse_fn_def("let test1 = 100 * 420.69");
+    compiler.compile_fn_def(func_def.as_ref()).unwrap();
+
+    unsafe {
+        let function = compiler
+            .execution_engine()
+            .get_function::<unsafe extern "C" fn() -> f32>("test1")
+            .unwrap();
+
+        assert_eq!(function.call(), 100.0 * 420.69);
+        assert_eq!(function.call(), 100.0 * 420.69);
+        assert_eq!(function.call(), 100.0 * 420.69);
+
+        let func_def = parse_fn_def("let test2 = 10.0 * 42");
+        compiler.compile_fn_def(func_def.as_ref()).unwrap();
+
+        // let function = compiler
+        //     .execution_engine()
+        //     .get_function::<unsafe extern "C" fn() -> f32>("test2")
+        //     .unwrap();
+
+        // assert_eq!(function.call(), 420.0);
+        // assert_eq!(function.call(), 420.0);
+        // assert_eq!(function.call(), 420.0);
     }
 }
