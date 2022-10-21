@@ -97,6 +97,10 @@ impl<'a, 'ctx> Compiler<'a, 'ctx> {
         self.context.create_module(name)
     }
 
+    pub fn module(&self) -> &'a Module<'ctx> {
+        &self.module
+    }
+
     pub fn lookup_var<S: ToString>(&self, name: S) -> Option<&PointerValue<'ctx>> {
         self.variables.get(&name.to_string())
     }
@@ -291,7 +295,10 @@ impl<'a, 'ctx> Compiler<'a, 'ctx> {
                     .builder
                     .build_load(*var, id.as_str())
                     .into_float_value()),
-                None => Err(CompileError::VarNotFound(id.clone())),
+                None => {
+                    self.compile_fn_call(id, &FnCallArgs::empty())
+                    // Err(CompileError::VarNotFound(id.clone()))
+                }
             },
 
             Expression::ConstOrTypeRef(_id) => todo!(),

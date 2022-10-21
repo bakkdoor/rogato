@@ -145,6 +145,18 @@ fn parse_eval_print(
                 println!("Compiled: {:?}", compile_result);
             }
 
+            if compiler.module().get_function("main").is_some() {
+                unsafe {
+                    let main_fn = compiler
+                        .execution_engine()
+                        .get_function::<unsafe extern "C" fn() -> f32>("main")?;
+
+                    let result = main_fn.call();
+                    println!("{:03} ✅ {}\n", counter, result);
+                    return Ok(());
+                }
+            }
+
             match ast.evaluate(eval_ctx) {
                 Ok(val) => {
                     if val.ast_depth() > 5 {
@@ -181,7 +193,7 @@ fn parse_eval_print(
                             )?;
 
                             let result = tmp_function.call();
-                            println!("Compiled call resulted in: {:?}", result);
+                            println!("{:03} ✅ {}\n", counter, result);
                             return Ok(());
                         }
                     }

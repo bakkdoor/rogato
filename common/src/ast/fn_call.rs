@@ -20,6 +20,10 @@ impl<T: Clone> FnCallArgs<T> {
         }
     }
 
+    pub fn empty() -> Self {
+        FnCallArgs { args: Vec::new() }
+    }
+
     pub fn prepend_arg(&mut self, arg: Rc<T>) {
         self.args.insert(0, arg);
     }
