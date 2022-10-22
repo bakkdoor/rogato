@@ -286,7 +286,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
     }
 
     #[inline]
-    pub fn not_yed_implemented_error<T, S: ToString>(&self, message: S) -> CodegenResult<T> {
+    pub fn not_yet_implemented_error<T, S: ToString>(&self, message: S) -> CodegenResult<T> {
         Err(CodegenError::NotYetImplemented(message.to_string()))
     }
 
