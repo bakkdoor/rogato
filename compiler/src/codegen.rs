@@ -22,12 +22,12 @@ use rogato_common::{
 };
 use std::collections::HashMap;
 
-use crate::error::CompileError;
+use crate::error::CodegenError;
 
-pub type CompileResult<T> = Result<T, CompileError>;
+pub type CodegenResult<T> = Result<T, CodegenError>;
 
 #[derive(Debug)]
-pub struct Compiler<'a, 'ctx> {
+pub struct Codegen<'a, 'ctx> {
     context: &'ctx Context,
     module: &'a Module<'ctx>,
     builder: &'a Builder<'ctx>,
@@ -39,7 +39,7 @@ pub struct Compiler<'a, 'ctx> {
     variables: HashMap<String, PointerValue<'ctx>>,
 }
 
-impl<'a, 'ctx> Compiler<'a, 'ctx> {
+impl<'a, 'ctx> Codegen<'a, 'ctx> {
     pub fn new(
         context: &'ctx Context,
         module: &'a Module<'ctx>,
@@ -86,7 +86,7 @@ impl<'a, 'ctx> Compiler<'a, 'ctx> {
         fpm
     }
 
-    pub fn compile_fn_def(&mut self, fn_def: &FnDef) -> CompileResult<FunctionValue<'ctx>> {
+    pub fn codegen_fn_def(&mut self, fn_def: &FnDef) -> CodegenResult<FunctionValue<'ctx>> {
         let f32_type = self.context.f32_type();
 
         let fn_arg_types: Vec<BasicMetadataTypeEnum<'ctx>> = fn_def
@@ -111,7 +111,7 @@ impl<'a, 'ctx> Compiler<'a, 'ctx> {
 
         match fn_def.body().as_ref() {
             FnDefBody::RogatoFn(expr) => {
-                let body = self.compile_expr(expr)?;
+                let body = self.codegen_expr(expr)?;
                 self.builder.build_return(Some(&body));
                 if func.verify(true) {
                     self.fpm.run_on(&func);
@@ -122,24 +122,24 @@ impl<'a, 'ctx> Compiler<'a, 'ctx> {
                         self.clear_current_fn();
                         func.delete();
                     }
-                    Err(CompileError::FnDefValidationFailed(func_name.clone()))
+                    Err(CodegenError::FnDefValidationFailed(func_name.clone()))
                 }
             }
             _ => self.unknown_error("Cannot compile function with NativeFn body!"),
         }
     }
 
-    pub fn compile_fn_call(
+    pub fn codegen_fn_call(
         &mut self,
         id: &Identifier,
         args: &FnCallArgs,
-    ) -> CompileResult<FloatValue<'ctx>> {
+    ) -> CodegenResult<FloatValue<'ctx>> {
         match self.get_function(id.as_str()) {
             Some(fun) => {
                 let mut compiled_args = Vec::with_capacity(args.len());
 
                 for arg in args.iter() {
-                    compiled_args.push(self.compile_expr(arg)?);
+                    compiled_args.push(self.codegen_expr(arg)?);
                 }
 
                 let argsv: Vec<BasicMetadataValueEnum> = compiled_args
@@ -158,37 +158,37 @@ impl<'a, 'ctx> Compiler<'a, 'ctx> {
                     None => self.unknown_error("Invalid call produced."),
                 }
             }
-            None => Err(CompileError::FnNotDefined(id.clone())),
+            None => Err(CodegenError::FnNotDefined(id.clone())),
         }
     }
 
-    pub fn compile_op_call(
+    pub fn codegen_op_call(
         &mut self,
         id: &Identifier,
         left: &Expression,
         right: &Expression,
-    ) -> CompileResult<FloatValue<'ctx>> {
-        let left = self.compile_expr(left)?;
-        let right = self.compile_expr(right)?;
+    ) -> CodegenResult<FloatValue<'ctx>> {
+        let left = self.codegen_expr(left)?;
+        let right = self.codegen_expr(right)?;
 
         match id.as_str() {
             "+" => Ok(self.builder.build_float_add(left, right, "tmpadd")),
             "-" => Ok(self.builder.build_float_sub(left, right, "tmpsub")),
             "*" => Ok(self.builder.build_float_mul(left, right, "tmpmul")),
             "/" => Ok(self.builder.build_float_div(left, right, "tmpdiv")),
-            _ => Err(CompileError::OpNotDefined(id.clone())),
+            _ => Err(CodegenError::OpNotDefined(id.clone())),
         }
     }
 
-    pub fn compile_module_def(&mut self, _mod_def: &ModuleDef) -> CompileResult<()> {
+    pub fn codegen_module_def(&mut self, _mod_def: &ModuleDef) -> CodegenResult<()> {
         todo!()
     }
 
-    pub fn compile_type_def(&mut self, _mod_def: &TypeDef) -> CompileResult<()> {
+    pub fn codegen_type_def(&mut self, _mod_def: &TypeDef) -> CodegenResult<()> {
         todo!()
     }
 
-    pub fn compile_lit_expr(&mut self, literal: &Literal) -> CompileResult<FloatValue<'ctx>> {
+    pub fn codegen_lit_expr(&mut self, literal: &Literal) -> CodegenResult<FloatValue<'ctx>> {
         match literal {
             Literal::Number(num) => {
                 let float_val = val::number_to_f64(num).unwrap();
@@ -198,25 +198,25 @@ impl<'a, 'ctx> Compiler<'a, 'ctx> {
         }
     }
 
-    pub fn compile_ast(&mut self, ast: &AST) -> CompileResult<()> {
+    pub fn codegen_ast(&mut self, ast: &AST) -> CodegenResult<()> {
         match ast {
-            AST::RootComment(c) => Err(CompileError::IgnoredRootComment(c.to_owned())),
+            AST::RootComment(c) => Err(CodegenError::IgnoredRootComment(c.to_owned())),
             AST::FnDef(fn_def) => {
-                self.compile_fn_def(fn_def)?;
+                self.codegen_fn_def(fn_def)?;
                 Ok(())
             }
-            AST::ModuleDef(mod_def) => self.compile_module_def(mod_def),
+            AST::ModuleDef(mod_def) => self.codegen_module_def(mod_def),
             AST::Use(_) => todo!(),
-            AST::TypeDef(type_def) => self.compile_type_def(type_def),
+            AST::TypeDef(type_def) => self.codegen_type_def(type_def),
         }
     }
 
-    pub fn compile_expr(&mut self, expr: &Expression) -> CompileResult<FloatValue<'ctx>> {
+    pub fn codegen_expr(&mut self, expr: &Expression) -> CodegenResult<FloatValue<'ctx>> {
         match expr {
-            Expression::Commented(_c, e) => self.compile_expr(e),
-            Expression::Lit(lit_expr) => self.compile_lit_expr(lit_expr),
-            Expression::FnCall(id, args) => self.compile_fn_call(id, args),
-            Expression::OpCall(id, left, right) => self.compile_op_call(id, left, right),
+            Expression::Commented(_c, e) => self.codegen_expr(e),
+            Expression::Lit(lit_expr) => self.codegen_lit_expr(lit_expr),
+            Expression::FnCall(id, args) => self.codegen_fn_call(id, args),
+            Expression::OpCall(id, left, right) => self.codegen_op_call(id, left, right),
 
             Expression::Var(id) => match self.lookup_var(id) {
                 Some(var) => Ok(self
@@ -224,7 +224,7 @@ impl<'a, 'ctx> Compiler<'a, 'ctx> {
                     .build_load(*var, id.as_str())
                     .into_float_value()),
                 None => {
-                    self.compile_fn_call(id, &FnCallArgs::empty())
+                    self.codegen_fn_call(id, &FnCallArgs::empty())
                     // Err(CompileError::VarNotFound(id.clone()))
                 }
             },
@@ -243,15 +243,15 @@ impl<'a, 'ctx> Compiler<'a, 'ctx> {
             Expression::Unquoted(_expr) => todo!(),
             Expression::UnquotedAST(_ast) => todo!(),
             Expression::InlineFnDef(fn_def) => {
-                self.compile_fn_def(fn_def)?;
+                self.codegen_fn_def(fn_def)?;
                 Ok(self.context.f32_type().const_zero()) // TODO: Hmmm?!
             }
         }
     }
 
-    pub fn compile_program(&mut self, program: &Program) -> CompileResult<()> {
+    pub fn codegen_program(&mut self, program: &Program) -> CodegenResult<()> {
         for ast in program.iter() {
-            self.compile_ast(ast)?;
+            self.codegen_ast(ast)?;
         }
         Ok(())
     }
@@ -281,13 +281,13 @@ impl<'a, 'ctx> Compiler<'a, 'ctx> {
     }
 
     #[inline]
-    fn unknown_error<T, S: ToString>(&self, message: S) -> CompileResult<T> {
-        Err(CompileError::Unknown(message.to_string()))
+    fn unknown_error<T, S: ToString>(&self, message: S) -> CodegenResult<T> {
+        Err(CodegenError::Unknown(message.to_string()))
     }
 
     #[inline]
-    pub fn not_yed_implemented_error<T, S: ToString>(&self, message: S) -> CompileResult<T> {
-        Err(CompileError::NotYetImplemented(message.to_string()))
+    pub fn not_yed_implemented_error<T, S: ToString>(&self, message: S) -> CodegenResult<T> {
+        Err(CodegenError::NotYetImplemented(message.to_string()))
     }
 
     pub fn context(&self) -> &'ctx Context {

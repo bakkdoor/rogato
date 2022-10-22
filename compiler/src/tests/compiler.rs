@@ -3,7 +3,7 @@ use std::rc::Rc;
 use rogato_common::ast::{fn_def::FnDef, AST};
 use rogato_parser::{parse_ast, ParserContext};
 
-use crate::Compiler;
+use crate::Codegen;
 
 pub fn parse_fn_def(code: &str) -> Rc<FnDef> {
     let mut parser_ctx = ParserContext::new();
@@ -17,16 +17,16 @@ pub fn parse_fn_def(code: &str) -> Rc<FnDef> {
 type F32FnType = unsafe extern "C" fn(f32, f32, f32) -> f32;
 
 #[test]
-fn compile_add3() {
-    let context = Compiler::new_context();
+fn codegen_add3() {
+    let context = Codegen::new_context();
     let builder = context.create_builder();
-    let module = context.create_module("compile_test");
-    let fpm = Compiler::default_function_pass_manager(&module);
-    let ee = Compiler::default_execution_engine(&module);
-    let mut compiler = Compiler::new(&context, &module, &builder, &fpm, &ee);
+    let module = context.create_module("compiler_test");
+    let fpm = Codegen::default_function_pass_manager(&module);
+    let ee = Codegen::default_execution_engine(&module);
+    let mut compiler = Codegen::new(&context, &module, &builder, &fpm, &ee);
 
     let func_def = parse_fn_def("let add3 x y z = (x + y) + z");
-    compiler.compile_fn_def(func_def.as_ref()).unwrap();
+    compiler.codegen_fn_def(func_def.as_ref()).unwrap();
 
     unsafe {
         let function = compiler
@@ -51,16 +51,16 @@ fn compile_add3() {
 }
 
 #[test]
-fn compile_add2_mul() {
-    let context = Compiler::new_context();
+fn codegen_add2_mul() {
+    let context = Codegen::new_context();
     let builder = context.create_builder();
-    let module = context.create_module("compile_test");
-    let fpm = Compiler::default_function_pass_manager(&module);
-    let ee = Compiler::default_execution_engine(&module);
-    let mut compiler = Compiler::new(&context, &module, &builder, &fpm, &ee);
+    let module = context.create_module("compiler_test");
+    let fpm = Codegen::default_function_pass_manager(&module);
+    let ee = Codegen::default_execution_engine(&module);
+    let mut compiler = Codegen::new(&context, &module, &builder, &fpm, &ee);
 
     let func_def = parse_fn_def("let add2_mul x y z = (x + y) * z");
-    compiler.compile_fn_def(func_def.as_ref()).unwrap();
+    compiler.codegen_fn_def(func_def.as_ref()).unwrap();
 
     unsafe {
         let function = compiler
@@ -86,24 +86,24 @@ fn compile_add2_mul() {
 }
 
 #[test]
-fn compile_multiple_functions() {
-    let context = Compiler::new_context();
+fn codegen_multiple_functions() {
+    let context = Codegen::new_context();
     let builder = context.create_builder();
-    let module = context.create_module("compile_test");
-    let fpm = Compiler::default_function_pass_manager(&module);
-    let ee = Compiler::default_execution_engine(&module);
-    let mut compiler = Compiler::new(&context, &module, &builder, &fpm, &ee);
+    let module = context.create_module("compiler_test");
+    let fpm = Codegen::default_function_pass_manager(&module);
+    let ee = Codegen::default_execution_engine(&module);
+    let mut compiler = Codegen::new(&context, &module, &builder, &fpm, &ee);
 
     let fn_def = parse_fn_def("let tripleSum x y z = (x + y + z) * 3.0");
-    compiler.compile_fn_def(&fn_def.as_ref()).unwrap();
+    compiler.codegen_fn_def(&fn_def.as_ref()).unwrap();
 
     let fn_def = parse_fn_def("let tripleProduct x y z = (x * y * z) * 3.0");
-    compiler.compile_fn_def(&fn_def.as_ref()).unwrap();
+    compiler.codegen_fn_def(&fn_def.as_ref()).unwrap();
 
     let fn_def = parse_fn_def(
         "let tripleSumTripleProduct x y z = (tripleSum x y z) * (tripleProduct x y z)",
     );
-    compiler.compile_fn_def(&fn_def.as_ref()).unwrap();
+    compiler.codegen_fn_def(&fn_def.as_ref()).unwrap();
 
     let fn_def = parse_fn_def(
         "let addAllOtherTripled x y z =
@@ -113,7 +113,7 @@ fn compile_multiple_functions() {
                 (tripleSumTripleProduct x y z)
             )",
     );
-    compiler.compile_fn_def(&fn_def.as_ref()).unwrap();
+    compiler.codegen_fn_def(&fn_def.as_ref()).unwrap();
 
     unsafe {
         let triple_sum = compiler
@@ -159,19 +159,19 @@ fn compile_multiple_functions() {
 }
 
 #[test]
-fn compile_0_arg_fn() {
-    let context = Compiler::new_context();
+fn codegen_0_arg_fn() {
+    let context = Codegen::new_context();
     let builder = context.create_builder();
-    let module = context.create_module("compile_test");
-    let fpm = Compiler::default_function_pass_manager(&module);
-    let ee = Compiler::default_execution_engine(&module);
-    let mut compiler = Compiler::new(&context, &module, &builder, &fpm, &ee);
+    let module = context.create_module("compiler_test");
+    let fpm = Codegen::default_function_pass_manager(&module);
+    let ee = Codegen::default_execution_engine(&module);
+    let mut compiler = Codegen::new(&context, &module, &builder, &fpm, &ee);
 
     let func_def = parse_fn_def("let test1 = 100 * 420.69");
-    compiler.compile_fn_def(func_def.as_ref()).unwrap();
+    compiler.codegen_fn_def(func_def.as_ref()).unwrap();
 
     let func_def = parse_fn_def("let test2 = 10.0 * 42");
-    compiler.compile_fn_def(func_def.as_ref()).unwrap();
+    compiler.codegen_fn_def(func_def.as_ref()).unwrap();
 
     unsafe {
         let test1 = compiler

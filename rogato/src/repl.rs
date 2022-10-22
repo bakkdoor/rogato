@@ -4,7 +4,7 @@ use rustyline::{Cmd, Editor, EventHandler, KeyCode, KeyEvent, Modifiers};
 use rustyline_derive::{Completer, Helper, Highlighter, Hinter, Validator};
 
 use rogato_common::ast::ASTDepth;
-use rogato_compiler::Compiler;
+use rogato_compiler::Codegen;
 use rogato_interpreter::{EvalContext, EvalError, Evaluate};
 use rogato_parser::{parse, parse_expr, ParseError, ParserContext};
 use thiserror::Error;
@@ -56,12 +56,12 @@ pub fn run_repl() -> anyhow::Result<()> {
     }
 
     loop {
-        let context = Compiler::new_context();
+        let context = Codegen::new_context();
         let builder = context.create_builder();
         let module = context.create_module("rogato.repl");
-        let fpm = Compiler::default_function_pass_manager(&module);
-        let ee = Compiler::default_execution_engine(&module);
-        let mut compiler = Compiler::new(&context, &module, &builder, &fpm, &ee);
+        let fpm = Codegen::default_function_pass_manager(&module);
+        let ee = Codegen::default_execution_engine(&module);
+        let mut compiler = Codegen::new(&context, &module, &builder, &fpm, &ee);
 
         counter += 1;
         let readline = rl.readline(format!("{:03} >  ", counter).as_str());
@@ -130,7 +130,7 @@ impl From<ReadlineError> for REPLError {
 fn parse_eval_print(
     parse_ctx: &ParserContext,
     eval_ctx: &mut EvalContext,
-    compiler: &mut Compiler,
+    compiler: &mut Codegen,
     counter: usize,
     code: &str,
 ) -> anyhow::Result<()> {
@@ -141,8 +141,7 @@ fn parse_eval_print(
             }
 
             if rogato_common::util::is_compilation_enabled() {
-                let compile_result = compiler.compile_program(&ast);
-                println!("Compiled: {:?}", compile_result);
+                compiler.codegen_program(&ast)?;
             }
 
             if compiler.module().get_function("main").is_some() {
@@ -183,7 +182,7 @@ fn parse_eval_print(
                             println!("{:03} 🌳 {:?}\n\n{}\n", counter, ast, ast);
                         }
 
-                        compiler.compile_program(&ast)?;
+                        compiler.codegen_program(&ast)?;
 
                         unsafe {
                             let tmp_function = compiler

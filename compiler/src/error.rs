@@ -2,8 +2,8 @@ use rogato_common::ast::Identifier;
 use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq, Eq, Clone)]
-pub enum CompileError {
-    #[error("Unknown compiler error: {0}")]
+pub enum CodegenError {
+    #[error("Unknown compiler codegen error: {0}")]
     Unknown(String),
 
     #[error("Compiler feature not yet implemented: {0}")]
@@ -21,6 +21,6 @@ pub enum CompileError {
     #[error("Operator not defined: {0}")]
     OpNotDefined(Identifier),
 
-    #[error("FnDef compilation validation failed for: {0}")]
+    #[error("FnDef codegen validation failed for: {0}")]
     FnDefValidationFailed(Identifier),
 }

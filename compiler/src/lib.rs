@@ -1,8 +1,8 @@
 #[cfg(test)]
 pub mod tests;
 
-pub mod compiler;
+pub mod codegen;
 pub mod error;
 
-pub use compiler::{CompileResult, Compiler};
-pub use error::CompileError;
+pub use codegen::{Codegen, CodegenResult};
+pub use error::CodegenError;
