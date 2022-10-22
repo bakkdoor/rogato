@@ -303,7 +303,7 @@ impl<'a, 'ctx> Compiler<'a, 'ctx> {
     }
 
     pub fn module(&self) -> &'a Module<'ctx> {
-        &self.module
+        self.module
     }
 
     pub fn lookup_var<S: ToString>(&self, name: S) -> Option<&PointerValue<'ctx>> {
