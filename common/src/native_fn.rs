@@ -23,7 +23,7 @@ impl From<LambdaClosureEvalError> for NativeFnError {
 }
 
 pub trait NativeFnContext {
-    fn lookup_var(&self, id: Identifier) -> Option<ValueRef>;
+    fn lookup_var(&self, id: &Identifier) -> Option<ValueRef>;
     fn lookup_const(&self, id: &Identifier) -> Option<ValueRef>;
 
     fn call_function(

@@ -167,11 +167,11 @@ impl EvalContext {
 }
 
 impl NativeFnContext for EvalContext {
-    fn lookup_var(&self, id: rogato_common::ast::Identifier) -> Option<ValueRef> {
-        self.lookup_var(id.as_str())
+    fn lookup_var(&self, id: &Identifier) -> Option<ValueRef> {
+        self.lookup_var(id)
     }
 
-    fn lookup_const(&self, id: &rogato_common::ast::Identifier) -> Option<ValueRef> {
+    fn lookup_const(&self, id: &Identifier) -> Option<ValueRef> {
         self.lookup_const(id)
     }
 
