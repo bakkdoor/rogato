@@ -144,10 +144,10 @@ fn parse_eval_print(
                 compiler.codegen_program(&ast)?;
             }
 
-            if compiler.module().get_function("main").is_some() {
+            if compiler.module.get_function("main").is_some() {
                 unsafe {
                     let main_fn = compiler
-                        .execution_engine()
+                        .execution_engine
                         .get_function::<unsafe extern "C" fn() -> f32>("main")?;
 
                     let result = main_fn.call();
@@ -186,7 +186,7 @@ fn parse_eval_print(
 
                         unsafe {
                             let tmp_function = compiler
-                                .execution_engine()
+                                .execution_engine
                                 .get_function::<unsafe extern "C" fn() -> f32>(
                                 tmp_func_name.as_str(),
                             )?;

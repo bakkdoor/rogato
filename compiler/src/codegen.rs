@@ -29,11 +29,11 @@ pub type CodegenResult<T> = Result<T, CodegenError>;
 #[derive(Debug)]
 pub struct Codegen<'a, 'ctx> {
     context: &'ctx Context,
-    module: &'a Module<'ctx>,
-    builder: &'a Builder<'ctx>,
-    fpm: &'a PassManager<FunctionValue<'ctx>>,
+    pub module: &'a Module<'ctx>,
+    pub builder: &'a Builder<'ctx>,
+    pub fpm: &'a PassManager<FunctionValue<'ctx>>,
     #[allow(dead_code)]
-    execution_engine: &'a ExecutionEngine<'ctx>,
+    pub execution_engine: &'a ExecutionEngine<'ctx>,
 
     current_fn_value: Option<FunctionValue<'ctx>>,
     variables: HashMap<String, PointerValue<'ctx>>,
@@ -290,20 +290,8 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         Err(CodegenError::NotYetImplemented(message.to_string()))
     }
 
-    pub fn context(&self) -> &'ctx Context {
-        self.context
-    }
-
-    pub fn execution_engine(&self) -> &ExecutionEngine<'ctx> {
-        self.execution_engine
-    }
-
     pub fn new_module(&self, name: &str) -> Module<'ctx> {
         self.context.create_module(name)
-    }
-
-    pub fn module(&self) -> &'a Module<'ctx> {
-        self.module
     }
 
     pub fn lookup_var<S: ToString>(&self, name: S) -> Option<&PointerValue<'ctx>> {

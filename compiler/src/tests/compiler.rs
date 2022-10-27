@@ -30,7 +30,7 @@ fn codegen_add3() {
 
     unsafe {
         let function = compiler
-            .execution_engine()
+            .execution_engine
             .get_function::<unsafe extern "C" fn(f32, f32, f32) -> f32>("add3")
             .unwrap();
 
@@ -64,7 +64,7 @@ fn codegen_add2_mul() {
 
     unsafe {
         let function = compiler
-            .execution_engine()
+            .execution_engine
             .get_function::<F32FnType>("add2_mul")
             .unwrap();
 
@@ -117,22 +117,22 @@ fn codegen_multiple_functions() {
 
     unsafe {
         let triple_sum = compiler
-            .execution_engine()
+            .execution_engine
             .get_function::<F32FnType>("tripleSum")
             .unwrap();
 
         let triple_product = compiler
-            .execution_engine()
+            .execution_engine
             .get_function::<F32FnType>("tripleProduct")
             .unwrap();
 
         let triple_sum_triple_product = compiler
-            .execution_engine()
+            .execution_engine
             .get_function::<F32FnType>("tripleSumTripleProduct")
             .unwrap();
 
         let add_all_other_tripled = compiler
-            .execution_engine()
+            .execution_engine
             .get_function::<F32FnType>("addAllOtherTripled")
             .unwrap();
 
@@ -175,7 +175,7 @@ fn codegen_0_arg_fn() {
 
     unsafe {
         let test1 = compiler
-            .execution_engine()
+            .execution_engine
             .get_function::<unsafe extern "C" fn() -> f32>("test1")
             .unwrap();
 
@@ -184,7 +184,7 @@ fn codegen_0_arg_fn() {
         assert_eq!(test1.call(), 100.0 * 420.69);
 
         let test2 = compiler
-            .execution_engine()
+            .execution_engine
             .get_function::<unsafe extern "C" fn() -> f32>("test2")
             .unwrap();
 
