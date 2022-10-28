@@ -28,13 +28,12 @@ pub type CodegenResult<T> = Result<T, CodegenError>;
 
 #[derive(Debug)]
 pub struct Codegen<'a, 'ctx> {
-    context: &'ctx Context,
     pub module: &'a Module<'ctx>,
     pub builder: &'a Builder<'ctx>,
     pub fpm: &'a PassManager<FunctionValue<'ctx>>,
-    #[allow(dead_code)]
     pub execution_engine: &'a ExecutionEngine<'ctx>,
 
+    context: &'ctx Context,
     current_fn_value: Option<FunctionValue<'ctx>>,
     variables: HashMap<String, PointerValue<'ctx>>,
 }
