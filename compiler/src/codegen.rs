@@ -96,10 +96,10 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
 
         let fn_type = f32_type.fn_type(&fn_arg_types, false);
         let func_name = fn_def.id();
-        let func = self.module.add_function(func_name.as_str(), fn_type, None);
+        let func = self.module.add_function(func_name, fn_type, None);
         self.set_current_fn_value(func);
 
-        let basic_block = self.context.append_basic_block(func, fn_def.id());
+        let basic_block = self.context.append_basic_block(func, func_name);
         self.builder.position_at_end(basic_block);
 
         for (arg, arg_name) in func.get_param_iter().zip(fn_def.args().iter()) {
