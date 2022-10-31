@@ -73,6 +73,7 @@ let locationsNearOsna =
 let locationsWithin loc maxDistance =
   ? l <- @Locations
   ! ((Location.distance l loc) <= maxDistance)
+  !> l
 
 // same as:
 let locationsWithin loc maxDistance =
@@ -82,19 +83,23 @@ let locationsWithin loc maxDistance =
 let locationsInGermany =
   ? l <- @Locations
   ! l#{country: Germany}
+  !> l
 
 let hasPlaceForUpTo maxNum query =
   ? l <- query
   ! l.maxCapacity >= maxNum
+  !> l
 
 let funPlaces city =
   ? l <- @Locations
   ! l#{isFun | relaxing | (hasPlaceForUpTo 20)}
+  !> l
 
 let funLocationsInBerlinOrHamburg =
   ? l <- @Locations
   ! l#{city: (Berlin | Hamburg)}
   ! l <- funPlaces (Berlin | Hamburg)
+  !> l
 
 
 // MAIN variations
