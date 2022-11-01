@@ -53,4 +53,4 @@ let repeat count func =
   x ->
     count
     |> range
-    |> Std.List.map (_ -> func x)
+    |> map (_ -> func x)
