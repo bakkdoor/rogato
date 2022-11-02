@@ -38,7 +38,7 @@ impl ASTDepth for Expression {
         match self {
             Expression::Commented(_, e) => 1 + e.ast_depth(),
             Expression::Lit(lit_exp) => lit_exp.ast_depth(),
-            Expression::FnCall(_id, args) => args.iter().map(|a| a.ast_depth()).sum(),
+            Expression::FnCall(_id, args) => args.ast_depth(),
             Expression::OpCall(_id, left, right) => left.ast_depth() + right.ast_depth(),
             Expression::Var(_id) => 1,
             Expression::ConstOrTypeRef(_id) => 1,

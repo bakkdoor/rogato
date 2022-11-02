@@ -1,9 +1,10 @@
 use super::expression::Expression;
+use super::ASTDepth;
 use std::fmt::Display;
 use std::rc::Rc;
 
 #[derive(Clone, PartialEq, Eq, Debug, Hash)]
-pub struct FnCallArgs<T = Expression> {
+pub struct FnCallArgs<T: Clone = Expression> {
     args: Vec<Rc<T>>,
 }
 
@@ -52,5 +53,11 @@ impl Display for FnCallArgs {
             is_first = false;
         }
         Ok(())
+    }
+}
+
+impl<T: Clone + ASTDepth> ASTDepth for FnCallArgs<T> {
+    fn ast_depth(&self) -> usize {
+        self.iter().map(|a| a.ast_depth()).sum()
     }
 }
