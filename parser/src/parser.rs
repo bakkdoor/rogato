@@ -16,6 +16,7 @@ use rogato_common::ast::{
 use rust_decimal::prelude::*;
 use rust_decimal::Decimal;
 use smol_str::SmolStr;
+use std::ops::Deref;
 use std::rc::Rc;
 
 parser! {
@@ -97,55 +98,56 @@ grammar parser(context: &ParserContext) for str {
 
     rule type_def() -> AST
         = _ "type " _ id:type_identifier() _ "::" _ t_expr:type_expr() {
-            AST::TypeDef(TypeDef::new(id, Rc::new(t_expr)))
+            AST::TypeDef(TypeDef::new(id, t_expr))
         }
 
-    rule type_expr() -> TypeExpression
-        = "Bool" { TypeExpression::BoolType }
-        / "Int" { TypeExpression::NumberType }
-        / "String" { TypeExpression::StringType }
+    rule type_expr() -> Rc<TypeExpression>
+        = "Bool" { Rc::new(TypeExpression::BoolType) }
+        / "Int" { Rc::new(TypeExpression::NumberType) }
+        / "String" { Rc::new(TypeExpression::StringType) }
         / tuple_type()
         / list_type()
         / function_type()
         / struct_type()
         / id:identifier() {
-            TypeExpression::TypeRef(id)
+            Rc::new(TypeExpression::TypeRef(id))
         }
 
-    rule tuple_type_item() -> TypeExpression
+    rule tuple_type_item() -> Rc<TypeExpression>
         = type_expr()
 
-    rule additional_tuple_type_item() -> TypeExpression
+    rule additional_tuple_type_item() -> Rc<TypeExpression>
         = " "* "," _ item:tuple_type_item() {
             item
         }
 
-    rule tuple_type() -> TypeExpression
+    rule tuple_type() -> Rc<TypeExpression>
         = "{" _ first:tuple_type_item() rest:(additional_tuple_type_item())+ _ ("," _)? "}" {
-            TypeExpression::TupleType(TupleItems::new(first, rest))
+            Rc::new(TypeExpression::TupleType(TupleItems::new(first, rest)))
         }
 
-    rule list_type() -> TypeExpression
+    rule list_type() -> Rc<TypeExpression>
         = "[" _ type_expr:type_expr() _ "]" {
-            TypeExpression::ListType(Rc::new(type_expr))
+            Rc::new(TypeExpression::ListType(type_expr))
         }
 
-    rule function_type() -> TypeExpression
+    rule function_type() -> Rc<TypeExpression>
         = "(" _ arg_types:(tuple_type_item())+ " "+ "->" return_type:type_expr() _ ")"{
-            TypeExpression::FunctionType(LambdaArgs::new(arg_types), Rc::new(return_type))
+            let arg_types: Vec<TypeExpression> = arg_types.iter().map(Deref::deref).map(Clone::clone).collect();
+            Rc::new(TypeExpression::FunctionType(LambdaArgs::new(arg_types), return_type))
         }
 
-    rule struct_type() -> TypeExpression
+    rule struct_type() -> Rc<TypeExpression>
         = "{" _ properties:(struct_prop_type())+ "}" {
-            TypeExpression::StructType(StructTypeProperties::new(properties))
+            Rc::new(TypeExpression::StructType(StructTypeProperties::new(properties)))
         }
 
     rule struct_prop_type() -> (Identifier, Rc<TypeExpression>)
         = id:identifier() " "+ "::" _ type_expr:type_expr() " "* "," _ {
-            (id, Rc::new(type_expr))
+            (id, type_expr)
         }
         / id:identifier() " "+ "::" _ type_expr:type_expr() [^'\n']* "\n"+ _ {
-            (id, Rc::new(type_expr))
+            (id, type_expr)
         }
 
     pub rule expression() -> Expression
@@ -427,15 +429,17 @@ grammar parser(context: &ParserContext) for str {
 
     rule tuple_lit() -> Expression
         = "{" _ first:tuple_item() rest:(additional_tuple_item())+ _ ("," _)? "}" {
-            Expression::Lit(Literal::Tuple(TupleItems::new(first, rest)))
+            let rest: Vec<Rc<Expression>> = rest.iter().map(|x| Rc::new(x.clone())).collect();
+            Expression::Lit(Literal::Tuple(TupleItems::new(Rc::new(first), rest)))
         }
 
     rule list_lit() -> Expression
         = "[" _ first:tuple_item() rest:(additional_tuple_item())+ _ ("," _)? "]" {
-            Expression::Lit(Literal::List(TupleItems::new(first, rest)))
+            let rest: Vec<Rc<Expression>> = rest.iter().map(|x| Rc::new(x.clone())).collect();
+            Expression::Lit(Literal::List(TupleItems::new(Rc::new(first), rest)))
         }
         / "[" _ item:tuple_item() _ "]" {
-            Expression::Lit(Literal::List(TupleItems::new(item, vec![])))
+            Expression::Lit(Literal::List(TupleItems::new(Rc::new(item), vec![])))
         }
         / "[" _ first:tuple_item() _ "::" _ rest:tuple_item() "]" {
             Expression::Lit(Literal::ListCons(Rc::new(first), Rc::new(rest)))

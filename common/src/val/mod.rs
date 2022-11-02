@@ -1,6 +1,7 @@
 use rust_decimal::prelude::*;
 use std::cell::RefCell;
 use std::hash::Hash;
+use std::ops::Deref;
 use std::{fmt::Display, rc::Rc};
 
 use rust_decimal::Decimal;
@@ -29,67 +30,67 @@ use crate::ast::{
 };
 
 pub fn option(opt: Option<ValueRef>) -> ValueRef {
-    Rc::new(Value::Option(opt))
+    ValueRef::new(Value::Option(opt))
 }
 
 pub fn none() -> ValueRef {
-    Rc::new(Value::Option(None))
+    ValueRef::new(Value::Option(None))
 }
 
 pub fn some(val: ValueRef) -> ValueRef {
-    Rc::new(Value::Option(Some(val)))
+    ValueRef::new(Value::Option(Some(val)))
 }
 
 pub fn string<S: ToString>(s: S) -> ValueRef {
-    Rc::new(Value::String(s.to_string()))
+    ValueRef::new(Value::String(s.to_string()))
 }
 
 pub fn symbol<ID: Into<Identifier>>(s: ID) -> ValueRef {
-    Rc::new(Value::Symbol(s.into()))
+    ValueRef::new(Value::Symbol(s.into()))
 }
 
 pub fn bool(b: bool) -> ValueRef {
-    Rc::new(Value::Bool(b))
+    ValueRef::new(Value::Bool(b))
 }
 
 pub fn number<Num>(n: Num) -> ValueRef
 where
     Decimal: From<Num>,
 {
-    Rc::new(Value::Number(Decimal::from(n)))
+    ValueRef::new(Value::Number(Decimal::from(n)))
 }
 
 pub fn decimal_str(s: &str) -> ValueRef {
-    Rc::new(Value::Number(Decimal::from_str(s).unwrap()))
+    ValueRef::new(Value::Number(Decimal::from_str(s).unwrap()))
 }
 
 pub fn tuple<I: IntoIterator<Item = ValueRef>>(items: I) -> ValueRef {
     let vec: Vec<ValueRef> = items.into_iter().collect();
-    Rc::new(Value::Tuple(vec.len(), vec))
+    ValueRef::new(Value::Tuple(vec.len(), vec))
 }
 
 pub fn list<I: IntoIterator<Item = ValueRef>>(items: I) -> ValueRef {
-    Rc::new(Value::List(List::from_iter(items.into_iter())))
+    ValueRef::new(Value::List(List::from_iter(items.into_iter())))
 }
 
 pub fn queue<I: IntoIterator<Item = ValueRef>>(items: I) -> ValueRef {
-    Rc::new(Value::Queue(Queue::from_iter(items.into_iter())))
+    ValueRef::new(Value::Queue(Queue::from_iter(items.into_iter())))
 }
 
 pub fn set<I: IntoIterator<Item = ValueRef>>(items: I) -> ValueRef {
-    Rc::new(Value::Set(Set::from_iter(items.into_iter())))
+    ValueRef::new(Value::Set(Set::from_iter(items.into_iter())))
 }
 
 pub fn stack<I: IntoIterator<Item = ValueRef>>(items: I) -> ValueRef {
-    Rc::new(Value::Stack(Stack::from_iter(items.into_iter())))
+    ValueRef::new(Value::Stack(Stack::from_iter(items.into_iter())))
 }
 
 pub fn vector<I: IntoIterator<Item = ValueRef>>(items: I) -> ValueRef {
-    Rc::new(Value::Vector(Vector::from_iter(items.into_iter())))
+    ValueRef::new(Value::Vector(Vector::from_iter(items.into_iter())))
 }
 
 pub fn map<I: IntoIterator<Item = (ValueRef, ValueRef)>>(items: I) -> ValueRef {
-    Rc::new(Value::Map(Map::from_iter(items.into_iter())))
+    ValueRef::new(Value::Map(Map::from_iter(items.into_iter())))
 }
 
 pub fn object<S: ToString, Props: IntoIterator<Item = (S, ValueRef)>>(props: Props) -> ValueRef {
@@ -97,18 +98,18 @@ pub fn object<S: ToString, Props: IntoIterator<Item = (S, ValueRef)>>(props: Pro
         .into_iter()
         .map(|(prop, val)| (prop.to_string(), val))
         .collect();
-    Rc::new(Value::Object(Object::from_iter(props)))
+    ValueRef::new(Value::Object(Object::from_iter(props)))
 }
 
 pub fn lambda(ctx: Rc<RefCell<dyn LambdaClosureContext>>, l: Rc<Lambda>) -> ValueRef {
-    Rc::new(Value::Lambda(ctx, l))
+    ValueRef::new(Value::Lambda(ctx, l))
 }
 
 pub fn quoted(expr: Rc<Expression>) -> ValueRef {
-    Rc::new(Value::Quoted(expr))
+    ValueRef::new(Value::Quoted(expr))
 }
 pub fn quoted_ast(ast: Rc<AST>) -> ValueRef {
-    Rc::new(Value::QuotedAST(ast))
+    ValueRef::new(Value::QuotedAST(ast))
 }
 
 pub fn number_to_f32(num: &Decimal) -> Option<f32> {
@@ -151,21 +152,48 @@ impl From<Option<ValueRef>> for Value {
     }
 }
 
-pub type ValueRef = Rc<Value>;
+#[derive(PartialEq, Eq, Hash, Debug)]
+pub struct ValueRef(Rc<Value>);
+
+impl ValueRef {
+    pub fn new(value: Value) -> ValueRef {
+        ValueRef(Rc::new(value))
+    }
+}
+
+impl Clone for ValueRef {
+    fn clone(&self) -> Self {
+        ValueRef(Rc::clone(&self.0))
+    }
+}
+
+impl Display for ValueRef {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.deref().fmt(f)
+    }
+}
+
+impl ASTDepth for ValueRef {
+    fn ast_depth(&self) -> usize {
+        self.0.ast_depth()
+    }
+}
 
 impl From<serde_json::Value> for Value {
     fn from(json_val: serde_json::Value) -> Self {
         match json_val {
             serde_json::Value::Null => Value::Option(None),
             serde_json::Value::Array(items) => Value::List(List::from_iter(
-                items.iter().map(|item| Rc::new(Value::from(item.clone()))),
+                items
+                    .iter()
+                    .map(|item| ValueRef::new(Value::from(item.clone()))),
             )),
             serde_json::Value::Bool(b) => Value::Bool(b),
             serde_json::Value::Number(n) => Value::Number(Decimal::from(n.as_i64().unwrap())),
             serde_json::Value::Object(props) => Value::Object(Object::from_iter(
                 props
                     .iter()
-                    .map(|(prop, val)| (prop.clone(), Rc::new(Value::from(val.clone()))))
+                    .map(|(prop, val)| (prop.clone(), ValueRef::new(Value::from(val.clone()))))
                     .collect::<Vec<(String, ValueRef)>>(),
             )),
             serde_json::Value::String(s) => Value::String(s),
@@ -286,14 +314,14 @@ impl Display for Value {
             Value::Set(set) => set.fmt(f),
             Value::Map(map) => map.fmt(f),
             Value::Object(object) => object.fmt(f),
-            Value::Lambda(_, lambda) => lambda.fmt(f),
+            Value::Lambda(_, lambda) => lambda.deref().fmt(f),
             Value::Quoted(expr) => {
                 f.write_str("^")?;
-                expr.fmt(f)
+                expr.deref().fmt(f)
             }
             Value::QuotedAST(ast) => {
                 f.write_str("^(")?;
-                ast.fmt(f)?;
+                ast.deref().fmt(f)?;
                 f.write_str(")")
             }
         }

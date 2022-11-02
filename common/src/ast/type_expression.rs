@@ -45,7 +45,7 @@ pub enum TypeExpression {
     StringType,
     TypeRef(Identifier),
     FunctionType(LambdaArgs<TypeExpression>, Rc<TypeExpression>), // args & return type
-    TupleType(TupleItems<TypeExpression>),
+    TupleType(TupleItems<Rc<TypeExpression>>),
     ListType(Rc<TypeExpression>),
     StructType(StructTypeProperties),
 }

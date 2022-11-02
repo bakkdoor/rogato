@@ -1,4 +1,4 @@
-use std::{fmt::Display, hash::Hash, rc::Rc};
+use std::{fmt::Display, hash::Hash};
 
 use super::{Value, ValueRef};
 use crate::{
@@ -27,7 +27,7 @@ impl List {
     }
 
     pub fn head(&self) -> Option<ValueRef> {
-        self.entries.first().map(Rc::clone)
+        self.entries.first().map(|e| e.clone())
     }
 
     pub fn tail(&self) -> Self {
@@ -72,7 +72,7 @@ impl ASTDepth for List {
 
 impl Display for List {
     fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let items: TupleItems<Value> = TupleItems::from_iter(self.iter().map(Rc::clone));
+        let items: TupleItems<ValueRef> = TupleItems::from_iter(self.iter().map(|x| x.clone()));
 
         if items.ast_depth() > 6 {
             let items_str = format!("{}", items);

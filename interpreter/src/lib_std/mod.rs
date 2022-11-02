@@ -98,7 +98,7 @@ pub fn std_module() -> Module {
     module.fn_def(fn_def("apply", &["func", "?args"], move |ctx, args| {
         let error = Err(invalid_args("apply"));
         match (args.len(), args.get(0), args.get(1)) {
-            (1, Some(func), None) => Ok(Rc::clone(func)),
+            (1, Some(func), None) => Ok(func.clone()),
             (2, Some(func), Some(args)) => match (func.deref(), args.deref()) {
                 (Value::Lambda(lambda_ctx, lambda), Value::List(args)) => {
                     let args: Vec<ValueRef> = args.iter().map(Rc::clone).collect();
@@ -169,9 +169,8 @@ pub fn std_module() -> Module {
     module.fn_def(fn_def(">=", &["a", "b"], move |_ctx, args| {
         let error = Err(invalid_args(">"));
         match (args.len(), args.get(0), args.get(1)) {
-            (2, Some(a), Some(b)) => match ((*a).deref(), (*b).deref()) {
-                (Value::Number(a), Value::Number(b)) => Ok(val::bool(a.ge(b))),
-                _ => error,
+            (2, Some(Value::Number(a)), Some(Value::Number(b))) =>{
+                Ok(val::bool(a.ge(b))),
             },
             _ => error,
         }

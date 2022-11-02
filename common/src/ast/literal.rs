@@ -9,8 +9,8 @@ pub enum Literal {
     Bool(bool),
     Number(Decimal),
     String(String),
-    Tuple(TupleItems<Expression>),
-    List(TupleItems<Expression>),
+    Tuple(TupleItems<Rc<Expression>>),
+    List(TupleItems<Rc<Expression>>),
     ListCons(Rc<Expression>, Rc<Expression>),
     Struct(Identifier, Rc<StructProps>),
 }
@@ -86,19 +86,19 @@ impl ASTDepth for Literal {
 
 #[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub struct TupleItems<I> {
-    items: Vec<Rc<I>>,
+    items: Vec<I>,
 }
 
 impl<I: Display> TupleItems<I> {
     pub fn new(first: I, rest: Vec<I>) -> Self {
-        let mut items = vec![Rc::new(first)];
+        let mut items = vec![first];
         for item in rest {
-            items.push(Rc::new(item))
+            items.push(item)
         }
         Self::from(items)
     }
 
-    pub fn from(items: Vec<Rc<I>>) -> Self {
+    pub fn from(items: Vec<I>) -> Self {
         TupleItems { items }
     }
 
@@ -110,13 +110,13 @@ impl<I: Display> TupleItems<I> {
         self.len() == 0
     }
 
-    pub fn iter(&self) -> std::slice::Iter<Rc<I>> {
+    pub fn iter(&self) -> std::slice::Iter<I> {
         self.items.iter()
     }
 }
 
-impl<I: Display> FromIterator<Rc<I>> for TupleItems<I> {
-    fn from_iter<T: IntoIterator<Item = Rc<I>>>(iter: T) -> Self {
+impl<I: Display> FromIterator<I> for TupleItems<I> {
+    fn from_iter<T: IntoIterator<Item = I>>(iter: T) -> Self {
         TupleItems::from(iter.into_iter().collect())
     }
 }
@@ -145,6 +145,33 @@ impl<I: Display + ASTDepth> Display for TupleItems<I> {
 impl<I: ASTDepth> ASTDepth for TupleItems<I> {
     fn ast_depth(&self) -> usize {
         1 + self.items.iter().map(|i| i.ast_depth()).sum::<usize>()
+    }
+}
+
+impl<I: ASTDepth> ASTDepth for TupleItems<Rc<I>> {
+    fn ast_depth(&self) -> usize {
+        1 + self.items.iter().map(|i| i.ast_depth()).sum::<usize>()
+    }
+}
+
+impl<I: Display + ASTDepth> Display for TupleItems<Rc<I>> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let indent_items = self.items.iter().any(|i| i.ast_depth() > 6);
+        let mut is_first = true;
+        for item in self.items.iter() {
+            if !is_first {
+                if indent_items {
+                    f.write_str(",\n")?;
+                } else {
+                    f.write_str(", ")?;
+                }
+            }
+
+            item.fmt(f)?;
+
+            is_first = false;
+        }
+        Ok(())
     }
 }
 
