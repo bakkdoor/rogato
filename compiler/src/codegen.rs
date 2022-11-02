@@ -282,20 +282,16 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         self.module.get_function(name)
     }
 
-    #[inline]
-    pub fn not_yet_implemented_error<T, S: ToString>(&self, message: S) -> CodegenResult<T> {
-        Err(CodegenError::NotYetImplemented(message.to_string()))
-    }
-
     pub fn new_module(&self, name: &str) -> Module<'ctx> {
         self.context.create_module(name)
     }
 
-    pub fn lookup_var<S: ToString>(&self, name: S) -> Option<&PointerValue<'ctx>> {
+    fn lookup_var<S: ToString>(&self, name: S) -> Option<&PointerValue<'ctx>> {
         self.variables.get(&name.to_string())
     }
 
-    pub fn store_var<S: ToString>(&mut self, name: S, pointer_val: PointerValue<'ctx>) {
+    #[allow(dead_code)]
+    fn store_var<S: ToString>(&mut self, name: S, pointer_val: PointerValue<'ctx>) {
         self.variables.insert(name.to_string(), pointer_val);
     }
 
