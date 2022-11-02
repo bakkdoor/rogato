@@ -133,31 +133,30 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         id: &Identifier,
         args: &FnCallArgs,
     ) -> CodegenResult<FloatValue<'ctx>> {
-        match self.get_function(id.as_str()) {
-            Some(fun) => {
-                let mut compiled_args = Vec::with_capacity(args.len());
+        let function = self
+            .get_function(id.as_str())
+            .ok_or_else(|| CodegenError::FnNotDefined(id.clone()))?;
 
-                for arg in args.iter() {
-                    compiled_args.push(self.codegen_expr(arg)?);
-                }
+        let mut compiled_args = Vec::with_capacity(args.len());
 
-                let argsv: Vec<BasicMetadataValueEnum> = compiled_args
-                    .iter()
-                    .by_ref()
-                    .map(|&val| val.into())
-                    .collect();
+        for arg in args.iter() {
+            compiled_args.push(self.codegen_expr(arg)?);
+        }
 
-                match self
-                    .builder
-                    .build_call(fun, argsv.as_slice(), "tmp")
-                    .try_as_basic_value()
-                    .left()
-                {
-                    Some(value) => Ok(value.into_float_value()),
-                    None => self.unknown_error("Invalid call produced."),
-                }
-            }
-            None => Err(CodegenError::FnNotDefined(id.clone())),
+        let argsv: Vec<BasicMetadataValueEnum> = compiled_args
+            .iter()
+            .by_ref()
+            .map(|&val| val.into())
+            .collect();
+
+        match self
+            .builder
+            .build_call(function, argsv.as_slice(), "tmp")
+            .try_as_basic_value()
+            .left()
+        {
+            Some(value) => Ok(value.into_float_value()),
+            None => self.unknown_error("Invalid call produced."),
         }
     }
 
