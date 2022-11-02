@@ -26,6 +26,11 @@ use crate::error::CodegenError;
 
 pub type CodegenResult<T> = Result<T, CodegenError>;
 
+#[inline]
+fn unknown_error<S: Into<String>>(message: S) -> CodegenError {
+    CodegenError::Unknown(String::from(message.into()))
+}
+
 #[derive(Debug)]
 pub struct Codegen<'a, 'ctx> {
     pub module: &'a Module<'ctx>,
@@ -124,7 +129,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                     Err(CodegenError::FnDefValidationFailed(func_name.clone()))
                 }
             }
-            _ => self.unknown_error("Cannot compile function with NativeFn body!"),
+            _ => Err(unknown_error("Cannot compile function with NativeFn body!")),
         }
     }
 
@@ -149,15 +154,14 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             .map(|&val| val.into())
             .collect();
 
-        match self
+        let value = self
             .builder
             .build_call(function, argsv.as_slice(), "tmp")
             .try_as_basic_value()
             .left()
-        {
-            Some(value) => Ok(value.into_float_value()),
-            None => self.unknown_error("Invalid call produced."),
-        }
+            .ok_or_else(|| unknown_error("Invalid call produced."))?;
+
+        Ok(value.into_float_value())
     }
 
     pub fn codegen_op_call(
@@ -192,7 +196,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                 let float_val = val::number_to_f64(num).unwrap();
                 Ok(self.context.f32_type().const_float(float_val))
             }
-            _ => self.unknown_error("Literals not yet implemented!"),
+            _ => Err(unknown_error("Literals not yet implemented!")),
         }
     }
 
@@ -276,11 +280,6 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
     #[inline]
     fn get_function(&self, name: &str) -> Option<FunctionValue<'ctx>> {
         self.module.get_function(name)
-    }
-
-    #[inline]
-    fn unknown_error<T, S: ToString>(&self, message: S) -> CodegenResult<T> {
-        Err(CodegenError::Unknown(message.to_string()))
     }
 
     #[inline]
