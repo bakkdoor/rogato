@@ -28,7 +28,7 @@ pub type CodegenResult<T> = Result<T, CodegenError>;
 
 #[inline]
 fn unknown_error<S: Into<String>>(message: S) -> CodegenError {
-    CodegenError::Unknown(String::from(message.into()))
+    CodegenError::Unknown(message.into())
 }
 
 #[derive(Debug)]
