@@ -3,7 +3,7 @@ use std::{
     hash::{Hash, Hasher},
 };
 
-use super::ValueRef;
+use super::{Value, ValueRef};
 use crate::ast::ASTDepth;
 
 #[derive(Clone, Eq, Debug)]
@@ -69,5 +69,11 @@ impl Display for Queue {
         }
 
         fmt.write_str(" ]")
+    }
+}
+
+impl From<Queue> for ValueRef {
+    fn from(queue: Queue) -> Self {
+        ValueRef::new(Value::Queue(queue))
     }
 }

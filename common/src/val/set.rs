@@ -3,7 +3,7 @@ use std::{
     hash::{Hash, Hasher},
 };
 
-use super::ValueRef;
+use super::{Value, ValueRef};
 use crate::ast::ASTDepth;
 
 #[derive(Clone, Eq, Debug)]
@@ -71,5 +71,11 @@ impl Display for Set {
         }
 
         fmt.write_str(" ]")
+    }
+}
+
+impl From<Set> for ValueRef {
+    fn from(set: Set) -> Self {
+        ValueRef::new(Value::Set(set))
     }
 }

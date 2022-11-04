@@ -1,6 +1,6 @@
 use std::{fmt::Display, hash::Hash};
 
-use super::ValueRef;
+use super::{Value, ValueRef};
 use crate::ast::ASTDepth;
 
 #[derive(Clone, PartialEq, Eq, Debug, Hash)]
@@ -21,6 +21,11 @@ impl List {
 
     pub fn is_empty(&self) -> bool {
         self.entries.is_empty()
+    }
+
+impl From<List> for ValueRef {
+    fn from(list: List) -> Self {
+        ValueRef::new(Value::List(list))
     }
 }
 

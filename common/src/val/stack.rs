@@ -1,6 +1,6 @@
 use std::{fmt::Display, hash::Hash};
 
-use super::ValueRef;
+use super::{Value, ValueRef};
 use crate::ast::ASTDepth;
 
 #[derive(Clone, PartialEq, Eq, Debug, Hash)]
@@ -53,5 +53,11 @@ impl Display for Stack {
         }
 
         fmt.write_str(" ]")
+    }
+}
+
+impl From<Stack> for ValueRef {
+    fn from(stack: Stack) -> Self {
+        ValueRef::new(Value::Stack(stack))
     }
 }

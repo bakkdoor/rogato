@@ -1,6 +1,6 @@
 use std::{fmt::Display, hash::Hash};
 
-use super::ValueRef;
+use super::{Value, ValueRef};
 use crate::ast::ASTDepth;
 
 #[derive(Clone, PartialEq, Eq, Debug, Hash)]
@@ -53,5 +53,11 @@ impl Display for Vector {
         }
 
         fmt.write_str(" ]")
+    }
+}
+
+impl From<Vector> for ValueRef {
+    fn from(vector: Vector) -> Self {
+        ValueRef::new(Value::Vector(vector))
     }
 }

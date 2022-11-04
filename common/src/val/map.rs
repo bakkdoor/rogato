@@ -6,7 +6,7 @@ use std::{
 
 use crate::ast::ASTDepth;
 
-use super::ValueRef;
+use super::{Value, ValueRef};
 
 #[derive(Clone, Eq, Debug)]
 pub struct Map {
@@ -75,5 +75,11 @@ impl Display for Map {
         }
 
         fmt.write_str(" }")
+    }
+}
+
+impl From<Map> for ValueRef {
+    fn from(map: Map) -> Self {
+        ValueRef::new(Value::Map(map))
     }
 }
