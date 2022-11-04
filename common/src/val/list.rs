@@ -1,4 +1,4 @@
-use std::{fmt::Display, hash::Hash};
+use std::{fmt::Display, hash::Hash, rc::Rc};
 
 use super::{Value, ValueRef};
 use crate::ast::ASTDepth;
@@ -21,6 +21,17 @@ impl List {
 
     pub fn is_empty(&self) -> bool {
         self.entries.is_empty()
+    }
+
+    pub fn head(&self) -> Option<ValueRef> {
+        self.entries.first().map(Rc::clone)
+    }
+
+    pub fn tail(&self) -> Self {
+        if let Some(entries) = self.entries.drop_first() {
+            return List { entries };
+        }
+        List::from_iter([])
     }
 
     pub fn cons(&self, value: ValueRef) -> Self {

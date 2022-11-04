@@ -71,10 +71,46 @@ pub fn module() -> Module {
         "reverse",
         &["list"],
         move |_ctx, args| -> Result<Rc<Value>, NativeFnError> {
-            let error = Err(invalid_args("Std.List.::"));
+            let error = Err(invalid_args("Std.List.reverse"));
             match (args.len(), args.get(0)) {
                 (1, Some(a)) => match a.deref() {
                     Value::List(items) => Ok(items.reverse().into()),
+                    _ => error,
+                },
+                _ => error,
+            }
+        },
+    ));
+
+    module.fn_def(fn_def(
+        "head",
+        &["list"],
+        move |_ctx, args| -> Result<Rc<Value>, NativeFnError> {
+            let error = Err(invalid_args("Std.List.head"));
+            match (args.len(), args.get(0)) {
+                (1, Some(a)) => match a.deref() {
+                    Value::List(items) => {
+                        if items.is_empty() {
+                            error
+                        } else {
+                            Ok(items.head().unwrap())
+                        }
+                    }
+                    _ => error,
+                },
+                _ => error,
+            }
+        },
+    ));
+
+    module.fn_def(fn_def(
+        "tail",
+        &["list"],
+        move |_ctx, args| -> Result<Rc<Value>, NativeFnError> {
+            let error = Err(invalid_args("Std.List.tail"));
+            match (args.len(), args.get(0)) {
+                (1, Some(a)) => match a.deref() {
+                    Value::List(items) => Ok(items.tail().into()),
                     _ => error,
                 },
                 _ => error,

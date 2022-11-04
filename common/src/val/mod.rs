@@ -145,6 +145,12 @@ impl Value {
     }
 }
 
+impl From<Option<ValueRef>> for Value {
+    fn from(opt: Option<ValueRef>) -> Self {
+        Value::Option(opt)
+    }
+}
+
 pub type ValueRef = Rc<Value>;
 
 impl From<serde_json::Value> for Value {

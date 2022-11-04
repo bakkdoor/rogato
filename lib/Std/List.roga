@@ -1,4 +1,4 @@
-module Std.List { map, count, isEmpty, reverse }
+module Std.List { map, count, isEmpty, reverse, repeatTimes }
 
 let map list f =
   let
