@@ -1,9 +1,9 @@
-use std::fmt::Display;
+use std::{fmt::Display, ops::Deref};
 
 use crate::{EvalContext, EvalError, Evaluate};
 use rogato_common::{
     ast::literal::{Literal, TupleItems},
-    val::{self, ValueRef},
+    val::{self, Value, ValueRef},
 };
 
 impl Evaluate<ValueRef> for Literal {
@@ -24,6 +24,14 @@ impl Evaluate<ValueRef> for Literal {
                     values.push(item.evaluate(context)?)
                 }
                 Ok(val::list(values))
+            }
+            Literal::ListCons(first, rest) => {
+                let value = first.evaluate(context)?;
+                let rest = rest.evaluate(context)?;
+                match rest.deref() {
+                    Value::List(list) => Ok(list.cons(value).into()),
+                    _ => Err(EvalError::ListConsInvalidList(rest)),
+                }
             }
             Literal::Struct(_struct_id, props) => {
                 let mut prop_values = vec![];

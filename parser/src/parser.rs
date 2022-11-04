@@ -428,6 +428,9 @@ grammar parser(context: &ParserContext) for str {
         / "[" _ item:tuple_item() _ "]" {
             Expression::Lit(Literal::List(TupleItems::new(item, vec![])))
         }
+        / "[" _ first:tuple_item() _ "::" _ rest:tuple_item() "]" {
+            Expression::Lit(Literal::ListCons(Rc::new(first), Rc::new(rest)))
+        }
         / "[" _ "]" {
             Expression::Lit(Literal::List(TupleItems::from(vec![])))
         }
@@ -522,10 +525,10 @@ grammar parser(context: &ParserContext) for str {
         }
 
     rule operator() -> Identifier
-        = "!" id:$(['+' | '-' | '*' | '/' | '>' | '<' | '=' | '!' | '^' | '=' | '|' | '%' | ':'])+ {
+        = "!" id:$(['+' | '-' | '*' | '/' | '>' | '<' | '=' | '!' | '^' | '=' | '|' | '%'])+ {
             join_string("!", id)
         }
-        / id:$(['+' | '-' | '*' | '/' | '>' | '<' | '=' | '^' | '=' | '|' | '%' | ':'])+ id2:$(['+' | '-' | '*' | '/' | '>' | '<' | '=' | '!' | '^' | '=' | '|' | '%' | ':'])* {
+        / id:$(['+' | '-' | '*' | '/' | '>' | '<' | '=' | '^' | '=' | '|' | '%'])+ id2:$(['+' | '-' | '*' | '/' | '>' | '<' | '=' | '!' | '^' | '=' | '|' | '%'])* {
             join_string(SmolStr::from_iter(id).as_str(), id2)
         }
 

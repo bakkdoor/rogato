@@ -50,6 +50,10 @@ pub fn list_lit<Iter: IntoIterator<Item = Rc<Expression>>>(vals: Iter) -> Rc<Exp
     lit(List(TupleItems::from_iter(vals)))
 }
 
+pub fn list_cons(first: Rc<Expression>, rest: Rc<Expression>) -> Rc<Expression> {
+    lit(ListCons(first, rest))
+}
+
 pub fn struct_lit<S: Into<Identifier>, Props: IntoIterator<Item = (S, Rc<Expression>)>>(
     id: S,
     raw_props: Props,

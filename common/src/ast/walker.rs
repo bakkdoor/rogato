@@ -40,6 +40,10 @@ impl Walk for Expression {
                             val.walk(v)
                         }
                     }
+                    Literal::ListCons(first, rest) => {
+                        first.walk(v);
+                        rest.walk(v)
+                    }
                     Literal::Tuple(vals) => {
                         for val in vals.iter() {
                             val.walk(v)

@@ -294,7 +294,7 @@ fn std_list_module() {
             ]),
         ),
         (
-            "1 :: [2,3,4]",
+            "[1 :: [2,3,4]]",
             val::list([
                 val::number(1),
                 val::number(2),
@@ -303,7 +303,7 @@ fn std_list_module() {
             ]),
         ),
         (
-            "{1,2,3} :: [2,3,4]",
+            "[{1,2,3} :: [2,3,4]]",
             val::list([
                 val::tuple([val::number(1), val::number(2), val::number(3)]),
                 val::number(2),

@@ -55,6 +55,9 @@ pub enum EvalError {
 
     #[error("IfElse condition is not a Bool value: {0}")]
     IFElseConditionNotBool(ValueRef),
+
+    #[error("List const with requires list, was given: {0}")]
+    ListConsInvalidList(ValueRef),
 }
 
 impl From<QueryError> for EvalError {

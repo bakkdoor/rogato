@@ -10,6 +10,7 @@ pub enum Literal {
     String(String),
     Tuple(TupleItems<Expression>),
     List(TupleItems<Expression>),
+    ListCons(Rc<Expression>, Rc<Expression>),
     Struct(Identifier, Rc<StructProps>),
 }
 
@@ -42,6 +43,21 @@ impl Display for Literal {
                     f.write_fmt(format_args!("[ {} ]", items))
                 }
             }
+            Literal::ListCons(first, rest) => {
+                if first.ast_depth() > 6 || rest.ast_depth() > 6 {
+                    let first_lines = format!("{}", first).lines().count();
+                    let rest_lines = format!("{}", rest).lines().count();
+
+                    match (first_lines, rest_lines) {
+                        (1, 1) => f.write_fmt(format_args!("[ {} :: {} ]", first, rest)),
+                        _ => {
+                            f.write_fmt(format_args!("[\n{} :: {}\n]", indent(first), indent(rest)))
+                        }
+                    }
+                } else {
+                    f.write_fmt(format_args!("[ {} :: {} ]", first, rest))
+                }
+            }
             Literal::Struct(id, props) => f.write_fmt(format_args!("{}{{ {} }}", id, props)),
         }
     }
@@ -54,6 +70,7 @@ impl ASTDepth for Literal {
             Literal::String(_) => 1,
             Literal::Tuple(items) => 1 + items.iter().map(|i| i.ast_depth()).sum::<usize>(),
             Literal::List(items) => 1 + items.iter().map(|i| i.ast_depth()).sum::<usize>(),
+            Literal::ListCons(first, rest) => first.ast_depth() + rest.ast_depth(),
             Literal::Struct(_id, props) => {
                 1 + props
                     .iter()

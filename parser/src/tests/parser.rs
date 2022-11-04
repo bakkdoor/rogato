@@ -2,6 +2,7 @@
 use crate::{assert_parse, assert_parse_ast, assert_parse_expr, parse_expr, ParserContext};
 #[cfg(test)]
 use rogato_common::ast::helpers::inline_fn_def;
+use rogato_common::ast::helpers::list_cons;
 #[cfg(test)]
 use rogato_common::ast::helpers::{
     commented, const_or_type_ref, db_type_ref, edge_prop, fn_call, fn_def, if_else, int_type,
@@ -250,6 +251,30 @@ fn literals() {
             op_call("+", var("x"), var("y"))
         ])
     );
+
+    assert_parse_expr!(
+        "[[1,2,3] :: (foo bar baz)]",
+        list_cons(
+            list_lit([number_lit(1), number_lit(2), number_lit(3)]),
+            fn_call("foo", [var("bar"), var("baz")])
+        )
+    );
+
+    assert_parse_expr!(
+        "[1 :: [1,2,3]]",
+        list_cons(
+            number_lit(1),
+            list_lit([number_lit(1), number_lit(2), number_lit(3)])
+        )
+    );
+
+    assert_parse_expr!(
+        "[{1,2,3} :: [1,2,3]]",
+        list_cons(
+            tuple_lit([number_lit(1), number_lit(2), number_lit(3)]),
+            list_lit([number_lit(1), number_lit(2), number_lit(3)])
+        )
+    );
 }
 
 #[test]
@@ -363,24 +388,6 @@ fn op_calls() {
             "<-",
             op_call("<-", number_lit(1), number_lit(2)),
             number_lit(3),
-        )
-    );
-
-    assert_parse_expr!(
-        "1 :: [1,2,3]",
-        op_call(
-            "::",
-            number_lit(1),
-            list_lit([number_lit(1), number_lit(2), number_lit(3)])
-        )
-    );
-
-    assert_parse_expr!(
-        "{1,2,3} :: [1,2,3]",
-        op_call(
-            "::",
-            tuple_lit([number_lit(1), number_lit(2), number_lit(3)]),
-            list_lit([number_lit(1), number_lit(2), number_lit(3)])
         )
     );
 }
