@@ -49,21 +49,15 @@ let take list n =
   in
     take_ [] list n
 
-let repeat count func =
-  x ->
-    count
-    |> range
-    |> map (_ -> func x)
-
-let repeatTimes iterations fn =
+let repeat iterations fn =
   repeatTimes_ [] iterations 0 fn
 
-let repeatTimes_ acc max n fn =
+let repeat_ acc max n fn =
   let
     value = fn n
-    values = value :: acc
+    values = [value :: acc]
   in
     if (n == (max - 1)) then
       (reverse values)
     else
-      (repeatTimes_ values max (n + 1) fn)
+      (repeat_ values max (n + 1) fn)
