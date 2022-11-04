@@ -54,3 +54,16 @@ let repeat count func =
     count
     |> range
     |> map (_ -> func x)
+
+let repeatTimes iterations fn =
+  repeatTimes_ [] iterations 0 fn
+
+let repeatTimes_ acc max n fn =
+  let
+    value = fn n
+    values = value :: acc
+  in
+    if (n == (max - 1)) then
+      (reverse values)
+    else
+      (repeatTimes_ values max (n + 1) fn)
