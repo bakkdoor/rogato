@@ -85,6 +85,16 @@ pub fn std_module() -> Module {
         }
     }));
 
+    module.fn_def(fn_def("print", &["value"], move |_ctx, args| {
+        match args.get(0) {
+            Some(value) => {
+                println!("{}", value);
+                Ok(Rc::clone(value))
+            }
+            None => Err(invalid_args("print")),
+        }
+    }));
+
     module.fn_def(fn_def("apply", &["func", "?args"], move |ctx, args| {
         let error = Err(invalid_args("apply"));
         match (args.len(), args.get(0), args.get(1)) {
