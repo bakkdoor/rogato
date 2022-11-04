@@ -1,0 +1,7 @@
+module Std { always, id }
+
+let always x =
+  _ -> x
+
+let id x =
+  x
