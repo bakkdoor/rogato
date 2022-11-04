@@ -365,6 +365,24 @@ fn op_calls() {
             number_lit(3),
         )
     );
+
+    assert_parse_expr!(
+        "1 :: [1,2,3]",
+        op_call(
+            "::",
+            number_lit(1),
+            list_lit([number_lit(1), number_lit(2), number_lit(3)])
+        )
+    );
+
+    assert_parse_expr!(
+        "{1,2,3} :: [1,2,3]",
+        op_call(
+            "::",
+            tuple_lit([number_lit(1), number_lit(2), number_lit(3)]),
+            list_lit([number_lit(1), number_lit(2), number_lit(3)])
+        )
+    );
 }
 
 #[test]

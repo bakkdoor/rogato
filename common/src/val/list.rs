@@ -23,6 +23,13 @@ impl List {
         self.entries.is_empty()
     }
 
+    pub fn cons(&self, value: ValueRef) -> Self {
+        List {
+            entries: self.entries.push_front(value),
+        }
+    }
+}
+
 impl From<List> for ValueRef {
     fn from(list: List) -> Self {
         ValueRef::new(Value::List(list))

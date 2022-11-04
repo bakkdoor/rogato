@@ -293,6 +293,24 @@ fn std_list_module() {
                 val::number(3),
             ]),
         ),
+        (
+            "1 :: [2,3,4]",
+            val::list([
+                val::number(1),
+                val::number(2),
+                val::number(3),
+                val::number(4),
+            ]),
+        ),
+        (
+            "{1,2,3} :: [2,3,4]",
+            val::list([
+                val::tuple([val::number(1), val::number(2), val::number(3)]),
+                val::number(2),
+                val::number(3),
+                val::number(4),
+            ]),
+        ),
     ];
 
     let mut eval_ctx = EvalContext::new();
