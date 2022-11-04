@@ -273,6 +273,8 @@ fn std_list_module() {
                 add10  = x -> x + 10
                 add1 x = x + 1
                 add2 x = (add1 (add1 x))
+                cons = [{^foo, ^bar} :: (range 3)]
+                cons2 list = [{^foo, ^bar} :: list]
              in
                 {
                     Std.List.map [1,2,3] insp,
@@ -281,7 +283,11 @@ fn std_list_module() {
                     add10 1,
                     add1 1000,
                     add2 0,
-                    add2 1
+                    add2 1,
+                    cons,
+                    cons2 [],
+                    cons2 [^a,^b,^c],
+                    cons2 [\"hello, world\"],
                 }",
             val::tuple([
                 val::list([val::string("1"), val::string("2"), val::string("3")]),
@@ -291,6 +297,23 @@ fn std_list_module() {
                 val::number(1001),
                 val::number(2),
                 val::number(3),
+                val::list([
+                    val::tuple([val::symbol("foo"), val::symbol("bar")]),
+                    val::number(0),
+                    val::number(1),
+                    val::number(2),
+                ]),
+                val::list([val::tuple([val::symbol("foo"), val::symbol("bar")])]),
+                val::list([
+                    val::tuple([val::symbol("foo"), val::symbol("bar")]),
+                    val::symbol("a"),
+                    val::symbol("b"),
+                    val::symbol("c"),
+                ]),
+                val::list([
+                    val::tuple([val::symbol("foo"), val::symbol("bar")]),
+                    val::string("hello, world"),
+                ]),
             ]),
         ),
         (
