@@ -52,8 +52,7 @@ let repeat iterations fn =
 
 let repeat_ acc max n fn =
   let
-    value = fn n
-    values = [value :: acc]
+    values = [fn n :: acc]
   in
     if (n == (max - 1)) then
       (reverse values)
