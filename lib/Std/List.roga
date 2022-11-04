@@ -1,4 +1,4 @@
-module Std.List { map, count, isEmpty, reverse, repeatTimes }
+module Std.List { map, count, isEmpty, reverse, repeat }
 
 let map list f =
   let
@@ -50,7 +50,7 @@ let take list n =
     take_ [] list n
 
 let repeat iterations fn =
-  repeatTimes_ [] iterations 0 fn
+  repeat_ [] iterations 0 fn
 
 let repeat_ acc max n fn =
   let
