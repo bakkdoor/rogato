@@ -67,5 +67,20 @@ pub fn module() -> Module {
         },
     ));
 
+    module.fn_def(fn_def(
+        "reverse",
+        &["list"],
+        move |_ctx, args| -> Result<Rc<Value>, NativeFnError> {
+            let error = Err(invalid_args("Std.List.::"));
+            match (args.len(), args.get(0)) {
+                (1, Some(a)) => match a.deref() {
+                    Value::List(items) => Ok(items.reverse().into()),
+                    _ => error,
+                },
+                _ => error,
+            }
+        },
+    ));
+
     module
 }

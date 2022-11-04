@@ -28,6 +28,12 @@ impl List {
             entries: self.entries.push_front(value),
         }
     }
+
+    pub fn reverse(&self) -> Self {
+        List {
+            entries: self.entries.reverse(),
+        }
+    }
 }
 
 impl From<List> for ValueRef {
