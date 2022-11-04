@@ -37,6 +37,9 @@ where
 {
     lit(Number(Decimal::from(val)))
 }
+pub fn bool_lit(val: bool) -> Rc<Expression> {
+    lit(Bool(val))
+}
 
 pub fn string_lit(val: &str) -> Rc<Expression> {
     lit(String(val.to_string()))

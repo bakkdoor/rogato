@@ -2,7 +2,7 @@
 use crate::{assert_parse, assert_parse_ast, assert_parse_expr, parse_expr, ParserContext};
 #[cfg(test)]
 use rogato_common::ast::helpers::inline_fn_def;
-use rogato_common::ast::helpers::list_cons;
+use rogato_common::ast::helpers::{bool_lit, list_cons};
 #[cfg(test)]
 use rogato_common::ast::helpers::{
     commented, const_or_type_ref, db_type_ref, edge_prop, fn_call, fn_def, if_else, int_type,
@@ -166,6 +166,9 @@ fn literals() {
         "{1,2,3}",
         tuple_lit([number_lit(1), number_lit(2), number_lit(3)])
     );
+
+    assert_parse_expr!("true", bool_lit(true));
+    assert_parse_expr!("false", bool_lit(false));
 
     assert_parse_expr!(
         "{ 1, (2 + 3), 4 }",

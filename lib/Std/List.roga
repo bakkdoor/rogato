@@ -19,10 +19,8 @@ let count list =
     count_ 0 list
 
 
-let isEmpty [] =
-  true
-let isEmpty _  =
-  false
+let isEmpty [] = true
+let isEmpty _  = false
 
 let reverse list =
   let

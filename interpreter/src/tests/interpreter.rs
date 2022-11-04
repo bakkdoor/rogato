@@ -120,6 +120,10 @@ fn equality() {
         ("{1,2,3}", "{3,4,5}"),
         ("{1, 1 + 1, 2 + 1}", "{3,4,5}"),
         ("[^foo, ^bar, 1 + 2]", "[^bar, 3, ^foo]"),
+        ("true", "false"),
+        ("false", "true"),
+        ("2 == 2", "false"),
+        ("2 != 3", "false"),
     ];
 
     let equal = [
@@ -134,6 +138,10 @@ fn equality() {
             "[^foo, ^bar, 1 + 2, \"hello\" ++ \", world!\"]",
             "[^foo, ^bar, 3, \"hello, world!\"]",
         ),
+        ("false", "false"),
+        ("true", "true"),
+        ("2 == 2", "true"),
+        ("2 != 3", "true"),
     ];
 
     let mut eval_ctx = EvalContext::new();

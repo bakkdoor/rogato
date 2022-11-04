@@ -33,6 +33,7 @@ impl Walk for Expression {
             Expression::Lit(lit_exp) => {
                 v.lit(lit_exp);
                 match lit_exp {
+                    Literal::Bool(_) => {}
                     Literal::Number(_) => {}
                     Literal::String(_) => {}
                     Literal::List(vals) => {

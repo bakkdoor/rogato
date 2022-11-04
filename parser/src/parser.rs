@@ -396,6 +396,7 @@ grammar parser(context: &ParserContext) for str {
 
     rule literal_expr() -> Expression
         = number_lit()
+        / bool_lit()
         / string_lit()
         / struct_lit()
         / tuple_lit()
@@ -409,6 +410,14 @@ grammar parser(context: &ParserContext) for str {
         / n:$("-"? ['0'..='9']+) {
             let decimal = Decimal::from_str(n).unwrap();
             Expression::Lit(Literal::Number(decimal))
+        }
+
+    rule bool_lit() -> Expression
+        = "true" {
+            Expression::Lit(Literal::Bool(true))
+        }
+        / "false" {
+            Expression::Lit(Literal::Bool(false))
         }
 
     rule string_lit() -> Expression
