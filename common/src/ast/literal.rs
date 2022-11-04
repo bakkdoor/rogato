@@ -120,7 +120,7 @@ impl<I: Display> FromIterator<Rc<I>> for TupleItems<I> {
 
 impl<I: Display + ASTDepth> Display for TupleItems<I> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let indent_items = self.items.iter().any(|i| i.ast_depth() > 6);
+        let indent_items = self.ast_depth() > 50 || self.items.iter().any(|i| i.ast_depth() > 6);
         let mut is_first = true;
         for item in self.items.iter() {
             if !is_first {

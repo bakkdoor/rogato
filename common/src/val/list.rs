@@ -1,7 +1,10 @@
 use std::{fmt::Display, hash::Hash, rc::Rc};
 
 use super::{Value, ValueRef};
-use crate::{ast::ASTDepth, util::indent};
+use crate::{
+    ast::{expression::TupleItems, ASTDepth},
+    util::indent,
+};
 
 #[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub struct List {
@@ -63,38 +66,23 @@ impl FromIterator<ValueRef> for List {
 
 impl ASTDepth for List {
     fn ast_depth(&self) -> usize {
-        1 + self.entries.len()
+        1 + self.entries.iter().map(|i| i.ast_depth()).sum::<usize>()
     }
 }
 
 impl Display for List {
     fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut first = true;
-        let is_large = self.len() > 25;
+        let items: TupleItems<Value> = TupleItems::from_iter(self.iter().map(Rc::clone));
 
-        if is_large {
-            fmt.write_str("\n[ ")?;
-        } else {
-            fmt.write_str("[ ")?;
-        }
-
-        for item in self.iter() {
-            if !first {
-                fmt.write_str(", ")?;
-            }
-            if is_large {
-                fmt.write_str("\n")?;
-                indent(item).fmt(fmt)?;
+        if items.ast_depth() > 6 {
+            let items_str = format!("{}", items);
+            if items_str.lines().count() == 1 {
+                fmt.write_fmt(format_args!("[ {} ]", items))
             } else {
-                item.fmt(fmt)?;
+                fmt.write_fmt(format_args!("[\n{}\n]", indent(&items)))
             }
-            first = false;
-        }
-
-        if is_large {
-            fmt.write_str("\n]")
         } else {
-            fmt.write_str(" ]")
+            fmt.write_fmt(format_args!("[ {} ]", items))
         }
     }
 }
