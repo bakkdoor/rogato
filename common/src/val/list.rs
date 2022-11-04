@@ -1,7 +1,7 @@
 use std::{fmt::Display, hash::Hash, rc::Rc};
 
 use super::{Value, ValueRef};
-use crate::ast::ASTDepth;
+use crate::{ast::ASTDepth, util::indent};
 
 #[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub struct List {
@@ -70,17 +70,31 @@ impl ASTDepth for List {
 impl Display for List {
     fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut first = true;
+        let is_large = self.len() > 25;
 
-        fmt.write_str("[ ")?;
+        if is_large {
+            fmt.write_str("\n[ ")?;
+        } else {
+            fmt.write_str("[ ")?;
+        }
 
-        for v in self.iter() {
+        for item in self.iter() {
             if !first {
                 fmt.write_str(", ")?;
             }
-            v.fmt(fmt)?;
+            if is_large {
+                fmt.write_str("\n")?;
+                indent(item).fmt(fmt)?;
+            } else {
+                item.fmt(fmt)?;
+            }
             first = false;
         }
 
-        fmt.write_str(" ]")
+        if is_large {
+            fmt.write_str("\n]")
+        } else {
+            fmt.write_str(" ]")
+        }
     }
 }
