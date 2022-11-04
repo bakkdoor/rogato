@@ -124,6 +124,18 @@ pub fn std_module() -> Module {
     }));
 
     module.fn_def(fn_def(
+        "toString",
+        &["value"],
+        move |_ctx, args| match args.get(0) {
+            Some(value) => match value.deref() {
+                Value::String(_) => Ok(Rc::clone(value)),
+                _ => Ok(val::string(format!("{}", value))),
+            },
+            None => Err(invalid_args("inspect")),
+        },
+    ));
+
+    module.fn_def(fn_def(
         "inspect",
         &["value"],
         move |_ctx, args| match args.get(0) {
