@@ -23,9 +23,19 @@ For some example source code and syntax ideas (still WIP), check out the code ex
 
 ### Build instructions
 
-Build with cargo, Rust's package and build manager:
+#### LLVM v14 Dependency
+
+*rogātō* depends on LLVM version 14 to build. LLVM is used by the [`compiler`](compiler/) crate to generate optimized native machine code.
+
+LLVM website with documentation and installation instructions:
+- https://llvm.org
+
+Latest compatible LLVM release:
+- https://github.com/llvm/llvm-project/releases/tag/llvmorg-14.0.6
 
 #### Build without optimizations (debug mode)
+
+Build with cargo, Rust's package and build manager:
 
     cargo b
 
