@@ -152,7 +152,7 @@ impl EvalContext {
     }
 
     pub fn lookup_db_type(&self, id: &Identifier) -> Option<Rc<TypeDef>> {
-        // TODO: do lookup / verfication with DB instead
+        // TODO: do lookup / verification with DB instead
         self.env.lookup_type(id)
     }
 
@@ -217,7 +217,7 @@ impl LambdaClosureContext for EvalContext {
         args: &[ValueRef],
     ) -> Result<ValueRef, LambdaClosureEvalError> {
         let given_argc = args.len();
-        let expected_argc = lambda.args().len();
+        let expected_argc = lambda.args.len();
         if given_argc != expected_argc {
             eprintln!(
                 "Lambda arity mismatch: Expected {} but got {}",
@@ -231,12 +231,12 @@ impl LambdaClosureContext for EvalContext {
 
         let mut call_ctx = self.with_child_env();
 
-        for (arg_id, arg_val) in lambda.args().iter().zip(args.iter()) {
+        for (arg_id, arg_val) in lambda.args.iter().zip(args.iter()) {
             call_ctx.define_var(arg_id, Rc::clone(arg_val))
         }
 
         lambda
-            .body()
+            .body
             .evaluate(&mut call_ctx)
             .map_err(|e| LambdaClosureEvalError::EvaluationFailed(e.to_string()))
     }

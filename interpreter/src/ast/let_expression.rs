@@ -6,7 +6,7 @@ use rogato_common::{
 
 impl Evaluate<ValueRef> for LetExpression {
     fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
-        for (id, expr) in self.bindings().iter() {
+        for (id, expr) in self.bindings.iter() {
             match &**expr {
                 Expression::InlineFnDef(fn_def) => {
                     context.define_fn(fn_def.clone());
@@ -18,6 +18,6 @@ impl Evaluate<ValueRef> for LetExpression {
             }
         }
 
-        self.body().evaluate(context)
+        self.body.evaluate(context)
     }
 }

@@ -6,21 +6,13 @@ use super::{expression::Expression, visitor::Visitor, walker::Walk, ASTDepth, Id
 
 #[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub struct LetExpression {
-    bindings: LetBindings,
-    body: Rc<Expression>,
+    pub bindings: LetBindings,
+    pub body: Rc<Expression>,
 }
 
 impl LetExpression {
     pub fn new(bindings: LetBindings, body: Rc<Expression>) -> LetExpression {
         LetExpression { bindings, body }
-    }
-
-    pub fn bindings(&self) -> &LetBindings {
-        &self.bindings
-    }
-
-    pub fn body(&self) -> Rc<Expression> {
-        Rc::clone(&self.body)
     }
 }
 

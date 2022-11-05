@@ -9,9 +9,9 @@ use std::rc::Rc;
 
 #[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub struct IfElse {
-    condition: Rc<Expression>,
-    then_expr: Rc<Expression>,
-    else_expr: Rc<Expression>,
+    pub condition: Rc<Expression>,
+    pub then_expr: Rc<Expression>,
+    pub else_expr: Rc<Expression>,
 }
 
 impl IfElse {
@@ -25,18 +25,6 @@ impl IfElse {
             then_expr,
             else_expr,
         }
-    }
-
-    pub fn condition(&self) -> Rc<Expression> {
-        Rc::clone(&self.condition)
-    }
-
-    pub fn then_expr(&self) -> Rc<Expression> {
-        Rc::clone(&self.then_expr)
-    }
-
-    pub fn else_expr(&self) -> Rc<Expression> {
-        Rc::clone(&self.else_expr)
     }
 }
 

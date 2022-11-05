@@ -10,8 +10,8 @@ use super::{expression::Expression, walker::Walk, ASTDepth, Identifier};
 
 #[derive(PartialEq, Eq, Debug, Hash)]
 pub struct Lambda {
-    args: LambdaArgs<Identifier>,
-    body: Rc<Expression>,
+    pub args: LambdaArgs<Identifier>,
+    pub body: Rc<Expression>,
 }
 
 impl Lambda {
@@ -22,16 +22,8 @@ impl Lambda {
         self.args.get(i)
     }
 
-    pub fn args(&self) -> &LambdaArgs<Identifier> {
-        &self.args
-    }
-
     pub fn arg_count(&self) -> usize {
         self.args.len()
-    }
-
-    pub fn body(&self) -> Rc<Expression> {
-        Rc::clone(&self.body)
     }
 }
 
