@@ -207,7 +207,7 @@ pub fn std_module() -> Module {
         match (args.len(), args.get(0), args.get(1)) {
             (1, Some(a), None) => match (*a).deref() {
                 Value::Number(end) => {
-                    if *end <= dec!(0) {
+                    if *end < dec!(0) {
                         return error;
                     }
                     let start = 0i64;
