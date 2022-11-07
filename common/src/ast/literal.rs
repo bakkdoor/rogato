@@ -91,7 +91,8 @@ pub struct TupleItems<I> {
 
 impl<I: Display> TupleItems<I> {
     pub fn new(first: I, rest: Vec<I>) -> Self {
-        let mut items = vec![Rc::new(first)];
+        let mut items = Vec::with_capacity(rest.len() + 1);
+        items.push(Rc::new(first));
         for item in rest {
             items.push(Rc::new(item))
         }

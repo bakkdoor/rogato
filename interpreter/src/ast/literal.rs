@@ -13,14 +13,14 @@ impl Evaluate<ValueRef> for Literal {
             Literal::Number(number) => Ok(val::number(*number)),
             Literal::String(string) => Ok(val::string(string)),
             Literal::Tuple(items) => {
-                let mut values = vec![];
+                let mut values = Vec::with_capacity(items.len());
                 for item in items.iter() {
                     values.push(item.evaluate(context)?)
                 }
                 Ok(val::tuple(values))
             }
             Literal::List(items) => {
-                let mut values = vec![];
+                let mut values = Vec::with_capacity(items.len());
                 for item in items.iter() {
                     values.push(item.evaluate(context)?)
                 }
@@ -35,7 +35,7 @@ impl Evaluate<ValueRef> for Literal {
                 }
             }
             Literal::Struct(_struct_id, props) => {
-                let mut prop_values = vec![];
+                let mut prop_values = Vec::with_capacity(props.len());
                 for (id, expr) in props.iter() {
                     prop_values.push((id.clone(), expr.evaluate(context)?))
                 }
@@ -47,7 +47,7 @@ impl Evaluate<ValueRef> for Literal {
 
 impl<T: Evaluate<ValueRef> + Display> Evaluate<ValueRef> for TupleItems<T> {
     fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
-        let mut values = vec![];
+        let mut values = Vec::with_capacity(self.len());
         for item in self.iter() {
             values.push(item.evaluate(context)?)
         }

@@ -21,7 +21,7 @@ impl Evaluate<ValueRef> for Query {
 
 impl Evaluate<Vec<ValueRef>> for QueryGuards {
     fn evaluate(&self, context: &mut EvalContext) -> Result<Vec<ValueRef>, EvalError> {
-        let mut results = vec![];
+        let mut results = Vec::with_capacity(self.len());
         for guard_expr in self.iter() {
             results.push(QueryGuard::new(Rc::clone(guard_expr)).evaluate(context)?)
         }

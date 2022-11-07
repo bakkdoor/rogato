@@ -207,12 +207,12 @@ pub fn std_module() -> Module {
         match (args.len(), args.get(0), args.get(1)) {
             (1, Some(a), None) => match (*a).deref() {
                 Value::Number(end) => {
-                    let mut numbers: Vec<ValueRef> = vec![];
                     if *end <= dec!(0) {
                         return error;
                     }
                     let start = 0i64;
                     let end = end.trunc().to_i64().unwrap();
+                    let mut numbers: Vec<ValueRef> = Vec::with_capacity(end.try_into().unwrap());
                     for i in start..end {
                         numbers.push(val::number(i))
                     }
@@ -222,9 +222,10 @@ pub fn std_module() -> Module {
             },
             (2, Some(a), Some(b)) => match ((*a).deref(), (*b).deref()) {
                 (Value::Number(start), Value::Number(end)) => {
-                    let mut numbers: Vec<ValueRef> = vec![];
                     let start: i64 = start.trunc().to_i64().unwrap();
                     let end = end.trunc().to_i64().unwrap();
+                    let mut numbers: Vec<ValueRef> =
+                        Vec::with_capacity((end - start).try_into().unwrap());
                     for i in start..end {
                         numbers.push(val::number(i))
                     }

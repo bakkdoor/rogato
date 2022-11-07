@@ -418,10 +418,10 @@ fn lambda_closures() {
             f x = [1, 2, 3] |> Std.List.map (y -> x + y)
         in
             {f 1, f 10, f 100}",
-        val::tuple(vec![
-            val::list(vec![val::number(2), val::number(3), val::number(4)]),
-            val::list(vec![val::number(11), val::number(12), val::number(13)]),
-            val::list(vec![val::number(101), val::number(102), val::number(103)]),
+        val::tuple([
+            val::list([val::number(2), val::number(3), val::number(4)]),
+            val::list([val::number(11), val::number(12), val::number(13)]),
+            val::list([val::number(101), val::number(102), val::number(103)]),
         ]),
     )];
 

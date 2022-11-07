@@ -7,7 +7,7 @@ use crate::{EvalContext, EvalError, Evaluate};
 
 impl Evaluate<ValueRef> for Program {
     fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
-        let mut values = vec![];
+        let mut values = Vec::with_capacity(self.len());
         for ast in self.iter() {
             values.push(ast.evaluate(context)?)
         }
