@@ -110,7 +110,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         for (arg, arg_name) in func.get_param_iter().zip(fn_def.args().iter()) {
             let alloca = self.create_entry_block_alloca(f32_type, arg_name);
             self.builder.build_store(alloca, arg);
-            self.variables.insert(arg_name.to_string(), alloca);
+            self.store_var(arg_name, alloca)
         }
 
         match fn_def.body().as_ref() {
