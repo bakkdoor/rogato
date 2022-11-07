@@ -174,10 +174,10 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         let right = self.codegen_expr(right)?;
 
         match id.as_str() {
-            "+" => Ok(self.builder.build_float_add(left, right, "tmpadd")),
-            "-" => Ok(self.builder.build_float_sub(left, right, "tmpsub")),
-            "*" => Ok(self.builder.build_float_mul(left, right, "tmpmul")),
-            "/" => Ok(self.builder.build_float_div(left, right, "tmpdiv")),
+            "+" => Ok(self.builder.build_float_add(left, right, "tmp_add")),
+            "-" => Ok(self.builder.build_float_sub(left, right, "tmp_sub")),
+            "*" => Ok(self.builder.build_float_mul(left, right, "tmp_mul")),
+            "/" => Ok(self.builder.build_float_div(left, right, "tmp_div")),
             _ => Err(CodegenError::OpNotDefined(id.clone())),
         }
     }
