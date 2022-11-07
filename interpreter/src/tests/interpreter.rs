@@ -98,15 +98,25 @@ fn let_expressions() {
         "let
             add a b = a + b
             mul a b = a * b
+            twice x = {x, x}
          in
-            { add 1 2, mul 2 3 }",
+            { add 1 2, mul 2 3, twice 1, twice 42.69, twice (twice ^wat) }",
         &parser_ctx,
     )
     .unwrap();
 
     assert_eq!(
         ast.evaluate(&mut eval_ctx),
-        Ok(val::tuple([val::number(3), val::number(6)]))
+        Ok(val::tuple([
+            val::number(3),
+            val::number(6),
+            val::tuple([val::number(1), val::number(1)]),
+            val::tuple([val::decimal_str("42.69"), val::decimal_str("42.69")]),
+            val::tuple([
+                val::tuple([val::symbol("wat"), val::symbol("wat")]),
+                val::tuple([val::symbol("wat"), val::symbol("wat")])
+            ])
+        ]))
     )
 }
 
