@@ -5,7 +5,7 @@ use inkwell::{
     module::Module,
     passes::PassManager,
     types::{BasicMetadataTypeEnum, BasicType},
-    values::{BasicMetadataValueEnum, FloatValue, FunctionValue, PointerValue},
+    values::{AnyValue, BasicMetadataValueEnum, FloatValue, FunctionValue, PointerValue},
     OptimizationLevel,
 };
 use rogato_common::{
@@ -141,6 +141,13 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         let function = self
             .get_function(id.as_str())
             .ok_or_else(|| CodegenError::FnNotDefined(id.clone()))?;
+
+        if rogato_common::util::is_debug_enabled() {
+            println!(
+                "📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟\n\n{}\n📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟\n",
+                function.print_to_string().to_string()
+            );
+        }
 
         let mut compiled_args = Vec::with_capacity(args.len());
 
