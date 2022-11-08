@@ -49,9 +49,8 @@ impl AttemptBinding for Pattern {
                 if list.is_empty() {
                     return Ok(None);
                 }
-                if let Some(h) = list.head() {
-                    head.attempt_binding(context, h)?;
-                }
+
+                head.attempt_binding(context, list.head().unwrap())?;
                 tail.attempt_binding(context, list.tail().into())?;
 
                 Ok(Some(value))
