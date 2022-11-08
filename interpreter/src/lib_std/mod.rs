@@ -7,6 +7,7 @@ use rogato_common::{
     ast::{
         expression::FnDefArgs,
         fn_def::{FnDef, FnDefBody},
+        pattern::Pattern,
     },
     native_fn::{NativeFn, NativeFnError},
     val,
@@ -300,7 +301,11 @@ pub fn std_module() -> Module {
 pub fn fn_def(id: &str, args: &[&str], body: NativeFn) -> Rc<FnDef> {
     FnDef::new(
         id.to_string(),
-        FnDefArgs::new(args.iter().map(|a| a.into()).collect()),
+        FnDefArgs::new(
+            args.iter()
+                .map(|a| Rc::new(Pattern::Var(a.into())))
+                .collect(),
+        ),
         Rc::new(FnDefBody::native(body)),
     )
 }
@@ -308,7 +313,7 @@ pub fn fn_def(id: &str, args: &[&str], body: NativeFn) -> Rc<FnDef> {
 pub fn op_fn_def(id: &str, body: NativeFn) -> Rc<FnDef> {
     FnDef::new(
         id.to_string(),
-        FnDefArgs::new(vec!["left".into(), "right".into()]),
+        FnDefArgs::new(vec![Rc::new("left".into()), Rc::new("right".into())]),
         Rc::new(FnDefBody::native(body)),
     )
 }

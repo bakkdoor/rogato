@@ -4,6 +4,7 @@ use let_expression::LetExpression;
 use super::{
     expression::{Lambda, Literal, Query},
     if_else::IfElse,
+    pattern::Pattern,
     *,
 };
 
@@ -79,6 +80,9 @@ pub trait Visitor<T: Default> {
         T::default()
     }
     fn inline_fn_def(&mut self, _fn_def: &FnDef) -> T {
+        T::default()
+    }
+    fn pattern(&mut self, _pattern: &Pattern) -> T {
         T::default()
     }
 }

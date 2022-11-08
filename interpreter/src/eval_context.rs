@@ -8,6 +8,7 @@ use rogato_common::{
 
 use super::{environment::Environment, module::Module, EvalError, Identifier, ValueRef};
 use crate::{
+    ast::pattern::AttemptBinding,
     lib_std,
     query_planner::{QueryPlanner, QueryResult},
     Evaluate,
@@ -108,8 +109,8 @@ impl EvalContext {
         }
 
         let mut fn_ctx = self.with_child_env();
-        for (arg_name, arg_val) in func.args().iter().zip(args) {
-            fn_ctx.define_var(arg_name, Rc::clone(arg_val))
+        for (arg_pattern, arg_val) in func.args().iter().zip(args) {
+            arg_pattern.attempt_binding(self, Rc::clone(arg_val))?;
         }
 
         match &*(func.body()) {
@@ -128,7 +129,7 @@ impl EvalContext {
     }
 
     pub fn define_var(&mut self, id: &Identifier, val: ValueRef) {
-        self.env.define_var(id, val);
+        self.env.define_var(id, val)
     }
 
     pub fn lookup_var(&self, id: &str) -> Option<ValueRef> {

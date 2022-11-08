@@ -10,6 +10,7 @@ use rogato_common::ast::{
     fn_def::{FnDef, FnDefBody},
     if_else::IfElse,
     module_def::{ModuleDef, ModuleExports},
+    pattern::Pattern,
     type_expression::{StructTypeProperties, TypeDef, TypeExpression},
     Identifier, Program, AST,
 };
@@ -86,13 +87,31 @@ grammar parser(context: &ParserContext) for str {
         }
 
     rule fn_def() -> AST
-        = _ "let " _ id:identifier() _ args:(fn_def_arg())* _ "=" _ body:(expression()) _ {
+        = _ "let " _ id:identifier() _ args:(fn_def_arg() ** spacing()) _ "=" _ body:(expression()) _ {
             AST::FnDef(FnDef::new(id, FnDefArgs::new(args), Rc::new(FnDefBody::rogato(Rc::new(body)))))
         }
 
-    rule fn_def_arg() -> Identifier
-        = _ id:identifier() _ {
-            id
+    rule fn_def_arg() -> Rc<Pattern>
+        = pattern()
+
+    rule pattern() -> Rc<Pattern>
+        = "(" _ p:pattern() _ ")" {
+            p
+        }
+        / "[" _ "]" {
+            Rc::new(Pattern::EmptyList)
+        }
+        / "[" _ items:(pattern() ** spacing()) _ "]" {
+            Rc::new(Pattern::ListLit(TupleItems::from(items)))
+        }
+        / "[" _ head:pattern() _ "::" _ tail:pattern() _ "]" {
+            Rc::new(Pattern::ListCons(head,tail))
+        }
+        / "_" {
+            Rc::new(Pattern::AnyPattern)
+        }
+        / id:identifier() {
+            Rc::new(Pattern::Var(id))
         }
 
     rule type_def() -> AST
@@ -367,8 +386,11 @@ grammar parser(context: &ParserContext) for str {
             (id.clone(), Expression::InlineFnDef(FnDef::new_inline(id, FnDefArgs::new(args), Rc::new(FnDefBody::rogato(Rc::new(body))))))
         }
 
-    rule inline_fn_arg() -> Identifier
-        = " "+ id:identifier() { id }
+    rule inline_fn_arg() -> Rc<Pattern>
+        = " "+ id:identifier() {
+            Rc::new(Pattern::Var(id))
+        }
+        / pattern()
 
     rule let_body() -> Expression
         = lambda()
@@ -547,6 +569,10 @@ grammar parser(context: &ParserContext) for str {
 
     rule ws()
         = ([' ' | '\t' | '\n'])+
+
+    rule spacing()
+        = ([' ' | '\t'])+
+
 
     rule comment() -> String
         = [' ' | '\t']* "//" comment:([^ '\n'])* {

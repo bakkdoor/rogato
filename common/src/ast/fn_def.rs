@@ -1,3 +1,4 @@
+use super::pattern::Pattern;
 use super::{expression::Expression, walker::Walk, ASTDepth, Identifier};
 use crate::{native_fn::NativeFn, util::indent};
 use std::hash::{Hash, Hasher};
@@ -90,17 +91,28 @@ impl ASTDepth for FnDef {
 
 #[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub struct FnDefArgs {
-    args: Vec<Identifier>,
+    args: Vec<Rc<Pattern>>,
 }
 
 impl FnDefArgs {
-    pub fn new(args: Vec<Identifier>) -> Self {
+    pub fn new(args: Vec<Rc<Pattern>>) -> Self {
         FnDefArgs { args }
     }
 
     pub fn required_args(&self) -> usize {
-        let optional_args = self.args.iter().filter(|a| a.starts_with('?')).count();
+        let optional_args = self
+            .args
+            .iter()
+            .filter(|a| Self::is_optional_arg(a))
+            .count();
         self.len() - optional_args
+    }
+
+    pub fn is_optional_arg(p: &Pattern) -> bool {
+        match p {
+            Pattern::Var(v) => v.starts_with('?'),
+            _ => false, // TODO: ???
+        }
     }
 
     pub fn len(&self) -> usize {
@@ -111,7 +123,7 @@ impl FnDefArgs {
         self.len() == 0
     }
 
-    pub fn iter(&self) -> std::slice::Iter<Identifier> {
+    pub fn iter(&self) -> std::slice::Iter<Rc<Pattern>> {
         self.args.iter()
     }
 }

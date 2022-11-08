@@ -9,6 +9,7 @@ pub mod eval_context;
 pub mod lib_std;
 pub mod module;
 
+use ast::pattern::PatternBindingError;
 pub use eval_context::EvalContext;
 use query_planner::QueryError;
 pub use rogato_common::{
@@ -58,6 +59,9 @@ pub enum EvalError {
 
     #[error("List const with requires list, was given: {0}")]
     ListConsInvalidList(ValueRef),
+
+    #[error("EvalError during pattern match: {0}")]
+    PatternBindingFailed(PatternBindingError),
 }
 
 impl From<QueryError> for EvalError {
@@ -75,6 +79,12 @@ impl From<NativeFnError> for EvalError {
 impl From<EvalError> for NativeFnError {
     fn from(e: EvalError) -> Self {
         NativeFnError::EvaluationFailed(format!("{}", e))
+    }
+}
+
+impl From<PatternBindingError> for EvalError {
+    fn from(e: PatternBindingError) -> Self {
+        EvalError::PatternBindingFailed(e)
     }
 }
 

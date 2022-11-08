@@ -20,6 +20,7 @@ use std::rc::Rc;
 
 use super::expression::IfElse;
 use super::fn_def::FnDefBody;
+use super::pattern::Pattern;
 use super::type_expression::StructTypeProperties;
 use super::Identifier;
 
@@ -84,7 +85,7 @@ pub fn prop_fn_ref(id: &str) -> Rc<Expression> {
     Rc::new(PropFnRef(id.into()))
 }
 
-pub fn fn_def<Args: IntoIterator<Item = &'static str>>(
+pub fn fn_def<P: Into<Rc<Pattern>>, Args: IntoIterator<Item = P>>(
     id: &str,
     args: Args,
     body: Rc<Expression>,
@@ -96,7 +97,7 @@ pub fn fn_def<Args: IntoIterator<Item = &'static str>>(
     )))
 }
 
-pub fn fn_def_args<Args: IntoIterator<Item = &'static str>>(args: Args) -> FnDefArgs {
+pub fn fn_def_args<P: Into<Rc<Pattern>>, Args: IntoIterator<Item = P>>(args: Args) -> FnDefArgs {
     FnDefArgs::new(Vec::from_iter(args.into_iter().map(|a| a.into())))
 }
 
@@ -258,7 +259,7 @@ pub fn unquoted_ast(ast: Rc<AST>) -> Rc<Expression> {
     Rc::new(Expression::UnquotedAST(ast))
 }
 
-pub fn inline_fn_def<Args: IntoIterator<Item = &'static str>>(
+pub fn inline_fn_def<Args: IntoIterator<Item = Rc<Pattern>>>(
     id: &str,
     args: Args,
     body: Rc<Expression>,
@@ -268,4 +269,37 @@ pub fn inline_fn_def<Args: IntoIterator<Item = &'static str>>(
         fn_def_args(args),
         Rc::new(FnDefBody::rogato(body)),
     )))
+}
+
+pub fn any_p() -> Rc<Pattern> {
+    Rc::new(Pattern::AnyPattern)
+}
+
+pub fn list_cons_p(head_pattern: Rc<Pattern>, tail_pattern: Rc<Pattern>) -> Rc<Pattern> {
+    Rc::new(Pattern::ListCons(head_pattern, tail_pattern))
+}
+
+pub fn empty_list_p() -> Rc<Pattern> {
+    Rc::new(Pattern::EmptyList)
+}
+
+pub fn var_p(id: &str) -> Rc<Pattern> {
+    Rc::new(Pattern::Var(id.into()))
+}
+
+pub fn p<P: Into<Vec<Pattern>>>(vec: P) -> Vec<Rc<Pattern>> {
+    let vec = vec.into();
+    let mut patterns = Vec::with_capacity(vec.len());
+    for pat in vec {
+        patterns.push(Rc::new(pat))
+    }
+    patterns
+}
+
+pub fn vars(ids: &[&str]) -> Vec<Rc<Pattern>> {
+    let mut vec = Vec::with_capacity(ids.len());
+    for id in ids.iter() {
+        vec.push(Rc::new(id.into()))
+    }
+    vec
 }

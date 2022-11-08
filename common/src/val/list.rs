@@ -50,6 +50,14 @@ impl List {
     }
 }
 
+impl Default for List {
+    fn default() -> Self {
+        Self {
+            entries: rpds::List::new(),
+        }
+    }
+}
+
 impl From<List> for ValueRef {
     fn from(list: List) -> Self {
         ValueRef::new(Value::List(list))

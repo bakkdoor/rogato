@@ -2,7 +2,9 @@
 use crate::{assert_parse, assert_parse_ast, assert_parse_expr, parse_expr, ParserContext};
 #[cfg(test)]
 use rogato_common::ast::helpers::inline_fn_def;
-use rogato_common::ast::helpers::{bool_lit, list_cons};
+use rogato_common::ast::helpers::{
+    any_p, bool_lit, empty_list_p, list_cons, list_cons_p, var_p, vars,
+};
 #[cfg(test)]
 use rogato_common::ast::helpers::{
     commented, const_or_type_ref, db_type_ref, edge_prop, fn_call, fn_def, if_else, int_type,
@@ -14,18 +16,18 @@ use rust_decimal_macros::dec;
 
 #[test]
 fn fn_defs() {
-    assert_parse_ast!("let id x = x", fn_def("id", ["x"], var("x")));
+    assert_parse_ast!("let id x = x", fn_def("id", vars(&["x"]), var("x")));
 
     assert_parse_ast!(
         "let add a b = a + b",
-        fn_def("add", ["a", "b"], op_call("+", var("a"), var("b")))
+        fn_def("add", vars(&["a", "b"]), op_call("+", var("a"), var("b")))
     );
 
     assert_parse_ast!(
         "let add a b c = (a + b) * (c * a)",
         fn_def(
             "add",
-            ["a", "b", "c"],
+            vars(&["a", "b", "c"]),
             op_call(
                 "*",
                 op_call("+", var("a"), var("b")),
@@ -36,19 +38,23 @@ fn fn_defs() {
 
     assert_parse_ast!(
         "let add1 a = 1 + a",
-        fn_def("add1", ["a"], op_call("+", number_lit(1), var("a")))
+        fn_def("add1", vars(&["a"]), op_call("+", number_lit(1), var("a")))
     );
 
     assert_parse_ast!(
         "\nlet add1and2 = 1 + 2\n",
-        fn_def("add1and2", [], op_call("+", number_lit(1), number_lit(2)))
+        fn_def(
+            "add1and2",
+            vars(&[]),
+            op_call("+", number_lit(1), number_lit(2))
+        )
     );
 
     assert_parse_ast!(
         "let foo a b = bar a (baz 1)",
         fn_def(
             "foo",
-            ["a", "b"],
+            vars(&["a", "b"]),
             fn_call("bar", [var("a"), fn_call("baz", [number_lit(1)])]),
         )
     );
@@ -67,7 +73,7 @@ fn fn_defs() {
         ",
         fn_def(
             "foo",
-            ["a", "b"],
+            vars(&["a", "b"]),
             let_expr(
                 [
                     ("x", op_call("+", var("a"), var("b"))),
@@ -82,6 +88,24 @@ fn fn_defs() {
                 ])
             )
         )
+    );
+}
+
+#[test]
+fn patterns() {
+    assert_parse_ast!(
+        "let tail [] = []",
+        fn_def("tail", [empty_list_p()], list_lit([]))
+    );
+
+    assert_parse_ast!(
+        "let tail [_ :: xs] = xs",
+        fn_def("tail", [list_cons_p(any_p(), var_p("xs"))], var("xs"))
+    );
+
+    assert_parse_ast!(
+        "let head [x :: _] = x",
+        fn_def("head", [list_cons_p(var_p("x"), any_p())], var("x"))
     );
 }
 
@@ -567,11 +591,11 @@ fn let_expressions() {
             [
                 (
                     "add",
-                    inline_fn_def("add", ["a", "b"], op_call("+", var("a"), var("b")))
+                    inline_fn_def("add", vars(&["a", "b"]), op_call("+", var("a"), var("b")))
                 ),
                 (
                     "mul",
-                    inline_fn_def("mul", ["a", "b"], op_call("*", var("a"), var("b")))
+                    inline_fn_def("mul", vars(&["a", "b"]), op_call("*", var("a"), var("b")))
                 ),
             ],
             tuple_lit([
@@ -925,7 +949,7 @@ fn fn_pipes() {
             !> p",
         fn_def(
             "f",
-            ["x"],
+            vars(&["x"]),
             query(
                 [(["p"], const_or_type_ref("Person"), false)],
                 [fn_call(
@@ -1016,12 +1040,20 @@ fn symbols_and_quotes() {
 
     assert_parse_expr!(
         "^(let f x = x + 1)",
-        quoted_ast(fn_def("f", ["x"], op_call("+", var("x"), number_lit(1))))
+        quoted_ast(fn_def(
+            "f",
+            [var_p("x")],
+            op_call("+", var("x"), number_lit(1))
+        ))
     );
 
     assert_parse_expr!(
         "~(let f x = x + 1)",
-        unquoted_ast(fn_def("f", ["x"], op_call("+", var("x"), number_lit(1))))
+        unquoted_ast(fn_def(
+            "f",
+            [var_p("x")],
+            op_call("+", var("x"), number_lit(1))
+        ))
     );
 }
 
@@ -1038,7 +1070,7 @@ fn if_else_expr() {
         "let f x y = if (x > y) then {x, y} else {y, x}",
         fn_def(
             "f",
-            ["x", "y"],
+            vars(&["x", "y"]),
             if_else(
                 op_call(">", var("x"), var("y")),
                 tuple_lit([var("x"), var("y")]),

@@ -15,6 +15,7 @@ use rogato_common::{
         fn_def::{FnDef, FnDefBody},
         literal::Literal,
         module_def::ModuleDef,
+        pattern::Pattern,
         type_expression::TypeDef,
         Identifier, Program, AST,
     },
@@ -108,9 +109,14 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         self.builder.position_at_end(basic_block);
 
         for (arg, arg_name) in func.get_param_iter().zip(fn_def.args().iter()) {
-            let alloca = self.create_entry_block_alloca(f32_type, arg_name);
-            self.builder.build_store(alloca, arg);
-            self.store_var(arg_name, alloca)
+            match &**arg_name {
+                Pattern::Var(arg_name) => {
+                    let alloca = self.create_entry_block_alloca(f32_type, arg_name);
+                    self.builder.build_store(alloca, arg);
+                    self.store_var(arg_name, alloca)
+                }
+                _ => todo!("pattern matching not yet supported"),
+            }
         }
 
         match fn_def.body().as_ref() {
