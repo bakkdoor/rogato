@@ -111,7 +111,7 @@ impl ASTDepth for FnDefVariant {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, Eq)]
 pub struct FnDefVariants {
     variants: Vec<FnDefVariant>,
 }
@@ -146,6 +146,12 @@ impl Hash for FnDefVariants {
         for v in self.variants.iter() {
             Hash::hash(&v.0, h);
         }
+    }
+}
+
+impl PartialEq for FnDefVariants {
+    fn eq(&self, other: &Self) -> bool {
+        self.variants.eq(&other.variants)
     }
 }
 
