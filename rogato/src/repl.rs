@@ -127,6 +127,8 @@ impl From<ReadlineError> for REPLError {
     }
 }
 
+type F32JITFunc = unsafe extern "C" fn() -> f32;
+
 fn parse_eval_print(
     parse_ctx: &ParserContext,
     eval_ctx: &mut EvalContext,
@@ -148,7 +150,7 @@ fn parse_eval_print(
                 unsafe {
                     let main_fn = compiler
                         .execution_engine
-                        .get_function::<unsafe extern "C" fn() -> f32>("main")?;
+                        .get_function::<F32JITFunc>("main")?;
 
                     let result = main_fn.call();
                     println!("{:03} ✅ {}\n", counter, result);
@@ -174,8 +176,8 @@ fn parse_eval_print(
 
         Err(_) => {
             if rogato_common::util::is_compilation_enabled() {
-                let tmp_func_name = format!("repl_{}", counter);
-                let code = format!("let {} = {}", tmp_func_name, code.trim());
+                let func_name = format!("repl_{}", counter);
+                let code = format!("let {} = {}", func_name, code.trim());
                 return match parse(code.as_str(), parse_ctx) {
                     Ok(ast) => {
                         if rogato_common::util::is_debug_enabled() {
@@ -187,9 +189,7 @@ fn parse_eval_print(
                         unsafe {
                             let tmp_function = compiler
                                 .execution_engine
-                                .get_function::<unsafe extern "C" fn() -> f32>(
-                                tmp_func_name.as_str(),
-                            )?;
+                                .get_function::<F32JITFunc>(func_name.as_str())?;
 
                             let result = tmp_function.call();
                             println!("{:03} ✅ {}\n", counter, result);
