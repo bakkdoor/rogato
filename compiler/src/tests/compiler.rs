@@ -1,11 +1,11 @@
-use std::rc::Rc;
+use std::{cell::RefCell, rc::Rc};
 
 use rogato_common::ast::{fn_def::FnDef, AST};
 use rogato_parser::{parse_ast, ParserContext};
 
 use crate::Codegen;
 
-pub fn parse_fn_def(code: &str) -> Rc<FnDef> {
+pub fn parse_fn_def(code: &str) -> Rc<RefCell<FnDef>> {
     let mut parser_ctx = ParserContext::new();
     let ast = parse_ast(code, &mut parser_ctx).unwrap();
     match ast.as_ref() {
@@ -26,7 +26,7 @@ fn codegen_add3() {
     let mut compiler = Codegen::new(&context, &module, &builder, &fpm, &ee);
 
     let func_def = parse_fn_def("let add3 x y z = (x + y) + z");
-    compiler.codegen_fn_def(func_def.as_ref()).unwrap();
+    compiler.codegen_fn_def(&func_def.borrow()).unwrap();
 
     unsafe {
         let function = compiler
@@ -60,7 +60,7 @@ fn codegen_add2_mul() {
     let mut compiler = Codegen::new(&context, &module, &builder, &fpm, &ee);
 
     let func_def = parse_fn_def("let add2_mul x y z = (x + y) * z");
-    compiler.codegen_fn_def(func_def.as_ref()).unwrap();
+    compiler.codegen_fn_def(&func_def.borrow()).unwrap();
 
     unsafe {
         let function = compiler
@@ -95,15 +95,15 @@ fn codegen_multiple_functions() {
     let mut compiler = Codegen::new(&context, &module, &builder, &fpm, &ee);
 
     let fn_def = parse_fn_def("let tripleSum x y z = (x + y + z) * 3.0");
-    compiler.codegen_fn_def(&fn_def.as_ref()).unwrap();
+    compiler.codegen_fn_def(&fn_def.borrow()).unwrap();
 
     let fn_def = parse_fn_def("let tripleProduct x y z = (x * y * z) * 3.0");
-    compiler.codegen_fn_def(&fn_def.as_ref()).unwrap();
+    compiler.codegen_fn_def(&fn_def.borrow()).unwrap();
 
     let fn_def = parse_fn_def(
         "let tripleSumTripleProduct x y z = (tripleSum x y z) * (tripleProduct x y z)",
     );
-    compiler.codegen_fn_def(&fn_def.as_ref()).unwrap();
+    compiler.codegen_fn_def(&fn_def.borrow()).unwrap();
 
     let fn_def = parse_fn_def(
         "let addAllOtherTripled x y z =
@@ -113,7 +113,7 @@ fn codegen_multiple_functions() {
                 (tripleSumTripleProduct x y z)
             )",
     );
-    compiler.codegen_fn_def(&fn_def.as_ref()).unwrap();
+    compiler.codegen_fn_def(&fn_def.borrow()).unwrap();
 
     unsafe {
         let triple_sum = compiler
@@ -168,10 +168,10 @@ fn codegen_0_arg_fn() {
     let mut compiler = Codegen::new(&context, &module, &builder, &fpm, &ee);
 
     let func_def = parse_fn_def("let test1 = 100 * 420.69");
-    compiler.codegen_fn_def(func_def.as_ref()).unwrap();
+    compiler.codegen_fn_def(&func_def.borrow()).unwrap();
 
     let func_def = parse_fn_def("let test2 = 10.0 * 42");
-    compiler.codegen_fn_def(func_def.as_ref()).unwrap();
+    compiler.codegen_fn_def(&func_def.borrow()).unwrap();
 
     unsafe {
         let test1 = compiler

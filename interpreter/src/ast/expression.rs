@@ -82,7 +82,7 @@ impl Evaluate<ValueRef> for Expression {
             Expression::QuotedAST(ast) => Ok(val::quoted_ast(Rc::clone(ast))),
             Expression::Unquoted(expr) => Ok(val::string(format!("~({})", expr))),
             Expression::UnquotedAST(ast) => Ok(val::string(format!("~({})", ast))),
-            Expression::InlineFnDef(fn_def) => fn_def.evaluate(context),
+            Expression::InlineFnDef(fn_def) => fn_def.borrow().evaluate(context),
         }
     }
 }

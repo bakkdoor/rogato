@@ -1,3 +1,5 @@
+use std::{cell::RefCell, rc::Rc};
+
 use crate::{
     ast::{fn_def::FnDef, lambda::LambdaClosureEvalError, Identifier},
     val::ValueRef,
@@ -34,7 +36,7 @@ pub trait NativeFnContext {
 
     fn call_function_direct(
         &mut self,
-        func: &FnDef,
+        func: Rc<RefCell<FnDef>>,
         args: &[ValueRef],
     ) -> Result<ValueRef, NativeFnError>;
 }

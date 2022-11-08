@@ -7,10 +7,11 @@ pub use super::let_expression::{LetBindings, LetExpression};
 pub use super::literal::*;
 pub use super::query::{Query, QueryBinding, QueryBindings, QueryGuards};
 use super::{ASTDepth, Identifier, AST};
+use std::cell::RefCell;
 use std::fmt::Display;
 use std::rc::Rc;
 
-#[derive(Clone, PartialEq, Eq, Debug, Hash)]
+#[derive(Clone, Eq, Debug)]
 pub enum Expression {
     Commented(String, Rc<Expression>),
     Lit(Literal),
@@ -30,7 +31,81 @@ pub enum Expression {
     QuotedAST(Rc<AST>),
     Unquoted(Rc<Expression>),
     UnquotedAST(Rc<AST>),
-    InlineFnDef(Rc<FnDef>),
+    InlineFnDef(Rc<RefCell<FnDef>>),
+}
+
+impl PartialEq for Expression {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Expression::Commented(c1, e1), Expression::Commented(c2, e2)) => {
+                c1.eq(c2) && e1.eq(e2)
+            }
+            (Expression::Lit(lit1), Expression::Lit(lit2)) => lit1.eq(lit2),
+            (Expression::FnCall(id1, args1), Expression::FnCall(id2, args2)) => {
+                id1.eq(id2) && args1.eq(args2)
+            }
+            (Expression::OpCall(id1, left1, right1), Expression::OpCall(id2, left2, right2)) => {
+                id1.eq(id2) && left1.eq(left2) && right1.eq(right2)
+            }
+            (Expression::Var(id1), Expression::Var(id2)) => id1.eq(id2),
+            (Expression::ConstOrTypeRef(id1), Expression::ConstOrTypeRef(id2)) => id1.eq(id2),
+            (Expression::DBTypeRef(id1), Expression::DBTypeRef(id2)) => id1.eq(id2),
+            (Expression::PropFnRef(id1), Expression::PropFnRef(id2)) => id1.eq(id2),
+            (Expression::EdgeProp(expr1, edge1), Expression::EdgeProp(expr2, edge2)) => {
+                expr1.eq(expr2) && edge1.eq(edge2)
+            }
+            (Expression::IfElse(if_else1), Expression::IfElse(if_else2)) => if_else1.eq(if_else2),
+            (Expression::Let(l1), Expression::Let(l2)) => l1.eq(l2),
+            (Expression::Lambda(l1), Expression::Lambda(l2)) => l1.eq(l2),
+            (Expression::Query(q1), Expression::Query(q2)) => q1.eq(q2),
+            (Expression::Symbol(id1), Expression::Symbol(id2)) => id1.eq(id2),
+            (Expression::Quoted(e1), Expression::Quoted(e2)) => e1.eq(e2),
+            (Expression::QuotedAST(e1), Expression::QuotedAST(e2)) => e1.eq(e2),
+            (Expression::Unquoted(e1), Expression::Unquoted(e2)) => e1.eq(e2),
+            (Expression::UnquotedAST(e1), Expression::UnquotedAST(e2)) => e1.eq(e2),
+            (Expression::InlineFnDef(f1), Expression::InlineFnDef(f2)) => f1.eq(f2),
+            (_, _) => false,
+        }
+    }
+}
+
+impl core::hash::Hash for Expression {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        match self {
+            Expression::Commented(c, e) => {
+                c.hash(state);
+                e.hash(state)
+            }
+            Expression::Lit(lit_exp) => lit_exp.hash(state),
+            Expression::FnCall(id, args) => {
+                id.hash(state);
+                args.hash(state)
+            }
+            Expression::OpCall(id, left, right) => {
+                id.hash(state);
+                left.hash(state);
+                right.hash(state)
+            }
+            Expression::Var(id) => id.hash(state),
+            Expression::ConstOrTypeRef(id) => id.hash(state),
+            Expression::DBTypeRef(id) => id.hash(state),
+            Expression::PropFnRef(id) => id.hash(state),
+            Expression::EdgeProp(expr, edge) => {
+                expr.hash(state);
+                edge.hash(state)
+            }
+            Expression::IfElse(if_else) => if_else.hash(state),
+            Expression::Let(let_expr) => let_expr.hash(state),
+            Expression::Lambda(lambda) => lambda.hash(state),
+            Expression::Query(query) => query.hash(state),
+            Expression::Symbol(id) => id.hash(state),
+            Expression::Quoted(expr) => expr.hash(state),
+            Expression::QuotedAST(expr) => expr.hash(state),
+            Expression::Unquoted(expr) => expr.hash(state),
+            Expression::UnquotedAST(expr) => expr.hash(state),
+            Expression::InlineFnDef(fn_def) => fn_def.borrow().hash(state),
+        }
+    }
 }
 
 impl ASTDepth for Expression {
@@ -54,7 +129,7 @@ impl ASTDepth for Expression {
             Expression::QuotedAST(expr) => 1 + expr.ast_depth(),
             Expression::Unquoted(expr) => 1 + expr.ast_depth(),
             Expression::UnquotedAST(expr) => 1 + expr.ast_depth(),
-            Expression::InlineFnDef(fn_def) => 1 + fn_def.ast_depth(),
+            Expression::InlineFnDef(fn_def) => 1 + fn_def.borrow().ast_depth(),
         }
     }
 }
@@ -112,7 +187,7 @@ impl Display for Expression {
             Expression::QuotedAST(ast) => display_quoted_expr(f, ast),
             Expression::Unquoted(expr) => display_unquoted_expr(f, expr),
             Expression::UnquotedAST(ast) => display_unquoted_expr(f, ast),
-            Expression::InlineFnDef(fn_def) => fn_def.fmt(f),
+            Expression::InlineFnDef(fn_def) => fn_def.borrow().fmt(f),
         }
     }
 }

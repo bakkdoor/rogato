@@ -72,7 +72,7 @@ impl Display for LetBindings {
             .iter()
             .map(|(ident, expr)| match &**expr {
                 Expression::InlineFnDef(fn_def) => {
-                    format!("{}", fn_def)
+                    format!("{}", fn_def.borrow_mut())
                 }
                 _ => {
                     if expr.ast_depth() > 5 {

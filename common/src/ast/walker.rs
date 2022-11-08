@@ -15,7 +15,8 @@ impl Walk for AST {
             AST::ModuleDef(mod_def) => v.module_def(mod_def),
             AST::Use(id) => v.use_stmt(id),
             AST::FnDef(fn_def) => {
-                v.fn_def(fn_def);
+                let fn_def = fn_def.borrow();
+                v.fn_def(&fn_def);
                 fn_def.body().walk(v)
             }
             AST::TypeDef(type_def) => v.type_def(type_def),
@@ -82,7 +83,7 @@ impl Walk for Expression {
             Expression::QuotedAST(ast) => v.quoted_ast(ast),
             Expression::Unquoted(expr) => v.unquoted(expr),
             Expression::UnquotedAST(ast) => v.unquoted_ast(ast),
-            Expression::InlineFnDef(fn_def) => v.inline_fn_def(fn_def),
+            Expression::InlineFnDef(fn_def) => v.inline_fn_def(&fn_def.borrow()),
         }
     }
 }

@@ -1,6 +1,7 @@
 use super::pattern::Pattern;
 use super::{expression::Expression, walker::Walk, ASTDepth, Identifier};
 use crate::{native_fn::NativeFn, util::indent};
+use std::cell::RefCell;
 use std::hash::{Hash, Hasher};
 use std::{fmt::Display, rc::Rc};
 
@@ -28,24 +29,28 @@ impl Hash for FnDef {
 }
 
 impl FnDef {
-    pub fn new<ID: Into<Identifier>>(id: ID, args: FnDefArgs, body: Rc<FnDefBody>) -> Rc<FnDef> {
-        Rc::new(FnDef {
+    pub fn new<ID: Into<Identifier>>(
+        id: ID,
+        args: FnDefArgs,
+        body: Rc<FnDefBody>,
+    ) -> Rc<RefCell<FnDef>> {
+        Rc::new(RefCell::new(FnDef {
             is_inline: false,
             id: id.into(),
             variants: FnDefVariants::new([(args, body)]),
-        })
+        }))
     }
 
     pub fn new_inline<ID: Into<Identifier>>(
         id: ID,
         args: FnDefArgs,
         body: Rc<FnDefBody>,
-    ) -> Rc<FnDef> {
-        Rc::new(FnDef {
+    ) -> Rc<RefCell<FnDef>> {
+        Rc::new(RefCell::new(FnDef {
             is_inline: true,
             id: id.into(),
             variants: FnDefVariants::new([(args, body)]),
-        })
+        }))
     }
 
     pub fn add_variant(&mut self, args: FnDefArgs, body: Rc<FnDefBody>) {

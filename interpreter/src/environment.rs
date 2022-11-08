@@ -242,7 +242,7 @@ impl Environment {
         }
     }
 
-    pub fn lookup_fn(&self, id: &Identifier) -> Option<Rc<FnDef>> {
+    pub fn lookup_fn(&self, id: &Identifier) -> Option<Rc<RefCell<FnDef>>> {
         if let Some((module_id, fn_id)) = self.qualified_lookup(id) {
             return Some(
                 self.lookup_module(&module_id)

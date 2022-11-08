@@ -63,18 +63,21 @@ impl EvalContext {
         }
     }
 
-    pub fn define_fn(&mut self, fn_def: Rc<FnDef>) -> ValueRef {
+    pub fn define_fn(&mut self, fn_def: Rc<RefCell<FnDef>>) -> ValueRef {
         let mut module = self.current_module();
-        let id = fn_def.id().clone();
-        module.fn_def(fn_def);
+        module.fn_def(Rc::clone(&fn_def));
+        let id = fn_def.borrow().id().clone();
         val::string(format!("FnDef {}", id))
     }
 
-    pub fn define_fn_variant(&mut self, _id: &Identifier, _args: FnDefArgs, _body: Rc<FnDefBody>) {
-        todo!()
+    pub fn define_fn_variant(&mut self, id: &Identifier, args: FnDefArgs, body: Rc<FnDefBody>) {
+        self.current_module()
+            .lookup_fn(id)
+            .map(|func| func.borrow_mut().variants.add(args, body))
+            .unwrap();
     }
 
-    pub fn lookup_fn(&mut self, id: &Identifier) -> Option<Rc<FnDef>> {
+    pub fn lookup_fn(&mut self, id: &Identifier) -> Option<Rc<RefCell<FnDef>>> {
         self.env.lookup_fn(id)
     }
 
@@ -92,10 +95,11 @@ impl EvalContext {
 
     pub fn call_function_direct(
         &mut self,
-        func: &FnDef,
+        func: Rc<RefCell<FnDef>>,
         args: &[ValueRef],
     ) -> Result<ValueRef, EvalError> {
         let given_argc = args.len();
+        let func = func.borrow();
         let required_argc = func.required_args();
 
         if given_argc < required_argc {
@@ -129,7 +133,7 @@ impl EvalContext {
         args: &[ValueRef],
     ) -> Option<Result<ValueRef, EvalError>> {
         self.lookup_fn(id)
-            .map(|func| self.call_function_direct(func.as_ref(), args))
+            .map(|func| self.call_function_direct(func, args))
     }
 
     pub fn define_var(&mut self, id: &Identifier, val: ValueRef) {
@@ -191,7 +195,7 @@ impl NativeFnContext for EvalContext {
 
     fn call_function_direct(
         &mut self,
-        func: &FnDef,
+        func: Rc<RefCell<FnDef>>,
         args: &[ValueRef],
     ) -> Result<ValueRef, rogato_common::native_fn::NativeFnError> {
         self.call_function_direct(func, args)

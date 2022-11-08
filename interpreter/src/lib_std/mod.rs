@@ -15,9 +15,9 @@ use rogato_common::{
 };
 use rust_decimal::{prelude::ToPrimitive, Decimal, MathematicalOps};
 use rust_decimal_macros::dec;
-use std::fmt::Debug;
 use std::ops::Deref;
 use std::rc::Rc;
+use std::{cell::RefCell, fmt::Debug};
 
 pub mod list;
 pub mod math;
@@ -298,7 +298,7 @@ pub fn std_module() -> Module {
     module
 }
 
-pub fn fn_def(id: &str, args: &[&str], body: NativeFn) -> Rc<FnDef> {
+pub fn fn_def(id: &str, args: &[&str], body: NativeFn) -> Rc<RefCell<FnDef>> {
     FnDef::new(
         id.to_string(),
         FnDefArgs::new(
@@ -310,7 +310,7 @@ pub fn fn_def(id: &str, args: &[&str], body: NativeFn) -> Rc<FnDef> {
     )
 }
 
-pub fn op_fn_def(id: &str, body: NativeFn) -> Rc<FnDef> {
+pub fn op_fn_def(id: &str, body: NativeFn) -> Rc<RefCell<FnDef>> {
     FnDef::new(
         id.to_string(),
         FnDefArgs::new(vec![Rc::new("left".into()), Rc::new("right".into())]),

@@ -1,5 +1,6 @@
-use std::fmt::Display;
+use std::hash::Hash;
 use std::rc::Rc;
+use std::{cell::RefCell, fmt::Display};
 
 use self::{
     expression::Expression, fn_def::FnDef, module_def::ModuleDef, type_expression::TypeDef,
@@ -72,10 +73,10 @@ pub struct ExprNode {
     expr: Rc<Expression>,
 }
 
-#[derive(Clone, PartialEq, Eq, Debug, Hash)]
+#[derive(Clone, Eq, Debug)]
 pub enum AST {
     RootComment(String),
-    FnDef(Rc<FnDef>),
+    FnDef(Rc<RefCell<FnDef>>),
     ModuleDef(ModuleDef),
     Use(Identifier),
     TypeDef(TypeDef),
@@ -92,7 +93,7 @@ impl Display for AST {
                 f.write_str("//")?;
                 comment.fmt(f)
             }
-            AST::FnDef(fn_def) => fn_def.fmt(f),
+            AST::FnDef(fn_def) => fn_def.borrow().fmt(f),
             AST::ModuleDef(mod_def) => mod_def.fmt(f),
             AST::Use(id) => {
                 f.write_str("use ")?;
@@ -107,7 +108,7 @@ impl ASTDepth for AST {
     fn ast_depth(&self) -> usize {
         match self {
             AST::RootComment(_) => 1,
-            AST::FnDef(fn_def) => fn_def.ast_depth(),
+            AST::FnDef(fn_def) => fn_def.borrow().ast_depth(),
             AST::ModuleDef(mod_def) => mod_def.ast_depth(),
             AST::Use(_) => 1,
             AST::TypeDef(type_def) => type_def.ast_depth(),
@@ -118,5 +119,30 @@ impl ASTDepth for AST {
 impl ASTDepth for Identifier {
     fn ast_depth(&self) -> usize {
         1
+    }
+}
+
+impl Hash for AST {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        match self {
+            AST::RootComment(c) => c.hash(state),
+            AST::FnDef(fn_def) => fn_def.borrow().hash(state),
+            AST::ModuleDef(mod_def) => mod_def.hash(state),
+            AST::Use(id) => id.hash(state),
+            AST::TypeDef(type_def) => type_def.hash(state),
+        }
+    }
+}
+
+impl PartialEq for AST {
+    fn eq(&self, other: &Self) -> bool {
+        match (&self, other) {
+            (AST::RootComment(c1), AST::RootComment(c2)) => c1.eq(c2),
+            (AST::FnDef(fn_def1), AST::FnDef(fn_def2)) => fn_def1.eq(fn_def2),
+            (AST::ModuleDef(mod_def1), AST::ModuleDef(mod_def2)) => mod_def1.eq(mod_def2),
+            (AST::Use(id1), AST::Use(id2)) => id1.eq(id2),
+            (AST::TypeDef(type_def1), AST::TypeDef(type_def2)) => type_def1.eq(type_def2),
+            (_, _) => false,
+        }
     }
 }

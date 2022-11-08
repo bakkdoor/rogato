@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::{EvalContext, EvalError, Evaluate};
 use rogato_common::{
     ast::{expression::Expression, let_expression::LetExpression},
@@ -11,7 +13,7 @@ impl Evaluate<ValueRef> for LetExpression {
         for (id, expr) in self.bindings.iter() {
             match &**expr {
                 Expression::InlineFnDef(fn_def) => {
-                    context.define_fn(fn_def.clone());
+                    context.define_fn(Rc::clone(fn_def));
                 }
                 _ => match expr.evaluate(&mut context) {
                     Ok(val) => context.define_var(id, val),

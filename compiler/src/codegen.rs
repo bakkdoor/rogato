@@ -217,7 +217,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         match ast {
             AST::RootComment(c) => Err(CodegenError::IgnoredRootComment(c.to_owned())),
             AST::FnDef(fn_def) => {
-                self.codegen_fn_def(fn_def)?;
+                self.codegen_fn_def(&fn_def.borrow())?;
                 Ok(())
             }
             AST::ModuleDef(mod_def) => self.codegen_module_def(mod_def),
@@ -258,7 +258,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             Expression::Unquoted(_expr) => todo!(),
             Expression::UnquotedAST(_ast) => todo!(),
             Expression::InlineFnDef(fn_def) => {
-                self.codegen_fn_def(fn_def)?;
+                self.codegen_fn_def(&fn_def.borrow())?;
                 Ok(self.context.f32_type().const_zero()) // TODO: Hmmm?!
             }
         }
