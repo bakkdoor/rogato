@@ -392,15 +392,9 @@ grammar parser(context: &ParserContext) for str {
         = _ id:identifier() _ "=" _ val:let_body() {
             (id, val)
         }
-        / _ id:identifier() args:inline_fn_arg()+ _ "=" _ body:let_body() {
+        / _ id:identifier() _ args:(pattern() ** spacing()) _ "=" _ body:let_body() {
             (id.clone(), Expression::InlineFnDef(FnDef::new_inline(id, FnDefArgs::new(args), Rc::new(FnDefBody::rogato(Rc::new(body))))))
         }
-
-    rule inline_fn_arg() -> Rc<Pattern>
-        = " "+ id:identifier() {
-            Rc::new(Pattern::Var(id))
-        }
-        / pattern()
 
     rule let_body() -> Expression
         = lambda()

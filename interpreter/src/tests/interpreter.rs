@@ -433,3 +433,33 @@ fn lambda_closures() {
         assert_eq!(ast.evaluate(&mut eval_ctx), Ok(val.clone()));
     }
 }
+
+#[test]
+fn patterns() {
+    let code_with_vals = vec![(
+        "let
+            head [x :: _]  = x
+            tail [_ :: xs] = xs
+            list = [1 :: [2, \"foo\", false]]
+        in
+            { list, head list, tail list }",
+        val::tuple([
+            val::list([
+                val::number(1),
+                val::number(2),
+                val::string("foo"),
+                val::bool(false),
+            ]),
+            val::number(1),
+            val::list([val::number(2), val::string("foo"), val::bool(false)]),
+        ]),
+    )];
+
+    let mut eval_ctx = EvalContext::new();
+    let parser_ctx = ParserContext::new();
+
+    for (code, val) in code_with_vals.iter() {
+        let ast = parse_expr(code, &parser_ctx).unwrap();
+        assert_eq!(ast.evaluate(&mut eval_ctx), Ok(val.clone()));
+    }
+}

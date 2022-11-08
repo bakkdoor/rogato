@@ -57,6 +57,42 @@ impl AttemptBinding for Pattern {
                 Ok(Some(value))
             }
 
+            (Pattern::ListLit(patterns), Value::List(items)) => {
+                if patterns.len() != items.len() {
+                    return Ok(None);
+                }
+
+                for (pat, val) in patterns.iter().zip(items.iter()) {
+                    pat.attempt_binding(context, Rc::clone(val))?;
+                }
+
+                Ok(Some(value))
+            }
+
+            (Pattern::Bool(pat), Value::Bool(bool)) => {
+                if pat == bool {
+                    Ok(Some(value))
+                } else {
+                    Ok(None)
+                }
+            }
+
+            (Pattern::Number(pat), Value::Number(number)) => {
+                if pat == number {
+                    Ok(Some(value))
+                } else {
+                    Ok(None)
+                }
+            }
+
+            (Pattern::String(pat), Value::String(string)) => {
+                if pat == string {
+                    Ok(Some(value))
+                } else {
+                    Ok(None)
+                }
+            }
+
             (_, _) => Err(PatternBindingError::MatchFail(
                 self.clone(),
                 Rc::clone(&value),
