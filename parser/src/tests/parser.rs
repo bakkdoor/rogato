@@ -3,7 +3,8 @@ use crate::{assert_parse, assert_parse_ast, assert_parse_expr, parse_expr, Parse
 #[cfg(test)]
 use rogato_common::ast::helpers::inline_fn_def;
 use rogato_common::ast::helpers::{
-    any_p, bool_lit, empty_list_p, list_cons, list_cons_p, var_p, vars,
+    any_p, bool_lit, bool_p, empty_list_p, list_cons, list_cons_p, list_lit_p, number_p, string_p,
+    var_p, vars,
 };
 #[cfg(test)]
 use rogato_common::ast::helpers::{
@@ -96,6 +97,24 @@ fn patterns() {
     assert_parse_ast!(
         "let tail [] = []",
         fn_def("tail", [empty_list_p()], list_lit([]))
+    );
+
+    assert_parse_ast!(
+        "let tail [1] = [2]",
+        fn_def(
+            "tail",
+            [list_lit_p([number_p(1)])],
+            list_lit([number_lit(2)])
+        )
+    );
+
+    assert_parse_ast!(
+        "let tail [1, \"foo\", true] = false",
+        fn_def(
+            "tail",
+            [list_lit_p([number_p(1), string_p("foo"), bool_p(true)])],
+            bool_lit(false)
+        )
     );
 
     assert_parse_ast!(

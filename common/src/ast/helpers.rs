@@ -283,8 +283,24 @@ pub fn empty_list_p() -> Rc<Pattern> {
     Rc::new(Pattern::EmptyList)
 }
 
+pub fn list_lit_p<P: Into<Vec<Rc<Pattern>>>>(patterns: P) -> Rc<Pattern> {
+    Rc::new(Pattern::ListLit(TupleItems::from(patterns.into())))
+}
+
 pub fn var_p(id: &str) -> Rc<Pattern> {
     Rc::new(Pattern::Var(id.into()))
+}
+
+pub fn number_p<N: Into<Decimal>>(n: N) -> Rc<Pattern> {
+    Rc::new(Pattern::Number(n.into()))
+}
+
+pub fn bool_p(b: bool) -> Rc<Pattern> {
+    Rc::new(Pattern::Bool(b))
+}
+
+pub fn string_p<S: ToString>(s: S) -> Rc<Pattern> {
+    Rc::new(Pattern::String(s.to_string()))
 }
 
 pub fn p<P: Into<Vec<Pattern>>>(vec: P) -> Vec<Rc<Pattern>> {

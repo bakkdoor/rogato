@@ -1,3 +1,5 @@
+use rust_decimal::Decimal;
+
 use super::{expression::TupleItems, ASTDepth, Identifier};
 use std::{fmt::Display, rc::Rc};
 
@@ -8,6 +10,9 @@ pub enum Pattern {
     ListCons(Rc<Pattern>, Rc<Pattern>),
     ListLit(TupleItems<Pattern>),
     Var(Identifier),
+    Bool(bool),
+    Number(Decimal),
+    String(String),
 }
 
 impl ASTDepth for Pattern {
@@ -18,6 +23,9 @@ impl ASTDepth for Pattern {
             Self::ListCons(head, tail) => 1 + head.ast_depth() + tail.ast_depth(),
             Self::ListLit(items) => 1 + items.ast_depth(),
             Self::Var(_) => 1,
+            Self::Bool(_) => 1,
+            Self::Number(_) => 1,
+            Self::String(_) => 1,
         }
     }
 }
@@ -40,6 +48,9 @@ impl Display for Pattern {
                 f.write_str("[ ")
             }
             Self::Var(id) => f.write_str(id),
+            Self::Bool(b) => b.fmt(f),
+            Self::Number(d) => d.fmt(f),
+            Self::String(s) => s.fmt(f),
         }
     }
 }

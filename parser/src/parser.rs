@@ -87,12 +87,13 @@ grammar parser(context: &ParserContext) for str {
         }
 
     rule fn_def() -> AST
-        = _ "let " _ id:identifier() _ args:(fn_def_arg() ** spacing()) _ "=" _ body:(expression()) _ {
+        = _ "let " _ id:identifier() _ args:(pattern() ** spacing()) _ "=" _ body:(expression()) _ {
             AST::FnDef(FnDef::new(id, FnDefArgs::new(args), Rc::new(FnDefBody::rogato(Rc::new(body)))))
         }
 
-    rule fn_def_arg() -> Rc<Pattern>
-        = pattern()
+    rule list_sep()
+        = (spacing()? "," _)
+        / (_ "," spacing()?)
 
     rule pattern() -> Rc<Pattern>
         = "(" _ p:pattern() _ ")" {
@@ -101,7 +102,7 @@ grammar parser(context: &ParserContext) for str {
         / "[" _ "]" {
             Rc::new(Pattern::EmptyList)
         }
-        / "[" _ items:(pattern() ** spacing()) _ "]" {
+        / "[" _ items:(pattern() ** list_sep()) _ "]" {
             Rc::new(Pattern::ListLit(TupleItems::from(items)))
         }
         / "[" _ head:pattern() _ "::" _ tail:pattern() _ "]" {
@@ -109,6 +110,15 @@ grammar parser(context: &ParserContext) for str {
         }
         / "_" {
             Rc::new(Pattern::AnyPattern)
+        }
+        / n:number_lit() {
+            Rc::new(Pattern::Number(n))
+        }
+        / b:bool_lit() {
+            Rc::new(Pattern::Bool(b))
+        }
+        / s:string_lit() {
+            Rc::new(Pattern::String(s))
         }
         / id:identifier() {
             Rc::new(Pattern::Var(id))
@@ -417,42 +427,34 @@ grammar parser(context: &ParserContext) for str {
         / tuple_item()
 
     rule literal_expr() -> Expression
-        = number_lit()
-        / bool_lit()
-        / string_lit()
-        / struct_lit()
-        / tuple_lit()
-        / list_lit()
+        = number_lit_expr()
+        / bool_lit_expr()
+        / string_lit_expr()
+        / struct_lit_expr()
+        / tuple_lit_expr()
+        / list_lit_expr()
 
-    rule number_lit() -> Expression
-        = n:$("-"? ['0'..='9']+ "." ['0'..='9']+) {
-            let decimal = Decimal::from_str(n).unwrap();
-            Expression::Lit(Literal::Number(decimal))
-        }
-        / n:$("-"? ['0'..='9']+) {
-            let decimal = Decimal::from_str(n).unwrap();
-            Expression::Lit(Literal::Number(decimal))
+    rule number_lit_expr() -> Expression
+        = n:number_lit() {
+            Expression::Lit(Literal::Number(n))
         }
 
-    rule bool_lit() -> Expression
-        = "true" {
-            Expression::Lit(Literal::Bool(true))
-        }
-        / "false" {
-            Expression::Lit(Literal::Bool(false))
+    rule bool_lit_expr() -> Expression
+        = b:bool_lit() {
+            Expression::Lit(Literal::Bool(b))
         }
 
-    rule string_lit() -> Expression
-        = "\"" s:([^ '"']*) "\"" {
-            Expression::Lit(Literal::String(String::from_iter(s)))
+    rule string_lit_expr() -> Expression
+        = s:string_lit() {
+            Expression::Lit(Literal::String(s))
         }
 
-    rule tuple_lit() -> Expression
+    rule tuple_lit_expr() -> Expression
         = "{" _ first:tuple_item() rest:(additional_tuple_item())+ _ ("," _)? "}" {
             Expression::Lit(Literal::Tuple(TupleItems::new(first, rest)))
         }
 
-    rule list_lit() -> Expression
+    rule list_lit_expr() -> Expression
         = "[" _ first:tuple_item() rest:(additional_tuple_item())+ _ ("," _)? "]" {
             Expression::Lit(Literal::List(TupleItems::new(first, rest)))
         }
@@ -486,7 +488,7 @@ grammar parser(context: &ParserContext) for str {
             item
         }
 
-    rule struct_lit() -> Expression
+    rule struct_lit_expr() -> Expression
         = id:struct_identifier() "{" _ first:struct_prop() rest:(additional_struct_prop())*  _ ("," _)? "}" {
             Expression::Lit(Literal::Struct(id, Rc::new(StructProps::new(first, rest))))
         }
@@ -563,6 +565,26 @@ grammar parser(context: &ParserContext) for str {
             join_string(SmolStr::from_iter(id).as_str(), id2)
         }
 
+    rule number_lit() -> Decimal
+        = n:$("-"? ['0'..='9']+ "." ['0'..='9']+) {
+            Decimal::from_str(n).unwrap()
+        }
+        / n:$("-"? ['0'..='9']+) {
+            Decimal::from_str(n).unwrap()
+        }
+
+    rule bool_lit() -> bool
+        = "true" {
+            true
+        }
+        / "false" {
+            false
+        }
+
+    rule string_lit() -> String
+        = "\"" s:([^ '"']*) "\"" {
+            String::from_iter(s)
+        }
 
     rule _
         = ([' ' | '\t' | '\n'])*
