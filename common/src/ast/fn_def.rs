@@ -2,22 +2,20 @@ use super::pattern::Pattern;
 use super::{expression::Expression, walker::Walk, ASTDepth, Identifier};
 use crate::{native_fn::NativeFn, util::indent};
 use std::hash::{Hash, Hasher};
-use std::{borrow::Borrow, fmt::Display, rc::Rc};
+use std::{fmt::Display, rc::Rc};
 
 #[derive(Clone, Debug, Eq)]
 pub struct FnDef {
-    is_inline: bool,
-    id: Identifier,
-    args: FnDefArgs,
-    body: Rc<FnDefBody>,
+    pub is_inline: bool,
+    pub id: Identifier,
+    pub variants: FnDefVariants,
 }
 
 impl PartialEq for FnDef {
     fn eq(&self, other: &Self) -> bool {
         self.is_inline.eq(&other.is_inline)
             && self.id.eq(&other.id)
-            && self.args.eq(&other.args)
-            && self.body.eq(&other.body)
+            && self.variants.eq(&other.variants)
     }
 }
 
@@ -25,7 +23,7 @@ impl Hash for FnDef {
     fn hash<H: Hasher>(&self, h: &mut H) {
         Hash::hash(&self.id, h);
         Hash::hash(&self.is_inline, h);
-        Hash::hash(&self.args, h);
+        Hash::hash(&self.variants, h);
     }
 }
 
@@ -34,8 +32,7 @@ impl FnDef {
         Rc::new(FnDef {
             is_inline: false,
             id: id.into(),
-            args,
-            body,
+            variants: FnDefVariants::new([(args, body)]),
         })
     }
 
@@ -47,9 +44,12 @@ impl FnDef {
         Rc::new(FnDef {
             is_inline: true,
             id: id.into(),
-            args,
-            body,
+            variants: FnDefVariants::new([(args, body)]),
         })
+    }
+
+    pub fn add_variant(&mut self, args: FnDefArgs, body: Rc<FnDefBody>) {
+        self.variants.add(args, body)
     }
 
     pub fn id(&self) -> &Identifier {
@@ -57,35 +57,95 @@ impl FnDef {
     }
 
     pub fn args(&self) -> &FnDefArgs {
-        &self.args
+        // TODO: fix this for proper codegen
+        &self.variants.variants.first().unwrap().0
     }
 
     pub fn body(&self) -> Rc<FnDefBody> {
-        Rc::clone(&self.body)
+        // TODO: fix this for proper codegen
+        Rc::clone(&self.variants.variants.first().unwrap().1)
+    }
+
+    pub fn required_args(&self) -> usize {
+        self.variants
+            .iter()
+            .map(|(args, _)| args.required_args())
+            .min()
+            .unwrap_or_default()
     }
 }
 
 impl Display for FnDef {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if !self.is_inline {
-            f.write_str("let ")?;
+        for (args, body) in self.variants.iter() {
+            if !self.is_inline {
+                f.write_str("let ")?;
+            }
+
+            self.id.fmt(f)?;
+            f.write_str(" ")?;
+            args.fmt(f)?;
+            f.write_str(" =\n")?;
+
+            match &**body {
+                FnDefBody::NativeFn(_) => indent(&"[NativeFn]").fmt(f)?,
+                FnDefBody::RogatoFn(body_expr) => indent(&body_expr).fmt(f)?,
+            }
         }
 
-        self.id.fmt(f)?;
-        f.write_str(" ")?;
-        self.args.fmt(f)?;
-        f.write_str(" =\n")?;
-
-        match self.body.borrow() {
-            FnDefBody::NativeFn(_) => indent(&"[NativeFn]").fmt(f),
-            FnDefBody::RogatoFn(body_expr) => indent(body_expr).fmt(f),
-        }
+        Ok(())
     }
 }
 
 impl ASTDepth for FnDef {
     fn ast_depth(&self) -> usize {
-        1 + self.args.len() + self.body.ast_depth()
+        1 + self.variants.ast_depth()
+    }
+}
+
+pub type FnDefVariant = (FnDefArgs, Rc<FnDefBody>);
+
+impl ASTDepth for FnDefVariant {
+    fn ast_depth(&self) -> usize {
+        self.0.ast_depth() + self.1.ast_depth()
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FnDefVariants {
+    variants: Vec<FnDefVariant>,
+}
+
+impl FnDefVariants {
+    pub fn new<V: Into<Vec<FnDefVariant>>>(variants: V) -> Self {
+        Self {
+            variants: variants.into(),
+        }
+    }
+
+    pub fn iter(&self) -> std::slice::Iter<FnDefVariant> {
+        self.variants.iter()
+    }
+
+    pub fn add(&mut self, args: FnDefArgs, body: Rc<FnDefBody>) {
+        self.variants.push((args, body))
+    }
+}
+
+impl ASTDepth for FnDefVariants {
+    fn ast_depth(&self) -> usize {
+        self.variants
+            .iter()
+            .map(|v| v.0.len() + v.1.ast_depth())
+            .sum::<usize>()
+    }
+}
+
+impl Hash for FnDefVariants {
+    fn hash<H: Hasher>(&self, h: &mut H) {
+        for v in self.variants.iter() {
+            Hash::hash(&v.0, h);
+        }
     }
 }
 
@@ -139,6 +199,12 @@ impl Display for FnDefArgs {
             is_first = true;
         }
         Ok(())
+    }
+}
+
+impl ASTDepth for FnDefArgs {
+    fn ast_depth(&self) -> usize {
+        self.iter().map(|a| a.ast_depth()).sum::<usize>()
     }
 }
 

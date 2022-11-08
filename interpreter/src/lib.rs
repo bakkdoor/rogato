@@ -45,7 +45,7 @@ pub enum EvalError {
     #[error("Function not defined: {0}")]
     FunctionNotDefined(Identifier),
 
-    #[error("Function arity mismatch for {0} : Expected: {1} but got: {2}")]
+    #[error("Function arity mismatch for {0} : Expected at least: {1} but got: {2}")]
     FunctionArityMismatch(Identifier, usize, usize),
 
     #[error("Lambda arity mismatch: Expected: {0} but got: {1}")]

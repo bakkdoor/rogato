@@ -1,6 +1,6 @@
 use rogato_common::{
     ast::{
-        fn_def::FnDefBody,
+        fn_def::{FnDefArgs, FnDefBody},
         lambda::{Lambda, LambdaClosureContext, LambdaClosureEvalError},
     },
     native_fn::{NativeFnContext, NativeFnError},
@@ -70,6 +70,10 @@ impl EvalContext {
         val::string(format!("FnDef {}", id))
     }
 
+    pub fn define_fn_variant(&mut self, _id: &Identifier, _args: FnDefArgs, _body: Rc<FnDefBody>) {
+        todo!()
+    }
+
     pub fn lookup_fn(&mut self, id: &Identifier) -> Option<Rc<FnDef>> {
         self.env.lookup_fn(id)
     }
@@ -92,18 +96,18 @@ impl EvalContext {
         args: &[ValueRef],
     ) -> Result<ValueRef, EvalError> {
         let given_argc = args.len();
-        let expected_argc = func.args().len();
+        let required_argc = func.required_args();
 
-        if given_argc < func.args().required_args() {
+        if given_argc < required_argc {
             eprintln!(
-                "Function arity mismatch for {}: Expected {} but got {}",
+                "Function arity mismatch for {}: Expected at least {} but got {}",
                 func.id().clone(),
-                expected_argc,
+                required_argc,
                 given_argc
             );
             return Err(EvalError::FunctionArityMismatch(
                 func.id().clone(),
-                expected_argc,
+                required_argc,
                 given_argc,
             ));
         }
