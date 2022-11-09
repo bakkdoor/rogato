@@ -69,17 +69,22 @@ pub fn run_repl(args: Args) -> anyhow::Result<()> {
             Ok(mut file) => {
                 let mut buf = String::new();
                 file.read_to_string(&mut buf).unwrap();
-                let parse_result = parse(buf.as_str(), &parser_ctx)?;
-                println!("✅\t{}", file_path.display());
-                match parse_result.evaluate(&mut eval_ctx) {
-                    Ok(_) => {}
+                match parse(buf.as_str(), &parser_ctx) {
+                    Ok(program) => match program.evaluate(&mut eval_ctx) {
+                        Ok(_) => {
+                            println!("✅ {}", file_path.display());
+                        }
+                        Err(e) => {
+                            eprintln!("❌ {}\n\t\tFailed to evaluate file: {}", arg, e)
+                        }
+                    },
                     Err(e) => {
-                        eprintln!("❌ Failed to load & evaluate file {} : {}", arg, e)
+                        eprintln!("❌ {}\n\t\tFailed to parse file: {}", arg, e)
                     }
                 }
             }
             Err(error) => {
-                println!("❌ Could not open source file: {:?}", error);
+                eprintln!("❌ {}\n\t\tCould not open source file: {:?}", arg, error);
             }
         }
     }
