@@ -1,5 +1,9 @@
 module Std.List { map, count, isEmpty, reverse, repeat }
 
+let head [x :: _]  = x
+
+let tail [_ :: xs] = xs
+
 let map list f =
   let
     map_ acc [] _ =
