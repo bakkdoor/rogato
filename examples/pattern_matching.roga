@@ -1,0 +1,15 @@
+module PatternMatching { head, tail, pairts, transform }
+
+let head [h :: _] = h
+let tail [_ :: t] = t
+
+let transform {1,2,3} = ^got_123
+let transform {a, 0, c} = {a, ^zero, c}
+let transform {0, b, c} = {b, b * c, c}
+let transform {a, b, 0} = {a, a * b, b}
+
+let pairs n =
+  n
+  |> range
+  |> map (x -> {x, x * x, x * (x * x)})
+  |> map ^transform

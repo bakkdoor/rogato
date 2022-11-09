@@ -116,7 +116,7 @@ pub fn std_module() -> Module {
                         Some(val) => Ok(Rc::clone(&val?)),
                         None => Err(NativeFnError::EvaluationFailed(
                             fn_id.clone(),
-                            format!("FunctionRef invalid (apply): {}", fn_id),
+                            format!("FunctionRef invalid in ^apply: ^{}", fn_id),
                         )),
                     }
                 }

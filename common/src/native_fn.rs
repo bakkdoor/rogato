@@ -8,13 +8,13 @@ use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq, Eq, Clone)]
 pub enum NativeFnError {
-    #[error("Unknown error in NativeFn {0}: {1}")]
+    #[error("Unknown error in NativeFn ^{0}: {1}")]
     Unknown(Identifier, String),
 
-    #[error("Invalid arguments for NativeFn {0}")]
+    #[error("Invalid arguments for NativeFn ^{0}")]
     InvalidArguments(Identifier),
 
-    #[error("Evaluation failed for NativeFn {0} with: {1}")]
+    #[error("Evaluation failed for NativeFn ^{0} with: {1}")]
     EvaluationFailed(Identifier, String),
 }
 
