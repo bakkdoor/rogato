@@ -213,7 +213,7 @@ impl NativeFnContext for EvalContext {
         args: &[ValueRef],
     ) -> Option<Result<ValueRef, NativeFnError>> {
         self.call_function(id, args)
-            .map(|res| res.map_err(|e| NativeFnError::EvaluationFailed(e.to_string())))
+            .map(|res| res.map_err(|e| NativeFnError::EvaluationFailed(id.clone(), e.to_string())))
     }
 
     fn call_function_direct(
@@ -221,8 +221,10 @@ impl NativeFnContext for EvalContext {
         func: Rc<RefCell<FnDef>>,
         args: &[ValueRef],
     ) -> Result<ValueRef, rogato_common::native_fn::NativeFnError> {
-        self.call_function_direct(func, args)
-            .map_err(|e| rogato_common::native_fn::NativeFnError::EvaluationFailed(e.to_string()))
+        let id = func.borrow().id().clone();
+        self.call_function_direct(func, args).map_err(|e| {
+            rogato_common::native_fn::NativeFnError::EvaluationFailed(id, e.to_string())
+        })
     }
 }
 

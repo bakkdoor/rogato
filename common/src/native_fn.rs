@@ -14,13 +14,13 @@ pub enum NativeFnError {
     #[error("Invalid arguments for NativeFn {0}")]
     InvalidArguments(Identifier),
 
-    #[error("Evaluation failed for NativeFn with: {0}")]
-    EvaluationFailed(String),
+    #[error("Evaluation failed for NativeFn {0} with: {1}")]
+    EvaluationFailed(Identifier, String),
 }
 
 impl From<LambdaClosureEvalError> for NativeFnError {
     fn from(e: LambdaClosureEvalError) -> Self {
-        NativeFnError::EvaluationFailed(e.to_string())
+        NativeFnError::EvaluationFailed("LambdaClosure".into(), e.to_string())
     }
 }
 

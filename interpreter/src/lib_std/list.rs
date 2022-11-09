@@ -23,10 +23,10 @@ pub fn module() -> Module {
                             match context.call_function(fn_id, &[Rc::clone(item)]) {
                                 Some(val) => result.push(Rc::clone(&val?)),
                                 None => {
-                                    return Err(NativeFnError::EvaluationFailed(format!(
-                                        "FunctionRef invalid: {}",
-                                        fn_id
-                                    )))
+                                    return Err(NativeFnError::EvaluationFailed(
+                                        fn_id.clone(),
+                                        format!("FunctionRef invalid (map): {}", fn_id),
+                                    ))
                                 }
                             }
                         }

@@ -106,16 +106,18 @@ pub fn std_module() -> Module {
                     lambda_ctx
                         .borrow_mut()
                         .evaluate_lambda_call(lambda, &args)
-                        .map_err(|e| NativeFnError::EvaluationFailed(e.to_string()))
+                        .map_err(|e| {
+                            NativeFnError::EvaluationFailed(func.to_string().into(), e.to_string())
+                        })
                 }
                 (Value::Symbol(fn_id), Value::List(args)) => {
                     let args: Vec<ValueRef> = args.iter().map(Rc::clone).collect();
                     match ctx.call_function(fn_id, &args) {
                         Some(val) => Ok(Rc::clone(&val?)),
-                        None => Err(NativeFnError::EvaluationFailed(format!(
-                            "FunctionRef invalid: {}",
-                            fn_id
-                        ))),
+                        None => Err(NativeFnError::EvaluationFailed(
+                            fn_id.clone(),
+                            format!("FunctionRef invalid (apply): {}", fn_id),
+                        )),
                     }
                 }
                 _ => error,
