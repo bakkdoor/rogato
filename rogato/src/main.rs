@@ -22,7 +22,6 @@ struct CLIArgs {
 
 fn main() -> anyhow::Result<()> {
     let mut args = std::env::args();
-    println!("args: {:?}", args);
     if args.len() == 1 {
         println!("No arguments given, but required.");
         print_help();
