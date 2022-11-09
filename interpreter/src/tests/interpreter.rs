@@ -436,24 +436,40 @@ fn lambda_closures() {
 
 #[test]
 fn patterns() {
-    let code_with_vals = vec![(
-        "let
-            head [x :: _]  = x
-            tail [_ :: xs] = xs
-            list = [1 :: [2, \"foo\", false]]
-        in
-            { list, head list, tail list }",
-        val::tuple([
-            val::list([
+    let code_with_vals = vec![
+        (
+            "let
+                head [x :: _]  = x
+                tail [_ :: xs] = xs
+                list = [1 :: [2, \"foo\", false]]
+            in
+                { list, head list, tail list }",
+            val::tuple([
+                val::list([
+                    val::number(1),
+                    val::number(2),
+                    val::string("foo"),
+                    val::bool(false),
+                ]),
                 val::number(1),
-                val::number(2),
-                val::string("foo"),
-                val::bool(false),
+                val::list([val::number(2), val::string("foo"), val::bool(false)]),
             ]),
-            val::number(1),
-            val::list([val::number(2), val::string("foo"), val::bool(false)]),
-        ]),
-    )];
+        ),
+        (
+            "let
+                fib 0 = 0
+                fib 1 = 1
+                fib x = (fib (x - 1)) + (fib (x - 2))
+            in
+                { fib 0, fib 1, fib 5, fib 10 }",
+            val::tuple([
+                val::number(0),
+                val::number(1),
+                val::number(5),
+                val::number(55),
+            ]),
+        ),
+    ];
 
     let mut eval_ctx = EvalContext::new();
     let parser_ctx = ParserContext::new();

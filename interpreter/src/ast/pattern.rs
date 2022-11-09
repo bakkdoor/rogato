@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use crate::EvalContext;
+use crate::{EvalContext, Identifier};
 use rogato_common::{
     ast::pattern::Pattern,
     val::{Value, ValueRef},
@@ -13,7 +13,10 @@ pub enum PatternBindingError {
     Unknown(String),
 
     #[error("Failed to match pattern: {0} with value: {1}")]
-    MatchFail(Pattern, ValueRef),
+    MatchFailed(Pattern, ValueRef),
+
+    #[error("Failed to match fn {0} variant for pattern: {1:?} with value: {2:?}")]
+    NoFnVariantMatched(Identifier, Option<Rc<Pattern>>, Vec<ValueRef>),
 }
 
 pub trait AttemptBinding {
@@ -92,7 +95,7 @@ impl AttemptBinding for Pattern {
                 }
             }
 
-            (_, _) => Err(PatternBindingError::MatchFail(
+            (_, _) => Err(PatternBindingError::MatchFailed(
                 self.clone(),
                 Rc::clone(&value),
             )),

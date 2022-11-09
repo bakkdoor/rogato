@@ -8,7 +8,7 @@ use rogato_common::{
 
 use super::{environment::Environment, module::Module, EvalError, Identifier, ValueRef};
 use crate::{
-    ast::pattern::AttemptBinding,
+    ast::pattern::{AttemptBinding, PatternBindingError},
     lib_std,
     query_planner::{QueryPlanner, QueryResult},
     Evaluate,
@@ -73,8 +73,7 @@ impl EvalContext {
     pub fn define_fn_variant(&mut self, id: &Identifier, args: FnDefArgs, body: Rc<FnDefBody>) {
         self.current_module()
             .lookup_fn(id)
-            .map(|func| func.borrow_mut().variants.add(args, body))
-            .unwrap();
+            .map(|func| func.borrow_mut().variants.add(args, body));
     }
 
     pub fn lookup_fn(&mut self, id: &Identifier) -> Option<Rc<RefCell<FnDef>>> {
@@ -116,15 +115,45 @@ impl EvalContext {
             ));
         }
 
-        let mut fn_ctx = self.with_child_env();
-        for (arg_pattern, arg_val) in func.args().iter().zip(args) {
-            arg_pattern.attempt_binding(self, Rc::clone(arg_val))?;
+        let mut last_attempted_pattern = None;
+
+        for (arg_patterns, body) in func.variants.iter() {
+            let mut fn_ctx = self.with_child_env();
+            let mut matched = 0;
+            let mut attempted = 0;
+            for (arg_pattern, arg_val) in arg_patterns.iter().zip(args) {
+                attempted += 1;
+                last_attempted_pattern = Some(Rc::clone(arg_pattern));
+                match arg_pattern.attempt_binding(&mut fn_ctx, Rc::clone(arg_val)) {
+                    Ok(Some(_)) => {
+                        matched += 1;
+                        continue;
+                    }
+                    Ok(None) => {
+                        break;
+                    }
+                    Err(e) => {
+                        return Err(e.into());
+                    }
+                }
+            }
+
+            if matched == attempted {
+                let return_val = match &**body {
+                    FnDefBody::NativeFn(f) => f(&mut fn_ctx, args).map_err(EvalError::from),
+                    FnDefBody::RogatoFn(expr) => expr.evaluate(&mut fn_ctx),
+                };
+                return return_val;
+            }
         }
 
-        match &*(func.body()) {
-            FnDefBody::NativeFn(f) => f(&mut fn_ctx, args).map_err(EvalError::from),
-            FnDefBody::RogatoFn(expr) => expr.evaluate(&mut fn_ctx),
-        }
+        return Err(EvalError::PatternBindingFailed(
+            PatternBindingError::NoFnVariantMatched(
+                func.id().clone(),
+                last_attempted_pattern,
+                args.to_vec(),
+            ),
+        ));
     }
 
     pub fn call_function(
