@@ -1,0 +1,7 @@
+module Fibonacci { fib }
+
+let fib n =
+  fib_ [0,1] n
+
+let fib_ [a,b] 0 = a
+let fib_ [a,b] n = fib_ [b, a + b] (n - 1)
