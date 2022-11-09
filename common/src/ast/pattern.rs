@@ -40,12 +40,12 @@ impl Display for Pattern {
                 head.fmt(f)?;
                 f.write_str(" :: ")?;
                 tail.fmt(f)?;
-                f.write_str("[ ")
+                f.write_str(" ]")
             }
             Self::ListLit(items) => {
                 f.write_str("[ ")?;
                 items.fmt(f)?;
-                f.write_str("[ ")
+                f.write_str(" ]")
             }
             Self::Var(id) => f.write_str(id),
             Self::Bool(b) => b.fmt(f),
