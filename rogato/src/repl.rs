@@ -1,3 +1,8 @@
+use std::env::Args;
+use std::fs::File;
+use std::io::Read;
+use std::path::Path;
+
 use rustyline::error::ReadlineError;
 use rustyline::validate::MatchingBracketValidator;
 use rustyline::{Cmd, Editor, EventHandler, KeyCode, KeyEvent, Modifiers};
@@ -34,13 +39,13 @@ fn validated_editor() -> Result<Editor<InputValidator>, ReadlineError> {
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-pub fn run_repl() -> anyhow::Result<()> {
+pub fn run_repl(args: Args) -> anyhow::Result<()> {
     println!("👾 rogātō ⌘ 🏷 ");
     print!("🖥  Interactive Shell ");
     println!("{} 🦀 \n", VERSION);
     println!("Enter rogātō expressions below. You can add new lines via SHIFT-DOWN.\n");
     let mut eval_ctx = EvalContext::new();
-    let parse_ctx = ParserContext::new();
+    let parser_ctx = ParserContext::new();
 
     let mut counter = 0usize;
 
@@ -53,6 +58,30 @@ pub fn run_repl() -> anyhow::Result<()> {
 
     if rl.load_history(history_file).is_err() {
         println!("No previous history.");
+    }
+
+    for arg in args {
+        if arg == "repl" {
+            continue;
+        }
+        let file_path = Path::new(arg.as_str());
+        match File::open(file_path) {
+            Ok(mut file) => {
+                let mut buf = String::new();
+                file.read_to_string(&mut buf).unwrap();
+                let parse_result = parse(buf.as_str(), &parser_ctx)?;
+                println!("✅\t{}", file_path.display());
+                match parse_result.evaluate(&mut eval_ctx) {
+                    Ok(_) => {}
+                    Err(e) => {
+                        eprintln!("❌ Failed to load & evaluate file {} : {}", arg, e)
+                    }
+                }
+            }
+            Err(error) => {
+                println!("Could not open source file: {:?}", error);
+            }
+        }
     }
 
     loop {
@@ -68,7 +97,7 @@ pub fn run_repl() -> anyhow::Result<()> {
         match readline {
             Ok(line) => {
                 rl.add_history_entry(line.as_str());
-                match parse_eval_print(&parse_ctx, &mut eval_ctx, &mut compiler, counter, &line) {
+                match parse_eval_print(&parser_ctx, &mut eval_ctx, &mut compiler, counter, &line) {
                     Ok(_) => {
                         continue;
                     }
