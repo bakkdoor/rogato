@@ -469,6 +469,28 @@ fn patterns() {
                 val::number(55),
             ]),
         ),
+        (
+            "let
+                reduce acc _ []        = acc
+                reduce acc f [x]       = (f acc x)
+                reduce acc f [x :: xs] = reduce (f acc x) f xs
+            in
+                {
+                    reduce 0 (x y -> x + y) [1,2,3],
+                    reduce 10 (x y -> x - y) [1,2,3],
+                    reduce [] (acc x -> [{x,x} :: acc]) [1,^foo,2,^bar]
+                }",
+            val::tuple([
+                val::number(6),
+                val::number(4),
+                val::list([
+                    val::tuple([val::symbol("bar"), val::symbol("bar")]),
+                    val::tuple([val::number(2), val::number(2)]),
+                    val::tuple([val::symbol("foo"), val::symbol("foo")]),
+                    val::tuple([val::number(1), val::number(1)]),
+                ]),
+            ]),
+        ),
     ];
 
     let mut eval_ctx = EvalContext::new();
