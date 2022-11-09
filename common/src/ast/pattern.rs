@@ -9,6 +9,7 @@ pub enum Pattern {
     EmptyList,
     ListCons(Rc<Pattern>, Rc<Pattern>),
     List(TupleItems<Pattern>),
+    Tuple(usize, TupleItems<Pattern>),
     Var(Identifier),
     Bool(bool),
     Number(Decimal),
@@ -22,6 +23,7 @@ impl ASTDepth for Pattern {
             Self::EmptyList => 1,
             Self::ListCons(head, tail) => 1 + head.ast_depth() + tail.ast_depth(),
             Self::List(items) => 1 + items.ast_depth(),
+            Self::Tuple(len, items) => 1 + len + items.ast_depth(),
             Self::Var(_) => 1,
             Self::Bool(_) => 1,
             Self::Number(_) => 1,
@@ -46,6 +48,11 @@ impl Display for Pattern {
                 f.write_str("[ ")?;
                 items.fmt(f)?;
                 f.write_str(" ]")
+            }
+            Self::Tuple(_len, items) => {
+                f.write_str("{ ")?;
+                items.fmt(f)?;
+                f.write_str(" }")
             }
             Self::Var(id) => f.write_str(id),
             Self::Bool(b) => b.fmt(f),

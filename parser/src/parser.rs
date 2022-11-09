@@ -99,6 +99,18 @@ grammar parser(context: &ParserContext) for str {
         = "(" _ p:pattern() _ ")" {
             p
         }
+        / n:number_lit() {
+            Rc::new(Pattern::Number(n))
+        }
+        / b:bool_lit() {
+            Rc::new(Pattern::Bool(b))
+        }
+        / s:string_lit() {
+            Rc::new(Pattern::String(s))
+        }
+        / "_" {
+            Rc::new(Pattern::Any)
+        }
         / "[" _ "]" {
             Rc::new(Pattern::EmptyList)
         }
@@ -108,17 +120,8 @@ grammar parser(context: &ParserContext) for str {
         / "[" _ head:pattern() _ "::" _ tail:pattern() _ "]" {
             Rc::new(Pattern::ListCons(head,tail))
         }
-        / "_" {
-            Rc::new(Pattern::Any)
-        }
-        / n:number_lit() {
-            Rc::new(Pattern::Number(n))
-        }
-        / b:bool_lit() {
-            Rc::new(Pattern::Bool(b))
-        }
-        / s:string_lit() {
-            Rc::new(Pattern::String(s))
+        / "{" _ items:(pattern() ** list_sep()) _ "}" {
+            Rc::new(Pattern::Tuple(items.len(), TupleItems::from(items)))
         }
         / id:identifier() {
             Rc::new(Pattern::Var(id))

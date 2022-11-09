@@ -65,7 +65,23 @@ impl AttemptBinding for Pattern {
                 }
 
                 for (pat, val) in patterns.iter().zip(items.iter()) {
-                    pat.attempt_binding(context, Rc::clone(val))?;
+                    if pat.attempt_binding(context, Rc::clone(val))?.is_none() {
+                        return Ok(None);
+                    }
+                }
+
+                Ok(Some(value))
+            }
+
+            (Pattern::Tuple(len_p, patterns), Value::Tuple(len, items)) => {
+                if len_p != len {
+                    return Ok(None);
+                }
+
+                for (pat, val) in patterns.iter().zip(items.iter()) {
+                    if pat.attempt_binding(context, Rc::clone(val))?.is_none() {
+                        return Ok(None);
+                    };
                 }
 
                 Ok(Some(value))

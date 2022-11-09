@@ -4,7 +4,7 @@ use crate::{assert_parse, assert_parse_ast, assert_parse_expr, parse_expr, Parse
 use rogato_common::ast::helpers::inline_fn_def;
 use rogato_common::ast::helpers::{
     any_p, bool_lit, bool_p, empty_list_p, list_cons, list_cons_p, list_lit_p, number_p, string_p,
-    var_p, vars,
+    tuple_lit_p, var_p, vars,
 };
 #[cfg(test)]
 use rogato_common::ast::helpers::{
@@ -125,6 +125,15 @@ fn patterns() {
     assert_parse_ast!(
         "let head [x :: _] = x",
         fn_def("head", [list_cons_p(var_p("x"), any_p())], var("x"))
+    );
+
+    assert_parse_ast!(
+        "let foo {1, \"foo\", x} = {false, 1, x}",
+        fn_def(
+            "foo",
+            [tuple_lit_p([number_p(1), string_p("foo"), var_p("x")])],
+            tuple_lit([bool_lit(false), number_lit(1), var("x")])
+        )
     );
 }
 

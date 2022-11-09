@@ -287,6 +287,11 @@ pub fn list_lit_p<P: Into<Vec<Rc<Pattern>>>>(patterns: P) -> Rc<Pattern> {
     Rc::new(Pattern::List(TupleItems::from(patterns.into())))
 }
 
+pub fn tuple_lit_p<P: Into<Vec<Rc<Pattern>>>>(patterns: P) -> Rc<Pattern> {
+    let patterns = patterns.into();
+    Rc::new(Pattern::Tuple(patterns.len(), TupleItems::from(patterns)))
+}
+
 pub fn var_p(id: &str) -> Rc<Pattern> {
     Rc::new(Pattern::Var(id.into()))
 }

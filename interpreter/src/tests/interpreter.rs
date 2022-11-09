@@ -491,6 +491,21 @@ fn patterns() {
                 ]),
             ]),
         ),
+        (
+            "let
+                foo {x, y, 0}  = {^a, x, y}
+                foo {_, 0, z}  = {^b, 0, z}
+                foo {x, _, 42} = {^c, x}
+                foo {x, y, z}  = {^d, x + y + z}
+            in
+                {foo {10, 20, 0}, foo {^ok, 0, 42.69}, foo {1, 2, 42}, foo {1, 2, 3}}",
+            val::tuple([
+                val::tuple([val::symbol("a"), val::number(10), val::number(20)]),
+                val::tuple([val::symbol("b"), val::number(0), val::decimal_str("42.69")]),
+                val::tuple([val::symbol("c"), val::number(1)]),
+                val::tuple([val::symbol("d"), val::number(6)]),
+            ]),
+        ),
     ];
 
     let mut eval_ctx = EvalContext::new();
