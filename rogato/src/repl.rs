@@ -79,7 +79,7 @@ pub fn run_repl(args: Args) -> anyhow::Result<()> {
                 }
             }
             Err(error) => {
-                println!("Could not open source file: {:?}", error);
+                println!("❌ Could not open source file: {:?}", error);
             }
         }
     }
