@@ -34,7 +34,7 @@ impl AttemptBinding for Pattern {
         value: ValueRef,
     ) -> Result<Option<ValueRef>, PatternBindingError> {
         match (self, &*value) {
-            (Pattern::AnyPattern, _) => Ok(Some(value)),
+            (Pattern::Any, _) => Ok(Some(value)),
             (Pattern::Var(id), _) => {
                 context.define_var(id, Rc::clone(&value));
                 Ok(Some(value))
@@ -59,7 +59,7 @@ impl AttemptBinding for Pattern {
                 Ok(Some(value))
             }
 
-            (Pattern::ListLit(patterns), Value::List(items)) => {
+            (Pattern::List(patterns), Value::List(items)) => {
                 if patterns.len() != items.len() {
                     return Ok(None);
                 }

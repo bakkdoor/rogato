@@ -103,13 +103,13 @@ grammar parser(context: &ParserContext) for str {
             Rc::new(Pattern::EmptyList)
         }
         / "[" _ items:(pattern() ** list_sep()) _ "]" {
-            Rc::new(Pattern::ListLit(TupleItems::from(items)))
+            Rc::new(Pattern::List(TupleItems::from(items)))
         }
         / "[" _ head:pattern() _ "::" _ tail:pattern() _ "]" {
             Rc::new(Pattern::ListCons(head,tail))
         }
         / "_" {
-            Rc::new(Pattern::AnyPattern)
+            Rc::new(Pattern::Any)
         }
         / n:number_lit() {
             Rc::new(Pattern::Number(n))

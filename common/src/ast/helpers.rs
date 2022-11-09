@@ -272,7 +272,7 @@ pub fn inline_fn_def<Args: IntoIterator<Item = Rc<Pattern>>>(
 }
 
 pub fn any_p() -> Rc<Pattern> {
-    Rc::new(Pattern::AnyPattern)
+    Rc::new(Pattern::Any)
 }
 
 pub fn list_cons_p(head_pattern: Rc<Pattern>, tail_pattern: Rc<Pattern>) -> Rc<Pattern> {
@@ -284,7 +284,7 @@ pub fn empty_list_p() -> Rc<Pattern> {
 }
 
 pub fn list_lit_p<P: Into<Vec<Rc<Pattern>>>>(patterns: P) -> Rc<Pattern> {
-    Rc::new(Pattern::ListLit(TupleItems::from(patterns.into())))
+    Rc::new(Pattern::List(TupleItems::from(patterns.into())))
 }
 
 pub fn var_p(id: &str) -> Rc<Pattern> {
