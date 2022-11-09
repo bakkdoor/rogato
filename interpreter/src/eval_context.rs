@@ -1,6 +1,6 @@
 use rogato_common::{
     ast::{
-        fn_def::{FnDefArgs, FnDefBody},
+        fn_def::FnDefBody,
         lambda::{Lambda, LambdaClosureContext, LambdaClosureEvalError},
     },
     native_fn::{NativeFnContext, NativeFnError},
@@ -70,14 +70,7 @@ impl EvalContext {
         val::string(format!("FnDef {}", id))
     }
 
-    pub fn define_fn_variant(&mut self, id: &Identifier, args: FnDefArgs, body: Rc<FnDefBody>) {
-        self.current_module()
-            .lookup_fn(id)
-            .map(|func| func.borrow_mut().variants.add(args, body))
-            .unwrap_or_else(|| eprintln!("EvalContext::define_fn_variant failed for: {}", id))
-    }
-
-    pub fn lookup_fn(&mut self, id: &Identifier) -> Option<Rc<RefCell<FnDef>>> {
+    fn lookup_fn(&mut self, id: &Identifier) -> Option<Rc<RefCell<FnDef>>> {
         self.env.lookup_fn(id)
     }
 

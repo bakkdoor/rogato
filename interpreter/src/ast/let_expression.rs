@@ -12,15 +12,9 @@ impl Evaluate<ValueRef> for LetExpression {
 
         for (id, expr) in self.bindings.iter() {
             match &**expr {
-                Expression::InlineFnDef(fn_def) => match context.lookup_fn(id) {
-                    Some(_) => {
-                        let fn_def = fn_def.borrow();
-                        context.define_fn_variant(id, fn_def.args().clone(), fn_def.body());
-                    }
-                    None => {
-                        context.define_fn(Rc::clone(fn_def));
-                    }
-                },
+                Expression::InlineFnDef(fn_def) => {
+                    context.define_fn(Rc::clone(fn_def));
+                }
                 _ => match expr.evaluate(&mut context) {
                     Ok(val) => context.define_var(id, val),
                     Err(e) => return Err(e),

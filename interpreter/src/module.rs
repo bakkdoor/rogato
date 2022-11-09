@@ -41,7 +41,21 @@ impl Module {
     pub fn fn_def(&mut self, fn_def: Rc<RefCell<FnDef>>) {
         let mut state = self.state.borrow_mut();
         let func = fn_def.borrow();
-        state.fn_defs.insert(func.id().clone(), Rc::clone(&fn_def));
+        if state.fn_defs.contains_key(func.id()) {
+            state
+                .fn_defs
+                .get(func.id())
+                .map(|f| {
+                    f.borrow_mut()
+                        .variants
+                        .add(func.args().clone(), func.body())
+                })
+                .unwrap_or_else(|| {
+                    eprintln!("EvalContext::define_fn_variant failed for: {}", func.id())
+                })
+        } else {
+            state.fn_defs.insert(func.id().clone(), Rc::clone(&fn_def));
+        }
     }
 
     pub fn lookup_fn(&self, id: &Identifier) -> Option<Rc<RefCell<FnDef>>> {
