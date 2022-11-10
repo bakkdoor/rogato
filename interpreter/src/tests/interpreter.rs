@@ -416,12 +416,36 @@ fn lambda_closures() {
     let code_with_vals = vec![(
         "let
             f x = [1, 2, 3] |> Std.List.map (y -> x + y)
+            g x = {f x, f (x * 2)}
+            list = [10,100,1000] |> map ^g
         in
-            {f 1, f 10, f 100}",
+            {f 1, f 10, f 100, g 1, g 5, list}",
         val::tuple([
             val::list([val::number(2), val::number(3), val::number(4)]),
             val::list([val::number(11), val::number(12), val::number(13)]),
             val::list([val::number(101), val::number(102), val::number(103)]),
+            val::tuple([
+                val::list([val::number(2), val::number(3), val::number(4)]),
+                val::list([val::number(3), val::number(4), val::number(5)]),
+            ]),
+            val::tuple([
+                val::list([val::number(6), val::number(7), val::number(8)]),
+                val::list([val::number(11), val::number(12), val::number(13)]),
+            ]),
+            val::list([
+                val::tuple([
+                    val::list([val::number(11), val::number(12), val::number(13)]),
+                    val::list([val::number(21), val::number(22), val::number(23)]),
+                ]),
+                val::tuple([
+                    val::list([val::number(101), val::number(102), val::number(103)]),
+                    val::list([val::number(201), val::number(202), val::number(203)]),
+                ]),
+                val::tuple([
+                    val::list([val::number(1001), val::number(1002), val::number(1003)]),
+                    val::list([val::number(2001), val::number(2002), val::number(2003)]),
+                ]),
+            ]),
         ]),
     )];
 
