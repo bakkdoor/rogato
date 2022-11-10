@@ -5,35 +5,31 @@ let head [x :: _]  = x
 let tail [_ :: xs] = xs
 
 let map list f =
-  let
-    map_ acc [] _ =
-      reverse acc
-    map_ acc [x :: xs] f =
-      map_ [f x :: acc] xs f
-  in
-    map_ [] list f
+  map_ [] list f
+
+let map_ acc [] _ =
+  reverse acc
+let map_ acc [x :: xs] f =
+  map_ [f x :: acc] xs f
 
 let count list =
-  let
-    count_ acc [] =
-      acc
-    count_ acc [_ :: xs] =
-      count_ (acc + 1) xs
-  in
-    count_ 0 list
+  count_ 0 list
 
+let count_ acc [] =
+  acc
+let count_ acc [_ :: xs] =
+  count_ (acc + 1) xs
 
 let isEmpty [] = true
 let isEmpty _  = false
 
 let reverse list =
-  let
-    reverse_ acc [] =
-      acc
-    reverse_ acc [x :: xs] =
-      reverse_ [x :: acc] xs
-  in
-    reverse_ [] list
+  reverse_ [] list
+
+let reverse_ acc [] =
+  acc
+let reverse_ acc [x :: xs] =
+  reverse_ [x :: acc] xs
 
 let skip list 0 =
   list
@@ -41,15 +37,14 @@ let skip [x :: xs] n =
   skip xs (n - 1)
 
 let take list n =
-  let
-    take_ acc _ 0 =
-      reverse acc
-    take_ acc [] _ =
-      reverse acc
-    take_ acc [x :: xs] n =
-      take_ [x :: acc] xs (n - 1)
-  in
-    take_ [] list n
+  take_ [] list n
+
+let take_ acc _ 0 =
+  reverse acc
+let take_ acc [] _ =
+  reverse acc
+let take_ acc [x :: xs] n =
+  take_ [x :: acc] xs (n - 1)
 
 let repeat iterations fn =
   repeat_ [] iterations 0 fn
