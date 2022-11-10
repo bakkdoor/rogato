@@ -1,4 +1,4 @@
-module Std.List { map, count, isEmpty, reverse, repeat }
+module Std.List { map, count, isEmpty, reverse, repeat, zip }
 
 let head [x :: _]  = x
 
@@ -57,3 +57,15 @@ let repeat_ acc max n fn =
       (reverse values)
     else
       (repeat_ values max (n + 1) fn)
+
+let zip xs ys =
+  zip_ [] xs ys
+
+let zip_ acc [] _ =
+  reverse acc
+
+let zip_ acc _ [] =
+  reverse acc
+
+let zip_ acc [x :: xs] [y :: ys] =
+  zip_ [{x, y} :: acc] xs ys
