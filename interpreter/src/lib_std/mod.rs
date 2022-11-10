@@ -20,6 +20,7 @@ use std::rc::Rc;
 use std::{cell::RefCell, fmt::Debug};
 
 pub mod list;
+pub mod map;
 pub mod math;
 pub mod string;
 
@@ -30,6 +31,7 @@ pub fn env() -> Environment {
     let math_mod = math::module();
     let string_mod = string::module();
     let list_mod = list::module();
+    let map_mod = map::module();
 
     env.import(&math_mod, Imports::All);
     env.import(&list_mod, Imports::All);
@@ -38,6 +40,7 @@ pub fn env() -> Environment {
     env.define_module(math_mod);
     env.define_module(string_mod);
     env.define_module(list_mod);
+    env.define_module(map_mod);
 
     env
 }
