@@ -9,6 +9,7 @@ use rogato_common::{
 use super::{environment::Environment, module::Module, EvalError, Identifier, ValueRef};
 use crate::{
     ast::pattern::{AttemptBinding, PatternBindingError},
+    environment::Imports,
     lib_std,
     query_planner::{QueryPlanner, QueryResult},
     Evaluate,
@@ -61,6 +62,22 @@ impl EvalContext {
             obj_storage: self.obj_storage.clone(),
             query_planner: self.query_planner.clone(),
         }
+    }
+
+    pub fn import(
+        &mut self,
+        module_id: &Identifier,
+        imports: Imports,
+    ) -> Result<ValueRef, EvalError> {
+        let module = self
+            .lookup_module(module_id)
+            .ok_or(EvalError::ImportFailed(
+                module_id.clone(),
+                imports.import_ids(),
+            ))?;
+
+        self.env.import(&module, imports);
+        Ok(val::none())
     }
 
     pub fn define_fn(&mut self, fn_def: Rc<RefCell<FnDef>>) -> ValueRef {

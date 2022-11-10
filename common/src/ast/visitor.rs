@@ -15,7 +15,7 @@ pub trait Visitor<T: Default> {
     fn module_def(&mut self, _mod_def: &ModuleDef) -> T {
         T::default()
     }
-    fn use_stmt(&mut self, _mod_def: &Identifier) -> T {
+    fn use_stmt(&mut self, _mod_def: &Identifier, _imports: &[Identifier]) -> T {
         T::default()
     }
     fn fn_def(&mut self, _fn_def: &FnDef) -> T {

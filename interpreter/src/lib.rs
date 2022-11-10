@@ -24,6 +24,9 @@ pub enum EvalError {
     #[error("Unknown error: {0}")]
     Unknown(String),
 
+    #[error("Import failed, module not found for: {0} {{  }}")]
+    ImportFailed(Identifier, Vec<Identifier>),
+
     #[error("{0}")]
     QueryFailed(QueryError),
 

@@ -221,7 +221,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                 Ok(())
             }
             AST::ModuleDef(mod_def) => self.codegen_module_def(mod_def),
-            AST::Use(_) => todo!(),
+            AST::Use(_id, _imports) => todo!(),
             AST::TypeDef(type_def) => self.codegen_type_def(type_def),
         }
     }

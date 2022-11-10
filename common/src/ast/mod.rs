@@ -78,7 +78,7 @@ pub enum AST {
     RootComment(String),
     FnDef(Rc<RefCell<FnDef>>),
     ModuleDef(ModuleDef),
-    Use(Identifier),
+    Use(Identifier, Vec<Identifier>),
     TypeDef(TypeDef),
 }
 
@@ -95,9 +95,18 @@ impl Display for AST {
             }
             AST::FnDef(fn_def) => fn_def.borrow().fmt(f),
             AST::ModuleDef(mod_def) => mod_def.fmt(f),
-            AST::Use(id) => {
+            AST::Use(id, imports) => {
                 f.write_str("use ")?;
-                id.fmt(f)
+                id.fmt(f)?;
+                let mut is_first = true;
+                for imp in imports.iter() {
+                    if !is_first {
+                        f.write_str(", ")?;
+                    }
+                    imp.fmt(f)?;
+                    is_first = false;
+                }
+                Ok(())
             }
             AST::TypeDef(type_def) => type_def.fmt(f),
         }
@@ -110,7 +119,7 @@ impl ASTDepth for AST {
             AST::RootComment(_) => 1,
             AST::FnDef(fn_def) => fn_def.borrow().ast_depth(),
             AST::ModuleDef(mod_def) => mod_def.ast_depth(),
-            AST::Use(_) => 1,
+            AST::Use(_, imports) => 1 + imports.len(),
             AST::TypeDef(type_def) => type_def.ast_depth(),
         }
     }
@@ -128,7 +137,10 @@ impl Hash for AST {
             AST::RootComment(c) => c.hash(state),
             AST::FnDef(fn_def) => fn_def.borrow().hash(state),
             AST::ModuleDef(mod_def) => mod_def.hash(state),
-            AST::Use(id) => id.hash(state),
+            AST::Use(id, imports) => {
+                id.hash(state);
+                imports.hash(state)
+            }
             AST::TypeDef(type_def) => type_def.hash(state),
         }
     }
@@ -140,7 +152,9 @@ impl PartialEq for AST {
             (AST::RootComment(c1), AST::RootComment(c2)) => c1.eq(c2),
             (AST::FnDef(fn_def1), AST::FnDef(fn_def2)) => fn_def1.eq(fn_def2),
             (AST::ModuleDef(mod_def1), AST::ModuleDef(mod_def2)) => mod_def1.eq(mod_def2),
-            (AST::Use(id1), AST::Use(id2)) => id1.eq(id2),
+            (AST::Use(id1, imports1), AST::Use(id2, imports2)) => {
+                id1.eq(id2) && imports1.eq(imports2)
+            }
             (AST::TypeDef(type_def1), AST::TypeDef(type_def2)) => type_def1.eq(type_def2),
             (_, _) => false,
         }

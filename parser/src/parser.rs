@@ -82,18 +82,21 @@ grammar parser(context: &ParserContext) for str {
         }
 
     rule use_stmt() -> AST
-        = "use " id:struct_identifier() {
-            AST::Use(id)
+        = "use " s() id:struct_identifier() s() "{" _ imports:(identifier() ** (_ "," _)) _ "}" {
+            AST::Use(id, imports)
+        }
+        / "use " s() id:struct_identifier() {
+            AST::Use(id, vec![])
         }
 
     rule fn_def() -> AST
-        = _ "let " _ id:identifier() _ args:(pattern() ** spacing()) _ "=" _ body:(expression()) _ {
+        = _ "let " _ id:identifier() _ args:(pattern() ** s()) _ "=" _ body:(expression()) _ {
             AST::FnDef(FnDef::new(id, FnDefArgs::new(args), Rc::new(FnDefBody::rogato(Rc::new(body)))))
         }
 
     rule list_sep()
-        = (spacing()? "," _)
-        / (_ "," spacing()?)
+        = (s()? "," _)
+        / (_ "," s()?)
 
     rule pattern() -> Rc<Pattern>
         = "(" _ p:pattern() _ ")" {
@@ -341,7 +344,11 @@ grammar parser(context: &ParserContext) for str {
 
 
     rule fn_call() -> Expression
-        = _ id:identifier() args:(fn_arg())+ _ {
+        = _ ids:(identifier() ** ".") args:(fn_arg())+ _ {
+            let args = FnCallArgs::from_owned(args);
+            Expression::FnCall(ids.join(".").into(), args)
+        }
+        / _ id:identifier() args:(fn_arg())+ _ {
             let args = FnCallArgs::from_owned(args);
             Expression::FnCall(id, args)
         }
@@ -395,7 +402,7 @@ grammar parser(context: &ParserContext) for str {
         = _ id:identifier() _ "=" _ val:let_body() {
             (id, val)
         }
-        / _ id:identifier() _ args:(pattern() ** spacing()) _ "=" _ body:let_body() {
+        / _ id:identifier() _ args:(pattern() ** s()) _ "=" _ body:let_body() {
             (id.clone(), Expression::InlineFnDef(FnDef::new_inline(id, FnDefArgs::new(args), Rc::new(FnDefBody::rogato(Rc::new(body))))))
         }
 
@@ -592,7 +599,7 @@ grammar parser(context: &ParserContext) for str {
     rule ws()
         = ([' ' | '\t' | '\n'])+
 
-    rule spacing()
+    rule s()
         = ([' ' | '\t'])+
 
 

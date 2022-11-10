@@ -13,7 +13,7 @@ impl Walk for AST {
         match self {
             AST::RootComment(c) => v.root_comment(c),
             AST::ModuleDef(mod_def) => v.module_def(mod_def),
-            AST::Use(id) => v.use_stmt(id),
+            AST::Use(id, imports) => v.use_stmt(id, imports),
             AST::FnDef(fn_def) => {
                 let fn_def = fn_def.borrow();
                 v.fn_def(&fn_def);

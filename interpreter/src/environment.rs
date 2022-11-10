@@ -19,6 +19,27 @@ pub enum Imports {
     Specific(Vec<ImportedIdentifier>),
 }
 
+impl Imports {
+    pub fn import_ids(&self) -> Vec<Identifier> {
+        match self {
+            Imports::All => vec!["*".into()],
+            Imports::Specific(ids) => ids
+                .iter()
+                .map(|id| match id {
+                    ImportedIdentifier::Func(id) => id.clone(),
+                    ImportedIdentifier::Type(id) => id.clone(),
+                    ImportedIdentifier::AliasedFunc(id, alias) => {
+                        format!("{} as {}", id, alias).into()
+                    }
+                    ImportedIdentifier::AliasedType(id, alias) => {
+                        format!("{} as {}", id, alias).into()
+                    }
+                })
+                .collect(),
+        }
+    }
+}
+
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct ImportedModules {
     imports: HashMap<Identifier, Imports>,

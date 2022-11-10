@@ -16,6 +16,12 @@ pub struct Map {
 type MapIter<'a> = rpds::map::hash_trie_map::Iter<'a, ValueRef, ValueRef, archery::RcK>;
 
 impl Map {
+    pub fn new() -> Self {
+        Self {
+            entries: HashTrieMap::new(),
+        }
+    }
+
     pub fn iter(&self) -> MapIter {
         self.entries.iter()
     }
