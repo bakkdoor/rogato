@@ -504,6 +504,9 @@ grammar parser(context: &ParserContext) for str {
         = args:lambda_args() " "+ "->" _ body:let_body() {
             Expression::Lambda(Rc::new(Lambda::new(LambdaArgs::new(args), Rc::new(body))))
         }
+        / "->" _ body:let_body() {
+            Expression::Lambda(Rc::new(Lambda::new(LambdaArgs::new(vec![]), Rc::new(body))))
+        }
 
     rule lambda_args() -> Vec<Identifier>
         = arg:variable_identifier() rest:(additional_lambda_arg())* {

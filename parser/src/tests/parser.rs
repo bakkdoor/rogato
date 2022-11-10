@@ -872,6 +872,13 @@ fn variables() {
 
 #[test]
 fn lambdas() {
+    assert_parse_expr!("-> ^ok", lambda([], symbol("ok")));
+
+    assert_parse_expr!(
+        "-> foo (bar baz)",
+        lambda([], fn_call("foo", [fn_call("bar", [var("baz")])]))
+    );
+
     assert_parse_expr!(
         "x -> x + 1",
         lambda(["x"], op_call("+", var("x"), number_lit(1)))
