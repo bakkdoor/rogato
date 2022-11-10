@@ -1,5 +1,5 @@
 use super::{fn_def, invalid_args};
-use crate::{module::Module, EvalContext};
+use crate::module::Module;
 use rogato_common::{
     native_fn::NativeFnError,
     val::{self, Value, ValueRef},
@@ -12,13 +12,12 @@ pub fn module() -> Module {
     module.fn_def(fn_def(
         "map",
         &["list", "f"],
-        move |_ctx, args| -> Result<Rc<Value>, NativeFnError> {
+        move |context, args| -> Result<Rc<Value>, NativeFnError> {
             let error = Err(invalid_args("Std.List.map"));
             match (args.len(), args.get(0), args.get(1)) {
                 (2, Some(a), Some(b)) => match (a.deref(), b.deref()) {
                     (Value::List(items), Value::Symbol(fn_id)) => {
                         let mut result: Vec<ValueRef> = Vec::new();
-                        let mut context = EvalContext::new();
                         for item in items.iter() {
                             match context.call_function(fn_id, &[Rc::clone(item)]) {
                                 Some(val) => result.push(Rc::clone(&val?)),
@@ -34,7 +33,6 @@ pub fn module() -> Module {
                     }
                     (Value::List(items), Value::Lambda(lambda_ctx, lambda)) => {
                         let mut result: Vec<ValueRef> = Vec::new();
-                        let mut context = EvalContext::new();
                         for item in items.iter() {
                             let val = context.call_lambda(
                                 Rc::clone(lambda_ctx),

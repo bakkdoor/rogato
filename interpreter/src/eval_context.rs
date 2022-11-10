@@ -216,6 +216,16 @@ impl NativeFnContext for EvalContext {
             .map(|res| res.map_err(|e| NativeFnError::EvaluationFailed(id.clone(), e.to_string())))
     }
 
+    fn call_lambda(
+        &mut self,
+        lambda_ctx: Rc<RefCell<dyn LambdaClosureContext>>,
+        lambda: &Lambda,
+        args: &[ValueRef],
+    ) -> Result<ValueRef, NativeFnError> {
+        self.call_lambda(lambda_ctx, lambda, args)
+            .map_err(|e| NativeFnError::Unknown(lambda.to_string().into(), e.to_string()))
+    }
+
     fn call_function_direct(
         &mut self,
         func: Rc<RefCell<FnDef>>,

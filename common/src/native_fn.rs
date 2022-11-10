@@ -1,7 +1,11 @@
 use std::{cell::RefCell, rc::Rc};
 
 use crate::{
-    ast::{fn_def::FnDef, lambda::LambdaClosureEvalError, Identifier},
+    ast::{
+        fn_def::FnDef,
+        lambda::{Lambda, LambdaClosureContext, LambdaClosureEvalError},
+        Identifier,
+    },
     val::ValueRef,
 };
 use thiserror::Error;
@@ -33,6 +37,13 @@ pub trait NativeFnContext {
         id: &Identifier,
         args: &[ValueRef],
     ) -> Option<Result<ValueRef, NativeFnError>>;
+
+    fn call_lambda(
+        &mut self,
+        lambda_ctx: Rc<RefCell<dyn LambdaClosureContext>>,
+        lambda: &Lambda,
+        args: &[ValueRef],
+    ) -> Result<ValueRef, NativeFnError>;
 
     fn call_function_direct(
         &mut self,
