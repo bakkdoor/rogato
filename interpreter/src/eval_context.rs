@@ -71,10 +71,7 @@ impl EvalContext {
     ) -> Result<ValueRef, EvalError> {
         let module = self
             .lookup_module(module_id)
-            .ok_or(EvalError::ImportFailed(
-                module_id.clone(),
-                imports.import_ids(),
-            ))?;
+            .ok_or_else(|| EvalError::ImportFailed(module_id.clone(), imports.import_ids()))?;
 
         self.env.import(&module, imports);
         Ok(val::none())
