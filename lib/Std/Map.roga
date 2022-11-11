@@ -71,3 +71,9 @@ let fromPairs list =
 
 let values m =
   m |> map ({_, v} -> v)
+
+let insertOrUpdate map key value fn =
+  if (map |> contains key) then
+    (map |> update key fn)
+  else
+    (map |> insert key value)
