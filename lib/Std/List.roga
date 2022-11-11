@@ -71,7 +71,7 @@ let zip_ acc [x :: xs] [y :: ys] =
   zip_ [{x, y} :: acc] xs ys
 
 let groupBy list fn =
-  groupBy [] list fn
+  groupBy {} list fn
 
 let groupBy acc [] _ =
   acc
