@@ -314,7 +314,6 @@ pub fn tuple_lit_p<P: Into<Vec<Rc<Pattern>>>>(patterns: P) -> Rc<Pattern> {
 }
 
 pub fn map_lit_p<P: Into<Vec<(Rc<Pattern>, Rc<Pattern>)>>>(kv_pairs: P) -> Rc<Pattern> {
-    // let patterns = kv_pairs.into().iter().map(|x| Rc::new(MapKVPair::new(x)).collect();
     let patterns = kv_pairs
         .into()
         .iter()
