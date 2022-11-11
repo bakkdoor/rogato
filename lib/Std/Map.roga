@@ -4,7 +4,7 @@ let map m f =
   let
     map_ acc {} _ =
       fromPairs acc
-    map_ acc {k => v :: rest} f =
+    map_ acc {k : v :: rest} f =
       [f {k, v} :: map_ rest f]
   in
     map_ [] m f
@@ -14,27 +14,29 @@ let mapKeys m f =
   let
     mapKeys_ acc {} _ =
       fromPairs acc
-    mapKeys_ acc {k => v :: rest} f =
+    mapKeys_ acc {k : v :: rest} f =
       mapKeys_  [{f k, v} :: acc] rest f
   in
     mapKeys_ [] m f
+    |> fromPairs
 
 
 let mapValues m f =
   let
     mapValues_ acc {} _ =
       fromPairs acc
-    mapValues_ acc {k => v :: rest} f =
+    mapValues_ acc {k : v :: rest} f =
       mapValues_ [{k, f v} :: acc] rest f
   in
     mapValues_ [] m f
+    |> fromPairs
 
 
 let count m =
   let
     count_ acc {} =
       acc
-    count_ acc {_ => _ :: rest} =
+    count_ acc {_ : _ :: rest} =
       count_ (acc + 1) rest
   in
     count_ 0 m
@@ -46,14 +48,14 @@ let isEmpty m =
 
 let reduce {} acc _ =
   acc
-let reduce {k => v :: rest} acc f =
+let reduce {k : v :: rest} acc f =
   reduce rest (f {k,v} acc) f
 
 let keys m =
   let
     keys_ acc {} =
       acc
-    keys_ acc {k => _ :: rest} =
+    keys_ acc {k : _ :: rest} =
       keys_ [k :: acc] rest
   in
     keys_ [] m
@@ -64,7 +66,7 @@ let fromPairs list =
     fromPairs_ acc [] =
       acc
     fromPairs_ acc [{k,v} :: rest] =
-      fromPairs_ {k => v :: acc} rest
+      fromPairs_ {k : v :: acc} rest
   in
     fromPairs_ {} list
 

@@ -9,6 +9,7 @@ use rogato_common::ast::{
     },
     fn_def::{FnDef, FnDefBody},
     if_else::IfElse,
+    literal::MapKVPair,
     module_def::{ModuleDef, ModuleExports},
     pattern::Pattern,
     type_expression::{StructTypeProperties, TypeDef, TypeExpression},
@@ -126,8 +127,16 @@ grammar parser(context: &ParserContext) for str {
         / "{" _ items:(pattern() ** list_sep()) _ "}" {
             Rc::new(Pattern::Tuple(items.len(), TupleItems::from(items)))
         }
+        / "{" _ items:(kv_pattern() ** list_sep()) _ "}" {
+            Rc::new(Pattern::Map(TupleItems::from(items)))
+        }
         / id:identifier() {
             Rc::new(Pattern::Var(id))
+        }
+
+    rule kv_pattern() -> Rc<MapKVPair<Pattern>>
+        = key:pattern() _ ":" _ val:pattern() {
+            Rc::new(MapKVPair::new(key, val))
         }
 
     rule type_def() -> AST
@@ -432,6 +441,7 @@ grammar parser(context: &ParserContext) for str {
 
     rule literal_expr() -> Expression
         = number_lit_expr()
+        / map_lit_expr()
         / bool_lit_expr()
         / string_lit_expr()
         / struct_lit_expr()
@@ -473,6 +483,16 @@ grammar parser(context: &ParserContext) for str {
         }
         / "[" _ comment() _ "]" {
             Expression::Lit(Literal::List(TupleItems::from(vec![])))
+        }
+
+    rule map_lit_expr() -> Expression
+        = "{" _ kv_pairs:(kv_pair() ** (_ "," _)) _ "}" {
+            Expression::Lit(Literal::Map(TupleItems::from(kv_pairs)))
+        }
+
+    rule kv_pair() -> Rc<MapKVPair<Expression>>
+        = key:tuple_item() _ ":" _ value:tuple_item() {
+            Rc::new(MapKVPair::new(Rc::new(key), Rc::new(value)))
         }
 
     rule tuple_item() -> Expression

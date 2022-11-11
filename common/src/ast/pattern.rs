@@ -1,6 +1,9 @@
 use rust_decimal::Decimal;
 
-use super::{expression::TupleItems, ASTDepth, Identifier};
+use super::{
+    expression::{MapKVPair, TupleItems},
+    ASTDepth, Identifier,
+};
 use std::{fmt::Display, rc::Rc};
 
 #[derive(Clone, PartialEq, Eq, Debug, Hash)]
@@ -10,6 +13,7 @@ pub enum Pattern {
     ListCons(Rc<Pattern>, Rc<Pattern>),
     List(TupleItems<Pattern>),
     Tuple(usize, TupleItems<Pattern>),
+    Map(TupleItems<MapKVPair<Pattern>>),
     Var(Identifier),
     Bool(bool),
     Number(Decimal),
@@ -24,6 +28,7 @@ impl ASTDepth for Pattern {
             Self::ListCons(head, tail) => 1 + head.ast_depth() + tail.ast_depth(),
             Self::List(items) => 1 + items.ast_depth(),
             Self::Tuple(len, items) => 1 + len + items.ast_depth(),
+            Self::Map(kv_pairs) => 1 + kv_pairs.ast_depth(),
             Self::Var(_) => 1,
             Self::Bool(_) => 1,
             Self::Number(_) => 1,
@@ -52,6 +57,11 @@ impl Display for Pattern {
             Self::Tuple(_len, items) => {
                 f.write_str("{ ")?;
                 items.fmt(f)?;
+                f.write_str(" }")
+            }
+            Self::Map(kv_pairs) => {
+                f.write_str("{ ")?;
+                kv_pairs.fmt(f)?;
                 f.write_str(" }")
             }
             Self::Var(id) => f.write_str(id),

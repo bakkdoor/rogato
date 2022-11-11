@@ -374,6 +374,36 @@ fn std_list_module() {
 }
 
 #[test]
+fn std_map_module() {
+    let code_with_vals = [
+        ("{}", val::map([])),
+        ("{1 : 2}", val::map([(val::number(1), val::number(2))])),
+        (
+            "{^foo : 2}",
+            val::map([(val::symbol("foo"), val::number(2))]),
+        ),
+        (
+            "{ ^foo : {^bar: { 2: ^hello_world }} }",
+            val::map([(
+                val::symbol("foo"),
+                val::map([(
+                    val::symbol("bar"),
+                    val::map([(val::number(2), val::symbol("hello_world"))]),
+                )]),
+            )]),
+        ),
+    ];
+
+    let mut eval_ctx = EvalContext::new();
+    let parser_ctx = ParserContext::new();
+
+    for (code, val) in code_with_vals.iter() {
+        let ast = parse_expr(code, &parser_ctx).unwrap();
+        assert_eq!(ast.evaluate(&mut eval_ctx), Ok(val.clone()));
+    }
+}
+
+#[test]
 fn if_else_expr() {
     let code_with_vals = [
         (

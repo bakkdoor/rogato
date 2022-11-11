@@ -3,8 +3,8 @@ use crate::{assert_parse, assert_parse_ast, assert_parse_expr, parse_expr, Parse
 #[cfg(test)]
 use rogato_common::ast::helpers::inline_fn_def;
 use rogato_common::ast::helpers::{
-    any_p, bool_lit, bool_p, empty_list_p, list_cons, list_cons_p, list_lit_p, number_p, string_p,
-    tuple_lit_p, var_p, vars,
+    any_p, bool_lit, bool_p, empty_list_p, list_cons, list_cons_p, list_lit_p, map_lit, number_p,
+    string_p, tuple_lit_p, var_p, vars,
 };
 #[cfg(test)]
 use rogato_common::ast::helpers::{
@@ -329,6 +329,25 @@ fn literals() {
             tuple_lit([number_lit(1), number_lit(2), number_lit(3)]),
             list_lit([number_lit(1), number_lit(2), number_lit(3)])
         )
+    );
+
+    assert_parse_expr!("{}", map_lit([]));
+    assert_parse_expr!("{           }", map_lit([]));
+    assert_parse_expr!("{1 : 2}", map_lit([(number_lit(1), number_lit(2))]));
+    assert_parse_expr!(
+        "{1: 2, 2: 3, ^foo: ^bar}",
+        map_lit([
+            (number_lit(1), number_lit(2)),
+            (number_lit(2), number_lit(3)),
+            (symbol("foo"), symbol("bar"))
+        ])
+    );
+    assert_parse_expr!(
+        "{1 : 2, ^foo : \"bar\"}",
+        map_lit([
+            (number_lit(1), number_lit(2)),
+            (symbol("foo"), string_lit("bar"))
+        ])
     );
 }
 

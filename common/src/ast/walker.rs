@@ -56,6 +56,12 @@ impl Walk for Expression {
                             val.walk(v)
                         }
                     }
+                    Literal::Map(kv_pairs) => {
+                        for kv_pair in kv_pairs.iter() {
+                            kv_pair.key.walk(v);
+                            kv_pair.value.walk(v)
+                        }
+                    }
                 }
             }
             Expression::FnCall(id, args) => {

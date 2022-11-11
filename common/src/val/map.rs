@@ -33,6 +33,13 @@ impl Map {
     pub fn is_empty(&self) -> bool {
         self.entries.is_empty()
     }
+
+    pub fn insert(&mut self, key: ValueRef, value: ValueRef) -> ValueRef {
+        Self {
+            entries: self.entries.insert(key, value),
+        }
+        .into()
+    }
 }
 
 impl Default for Map {
@@ -81,7 +88,7 @@ impl Display for Map {
                 fmt.write_str(", ")?;
             }
             k.fmt(fmt)?;
-            fmt.write_str(" => ")?;
+            fmt.write_str(" : ")?;
             v.fmt(fmt)?;
             first = false;
         }

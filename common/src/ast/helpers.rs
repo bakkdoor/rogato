@@ -18,7 +18,7 @@ use crate::ast::{
 use crate::ast::{type_expression::TypeExpression, Program};
 use std::rc::Rc;
 
-use super::expression::IfElse;
+use super::expression::{IfElse, MapKVPair};
 use super::fn_def::FnDefBody;
 use super::pattern::Pattern;
 use super::type_expression::StructTypeProperties;
@@ -67,6 +67,16 @@ pub fn struct_lit<S: Into<Identifier>, Props: IntoIterator<Item = (S, Rc<Express
         props.push((id.into(), expr))
     }
     lit(Struct(id.into(), Rc::new(StructProps::from(props))))
+}
+
+pub fn map_lit<Iter: IntoIterator<Item = (Rc<Expression>, Rc<Expression>)>>(
+    items: Iter,
+) -> Rc<Expression> {
+    let kv_pairs: Vec<Rc<MapKVPair<Expression>>> = items
+        .into_iter()
+        .map(|kvp| Rc::new(MapKVPair::new(kvp.0, kvp.1)))
+        .collect();
+    lit(Map(TupleItems::from_iter(kv_pairs)))
 }
 
 pub fn var(id: &str) -> Rc<Expression> {

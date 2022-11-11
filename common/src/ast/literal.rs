@@ -13,6 +13,7 @@ pub enum Literal {
     List(TupleItems<Expression>),
     ListCons(Rc<Expression>, Rc<Expression>),
     Struct(Identifier, Rc<StructProps>),
+    Map(TupleItems<MapKVPair<Expression>>),
 }
 
 impl Display for Literal {
@@ -61,6 +62,11 @@ impl Display for Literal {
                 }
             }
             Literal::Struct(id, props) => f.write_fmt(format_args!("{}{{ {} }}", id, props)),
+            Literal::Map(kv_pairs) => {
+                f.write_str("{ ")?;
+                kv_pairs.fmt(f)?;
+                f.write_str(" }")
+            }
         }
     }
 }
@@ -80,6 +86,7 @@ impl ASTDepth for Literal {
                     .map(|(_name, val)| val.ast_depth())
                     .sum::<usize>()
             }
+            Literal::Map(kv_pairs) => 1 + kv_pairs.ast_depth(),
         }
     }
 }
@@ -196,5 +203,31 @@ impl Display for StructProps {
         });
 
         f.write_fmt(format_args!("{}", fmt_str))
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, Debug, Hash)]
+pub struct MapKVPair<T: Display + ASTDepth> {
+    pub key: Rc<T>,
+    pub value: Rc<T>,
+}
+
+impl<T: Display + ASTDepth> MapKVPair<T> {
+    pub fn new(key: Rc<T>, value: Rc<T>) -> Self {
+        Self { key, value }
+    }
+}
+
+impl<T: Display + ASTDepth> Display for MapKVPair<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.key.fmt(f)?;
+        f.write_str(" : ")?;
+        self.value.fmt(f)
+    }
+}
+
+impl<T: Display + ASTDepth> ASTDepth for MapKVPair<T> {
+    fn ast_depth(&self) -> usize {
+        self.key.ast_depth() + self.value.ast_depth()
     }
 }
