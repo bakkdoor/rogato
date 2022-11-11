@@ -60,8 +60,11 @@ pub enum EvalError {
     #[error("IfElse condition is not a Bool value: {0}")]
     IFElseConditionNotBool(ValueRef),
 
-    #[error("List const with requires list, was given: {0}")]
+    #[error("List cons requires List, was given: {0}")]
     ListConsInvalidList(ValueRef),
+
+    #[error("Map cons requires Map, was given: {0}")]
+    MapConsInvalidMap(ValueRef),
 
     #[error("EvalError during pattern match: {0}")]
     PatternBindingFailed(PatternBindingError),

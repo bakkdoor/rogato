@@ -51,6 +51,24 @@ impl Evaluate<ValueRef> for Literal {
                 }
                 Ok(val::map(pairs))
             }
+            Literal::MapCons(kv_pairs, rest) => {
+                let rest = rest.evaluate(context)?;
+                match rest.deref() {
+                    Value::Map(map) => {
+                        let mut pairs: Vec<(ValueRef, ValueRef)> =
+                            Vec::with_capacity(kv_pairs.len());
+
+                        for kv_pair in kv_pairs.iter() {
+                            pairs.push((
+                                kv_pair.key.evaluate(context)?,
+                                kv_pair.value.evaluate(context)?,
+                            ));
+                        }
+                        Ok(map.cons(pairs).into())
+                    }
+                    _ => Err(EvalError::MapConsInvalidMap(rest)),
+                }
+            }
         }
     }
 }

@@ -14,6 +14,7 @@ pub enum Literal {
     ListCons(Rc<Expression>, Rc<Expression>),
     Struct(Identifier, Rc<StructProps>),
     Map(TupleItems<MapKVPair<Expression>>),
+    MapCons(TupleItems<MapKVPair<Expression>>, Rc<Expression>),
 }
 
 impl Display for Literal {
@@ -67,6 +68,13 @@ impl Display for Literal {
                 kv_pairs.fmt(f)?;
                 f.write_str(" }")
             }
+            Literal::MapCons(kv_pairs, rest) => {
+                f.write_str("{ ")?;
+                kv_pairs.fmt(f)?;
+                f.write_str(" :: ")?;
+                rest.fmt(f)?;
+                f.write_str(" }")
+            }
         }
     }
 }
@@ -87,6 +95,7 @@ impl ASTDepth for Literal {
                     .sum::<usize>()
             }
             Literal::Map(kv_pairs) => 1 + kv_pairs.ast_depth(),
+            Literal::MapCons(kv_pairs, rest) => 1 + kv_pairs.ast_depth() + rest.ast_depth(),
         }
     }
 }
@@ -229,5 +238,23 @@ impl<T: Display + ASTDepth> Display for MapKVPair<T> {
 impl<T: Display + ASTDepth> ASTDepth for MapKVPair<T> {
     fn ast_depth(&self) -> usize {
         self.key.ast_depth() + self.value.ast_depth()
+    }
+}
+
+impl<T: Display + ASTDepth> From<(Rc<T>, Rc<T>)> for MapKVPair<T> {
+    fn from(pair: (Rc<T>, Rc<T>)) -> Self {
+        MapKVPair {
+            key: pair.0,
+            value: pair.1,
+        }
+    }
+}
+
+impl<T: Display + ASTDepth> From<(T, T)> for MapKVPair<T> {
+    fn from(pair: (T, T)) -> Self {
+        MapKVPair {
+            key: Rc::new(pair.0),
+            value: Rc::new(pair.1),
+        }
     }
 }

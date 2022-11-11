@@ -79,6 +79,17 @@ pub fn map_lit<Iter: IntoIterator<Item = (Rc<Expression>, Rc<Expression>)>>(
     lit(Map(TupleItems::from_iter(kv_pairs)))
 }
 
+pub fn map_cons_lit<Iter: IntoIterator<Item = (Rc<Expression>, Rc<Expression>)>>(
+    items: Iter,
+    rest: Rc<Expression>,
+) -> Rc<Expression> {
+    let kv_pairs: Vec<Rc<MapKVPair<Expression>>> = items
+        .into_iter()
+        .map(|kvp| Rc::new(MapKVPair::new(kvp.0, kvp.1)))
+        .collect();
+    lit(MapCons(TupleItems::from_iter(kv_pairs), rest))
+}
+
 pub fn var(id: &str) -> Rc<Expression> {
     Rc::new(Var(id.into()))
 }
@@ -302,6 +313,28 @@ pub fn tuple_lit_p<P: Into<Vec<Rc<Pattern>>>>(patterns: P) -> Rc<Pattern> {
     Rc::new(Pattern::Tuple(patterns.len(), TupleItems::from(patterns)))
 }
 
+pub fn map_lit_p<P: Into<Vec<(Rc<Pattern>, Rc<Pattern>)>>>(kv_pairs: P) -> Rc<Pattern> {
+    // let patterns = kv_pairs.into().iter().map(|x| Rc::new(MapKVPair::new(x)).collect();
+    let patterns = kv_pairs
+        .into()
+        .iter()
+        .map(|(key, val)| Rc::new(MapKVPair::new(Rc::clone(key), Rc::clone(val))))
+        .collect();
+    Rc::new(Pattern::Map(TupleItems::from(patterns)))
+}
+
+pub fn map_cons_lit_p<P: Into<Vec<(Rc<Pattern>, Rc<Pattern>)>>>(
+    kv_pairs: P,
+    tail_pattern: Rc<Pattern>,
+) -> Rc<Pattern> {
+    let patterns = kv_pairs
+        .into()
+        .iter()
+        .map(|(key, val)| Rc::new(MapKVPair::new(Rc::clone(key), Rc::clone(val))))
+        .collect();
+    Rc::new(Pattern::MapCons(TupleItems::from(patterns), tail_pattern))
+}
+
 pub fn var_p(id: &str) -> Rc<Pattern> {
     Rc::new(Pattern::Var(id.into()))
 }
@@ -316,6 +349,10 @@ pub fn bool_p(b: bool) -> Rc<Pattern> {
 
 pub fn string_p<S: ToString>(s: S) -> Rc<Pattern> {
     Rc::new(Pattern::String(s.to_string()))
+}
+
+pub fn symbol_p<S: Into<Identifier>>(s: S) -> Rc<Pattern> {
+    Rc::new(Pattern::Symbol(s.into()))
 }
 
 pub fn p<P: Into<Vec<Pattern>>>(vec: P) -> Vec<Rc<Pattern>> {

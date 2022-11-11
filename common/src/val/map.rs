@@ -34,11 +34,18 @@ impl Map {
         self.entries.is_empty()
     }
 
-    pub fn insert(&mut self, key: ValueRef, value: ValueRef) -> ValueRef {
+    pub fn insert(&self, key: ValueRef, value: ValueRef) -> Self {
         Self {
             entries: self.entries.insert(key, value),
         }
-        .into()
+    }
+
+    pub fn cons(&self, pairs: Vec<(ValueRef, ValueRef)>) -> Self {
+        let mut map = self.clone();
+        for (key, value) in pairs.iter() {
+            map = map.insert(ValueRef::clone(key), ValueRef::clone(value))
+        }
+        map
     }
 }
 

@@ -118,20 +118,26 @@ grammar parser(context: &ParserContext) for str {
         / "[" _ "]" {
             Rc::new(Pattern::EmptyList)
         }
-        / "[" _ items:(pattern() ** list_sep()) _ "]" {
-            Rc::new(Pattern::List(TupleItems::from(items)))
-        }
         / "[" _ head:pattern() _ "::" _ tail:pattern() _ "]" {
             Rc::new(Pattern::ListCons(head,tail))
         }
-        / "{" _ items:(pattern() ** list_sep()) _ "}" {
-            Rc::new(Pattern::Tuple(items.len(), TupleItems::from(items)))
+        / "[" _ items:(pattern() ** list_sep()) _ "]" {
+            Rc::new(Pattern::List(TupleItems::from(items)))
+        }
+        / "{" _ items:(kv_pattern() ** list_sep()) s()? "::" _ tail:pattern() _ "}" {
+            Rc::new(Pattern::MapCons(TupleItems::from(items), tail))
         }
         / "{" _ items:(kv_pattern() ** list_sep()) _ "}" {
             Rc::new(Pattern::Map(TupleItems::from(items)))
         }
+        / "{" _ items:(pattern() ** list_sep()) _ "}" {
+            Rc::new(Pattern::Tuple(items.len(), TupleItems::from(items)))
+        }
         / id:identifier() {
             Rc::new(Pattern::Var(id))
+        }
+        / "^" id:symbol_identifier() {
+            Rc::new(Pattern::Symbol(id))
         }
 
     rule kv_pattern() -> Rc<MapKVPair<Pattern>>
@@ -488,6 +494,9 @@ grammar parser(context: &ParserContext) for str {
     rule map_lit_expr() -> Expression
         = "{" _ kv_pairs:(kv_pair() ** (_ "," _)) _ "}" {
             Expression::Lit(Literal::Map(TupleItems::from(kv_pairs)))
+        }
+        / "{" _ kv_pairs:(kv_pair() ** (_ "," _)) _ "::" _ rest:tuple_item() _ "}" {
+            Expression::Lit(Literal::MapCons(TupleItems::from(kv_pairs), Rc::new(rest)))
         }
 
     rule kv_pair() -> Rc<MapKVPair<Expression>>

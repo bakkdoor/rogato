@@ -3,8 +3,8 @@ use crate::{assert_parse, assert_parse_ast, assert_parse_expr, parse_expr, Parse
 #[cfg(test)]
 use rogato_common::ast::helpers::inline_fn_def;
 use rogato_common::ast::helpers::{
-    any_p, bool_lit, bool_p, empty_list_p, list_cons, list_cons_p, list_lit_p, map_lit, number_p,
-    string_p, tuple_lit_p, var_p, vars,
+    any_p, bool_lit, bool_p, empty_list_p, list_cons, list_cons_p, list_lit_p, map_cons_lit,
+    map_cons_lit_p, map_lit, map_lit_p, number_p, string_p, symbol_p, tuple_lit_p, var_p, vars,
 };
 #[cfg(test)]
 use rogato_common::ast::helpers::{
@@ -133,6 +133,39 @@ fn patterns() {
             "foo",
             [tuple_lit_p([number_p(1), string_p("foo"), var_p("x")])],
             tuple_lit([bool_lit(false), number_lit(1), var("x")])
+        )
+    );
+
+    assert_parse_ast!(
+        "let foo {1: \"foo\"} = ^foo1",
+        fn_def(
+            "foo",
+            [map_lit_p([(number_p(1), string_p("foo"))])],
+            symbol("foo1")
+        )
+    );
+
+    assert_parse_ast!(
+        "let foo {1: \"foo\", ^foo : ^ok} = ^foo1",
+        fn_def(
+            "foo",
+            [map_lit_p([
+                (number_p(1), string_p("foo")),
+                (symbol_p("foo"), symbol_p("ok"))
+            ])],
+            symbol("foo1")
+        )
+    );
+
+    assert_parse_ast!(
+        "let foo {1 : ^foo :: rest} = {^foo1, rest}",
+        fn_def(
+            "foo",
+            [map_cons_lit_p(
+                [(number_p(1), symbol_p("foo"))],
+                var_p("rest")
+            )],
+            tuple_lit([symbol("foo1"), var("rest")])
         )
     );
 }
@@ -342,12 +375,49 @@ fn literals() {
             (symbol("foo"), symbol("bar"))
         ])
     );
+
     assert_parse_expr!(
         "{1 : 2, ^foo : \"bar\"}",
         map_lit([
             (number_lit(1), number_lit(2)),
             (symbol("foo"), string_lit("bar"))
         ])
+    );
+
+    assert_parse_expr!(
+        "{1 : 2, ^foo : \"bar\" :: foo}",
+        map_cons_lit(
+            [
+                (number_lit(1), number_lit(2)),
+                (symbol("foo"), string_lit("bar"))
+            ],
+            var("foo")
+        )
+    );
+
+    assert_parse_expr!(
+        "{1 : 2, ^foo : \"bar\" :: (foo 1 2 3)}",
+        map_cons_lit(
+            [
+                (number_lit(1), number_lit(2)),
+                (symbol("foo"), string_lit("bar"))
+            ],
+            fn_call("foo", [number_lit(1), number_lit(2), number_lit(3)])
+        )
+    );
+
+    assert_parse_expr!(
+        "{1 : 2, ^foo : \"bar\" :: { ^hello: {^world, 1, 2, 3}}}",
+        map_cons_lit(
+            [
+                (number_lit(1), number_lit(2)),
+                (symbol("foo"), string_lit("bar"))
+            ],
+            map_lit([(
+                symbol("hello"),
+                tuple_lit([symbol("world"), number_lit(1), number_lit(2), number_lit(3)])
+            )])
+        )
     );
 }
 

@@ -62,6 +62,13 @@ impl Walk for Expression {
                             kv_pair.value.walk(v)
                         }
                     }
+                    Literal::MapCons(kv_pairs, rest) => {
+                        for kv_pair in kv_pairs.iter() {
+                            kv_pair.key.walk(v);
+                            kv_pair.value.walk(v)
+                        }
+                        rest.walk(v)
+                    }
                 }
             }
             Expression::FnCall(id, args) => {
