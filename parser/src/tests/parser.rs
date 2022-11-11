@@ -358,6 +358,8 @@ fn fn_calls() {
             [number_lit(1), fn_call("add", [var("a"), number_lit(3)]),],
         )
     );
+
+    assert_parse_expr!("Std.Map.new", fn_call("Std.Map.new", []));
 }
 
 #[test]

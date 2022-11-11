@@ -217,11 +217,9 @@ impl Environment {
 
     pub fn lookup_const(&self, id: &Identifier) -> Option<ValueRef> {
         if let Some((module_id, fn_id)) = self.qualified_lookup(id) {
-            return Some(
-                self.lookup_module(&module_id)
-                    .and_then(|m| m.lookup_const(&fn_id))
-                    .unwrap_or_else(|| panic!("qualified const lookup failed: {}", id)),
-            );
+            return self
+                .lookup_module(&module_id)
+                .and_then(|m| m.lookup_const(&fn_id));
         }
 
         match self
@@ -241,11 +239,9 @@ impl Environment {
 
     pub fn lookup_type(&self, id: &Identifier) -> Option<Rc<TypeDef>> {
         if let Some((module_id, fn_id)) = self.qualified_lookup(id) {
-            return Some(
-                self.lookup_module(&module_id)
-                    .and_then(|m| m.lookup_type(&fn_id))
-                    .unwrap_or_else(|| panic!("qualified type lookup failed: {}", id)),
-            );
+            return self
+                .lookup_module(&module_id)
+                .and_then(|m| m.lookup_type(&fn_id));
         }
 
         match self
@@ -265,11 +261,9 @@ impl Environment {
 
     pub fn lookup_fn(&self, id: &Identifier) -> Option<Rc<RefCell<FnDef>>> {
         if let Some((module_id, fn_id)) = self.qualified_lookup(id) {
-            return Some(
-                self.lookup_module(&module_id)
-                    .and_then(|m| m.lookup_fn(&fn_id))
-                    .unwrap_or_else(|| panic!("qualified fn lookup failed: {}", id)),
-            );
+            return self
+                .lookup_module(&module_id)
+                .and_then(|m| m.lookup_fn(&fn_id));
         }
 
         match self.lookup_module_for_fn(id).and_then(|m| m.lookup_fn(id)) {

@@ -529,7 +529,11 @@ grammar parser(context: &ParserContext) for str {
 
     rule constant_or_type_ref() -> Expression
         = id:struct_identifier() {
-            Expression::ConstOrTypeRef(id)
+            if is_qualified_fn_call(&id) {
+                Expression::FnCall(id, FnCallArgs::empty())
+            }else{
+                Expression::ConstOrTypeRef(id)
+            }
         }
         / "@" id:struct_identifier() {
             Expression::DBTypeRef(id)
@@ -642,4 +646,18 @@ fn join_string(first: &str, rest: Vec<&str>) -> SmolStr {
         parts.push(part)
     }
     SmolStr::from_iter(parts)
+}
+
+fn is_qualified_fn_call(id: &Identifier) -> bool {
+    let id_parts: Vec<&str> = id.split('.').collect();
+    if let Some(last) = id_parts.last() {
+        let mut ci = last.char_indices();
+        if let Some((0, c)) = ci.next() {
+            if c.is_lowercase() {
+                return true;
+            }
+        }
+    }
+
+    false
 }
