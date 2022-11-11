@@ -35,6 +35,12 @@ impl Map {
     }
 }
 
+impl Default for Map {
+    fn default() -> Self {
+        Map::new()
+    }
+}
+
 impl FromIterator<(ValueRef, ValueRef)> for Map {
     fn from_iter<T: IntoIterator<Item = (ValueRef, ValueRef)>>(iter: T) -> Self {
         Self {
