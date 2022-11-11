@@ -392,6 +392,22 @@ fn std_map_module() {
                 )]),
             )]),
         ),
+        (
+            "{{ ^hello: {^world, 1, 2, 3}} :: 1 : 2, ^foo : \"bar\"}",
+            val::map([
+                (
+                    val::symbol("hello"),
+                    val::tuple([
+                        val::symbol("world"),
+                        val::number(1),
+                        val::number(2),
+                        val::number(3),
+                    ]),
+                ),
+                (val::number(1), val::number(2)),
+                (val::symbol("foo"), val::string("bar")),
+            ]),
+        ),
     ];
 
     let mut eval_ctx = EvalContext::new();

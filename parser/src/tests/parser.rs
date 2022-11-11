@@ -158,7 +158,7 @@ fn patterns() {
     );
 
     assert_parse_ast!(
-        "let foo {1 : ^foo :: rest} = {^foo1, rest}",
+        "let foo {rest :: 1 : ^foo} = {^foo1, rest}",
         fn_def(
             "foo",
             [map_cons_lit_p(
@@ -385,7 +385,7 @@ fn literals() {
     );
 
     assert_parse_expr!(
-        "{1 : 2, ^foo : \"bar\" :: foo}",
+        "{foo :: 1 : 2, ^foo : \"bar\"}",
         map_cons_lit(
             [
                 (number_lit(1), number_lit(2)),
@@ -396,7 +396,7 @@ fn literals() {
     );
 
     assert_parse_expr!(
-        "{1 : 2, ^foo : \"bar\" :: (foo 1 2 3)}",
+        "{(foo 1 2 3) :: 1 : 2, ^foo : \"bar\"}",
         map_cons_lit(
             [
                 (number_lit(1), number_lit(2)),
@@ -407,7 +407,7 @@ fn literals() {
     );
 
     assert_parse_expr!(
-        "{1 : 2, ^foo : \"bar\" :: { ^hello: {^world, 1, 2, 3}}}",
+        "{{ ^hello: {^world, 1, 2, 3}} :: 1 : 2, ^foo : \"bar\"}",
         map_cons_lit(
             [
                 (number_lit(1), number_lit(2)),

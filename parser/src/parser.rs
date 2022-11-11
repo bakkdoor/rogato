@@ -124,7 +124,7 @@ grammar parser(context: &ParserContext) for str {
         / "[" _ items:(pattern() ** list_sep()) _ "]" {
             Rc::new(Pattern::List(TupleItems::from(items)))
         }
-        / "{" _ items:(kv_pattern() ** list_sep()) s()? "::" _ tail:pattern() _ "}" {
+        / "{" _ tail:pattern() _ "::" _ items:(kv_pattern() ** list_sep()) _ "}" {
             Rc::new(Pattern::MapCons(TupleItems::from(items), tail))
         }
         / "{" _ items:(kv_pattern() ** list_sep()) _ "}" {
@@ -495,7 +495,7 @@ grammar parser(context: &ParserContext) for str {
         = "{" _ kv_pairs:(kv_pair() ** (_ "," _)) _ "}" {
             Expression::Lit(Literal::Map(TupleItems::from(kv_pairs)))
         }
-        / "{" _ kv_pairs:(kv_pair() ** (_ "," _)) _ "::" _ rest:tuple_item() _ "}" {
+        / "{" _ rest:tuple_item() _ "::" _ kv_pairs:(kv_pair() ** (_ "," _)) _ "}" {
             Expression::Lit(Literal::MapCons(TupleItems::from(kv_pairs), Rc::new(rest)))
         }
 
