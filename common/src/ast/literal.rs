@@ -225,6 +225,10 @@ impl<T: Display + ASTDepth> MapKVPair<T> {
     pub fn new(key: Rc<T>, value: Rc<T>) -> Self {
         Self { key, value }
     }
+
+    pub fn pair(&self) -> (Rc<T>, Rc<T>) {
+        (Rc::clone(&self.key), Rc::clone(&self.value))
+    }
 }
 
 impl<T: Display + ASTDepth> Display for MapKVPair<T> {

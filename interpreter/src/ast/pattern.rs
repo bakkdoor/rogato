@@ -3,7 +3,7 @@ use std::rc::Rc;
 use crate::{EvalContext, Identifier};
 use rogato_common::{
     ast::pattern::Pattern,
-    val::{Value, ValueRef},
+    val::{Map, Value, ValueRef},
 };
 use thiserror::Error;
 
@@ -85,6 +85,65 @@ impl AttemptBinding for Pattern {
                 }
 
                 Ok(Some(value))
+            }
+
+            (Pattern::Map(kv_pairs_p), Value::Map(map)) => {
+                if kv_pairs_p.len() != map.len() {
+                    return Ok(None);
+                }
+
+                for kv_pair_p in kv_pairs_p.iter() {
+                    let mut matched_pair = false;
+                    let (key_p, val_p) = kv_pair_p.pair();
+                    for (key, val) in map.iter() {
+                        match (
+                            key_p.attempt_binding(context, ValueRef::clone(key))?,
+                            val_p.attempt_binding(context, ValueRef::clone(val))?,
+                        ) {
+                            (Some(_), Some(_)) => {
+                                matched_pair = true;
+                                break;
+                            }
+                            _ => continue,
+                        }
+                    }
+
+                    if !matched_pair {
+                        return Ok(None);
+                    }
+                }
+
+                Ok(Some(value))
+            }
+
+            (Pattern::MapCons(kv_pairs_p, rest_p), Value::Map(map)) => {
+                let mut rest_items: Map = map.clone();
+                for kv_pair_p in kv_pairs_p.iter() {
+                    let mut matched_pair = false;
+                    let (key_p, val_p) = kv_pair_p.pair();
+                    for (key, val) in map.iter() {
+                        match (
+                            key_p.attempt_binding(context, ValueRef::clone(key))?,
+                            val_p.attempt_binding(context, ValueRef::clone(val))?,
+                        ) {
+                            (Some(_), Some(_)) => {
+                                matched_pair = true;
+                                rest_items = rest_items.remove(key);
+                                break;
+                            }
+                            _ => continue,
+                        }
+                    }
+
+                    if !matched_pair {
+                        return Ok(None);
+                    }
+                }
+
+                match rest_p.attempt_binding(context, rest_items.into())? {
+                    Some(_) => Ok(Some(value)),
+                    None => Ok(None),
+                }
             }
 
             (Pattern::Bool(pat), Value::Bool(bool)) => {

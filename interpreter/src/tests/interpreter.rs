@@ -576,6 +576,53 @@ fn patterns() {
                 val::tuple([val::symbol("d"), val::number(6)]),
             ]),
         ),
+        (
+            "let
+                countMap {} = 0
+                countMap {rest :: _ : _} = 1 + (countMap rest)
+                map1 = {^foo: ^bar, ^bar: \"baz\"}
+                map2 = {1: 2, 10: 20, ^hello: ^world}
+            in
+                {countMap {}, countMap map1, countMap map2}",
+            val::tuple([val::number(0), val::number(2), val::number(3)]),
+        ),
+        (
+            "let
+                checkKeys {} = {}
+                checkKeys {rest :: k : v} = {checkKeys rest :: k : {v, true}}
+
+                map1 = {^foo: ^bar, ^bar: \"baz\"}
+                map2 = {1: 2, 10: 20, ^hello: ^world}
+            in
+                {checkKeys {}, checkKeys map1, checkKeys map2}",
+            val::tuple([
+                val::map([]),
+                val::map([
+                    (
+                        val::symbol("foo"),
+                        val::tuple([val::symbol("bar"), val::bool(true)]),
+                    ),
+                    (
+                        val::symbol("bar"),
+                        val::tuple([val::string("baz"), val::bool(true)]),
+                    ),
+                ]),
+                val::map([
+                    (
+                        val::number(1),
+                        val::tuple([val::number(2), val::bool(true)]),
+                    ),
+                    (
+                        val::number(10),
+                        val::tuple([val::number(20), val::bool(true)]),
+                    ),
+                    (
+                        val::symbol("hello"),
+                        val::tuple([val::symbol("world"), val::bool(true)]),
+                    ),
+                ]),
+            ]),
+        ),
     ];
 
     let mut eval_ctx = EvalContext::new();

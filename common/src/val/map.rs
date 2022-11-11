@@ -47,6 +47,12 @@ impl Map {
         }
         map
     }
+
+    pub fn remove(&self, key: &ValueRef) -> Self {
+        Self {
+            entries: self.entries.remove(key),
+        }
+    }
 }
 
 impl Default for Map {
