@@ -58,8 +58,8 @@ let fromPairs_ acc [{k,v} :: rest] =
   fromPairs_ {acc :: k : v} rest
 
 
-let values m =
-  m |> map ({_, v} -> v)
+let values {} = []
+let values {rest :: _ : v} = [v :: values rest]
 
 
 let insertOrUpdate map key value fn =
