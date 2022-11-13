@@ -2,6 +2,8 @@ use rust_decimal::Decimal;
 
 use super::{
     expression::{MapKVPair, TupleItems},
+    visitor::Visitor,
+    walker::Walk,
     ASTDepth, Identifier,
 };
 use std::{fmt::Display, rc::Rc};
@@ -90,5 +92,40 @@ impl Display for Pattern {
 impl<S: Into<Identifier>> From<S> for Pattern {
     fn from(s: S) -> Self {
         Pattern::Var(s.into())
+    }
+}
+
+impl Walk for Pattern {
+    fn walk<V: Visitor<()>>(&self, v: &mut V) {
+        match self {
+            Pattern::List(patterns) => {
+                for p in patterns.iter() {
+                    p.walk(v);
+                }
+            }
+            Pattern::ListCons(head, tail) => {
+                head.walk(v);
+                tail.walk(v);
+            }
+            Pattern::Tuple(_len, items) => {
+                for item in items.iter() {
+                    item.walk(v);
+                }
+            }
+            Pattern::Map(kv_pairs) => {
+                for kv_pair in kv_pairs.iter() {
+                    kv_pair.key.walk(v);
+                    kv_pair.value.walk(v);
+                }
+            }
+            Pattern::MapCons(kv_pairs, rest) => {
+                for kv_pair in kv_pairs.iter() {
+                    kv_pair.key.walk(v);
+                    kv_pair.value.walk(v);
+                }
+                rest.walk(v);
+            }
+            _ => {}
+        }
     }
 }

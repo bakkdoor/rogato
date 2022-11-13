@@ -17,7 +17,12 @@ impl Walk for AST {
             AST::FnDef(fn_def) => {
                 let fn_def = fn_def.borrow();
                 v.fn_def(&fn_def);
-                fn_def.body().walk(v)
+                for (args, body) in fn_def.variants.iter() {
+                    for a in args.iter() {
+                        a.walk(v);
+                    }
+                    body.walk(v);
+                }
             }
             AST::TypeDef(type_def) => v.type_def(type_def),
         }

@@ -94,8 +94,9 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
     pub fn codegen_fn_def(&mut self, fn_def: &FnDef) -> CodegenResult<FunctionValue<'ctx>> {
         let f32_type = self.context.f32_type();
 
-        let fn_arg_types: Vec<BasicMetadataTypeEnum<'ctx>> = fn_def
-            .args()
+        let (args, body) = fn_def.get_variant(0).unwrap();
+
+        let fn_arg_types: Vec<BasicMetadataTypeEnum<'ctx>> = args
             .iter()
             .map(|_| BasicMetadataTypeEnum::FloatType(f32_type))
             .collect();
@@ -119,7 +120,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             }
         }
 
-        match fn_def.body().as_ref() {
+        match body.as_ref() {
             FnDefBody::RogatoFn(expr) => {
                 let body = self.codegen_expr(expr)?;
                 self.builder.build_return(Some(&body));

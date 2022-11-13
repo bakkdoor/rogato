@@ -78,6 +78,9 @@ impl FnDef {
             .min()
             .unwrap_or_default()
     }
+    pub fn get_variant(&self, index: usize) -> Option<&FnDefVariant> {
+        self.variants.get_variant(index)
+    }
 }
 
 impl Display for FnDef {
@@ -134,6 +137,10 @@ impl FnDefVariants {
 
     pub fn add(&mut self, args: FnDefArgs, body: Rc<FnDefBody>) {
         self.variants.push((args, body))
+    }
+
+    pub fn get_variant(&self, index: usize) -> Option<&FnDefVariant> {
+        self.variants.get(index)
     }
 }
 
