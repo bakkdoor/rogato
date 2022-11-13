@@ -2,7 +2,9 @@ module Std.List { map, count, isEmpty, reverse, repeat, zip }
 
 let head [x :: _]  = x
 
+
 let tail [_ :: xs] = xs
+
 
 let map list f =
   map_ [] list f
@@ -12,6 +14,7 @@ let map_ acc [] _ =
 let map_ acc [x :: xs] f =
   map_ [f x :: acc] xs f
 
+
 let count list =
   count_ 0 list
 
@@ -20,8 +23,10 @@ let count_ acc [] =
 let count_ acc [_ :: xs] =
   count_ (acc + 1) xs
 
+
 let isEmpty [] = true
 let isEmpty _  = false
+
 
 let reverse list =
   reverse_ [] list
@@ -31,10 +36,12 @@ let reverse_ acc [] =
 let reverse_ acc [x :: xs] =
   reverse_ [x :: acc] xs
 
+
 let skip list 0 =
   list
 let skip [x :: xs] n =
   skip xs (n - 1)
+
 
 let take list n =
   take_ [] list n
@@ -45,6 +52,7 @@ let take_ acc [] _ =
   reverse acc
 let take_ acc [x :: xs] n =
   take_ [x :: acc] xs (n - 1)
+
 
 let repeat iterations fn =
   repeat_ [] iterations 0 fn
@@ -58,6 +66,7 @@ let repeat_ acc max n fn =
     else
       (repeat_ values max (n + 1) fn)
 
+
 let zip xs ys =
   zip_ [] xs ys
 
@@ -69,6 +78,7 @@ let zip_ acc _ [] =
 
 let zip_ acc [x :: xs] [y :: ys] =
   zip_ [{x, y} :: acc] xs ys
+
 
 let groupBy list fn =
   groupBy {} list fn

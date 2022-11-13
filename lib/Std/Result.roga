@@ -4,18 +4,22 @@ type Result
   = Ok val
   | Err err
 
+
 let isOk (Ok val) =
   true
 let isOK _ =
   false
 
+
 let isErr r =
   not (isOk r)
+
 
 let map (Ok val) f =
   Ok (f val)
 let map r _ =
   r
+
 
 let mapErr (Err e) f =
   Err (f e)

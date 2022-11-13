@@ -1,32 +1,33 @@
 module Std.Map { count, fromPairs, isEmpty, keys, map, mapKeys, mapValues, reduce, values }
 
 let map m f =
-  let
-    map_ acc {} _ =
-      fromPairs acc
-    map_ acc {rest :: k : v} f =
-      [f {k, v} :: map_ rest f]
-  in
-    map_ [] m f
+  map_ [] m f
+
+let map_ acc {} _ =
+  fromPairs acc
+let map_ acc {rest :: k : v} f =
+  [f {k, v} :: map_ rest f]
+
 
 let mapKeys {} f =
   {}
 let mapKeys {rest :: k : v} f =
   {mapKeys rest f :: (f k) : v}
 
+
 let mapValues {} f =
   {}
 let mapValues {rest :: k : v} f =
   {mapValues rest f :: k : (f v)}
 
+
 let count m =
-  let
-    count_ acc {} =
-      acc
-    count_ acc {rest :: _ : _} =
-      count_ (acc + 1) rest
-  in
-    count_ 0 m
+  count_ 0 m
+
+let count_ acc {} =
+  acc
+let count_ acc {rest :: _ : _} =
+  count_ (acc + 1) rest
 
 
 let isEmpty m =
@@ -38,28 +39,28 @@ let reduce {} acc _ =
 let reduce {rest :: k : v} acc f =
   reduce rest (f {k,v} acc) f
 
+
 let keys m =
-  let
-    keys_ acc {} =
-      acc
-    keys_ acc {rest :: k : _} =
-      keys_ [k :: acc] rest
-  in
-    keys_ [] m
+  keys_ [] m
+
+let keys_ acc {} =
+  acc
+let keys_ acc {rest :: k : _} =
+  keys_ [k :: acc] rest
 
 
 let fromPairs list =
-  let
-    fromPairs_ acc [] =
-      acc
-    fromPairs_ acc [{k,v} :: rest] =
-      fromPairs_ {acc :: k : v} rest
-  in
-    fromPairs_ {} list
+  fromPairs_ {} list
+
+let fromPairs_ acc [] =
+  acc
+let fromPairs_ acc [{k,v} :: rest] =
+  fromPairs_ {acc :: k : v} rest
 
 
 let values m =
   m |> map ({_, v} -> v)
+
 
 let insertOrUpdate map key value fn =
   if (map |> contains key) then
