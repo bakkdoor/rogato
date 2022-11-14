@@ -1,12 +1,12 @@
 module Std.Map { count, fromPairs, isEmpty, keys, map, mapKeys, mapValues, reduce, values }
 
 let map m f =
-  map_ [] m f
+  map_ {} m f
 
-let map_ acc {} _ =
-  fromPairs acc
+
+let map_ acc {} _ = acc
 let map_ acc {rest :: k : v} f =
-  [f {k, v} :: map_ rest f]
+  map_ (acc |> Std.Map.insert (f k v)) rest f
 
 
 let mapKeys {} f =

@@ -408,6 +408,42 @@ fn std_map_module() {
                 (val::symbol("foo"), val::string("bar")),
             ]),
         ),
+        (
+            "let
+                map m f =
+                    map_ {} m f
+                map_ acc {} _ =
+                    acc
+                map_ acc {rest :: k : v} f =
+                    map_ (acc |> Std.Map.insert (f k v)) rest f
+
+                data = {
+                    ^foo: ^bar,
+                    ^bar: {1,2,3},
+                    ^baz: {^hello, \"world\"},
+                    1: {2, 3}
+                }
+        in
+            map data (k v -> {{k,k}, v})",
+            val::map([
+                (
+                    val::tuple([val::symbol("foo"), val::symbol("foo")]),
+                    val::symbol("bar"),
+                ),
+                (
+                    val::tuple([val::symbol("bar"), val::symbol("bar")]),
+                    val::tuple([val::number(1), val::number(2), val::number(3)]),
+                ),
+                (
+                    val::tuple([val::symbol("baz"), val::symbol("baz")]),
+                    val::tuple([val::symbol("hello"), val::string("world")]),
+                ),
+                (
+                    val::tuple([val::number(1), val::number(1)]),
+                    val::tuple([val::number(2), val::number(3)]),
+                ),
+            ]),
+        ),
     ];
 
     let mut eval_ctx = EvalContext::new();
