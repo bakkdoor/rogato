@@ -101,5 +101,18 @@ pub fn module() -> Module {
         },
     );
 
+    module.fn_def_native("length", &["list"], move |_ctx, args| {
+        let error = Err(invalid_args("Std.List.length"));
+
+        match (args.len(), args.get(0)) {
+            (1, Some(map1)) => match map1.deref() {
+                Value::List(list) => Ok(val::number(list.len())),
+                _ => error,
+            },
+
+            (_, _) => error,
+        }
+    });
+
     module
 }

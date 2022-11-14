@@ -61,5 +61,18 @@ pub fn module() -> Module {
         }
     });
 
+    module.fn_def_native("length", &["map"], move |_ctx, args| {
+        let error = Err(invalid_args("Std.Map.length"));
+
+        match (args.len(), args.get(0)) {
+            (1, Some(map1)) => match map1.deref() {
+                Value::Map(map) => Ok(val::number(map.len())),
+                _ => error,
+            },
+
+            (_, _) => error,
+        }
+    });
+
     module
 }
