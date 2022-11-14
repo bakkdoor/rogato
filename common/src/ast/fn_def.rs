@@ -78,6 +78,7 @@ impl FnDef {
             .min()
             .unwrap_or_default()
     }
+
     pub fn get_variant(&self, index: usize) -> Option<&FnDefVariant> {
         self.variants.get_variant(index)
     }
