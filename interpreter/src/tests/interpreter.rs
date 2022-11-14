@@ -444,6 +444,42 @@ fn std_map_module() {
                 ),
             ]),
         ),
+        (
+            "let
+                map = {^foo: 1, ^bar: {1, 2, 3}, {1, 2}: ^wat}
+            in
+                {
+                    map |> Std.Map.remove ^foo,
+                    map |> Std.Map.remove ^bar,
+                    map |> Std.Map.remove {1, 2},
+                }",
+            val::tuple([
+                val::map([
+                    (
+                        val::symbol("bar"),
+                        val::tuple([val::number(1), val::number(2), val::number(3)]),
+                    ),
+                    (
+                        val::tuple([val::number(1), val::number(2)]),
+                        val::symbol("wat"),
+                    ),
+                ]),
+                val::map([
+                    (val::symbol("foo"), val::number(1)),
+                    (
+                        val::tuple([val::number(1), val::number(2)]),
+                        val::symbol("wat"),
+                    ),
+                ]),
+                val::map([
+                    (val::symbol("foo"), val::number(1)),
+                    (
+                        val::symbol("bar"),
+                        val::tuple([val::number(1), val::number(2), val::number(3)]),
+                    ),
+                ]),
+            ]),
+        ),
     ];
 
     let mut eval_ctx = EvalContext::new();

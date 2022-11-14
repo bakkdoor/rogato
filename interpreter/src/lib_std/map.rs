@@ -35,5 +35,18 @@ pub fn module() -> Module {
         }
     });
 
+    module.fn_def_native("remove", &["map", "key"], move |_ctx, args| {
+        let error = Err(invalid_args("Std.Map.remove"));
+
+        match (args.len(), args.get(0), args.get(1)) {
+            (2, Some(map), Some(key)) => match map.deref() {
+                Value::Map(map) => Ok(map.remove(key).into()),
+                _ => error,
+            },
+
+            (_, _, _) => error,
+        }
+    });
+
     module
 }
