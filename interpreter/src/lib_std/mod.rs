@@ -289,6 +289,7 @@ pub fn std_module() -> Module {
             let error = Err(invalid_args("length"));
             match (args.len(), args.get(0)) {
                 (1, Some(l)) => match (*l).deref() {
+                    Value::String(s) => Ok(val::number(s.len())),
                     Value::List(list) => Ok(val::number(list.len())),
                     Value::Map(map) => Ok(val::number(map.len())),
                     Value::Queue(queue) => Ok(val::number(queue.len())),
