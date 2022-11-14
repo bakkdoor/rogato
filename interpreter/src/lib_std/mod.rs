@@ -6,8 +6,7 @@ use rand::Rng;
 use rogato_common::{
     ast::{
         expression::FnDefArgs,
-        fn_def::{FnDef, FnDefBody},
-        pattern::Pattern,
+        fn_def::{FnDefBody, FnDefVariant},
     },
     native_fn::{NativeFn, NativeFnError},
     val,
@@ -15,9 +14,9 @@ use rogato_common::{
 };
 use rust_decimal::{prelude::ToPrimitive, Decimal, MathematicalOps};
 use rust_decimal_macros::dec;
+use std::fmt::Debug;
 use std::ops::Deref;
 use std::rc::Rc;
-use std::{cell::RefCell, fmt::Debug};
 
 pub mod list;
 pub mod map;
@@ -48,58 +47,67 @@ pub fn env() -> Environment {
 pub fn std_module() -> Module {
     let mut module = Module::new("Std");
 
-    module.fn_def(op_fn_def("+", move |_ctx, args| {
-        with_number_op_args("+", args, |a, b| Ok(a.saturating_add(b)))
-    }));
+    module.fn_def(
+        "+",
+        op_fn(move |_ctx, args| with_number_op_args("+", args, |a, b| Ok(a.saturating_add(b)))),
+    );
 
-    module.fn_def(op_fn_def("-", move |_ctx, args| {
-        with_number_op_args("-", args, |a, b| Ok(a.saturating_sub(b)))
-    }));
+    module.fn_def(
+        "-",
+        op_fn(move |_ctx, args| with_number_op_args("-", args, |a, b| Ok(a.saturating_sub(b)))),
+    );
 
-    module.fn_def(op_fn_def("*", move |_ctx, args| {
-        with_number_op_args("*", args, |a, b| Ok(a.saturating_mul(b)))
-    }));
+    module.fn_def(
+        "*",
+        op_fn(move |_ctx, args| with_number_op_args("*", args, |a, b| Ok(a.saturating_mul(b)))),
+    );
 
-    module.fn_def(op_fn_def("/", move |_ctx, args| {
-        with_number_op_args("/", args, |a, b| {
-            a.checked_div(b).map_or(Err(invalid_args("/")), Ok)
-        })
-    }));
+    module.fn_def(
+        "/",
+        op_fn(move |_ctx, args| {
+            with_number_op_args("/", args, |a, b| {
+                a.checked_div(b).map_or(Err(invalid_args("/")), Ok)
+            })
+        }),
+    );
 
-    module.fn_def(op_fn_def("%", move |_ctx, args| {
-        with_number_op_args("%", args, |a, b| {
-            a.checked_rem(b).map_or(Err(invalid_args("%")), Ok)
-        })
-    }));
+    module.fn_def(
+        "%",
+        op_fn(move |_ctx, args| {
+            with_number_op_args("%", args, |a, b| {
+                a.checked_rem(b).map_or(Err(invalid_args("%")), Ok)
+            })
+        }),
+    );
 
-    module.fn_def(op_fn_def("^", move |_ctx, args| {
-        with_number_op_args("^", args, |a, b| {
-            a.checked_powd(b).map_or(Err(invalid_args("^")), Ok)
-        })
-    }));
+    module.fn_def(
+        "^",
+        op_fn(move |_ctx, args| {
+            with_number_op_args("^", args, |a, b| {
+                a.checked_powd(b).map_or(Err(invalid_args("^")), Ok)
+            })
+        }),
+    );
 
-    module.fn_def(op_fn_def("++", move |_ctx, args| {
-        with_string_op_args("++", args, |a, b| Ok(format!("{}{}", a, b)))
-    }));
+    module.fn_def(
+        "++",
+        op_fn(move |_ctx, args| with_string_op_args("++", args, |a, b| Ok(format!("{}{}", a, b)))),
+    );
 
-    module.fn_def(fn_def("id", &["value"], move |_ctx, args| {
-        match args.get(0) {
-            Some(value) => Ok(Rc::clone(value)),
-            None => Err(invalid_args("id")),
+    module.fn_def_native("id", &["value"], move |_ctx, args| match args.get(0) {
+        Some(value) => Ok(Rc::clone(value)),
+        None => Err(invalid_args("id")),
+    });
+
+    module.fn_def_native("print", &["value"], move |_ctx, args| match args.get(0) {
+        Some(value) => {
+            println!("{}", value);
+            Ok(Rc::clone(value))
         }
-    }));
+        None => Err(invalid_args("print")),
+    });
 
-    module.fn_def(fn_def("print", &["value"], move |_ctx, args| {
-        match args.get(0) {
-            Some(value) => {
-                println!("{}", value);
-                Ok(Rc::clone(value))
-            }
-            None => Err(invalid_args("print")),
-        }
-    }));
-
-    module.fn_def(fn_def("apply", &["func", "?args"], move |ctx, args| {
+    module.fn_def_native("apply", &["func", "?args"], move |ctx, args| {
         let error = Err(invalid_args("apply"));
         match (args.len(), args.get(0), args.get(1)) {
             (1, Some(func), None) => Ok(Rc::clone(func)),
@@ -127,30 +135,24 @@ pub fn std_module() -> Module {
             },
             _ => error,
         }
-    }));
+    });
 
-    module.fn_def(fn_def(
-        "toString",
-        &["value"],
-        move |_ctx, args| match args.get(0) {
+    module.fn_def_native("toString", &["value"], move |_ctx, args| {
+        match args.get(0) {
             Some(value) => match value.deref() {
                 Value::String(_) => Ok(Rc::clone(value)),
                 _ => Ok(val::string(format!("{}", value))),
             },
             None => Err(invalid_args("inspect")),
-        },
-    ));
+        }
+    });
 
-    module.fn_def(fn_def(
-        "inspect",
-        &["value"],
-        move |_ctx, args| match args.get(0) {
-            Some(value) => Ok(val::string(format!("{}", value))),
-            None => Err(invalid_args("inspect")),
-        },
-    ));
+    module.fn_def_native("inspect", &["value"], move |_ctx, args| match args.get(0) {
+        Some(value) => Ok(val::string(format!("{}", value))),
+        None => Err(invalid_args("inspect")),
+    });
 
-    module.fn_def(fn_def(">", &["a", "b"], move |_ctx, args| {
+    module.fn_def_native(">", &["a", "b"], move |_ctx, args| {
         let error = Err(invalid_args(">"));
         match (args.len(), args.get(0), args.get(1)) {
             (2, Some(a), Some(b)) => match ((*a).deref(), (*b).deref()) {
@@ -159,9 +161,9 @@ pub fn std_module() -> Module {
             },
             _ => error,
         }
-    }));
+    });
 
-    module.fn_def(fn_def("<", &["a", "b"], move |_ctx, args| {
+    module.fn_def_native("<", &["a", "b"], move |_ctx, args| {
         let error = Err(invalid_args(">"));
         match (args.len(), args.get(0), args.get(1)) {
             (2, Some(a), Some(b)) => match ((*a).deref(), (*b).deref()) {
@@ -170,9 +172,9 @@ pub fn std_module() -> Module {
             },
             _ => error,
         }
-    }));
+    });
 
-    module.fn_def(fn_def(">=", &["a", "b"], move |_ctx, args| {
+    module.fn_def_native(">=", &["a", "b"], move |_ctx, args| {
         let error = Err(invalid_args(">"));
         match (args.len(), args.get(0), args.get(1)) {
             (2, Some(a), Some(b)) => match ((*a).deref(), (*b).deref()) {
@@ -181,9 +183,9 @@ pub fn std_module() -> Module {
             },
             _ => error,
         }
-    }));
+    });
 
-    module.fn_def(fn_def("<=", &["a", "b"], move |_ctx, args| {
+    module.fn_def_native("<=", &["a", "b"], move |_ctx, args| {
         let error = Err(invalid_args(">"));
         match (args.len(), args.get(0), args.get(1)) {
             (2, Some(a), Some(b)) => match ((*a).deref(), (*b).deref()) {
@@ -192,23 +194,23 @@ pub fn std_module() -> Module {
             },
             _ => error,
         }
-    }));
+    });
 
-    module.fn_def(fn_def("==", &["a", "b"], move |_ctx, args| {
+    module.fn_def_native("==", &["a", "b"], move |_ctx, args| {
         match (args.len(), args.get(0), args.get(1)) {
             (2, Some(a), Some(b)) => Ok(val::bool(a.eq(b))),
             _ => Err(invalid_args("==")),
         }
-    }));
+    });
 
-    module.fn_def(fn_def("!=", &["a", "b"], move |_ctx, args| {
+    module.fn_def_native("!=", &["a", "b"], move |_ctx, args| {
         match (args.len(), args.get(0), args.get(1)) {
             (2, Some(a), Some(b)) => Ok(val::bool(a.ne(b))),
             _ => Err(invalid_args("!=")),
         }
-    }));
+    });
 
-    module.fn_def(fn_def("range", &["?start", "end"], move |_ctx, args| {
+    module.fn_def_native("range", &["?start", "end"], move |_ctx, args| {
         let error = Err(invalid_args("range"));
         match (args.len(), args.get(0), args.get(1)) {
             (1, Some(a), None) => match (*a).deref() {
@@ -243,9 +245,9 @@ pub fn std_module() -> Module {
             },
             _ => error,
         }
-    }));
+    });
 
-    module.fn_def(fn_def("random", &["min", "?max"], move |_ctx, args| {
+    module.fn_def_native("random", &["min", "?max"], move |_ctx, args| {
         let error = Err(invalid_args("random"));
         match (args.len(), args.get(0), args.get(1)) {
             (1, Some(a), None) => match (*a).deref() {
@@ -278,9 +280,9 @@ pub fn std_module() -> Module {
             },
             _ => error,
         }
-    }));
+    });
 
-    module.fn_def(fn_def(
+    module.fn_def_native(
         "length",
         &["collection"],
         move |_ctx, args| -> Result<Rc<Value>, NativeFnError> {
@@ -298,26 +300,13 @@ pub fn std_module() -> Module {
                 _ => error,
             }
         },
-    ));
+    );
 
     module
 }
 
-pub fn fn_def(id: &str, args: &[&str], body: NativeFn) -> Rc<RefCell<FnDef>> {
-    FnDef::new(
-        id.to_string(),
-        FnDefArgs::new(
-            args.iter()
-                .map(|a| Rc::new(Pattern::Var(a.into())))
-                .collect(),
-        ),
-        Rc::new(FnDefBody::native(body)),
-    )
-}
-
-pub fn op_fn_def(id: &str, body: NativeFn) -> Rc<RefCell<FnDef>> {
-    FnDef::new(
-        id.to_string(),
+pub fn op_fn(body: NativeFn) -> FnDefVariant {
+    (
         FnDefArgs::new(vec![Rc::new("left".into()), Rc::new("right".into())]),
         Rc::new(FnDefBody::native(body)),
     )

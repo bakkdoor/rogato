@@ -1,13 +1,17 @@
 use std::rc::Rc;
 
 use crate::{EvalContext, EvalError, Evaluate};
-use rogato_common::{ast::fn_def::FnDef, val, val::ValueRef};
+use rogato_common::{
+    ast::fn_def::{FnDef, FnDefVariant},
+    val,
+    val::ValueRef,
+};
 
 impl Evaluate<ValueRef> for FnDef {
     fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
         for (args, body) in self.variants.iter() {
-            let fn_def = FnDef::new(self.id().clone(), args.clone(), Rc::clone(body));
-            context.define_fn(fn_def);
+            let fn_def_variant: FnDefVariant = (args.clone(), Rc::clone(body));
+            context.define_fn(self.id(), fn_def_variant);
         }
         Ok(val::symbol(self.id().clone()))
     }

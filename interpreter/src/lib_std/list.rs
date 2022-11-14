@@ -1,4 +1,4 @@
-use super::{fn_def, invalid_args};
+use super::invalid_args;
 use crate::module::Module;
 use rogato_common::{
     native_fn::NativeFnError,
@@ -9,7 +9,7 @@ use std::{ops::Deref, rc::Rc};
 pub fn module() -> Module {
     let mut module = Module::new("Std.List");
 
-    module.fn_def(fn_def(
+    module.fn_def_native(
         "map",
         &["list", "f"],
         move |context, args| -> Result<Rc<Value>, NativeFnError> {
@@ -48,9 +48,9 @@ pub fn module() -> Module {
                 _ => error,
             }
         },
-    ));
+    );
 
-    module.fn_def(fn_def(
+    module.fn_def_native(
         "reverse",
         &["list"],
         move |_ctx, args| -> Result<Rc<Value>, NativeFnError> {
@@ -63,9 +63,9 @@ pub fn module() -> Module {
                 _ => error,
             }
         },
-    ));
+    );
 
-    module.fn_def(fn_def(
+    module.fn_def_native(
         "head",
         &["list"],
         move |_ctx, args| -> Result<Rc<Value>, NativeFnError> {
@@ -84,9 +84,9 @@ pub fn module() -> Module {
                 _ => error,
             }
         },
-    ));
+    );
 
-    module.fn_def(fn_def(
+    module.fn_def_native(
         "tail",
         &["list"],
         move |_ctx, args| -> Result<Rc<Value>, NativeFnError> {
@@ -99,7 +99,7 @@ pub fn module() -> Module {
                 _ => error,
             }
         },
-    ));
+    );
 
     module
 }

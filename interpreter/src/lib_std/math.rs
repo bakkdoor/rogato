@@ -1,4 +1,4 @@
-use super::{fn_def, invalid_args};
+use super::invalid_args;
 use crate::module::Module;
 use rogato_common::val::{self, Value};
 use rust_decimal::MathematicalOps;
@@ -7,7 +7,7 @@ use std::ops::Deref;
 pub fn module() -> Module {
     let mut module = Module::new("Std.Math");
 
-    module.fn_def(fn_def("abs", &["num"], move |_ctx, args| {
+    module.fn_def_native("abs", &["num"], move |_ctx, args| {
         let error = Err(invalid_args("abs"));
         match args.get(0) {
             Some(val) => match val.deref() {
@@ -16,9 +16,9 @@ pub fn module() -> Module {
             },
             _ => error,
         }
-    }));
+    });
 
-    module.fn_def(fn_def("round", &["num"], move |_ctx, args| {
+    module.fn_def_native("round", &["num"], move |_ctx, args| {
         let error = Err(invalid_args("round"));
         match args.get(0) {
             Some(val) => match val.deref() {
@@ -27,9 +27,9 @@ pub fn module() -> Module {
             },
             _ => error,
         }
-    }));
+    });
 
-    module.fn_def(fn_def("ceil", &["num"], move |_ctx, args| {
+    module.fn_def_native("ceil", &["num"], move |_ctx, args| {
         let error = Err(invalid_args("ceil"));
         match args.get(0) {
             Some(val) => match val.deref() {
@@ -38,9 +38,9 @@ pub fn module() -> Module {
             },
             _ => error,
         }
-    }));
+    });
 
-    module.fn_def(fn_def("floor", &["num"], move |_ctx, args| {
+    module.fn_def_native("floor", &["num"], move |_ctx, args| {
         let error = Err(invalid_args("floor"));
         match args.get(0) {
             Some(val) => match val.deref() {
@@ -49,9 +49,9 @@ pub fn module() -> Module {
             },
             _ => error,
         }
-    }));
+    });
 
-    module.fn_def(fn_def("trunc", &["num"], move |_ctx, args| {
+    module.fn_def_native("trunc", &["num"], move |_ctx, args| {
         let error = Err(invalid_args("trunc"));
         match args.get(0) {
             Some(val) => match val.deref() {
@@ -60,9 +60,9 @@ pub fn module() -> Module {
             },
             _ => error,
         }
-    }));
+    });
 
-    module.fn_def(fn_def("fract", &["num"], move |_ctx, args| {
+    module.fn_def_native("fract", &["num"], move |_ctx, args| {
         let error = Err(invalid_args("fract"));
         match args.get(0) {
             Some(val) => match val.deref() {
@@ -71,9 +71,9 @@ pub fn module() -> Module {
             },
             _ => error,
         }
-    }));
+    });
 
-    module.fn_def(fn_def("max", &["a", "b"], move |_ctx, args| {
+    module.fn_def_native("max", &["a", "b"], move |_ctx, args| {
         let error = Err(invalid_args("max"));
         match (args.get(0), args.get(1)) {
             (Some(a), Some(b)) => match (a.deref(), b.deref()) {
@@ -82,9 +82,9 @@ pub fn module() -> Module {
             },
             _ => error,
         }
-    }));
+    });
 
-    module.fn_def(fn_def("min", &["a", "b"], move |_ctx, args| {
+    module.fn_def_native("min", &["a", "b"], move |_ctx, args| {
         let error = Err(invalid_args("min"));
         match (args.get(0), args.get(1)) {
             (Some(a), Some(b)) => match (a.deref(), b.deref()) {
@@ -93,9 +93,9 @@ pub fn module() -> Module {
             },
             _ => error,
         }
-    }));
+    });
 
-    module.fn_def(fn_def("sqrt", &["num"], move |_ctx, args| {
+    module.fn_def_native("sqrt", &["num"], move |_ctx, args| {
         let error = Err(invalid_args("srqt"));
         match args.get(0) {
             Some(a) => match a.deref() {
@@ -104,7 +104,7 @@ pub fn module() -> Module {
             },
             _ => error,
         }
-    }));
+    });
 
     module
 }

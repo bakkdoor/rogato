@@ -1,6 +1,6 @@
 use rogato_common::{
     ast::{
-        fn_def::FnDefBody,
+        fn_def::{FnDefBody, FnDefVariant},
         lambda::{Lambda, LambdaClosureContext, LambdaClosureEvalError},
     },
     native_fn::{NativeFnContext, NativeFnError},
@@ -77,10 +77,9 @@ impl EvalContext {
         Ok(val::none())
     }
 
-    pub fn define_fn(&mut self, fn_def: Rc<RefCell<FnDef>>) -> ValueRef {
+    pub fn define_fn(&mut self, id: &Identifier, fn_variant: FnDefVariant) -> ValueRef {
         let mut module = self.current_module();
-        module.fn_def(Rc::clone(&fn_def));
-        let id = fn_def.borrow().id().clone();
+        module.fn_def(id.clone(), fn_variant);
         val::string(format!("FnDef {}", id))
     }
 

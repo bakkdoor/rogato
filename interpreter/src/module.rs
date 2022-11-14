@@ -3,7 +3,10 @@ use std::rc::Rc;
 use std::{collections::HashMap, fmt::Display};
 
 use crate::ValueRef;
+use rogato_common::ast::fn_def::{FnDefArgs, FnDefBody, FnDefVariant};
+use rogato_common::ast::pattern::Pattern;
 use rogato_common::ast::{fn_def::FnDef, type_expression::TypeDef};
+use rogato_common::native_fn::NativeFn;
 
 use super::Identifier;
 
@@ -38,27 +41,34 @@ impl Module {
         state.id.clone()
     }
 
-    pub fn fn_def(&mut self, fn_def: Rc<RefCell<FnDef>>) {
-        let func = fn_def.borrow();
-        if self.has_fn_defined(func.id()) {
+    pub fn fn_def<ID: Into<Identifier>>(&mut self, id: ID, fn_variant: FnDefVariant) {
+        let id: Identifier = id.into();
+        if self.has_fn_defined(&id) {
+            let (args, body) = fn_variant;
             self.state
                 .borrow()
                 .fn_defs
-                .get(func.id())
-                .map(|f| {
-                    f.borrow_mut()
-                        .variants
-                        .add(func.args().clone(), func.body())
-                })
-                .unwrap_or_else(|| {
-                    eprintln!("EvalContext::define_fn_variant failed for: {}", func.id())
-                })
+                .get(&id)
+                .map(|f| f.borrow_mut().variants.add(args, body))
+                .unwrap_or_else(|| eprintln!("EvalContext::define_fn_variant failed for: {}", id))
         } else {
-            self.state
-                .borrow_mut()
-                .fn_defs
-                .insert(func.id().clone(), Rc::clone(&fn_def));
+            let (args, body) = fn_variant;
+            let fn_def = FnDef::new(id.clone(), args, body);
+            self.state.borrow_mut().fn_defs.insert(id, fn_def);
         }
+    }
+
+    pub fn fn_def_native(&mut self, id: &str, args: &[&str], fn_body: NativeFn) {
+        let id: Identifier = id.into();
+
+        let args = FnDefArgs::new(
+            args.iter()
+                .map(|a| Rc::new(Pattern::Var(a.into())))
+                .collect(),
+        );
+        let body = Rc::new(FnDefBody::native(fn_body));
+
+        self.fn_def(id, (args, body));
     }
 
     fn has_fn_defined(&self, id: &Identifier) -> bool {
