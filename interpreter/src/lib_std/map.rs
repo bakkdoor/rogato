@@ -48,5 +48,18 @@ pub fn module() -> Module {
         }
     });
 
+    module.fn_def_native("merge", &["map1", "map2"], move |_ctx, args| {
+        let error = Err(invalid_args("Std.Map.merge"));
+
+        match (args.len(), args.get(0), args.get(1)) {
+            (2, Some(map1), Some(map2)) => match (map1.deref(), map2.deref()) {
+                (Value::Map(map1), Value::Map(map2)) => Ok(map1.merge(map2).into()),
+                _ => error,
+            },
+
+            (_, _, _) => error,
+        }
+    });
+
     module
 }

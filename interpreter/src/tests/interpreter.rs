@@ -480,6 +480,57 @@ fn std_map_module() {
                 ]),
             ]),
         ),
+        (
+            "let
+                map1 = {^foo: 1, ^bar: {1, 2, 3}}
+                map2 = {^foo: 2, {1, 2}: ^wat}
+                map3 = {^foo: 3, ^wat: {420, 69}}
+            in
+                {
+                    map1 |> Std.Map.merge map2,
+                    map2 |> Std.Map.merge map3,
+                    map1 |> Std.Map.merge map2 |> Std.Map.merge map3
+                }",
+            val::tuple([
+                val::map([
+                    (val::symbol("foo"), val::number(2)),
+                    (
+                        val::symbol("bar"),
+                        val::tuple([val::number(1), val::number(2), val::number(3)]),
+                    ),
+                    (
+                        val::tuple([val::number(1), val::number(2)]),
+                        val::symbol("wat"),
+                    ),
+                ]),
+                val::map([
+                    (val::symbol("foo"), val::number(3)),
+                    (
+                        val::tuple([val::number(1), val::number(2)]),
+                        val::symbol("wat"),
+                    ),
+                    (
+                        val::symbol("wat"),
+                        val::tuple([val::number(420), val::number(69)]),
+                    ),
+                ]),
+                val::map([
+                    (val::symbol("foo"), val::number(3)),
+                    (
+                        val::symbol("bar"),
+                        val::tuple([val::number(1), val::number(2), val::number(3)]),
+                    ),
+                    (
+                        val::tuple([val::number(1), val::number(2)]),
+                        val::symbol("wat"),
+                    ),
+                    (
+                        val::symbol("wat"),
+                        val::tuple([val::number(420), val::number(69)]),
+                    ),
+                ]),
+            ]),
+        ),
     ];
 
     let mut eval_ctx = EvalContext::new();

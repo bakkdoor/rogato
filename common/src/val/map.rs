@@ -53,6 +53,14 @@ impl Map {
             entries: self.entries.remove(key),
         }
     }
+
+    pub fn merge(&self, other: &Map) -> Self {
+        let mut entries = self.entries.clone();
+        for (k, v) in other.entries.iter() {
+            entries = entries.insert(ValueRef::clone(k), ValueRef::clone(v))
+        }
+        Self { entries }
+    }
 }
 
 impl Default for Map {
