@@ -19,5 +19,18 @@ pub fn module() -> Module {
         }
     });
 
+    module.fn_def_native("fromString", &["string"], move |_ctx, args| {
+        let error = Err(invalid_args("Std.Symbol.fromString"));
+
+        match (args.len(), args.get(0)) {
+            (1, Some(string)) => match string.deref() {
+                Value::String(string) => Ok(val::symbol(string.trim())),
+                _ => error,
+            },
+
+            (_, _) => error,
+        }
+    });
+
     module
 }
