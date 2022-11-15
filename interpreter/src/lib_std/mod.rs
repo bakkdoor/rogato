@@ -22,6 +22,7 @@ pub mod list;
 pub mod map;
 pub mod math;
 pub mod string;
+pub mod symbol;
 
 pub fn env() -> Environment {
     let mut env = Environment::new();
@@ -31,6 +32,7 @@ pub fn env() -> Environment {
     let string_mod = string::module();
     let list_mod = list::module();
     let map_mod = map::module();
+    let symbol_mod = symbol::module();
 
     env.import(&math_mod, Imports::All);
     env.import(&list_mod, Imports::All);
@@ -40,6 +42,7 @@ pub fn env() -> Environment {
     env.define_module(string_mod);
     env.define_module(list_mod);
     env.define_module(map_mod);
+    env.define_module(symbol_mod);
 
     env
 }
