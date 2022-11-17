@@ -205,6 +205,11 @@ impl Environment {
             .expect("current_module should be set")
     }
 
+    pub fn set_current_module(&mut self, module_id: Identifier) {
+        let mut state = self.state.borrow_mut();
+        state.current_module_name = module_id;
+    }
+
     pub fn lookup_module(&self, id: &Identifier) -> Option<Module> {
         match self.state.borrow().modules.borrow().get(id) {
             Some(module) => Some(module.clone()),

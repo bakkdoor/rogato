@@ -3,10 +3,27 @@ use rogato_common::{
     val::{self, ValueRef},
 };
 
-use crate::{EvalContext, EvalError, Evaluate};
+use crate::{module::Module, EvalContext, EvalError, Evaluate};
 
 impl Evaluate<ValueRef> for ModuleDef {
-    fn evaluate(&self, _context: &mut EvalContext) -> Result<ValueRef, EvalError> {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
+        match context.lookup_module(self.id()) {
+            Some(mut module) => {
+                for eid in self.exports().iter() {
+                    module.export(eid.clone());
+                }
+                context.set_current_module(self.id().clone())
+            }
+            None => {
+                let mut module = Module::new(self.id());
+                for eid in self.exports().iter() {
+                    module.export(eid.clone());
+                }
+                context.define_module(module);
+                context.set_current_module(self.id().clone());
+            }
+        }
+
         Ok(val::object([
             ("type", val::string("Module")),
             ("name", val::string(self.id().clone())),

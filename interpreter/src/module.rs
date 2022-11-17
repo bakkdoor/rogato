@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::collections::HashSet;
 use std::rc::Rc;
 use std::{collections::HashMap, fmt::Display};
 
@@ -16,6 +17,7 @@ struct State {
     fn_defs: HashMap<Identifier, Rc<RefCell<FnDef>>>,
     type_defs: HashMap<Identifier, Rc<TypeDef>>,
     constants: HashMap<Identifier, ValueRef>,
+    exports: HashSet<Identifier>,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -30,6 +32,7 @@ impl Module {
             fn_defs: HashMap::new(),
             type_defs: HashMap::new(),
             constants: HashMap::new(),
+            exports: HashSet::new(),
         };
         Module {
             state: Rc::new(RefCell::new(state)),
@@ -39,6 +42,11 @@ impl Module {
     pub fn id(&self) -> Identifier {
         let state = self.state.borrow();
         state.id.clone()
+    }
+
+    pub fn export(&mut self, id: Identifier) {
+        let mut state = self.state.borrow_mut();
+        state.exports.insert(id);
     }
 
     pub fn fn_def<ID: Into<Identifier>>(&mut self, id: ID, fn_variant: FnDefVariant) {
