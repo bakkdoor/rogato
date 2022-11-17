@@ -9,16 +9,12 @@ impl Evaluate<ValueRef> for ModuleDef {
     fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
         match context.lookup_module(self.id()) {
             Some(mut module) => {
-                for eid in self.exports().iter() {
-                    module.export(eid.clone());
-                }
+                module.export(self.exports());
                 context.set_current_module(self.id().clone())
             }
             None => {
                 let mut module = Module::new(self.id());
-                for eid in self.exports().iter() {
-                    module.export(eid.clone());
-                }
+                module.export(self.exports());
                 context.define_module(module);
                 context.set_current_module(self.id().clone());
             }

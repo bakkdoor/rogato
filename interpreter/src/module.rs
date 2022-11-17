@@ -5,11 +5,11 @@ use std::{collections::HashMap, fmt::Display};
 
 use crate::ValueRef;
 use rogato_common::ast::fn_def::{FnDefArgs, FnDefBody, FnDefVariant};
+use rogato_common::ast::module_def::ModuleExports;
 use rogato_common::ast::pattern::Pattern;
+use rogato_common::ast::Identifier;
 use rogato_common::ast::{fn_def::FnDef, type_expression::TypeDef};
 use rogato_common::native_fn::NativeFn;
-
-use super::Identifier;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 struct State {
@@ -44,9 +44,11 @@ impl Module {
         state.id.clone()
     }
 
-    pub fn export(&mut self, id: Identifier) {
+    pub fn export(&mut self, exports: &ModuleExports) {
         let mut state = self.state.borrow_mut();
-        state.exports.insert(id);
+        for id in exports.iter() {
+            state.exports.insert(id.clone());
+        }
     }
 
     pub fn fn_def<ID: Into<Identifier>>(&mut self, id: ID, fn_variant: FnDefVariant) {
