@@ -83,10 +83,10 @@ grammar parser(context: &ParserContext) for str {
         }
 
     rule use_stmt() -> AST
-        = "use " s() id:struct_identifier() s() "{" _ imports:(identifier() ** (_ "," _)) _ "}" {
+        = "use" s() id:struct_identifier() s() "{" _ imports:(identifier() ** (_ "," _)) _ "}" {
             AST::Use(id, imports)
         }
-        / "use " s() id:struct_identifier() {
+        / "use" s() id:struct_identifier() {
             AST::Use(id, vec![])
         }
 

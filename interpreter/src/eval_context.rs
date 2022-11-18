@@ -28,6 +28,7 @@ pub struct EvalContext {
     env: Environment,
     obj_storage: ObjectStorage,
     query_planner: QueryPlanner,
+    current_func_id: Option<Identifier>,
 }
 
 impl Default for EvalContext {
@@ -43,6 +44,7 @@ impl EvalContext {
             env: lib_std::env(),
             obj_storage: ObjectStorage::new(),
             query_planner: QueryPlanner::new(),
+            current_func_id: None,
         }
     }
 
@@ -52,6 +54,7 @@ impl EvalContext {
             env,
             obj_storage: ObjectStorage::new(),
             query_planner: QueryPlanner::new(),
+            current_func_id: None,
         }
     }
 
@@ -61,7 +64,12 @@ impl EvalContext {
             env: self.env.child(),
             obj_storage: self.obj_storage.clone(),
             query_planner: self.query_planner.clone(),
+            current_func_id: self.current_func_id.clone(),
         }
+    }
+
+    pub fn current_func_id(&self) -> Identifier {
+        self.current_func_id.clone().unwrap_or_else(|| "N/A".into())
     }
 
     pub fn import(
@@ -122,6 +130,9 @@ impl EvalContext {
             ));
         }
 
+        let last_current_func_id = self.current_func_id.clone();
+        self.current_func_id = Some(func.id().clone());
+
         let mut last_attempted_pattern = None;
 
         for (arg_patterns, body) in func.variants.iter() {
@@ -154,7 +165,10 @@ impl EvalContext {
             }
         }
 
+        self.current_func_id = last_current_func_id;
+
         return Err(EvalError::PatternBindingFailed(
+            func.id().clone(),
             PatternBindingError::NoFnVariantMatched(
                 func.id().clone(),
                 last_attempted_pattern,

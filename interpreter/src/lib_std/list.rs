@@ -1,6 +1,7 @@
 use super::invalid_args;
 use crate::module::Module;
 use rogato_common::{
+    ast::module_def::ModuleExports,
     native_fn::NativeFnError,
     val::{self, Value, ValueRef},
 };
@@ -8,6 +9,13 @@ use std::{ops::Deref, rc::Rc};
 
 pub fn module() -> Module {
     let mut module = Module::new("Std.List");
+    module.export(&ModuleExports::new(vec![
+        "map".into(),
+        "reverse".into(),
+        "head".into(),
+        "tail".into(),
+        "length".into(),
+    ]));
 
     module.fn_def_native(
         "map",

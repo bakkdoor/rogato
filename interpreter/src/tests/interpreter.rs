@@ -586,7 +586,7 @@ fn lambda_closures() {
         "let
             f x = [1, 2, 3] |> Std.List.map (y -> x + y)
             g x = {f x, f (x * 2)}
-            list = [10,100,1000] |> map ^g
+            list = [10,100,1000] |> Std.List.map ^g
         in
             {f 1, f 10, f 100, g 1, g 5, list}",
         val::tuple([

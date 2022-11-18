@@ -1,11 +1,73 @@
-use super::invalid_args;
+use super::{invalid_args, op_fn, with_number_op_args};
 use crate::module::Module;
-use rogato_common::val::{self, Value};
+use rogato_common::{
+    ast::module_def::ModuleExports,
+    val::{self, Value},
+};
 use rust_decimal::MathematicalOps;
 use std::ops::Deref;
 
 pub fn module() -> Module {
     let mut module = Module::new("Std.Math");
+    module.export(&ModuleExports::new(vec![
+        "+".into(),
+        "-".into(),
+        "*".into(),
+        "/".into(),
+        "%".into(),
+        "^".into(),
+        "abs".into(),
+        "round".into(),
+        "ceil".into(),
+        "floor".into(),
+        "trunc".into(),
+        "fract".into(),
+        "max".into(),
+        "min".into(),
+        "sqrt".into(),
+    ]));
+
+    module.fn_def(
+        "+",
+        op_fn(move |_ctx, args| with_number_op_args("+", args, |a, b| Ok(a.saturating_add(b)))),
+    );
+
+    module.fn_def(
+        "-",
+        op_fn(move |_ctx, args| with_number_op_args("-", args, |a, b| Ok(a.saturating_sub(b)))),
+    );
+
+    module.fn_def(
+        "*",
+        op_fn(move |_ctx, args| with_number_op_args("*", args, |a, b| Ok(a.saturating_mul(b)))),
+    );
+
+    module.fn_def(
+        "/",
+        op_fn(move |_ctx, args| {
+            with_number_op_args("/", args, |a, b| {
+                a.checked_div(b).map_or(Err(invalid_args("/")), Ok)
+            })
+        }),
+    );
+
+    module.fn_def(
+        "%",
+        op_fn(move |_ctx, args| {
+            with_number_op_args("%", args, |a, b| {
+                a.checked_rem(b).map_or(Err(invalid_args("%")), Ok)
+            })
+        }),
+    );
+
+    module.fn_def(
+        "^",
+        op_fn(move |_ctx, args| {
+            with_number_op_args("^", args, |a, b| {
+                a.checked_powd(b).map_or(Err(invalid_args("^")), Ok)
+            })
+        }),
+    );
 
     module.fn_def_native("abs", &["num"], move |_ctx, args| {
         let error = Err(invalid_args("abs"));

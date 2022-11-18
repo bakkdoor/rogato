@@ -1,10 +1,14 @@
 use super::invalid_args;
 use crate::module::Module;
-use rogato_common::val::{self, Value};
+use rogato_common::{
+    ast::module_def::ModuleExports,
+    val::{self, Value},
+};
 use std::ops::Deref;
 
 pub fn module() -> Module {
     let mut module = Module::new("Std.String");
+    module.export(&ModuleExports::new(vec!["length".into()]));
 
     module.fn_def_native("length", &["string"], move |_ctx, args| {
         let error = Err(invalid_args("Std.String.length"));

@@ -1,12 +1,22 @@
 use std::{ops::Deref, rc::Rc};
 
 use crate::module::Module;
-use rogato_common::val::{self, Value, ValueRef};
+use rogato_common::{
+    ast::module_def::ModuleExports,
+    val::{self, Value, ValueRef},
+};
 
 use super::invalid_args;
 
 pub fn module() -> Module {
     let mut module = Module::new("Std.Map");
+    module.export(&ModuleExports::new(vec![
+        "new".into(),
+        "insert".into(),
+        "remove".into(),
+        "merge".into(),
+        "length".into(),
+    ]));
 
     module.fn_def_native("new", &[], move |_ctx, _args| {
         Ok(ValueRef::new(Value::Map(val::Map::new())))

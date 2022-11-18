@@ -7,16 +7,18 @@ use rogato_common::{
 };
 use thiserror::Error;
 
+type FuncId = Identifier;
+
 #[derive(Error, Debug, PartialEq, Eq, Clone)]
 pub enum PatternBindingError {
-    #[error("Unknown PatternBindingError: {0}")]
-    Unknown(String),
+    #[error("Unknown PatternBindingError in {0} : {1}")]
+    Unknown(FuncId, String),
 
-    #[error("Failed to match pattern: {0} with value: {1}")]
-    MatchFailed(Pattern, ValueRef),
+    #[error("Failed to match pattern in {0} : {1} with value: {2}")]
+    MatchFailed(FuncId, Pattern, ValueRef),
 
     #[error("Failed to match fn {0} variant for pattern: {1:?} with value: {2:?}")]
-    NoFnVariantMatched(Identifier, Option<Rc<Pattern>>, Vec<ValueRef>),
+    NoFnVariantMatched(FuncId, Option<Rc<Pattern>>, Vec<ValueRef>),
 }
 
 pub trait AttemptBinding {
@@ -171,6 +173,7 @@ impl AttemptBinding for Pattern {
             }
 
             (_, _) => Err(PatternBindingError::MatchFailed(
+                context.current_func_id(),
                 self.clone(),
                 Rc::clone(&value),
             )),

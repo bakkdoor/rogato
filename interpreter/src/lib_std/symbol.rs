@@ -1,10 +1,17 @@
 use super::invalid_args;
 use crate::module::Module;
-use rogato_common::val::{self, Value};
+use rogato_common::{
+    ast::module_def::ModuleExports,
+    val::{self, Value},
+};
 use std::ops::Deref;
 
 pub fn module() -> Module {
     let mut module = Module::new("Std.Symbol");
+    module.export(&ModuleExports::new(vec![
+        "toString".into(),
+        "fromString".into(),
+    ]));
 
     module.fn_def_native("toString", &["symbol"], move |_ctx, args| {
         let error = Err(invalid_args("Std.Symbol.toString"));

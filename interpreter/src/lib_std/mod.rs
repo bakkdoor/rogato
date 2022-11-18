@@ -7,12 +7,13 @@ use rogato_common::{
     ast::{
         expression::FnDefArgs,
         fn_def::{FnDefBody, FnDefVariant},
+        module_def::ModuleExports,
     },
     native_fn::{NativeFn, NativeFnError},
     val,
     val::{Value, ValueRef},
 };
-use rust_decimal::{prelude::ToPrimitive, Decimal, MathematicalOps};
+use rust_decimal::{prelude::ToPrimitive, Decimal};
 use rust_decimal_macros::dec;
 use std::fmt::Debug;
 use std::ops::Deref;
@@ -34,8 +35,8 @@ pub fn env() -> Environment {
     let map_mod = map::module();
     let symbol_mod = symbol::module();
 
+    env.import(&std_mod, Imports::All);
     env.import(&math_mod, Imports::All);
-    env.import(&list_mod, Imports::All);
 
     env.define_module(std_mod);
     env.define_module(math_mod);
@@ -49,48 +50,23 @@ pub fn env() -> Environment {
 
 pub fn std_module() -> Module {
     let mut module = Module::new("Std");
-
-    module.fn_def(
-        "+",
-        op_fn(move |_ctx, args| with_number_op_args("+", args, |a, b| Ok(a.saturating_add(b)))),
-    );
-
-    module.fn_def(
-        "-",
-        op_fn(move |_ctx, args| with_number_op_args("-", args, |a, b| Ok(a.saturating_sub(b)))),
-    );
-
-    module.fn_def(
-        "*",
-        op_fn(move |_ctx, args| with_number_op_args("*", args, |a, b| Ok(a.saturating_mul(b)))),
-    );
-
-    module.fn_def(
-        "/",
-        op_fn(move |_ctx, args| {
-            with_number_op_args("/", args, |a, b| {
-                a.checked_div(b).map_or(Err(invalid_args("/")), Ok)
-            })
-        }),
-    );
-
-    module.fn_def(
-        "%",
-        op_fn(move |_ctx, args| {
-            with_number_op_args("%", args, |a, b| {
-                a.checked_rem(b).map_or(Err(invalid_args("%")), Ok)
-            })
-        }),
-    );
-
-    module.fn_def(
-        "^",
-        op_fn(move |_ctx, args| {
-            with_number_op_args("^", args, |a, b| {
-                a.checked_powd(b).map_or(Err(invalid_args("^")), Ok)
-            })
-        }),
-    );
+    module.export(&ModuleExports::new(vec![
+        "++".into(),
+        "id".into(),
+        "print".into(),
+        "apply".into(),
+        "toString".into(),
+        "inspect".into(),
+        ">".into(),
+        "<".into(),
+        ">=".into(),
+        "<=".into(),
+        "==".into(),
+        "!=".into(),
+        "range".into(),
+        "random".into(),
+        "length".into(),
+    ]));
 
     module.fn_def(
         "++",
