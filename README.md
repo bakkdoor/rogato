@@ -65,7 +65,7 @@ Then open pegviz.html to view parser tracing visualization.
 
 #### Why?
 
-I needed a project to learn Rust with. I always have been interested in graph databases and their applications to data problems and have been fascinated by what declarative, logic based programming can do for simplicity in querying large data sets.  
+I needed a project to learn Rust with. I always have been interested in graph databases and their applications to data problems and have been fascinated by what declarative programming can do for simplicity in querying large data sets.  
 **rogātō** aims to unify some ideas and properties from functional and logic programming as well as graph databases into something new and cohesive that is fun and productive to use and can aid in discovering interesting facts about large data sets.
 
 #### What does the name mean?
