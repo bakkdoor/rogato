@@ -12,7 +12,9 @@ pub fn module() -> Module {
     let mut module = Module::new("Std.Map");
     module.export(&ModuleExports::new(vec![
         "new".into(),
+        "contains".into(),
         "insert".into(),
+        "insertOrUpdate".into(),
         "remove".into(),
         "merge".into(),
         "length".into(),
@@ -20,6 +22,18 @@ pub fn module() -> Module {
 
     module.fn_def_native("new", &[], move |_ctx, _args| {
         Ok(ValueRef::new(Value::Map(val::Map::new())))
+    });
+
+    module.fn_def_native("contains", &["map", "key"], move |_ctx, args| {
+        let error = Err(invalid_args("Std.Map.contains"));
+
+        match (args.len(), args.get(0), args.get(1)) {
+            (2, Some(map), Some(key)) => match map.deref() {
+                Value::Map(map) => Ok(val::bool(map.contains(&key))),
+                _ => error,
+            },
+            (_, _, _) => error,
+        }
     });
 
     module.fn_def_native("insert", &["map", "key", "?value"], move |_ctx, args| {
@@ -44,6 +58,57 @@ pub fn module() -> Module {
             (_, _, _, _) => error,
         }
     });
+
+    module.fn_def_native(
+        "insertOrUpdate",
+        &["map", "key", "value", "func"],
+        move |ctx, args| {
+            let error = Err(invalid_args("Std.Map.insertOrUpdate"));
+
+            match (
+                args.len(),
+                args.get(0),
+                args.get(1),
+                args.get(2),
+                args.get(3),
+            ) {
+                (4, Some(map), Some(key), Some(value), Some(func)) => {
+                    match (map.deref(), func.deref()) {
+                        (Value::Map(map), Value::Lambda(lambda_ctx, lambda)) => {
+                            match map.get(&key) {
+                                Some(value) => {
+                                    let value =
+                                        ctx.call_lambda(Rc::clone(lambda_ctx), lambda, &[value])?;
+
+                                    Ok(map.insert(Rc::clone(key), value).into())
+                                }
+                                None => Ok(map.insert(Rc::clone(key), Rc::clone(value)).into()),
+                            }
+                        }
+                        (Value::Map(map), Value::Symbol(fn_id)) => match map.get(&key) {
+                            Some(value) => match ctx.call_function(fn_id, &[value]) {
+                                Some(Ok(value)) => {
+                                    Ok(map.insert(ValueRef::clone(key), value).into())
+                                }
+                                Some(Err(e)) => Err(e),
+                                None => {
+                                    Err(rogato_common::native_fn::NativeFnError::InvalidArguments(
+                                        "Std.Map.insertOrUpdate".into(),
+                                    ))
+                                }
+                            },
+                            None => Ok(map
+                                .insert(ValueRef::clone(key), ValueRef::clone(value))
+                                .into()),
+                        },
+                        _ => error,
+                    }
+                }
+
+                (_, _, _, _, _) => error,
+            }
+        },
+    );
 
     module.fn_def_native("remove", &["map", "key"], move |_ctx, args| {
         let error = Err(invalid_args("Std.Map.remove"));

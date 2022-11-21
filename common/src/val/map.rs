@@ -30,6 +30,14 @@ impl Map {
         self.entries.size()
     }
 
+    pub fn contains(&self, key: &ValueRef) -> bool {
+        self.entries.contains_key(key)
+    }
+
+    pub fn get(&self, key: &ValueRef) -> Option<ValueRef> {
+        self.entries.get(key).map(ValueRef::clone)
+    }
+
     pub fn is_empty(&self) -> bool {
         self.entries.is_empty()
     }
