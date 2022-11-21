@@ -142,7 +142,7 @@ impl EvalContext {
             for (arg_pattern, arg_val) in arg_patterns.iter().zip(args) {
                 attempted += 1;
                 last_attempted_pattern = Some(Rc::clone(arg_pattern));
-                match arg_pattern.attempt_binding(&mut fn_ctx, Rc::clone(arg_val)) {
+                match arg_pattern.attempt_binding(&mut fn_ctx, ValueRef::clone(arg_val)) {
                     Ok(Some(_)) => {
                         matched += 1;
                         continue;
@@ -307,7 +307,7 @@ impl LambdaClosureContext for EvalContext {
         let mut call_ctx = self.with_child_env();
 
         for (arg_id, arg_val) in lambda.args.iter().zip(args.iter()) {
-            call_ctx.define_var(arg_id, Rc::clone(arg_val))
+            call_ctx.define_var(arg_id, ValueRef::clone(arg_val))
         }
 
         lambda

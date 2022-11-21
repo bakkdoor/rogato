@@ -42,16 +42,18 @@ pub fn module() -> Module {
         match (args.len(), args.get(0), args.get(1), args.get(2)) {
             (2, Some(map), Some(kv_pair), None) => match (map.deref(), kv_pair.deref()) {
                 (Value::Map(map), Value::Tuple(2, pair)) => match (pair.get(0), pair.get(1)) {
-                    (Some(key), Some(value)) => {
-                        Ok(map.insert(Rc::clone(key), Rc::clone(value)).into())
-                    }
+                    (Some(key), Some(value)) => Ok(map
+                        .insert(ValueRef::clone(key), ValueRef::clone(value))
+                        .into()),
                     _ => error,
                 },
                 _ => error,
             },
 
             (3, Some(map), Some(key), Some(value)) => match map.deref() {
-                Value::Map(map) => Ok(map.insert(Rc::clone(key), Rc::clone(value)).into()),
+                Value::Map(map) => Ok(map
+                    .insert(ValueRef::clone(key), ValueRef::clone(value))
+                    .into()),
                 _ => error,
             },
 
@@ -80,9 +82,11 @@ pub fn module() -> Module {
                                     let value =
                                         ctx.call_lambda(Rc::clone(lambda_ctx), lambda, &[value])?;
 
-                                    Ok(map.insert(Rc::clone(key), value).into())
+                                    Ok(map.insert(ValueRef::clone(key), value).into())
                                 }
-                                None => Ok(map.insert(Rc::clone(key), Rc::clone(value)).into()),
+                                None => Ok(map
+                                    .insert(ValueRef::clone(key), ValueRef::clone(value))
+                                    .into()),
                             }
                         }
                         (Value::Map(map), Value::Symbol(fn_id)) => match map.get(key) {

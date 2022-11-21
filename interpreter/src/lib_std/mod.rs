@@ -81,7 +81,7 @@ pub fn std_module() -> Module {
     module.fn_def_native("print", &["value"], move |_ctx, args| match args.get(0) {
         Some(value) => {
             println!("{}", value);
-            Ok(Rc::clone(value))
+            Ok(ValueRef::clone(value))
         }
         None => Err(invalid_args("print")),
     });
@@ -89,7 +89,7 @@ pub fn std_module() -> Module {
     module.fn_def_native("apply", &["func", "?args"], move |ctx, args| {
         let error = Err(invalid_args("apply"));
         match (args.len(), args.get(0), args.get(1)) {
-            (1, Some(func), None) => Ok(Rc::clone(func)),
+            (1, Some(func), None) => Ok(ValueRef::clone(func)),
             (2, Some(func), Some(args)) => match (func.deref(), args.deref()) {
                 (Value::Lambda(lambda_ctx, lambda), Value::List(args)) => {
                     let args: Vec<ValueRef> = args.iter().map(Rc::clone).collect();
@@ -103,7 +103,7 @@ pub fn std_module() -> Module {
                 (Value::Symbol(fn_id), Value::List(args)) => {
                     let args: Vec<ValueRef> = args.iter().map(Rc::clone).collect();
                     match ctx.call_function(fn_id, &args) {
-                        Some(val) => Ok(Rc::clone(&val?)),
+                        Some(val) => Ok(ValueRef::clone(&val?)),
                         None => Err(NativeFnError::EvaluationFailed(
                             fn_id.clone(),
                             format!("FunctionRef invalid in ^apply: ^{}", fn_id),
@@ -119,7 +119,7 @@ pub fn std_module() -> Module {
     module.fn_def_native("toString", &["value"], move |_ctx, args| {
         match args.get(0) {
             Some(value) => match value.deref() {
-                Value::String(_) => Ok(Rc::clone(value)),
+                Value::String(_) => Ok(ValueRef::clone(value)),
                 _ => Ok(val::string(format!("{}", value))),
             },
             None => Err(invalid_args("inspect")),

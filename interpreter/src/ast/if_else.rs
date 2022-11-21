@@ -1,5 +1,3 @@
-use std::rc::Rc;
-
 use crate::{EvalContext, EvalError, Evaluate};
 use rogato_common::ast::if_else::IfElse;
 use rogato_common::val::{Value, ValueRef};
@@ -10,7 +8,7 @@ impl Evaluate<ValueRef> for IfElse {
         match *val {
             Value::Bool(true) => self.then_expr.evaluate(context),
             Value::Bool(false) => self.else_expr.evaluate(context),
-            _ => Err(EvalError::IFElseConditionNotBool(Rc::clone(&val))),
+            _ => Err(EvalError::IFElseConditionNotBool(ValueRef::clone(&val))),
         }
     }
 }

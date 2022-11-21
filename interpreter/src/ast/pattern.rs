@@ -38,7 +38,7 @@ impl AttemptBinding for Pattern {
         match (self, &*value) {
             (Pattern::Any, _) => Ok(Some(value)),
             (Pattern::Var(id), _) => {
-                context.define_var(id, Rc::clone(&value));
+                context.define_var(id, ValueRef::clone(&value));
                 Ok(Some(value))
             }
 
@@ -67,7 +67,10 @@ impl AttemptBinding for Pattern {
                 }
 
                 for (pat, val) in patterns.iter().zip(items.iter()) {
-                    if pat.attempt_binding(context, Rc::clone(val))?.is_none() {
+                    if pat
+                        .attempt_binding(context, ValueRef::clone(val))?
+                        .is_none()
+                    {
                         return Ok(None);
                     }
                 }
@@ -81,7 +84,10 @@ impl AttemptBinding for Pattern {
                 }
 
                 for (pat, val) in patterns.iter().zip(items.iter()) {
-                    if pat.attempt_binding(context, Rc::clone(val))?.is_none() {
+                    if pat
+                        .attempt_binding(context, ValueRef::clone(val))?
+                        .is_none()
+                    {
                         return Ok(None);
                     };
                 }
@@ -175,7 +181,7 @@ impl AttemptBinding for Pattern {
             (_, _) => Err(PatternBindingError::MatchFailed(
                 context.current_func_id(),
                 self.clone(),
-                Rc::clone(&value),
+                ValueRef::clone(&value),
             )),
         }
     }

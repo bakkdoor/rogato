@@ -43,8 +43,8 @@ pub fn module() -> Module {
                     (Value::List(items), Value::Symbol(fn_id)) => {
                         let mut result: Vec<ValueRef> = Vec::new();
                         for item in items.iter() {
-                            match context.call_function(fn_id, &[Rc::clone(item)]) {
-                                Some(val) => result.push(Rc::clone(&val?)),
+                            match context.call_function(fn_id, &[ValueRef::clone(item)]) {
+                                Some(val) => result.push(ValueRef::clone(&val?)),
                                 None => {
                                     return Err(NativeFnError::EvaluationFailed(
                                         fn_id.clone(),
@@ -61,7 +61,7 @@ pub fn module() -> Module {
                             let val = context.call_lambda(
                                 Rc::clone(lambda_ctx),
                                 lambda,
-                                &[Rc::clone(item)],
+                                &[ValueRef::clone(item)],
                             )?;
                             result.push(val)
                         }
