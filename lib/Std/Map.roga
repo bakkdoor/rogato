@@ -60,10 +60,3 @@ let fromPairs_ acc [{k,v} :: rest] =
 
 let values {} = []
 let values {rest :: _ : v} = [v :: values rest]
-
-
-let insertOrUpdate map key value fn =
-  if (map |> contains key) then
-    (map |> update key fn)
-  else
-    (map |> insert key value)
