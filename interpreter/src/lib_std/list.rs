@@ -10,12 +10,28 @@ use std::{ops::Deref, rc::Rc};
 pub fn module() -> Module {
     let mut module = Module::new("Std.List");
     module.export(&ModuleExports::new(vec![
+        "join".into(),
         "map".into(),
         "reverse".into(),
         "head".into(),
         "tail".into(),
         "length".into(),
     ]));
+
+    module.fn_def_native(
+        "join",
+        &["list1", "list2"],
+        move |_ctx, args| -> Result<Rc<Value>, NativeFnError> {
+            let error = Err(invalid_args("Std.List.reverse"));
+            match (args.len(), args.get(0), args.get(1)) {
+                (2, Some(a), Some(b)) => match (a.deref(), b.deref()) {
+                    (Value::List(items1), Value::List(items2)) => Ok(items1.join(items2).into()),
+                    _ => error,
+                },
+                _ => error,
+            }
+        },
+    );
 
     module.fn_def_native(
         "map",

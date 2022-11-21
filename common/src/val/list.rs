@@ -48,6 +48,14 @@ impl List {
             entries: self.entries.reverse(),
         }
     }
+
+    pub fn join(&self, other: &Self) -> Self {
+        let mut joined = other.entries.clone();
+        for e in self.entries.reverse().iter() {
+            joined = joined.push_front(ValueRef::clone(e))
+        }
+        Self { entries: joined }
+    }
 }
 
 impl Default for List {
