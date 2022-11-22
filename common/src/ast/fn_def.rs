@@ -61,16 +61,6 @@ impl FnDef {
         &self.id
     }
 
-    pub fn args(&self) -> &FnDefArgs {
-        // TODO: fix this for proper codegen
-        &self.variants.variants.first().unwrap().0
-    }
-
-    pub fn body(&self) -> Rc<FnDefBody> {
-        // TODO: fix this for proper codegen
-        Rc::clone(&self.variants.variants.first().unwrap().1)
-    }
-
     pub fn required_args(&self) -> usize {
         self.variants
             .iter()

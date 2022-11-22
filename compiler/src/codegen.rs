@@ -94,6 +94,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
     pub fn codegen_fn_def(&mut self, fn_def: &FnDef) -> CodegenResult<FunctionValue<'ctx>> {
         let f32_type = self.context.f32_type();
 
+        // TODO: add support for multiple fn variants
         let (args, body) = fn_def.get_variant(0).unwrap();
 
         let fn_arg_types: Vec<BasicMetadataTypeEnum<'ctx>> = args
@@ -109,7 +110,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         let basic_block = self.context.append_basic_block(func, func_name);
         self.builder.position_at_end(basic_block);
 
-        for (arg, arg_name) in func.get_param_iter().zip(fn_def.args().iter()) {
+        for (arg, arg_name) in func.get_param_iter().zip(args.iter()) {
             match &**arg_name {
                 Pattern::Var(arg_name) => {
                     let alloca = self.create_entry_block_alloca(f32_type, arg_name);
