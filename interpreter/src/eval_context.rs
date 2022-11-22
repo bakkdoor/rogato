@@ -8,9 +8,9 @@ use rogato_common::{
 
 use super::{environment::Environment, module::Module, EvalError, Identifier, ValueRef};
 use crate::{
-    ast::pattern::{AttemptBinding, PatternBindingError},
     environment::Imports,
     lib_std,
+    pattern::{AttemptBinding, PatternBindingError},
     query_planner::{QueryPlanner, QueryResult},
     Evaluate,
 };

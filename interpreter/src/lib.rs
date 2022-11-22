@@ -8,9 +8,10 @@ pub mod environment;
 pub mod eval_context;
 pub mod lib_std;
 pub mod module;
+pub mod pattern;
 
-use ast::pattern::PatternBindingError;
 pub use eval_context::EvalContext;
+use pattern::PatternBindingError;
 use query_planner::QueryError;
 pub use rogato_common::{
     native_fn::{NativeFn, NativeFnError},
