@@ -2,7 +2,7 @@
 
 - [x] Parser (WIP but works for the most part, further syntax changes expected)
 - [ ] Analyzer
-  - [ ] Static type checking? Or default to runtime type checking for now?- [ ]
+  - [ ] Static type checking? Or default to runtime type checking for now?
   - [ ] Local variable access (prevent accessing undefined variables)
   - [ ] Check function signatures and call-sites
   - [ ] Basic type checker for
@@ -15,7 +15,17 @@
     - [ ] Simplifier / AST Optimizer
       - [ ] Constant (function) replacements
       - [ ] Constant arithmetic expressions
-- [ ] Interpreter
+- [x] Interpreter
+  - [x] Value enum (`Number`, `String`, `Symbol`, `List`, `Map`, etc. ...)
+  - [x] ValueRef type (for now just alias for `Rc<Value>`)
+  - [x] `Evaluate<T>` trait + impls (Simple tree-walking dynamic interpreter)
+    - Lots of impls are still `todo!()` including anything related to the DB & querying
+  - [x] `NativeFn` impls for some standard library modules (`Std`, `Std.Math`, `Std.List`, `Std.Map`)
+- [x] Compiler using `LLVM` & `Inkwell`
+  - [x] JITFunction codegen working for:
+    - [x] Simple Float arithmetic functions and expressions
+  - [ ] Most AST expression variants still are `todo!()`
+  - [ ] Lots more stuff missing and needs to be figured out
 - [ ] DB Value
   - [ ] Storage
     - [ ] Serialization
@@ -27,3 +37,13 @@
       - [ ] Optimization
       - [ ] Execution / Result gathering
 - [ ] Std Library (types & functions)
+  - [x] Std
+    - [x] Math
+    - [x] List
+    - [x] Map
+    - [x] Result (WIP)
+    - [ ] Symbol
+    - [ ] Set
+    - [ ] Stack
+    - [ ] Queue
+    - [ ] Vector
