@@ -19,7 +19,7 @@
   - [x] Value enum (`Number`, `String`, `Symbol`, `List`, `Map`, etc. ...)
   - [x] ValueRef type (for now just alias for `Rc<Value>`)
   - [x] `Evaluate<T>` trait + impls (Simple tree-walking dynamic interpreter)
-    - Lots of impls are still `todo!()` including anything related to the DB & querying
+    - Some impls are still `todo!()`
   - [x] `NativeFn` impls for some standard library modules (`Std`, `Std.Math`, `Std.List`, `Std.Map`)
 - [x] Compiler using `LLVM` & `Inkwell`
   - [x] JITFunction codegen working for:
