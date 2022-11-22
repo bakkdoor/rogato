@@ -1,6 +1,7 @@
 # Tasks
 
 - [x] Parser (WIP but works for the most part, further syntax changes expected)
+  - Lots of potential optimizations and refactorings to be done in the parser grammar
 - [ ] Analyzer
   - [ ] Static type checking? Or default to runtime type checking for now?
   - [ ] Local variable access (prevent accessing undefined variables)
