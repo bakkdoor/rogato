@@ -21,12 +21,37 @@ pub enum PatternMatchingError {
     NoFnVariantMatched(FuncId, Option<Rc<Pattern>>, Vec<ValueRef>),
 }
 
+pub enum PatternMatch {
+    Matched(ValueRef),
+    TryNextPattern,
+}
+
+impl PatternMatch {
+    pub fn matched(&self) -> bool {
+        match self {
+            Self::Matched(_) => true,
+            Self::TryNextPattern => false,
+        }
+    }
+
+    pub fn match_failed(&self) -> bool {
+        !self.matched()
+    }
+
+    pub fn map(&self, f: fn(ValueRef) -> ValueRef) -> Self {
+        match self {
+            Self::Matched(val) => Self::Matched(f(ValueRef::clone(val))),
+            Self::TryNextPattern => Self::TryNextPattern,
+        }
+    }
+}
+
 pub trait PatternMatching {
     fn pattern_match(
         &self,
         eval_context: &mut crate::EvalContext,
         value: ValueRef,
-    ) -> Result<Option<ValueRef>, PatternMatchingError>;
+    ) -> Result<PatternMatch, PatternMatchingError>;
 }
 
 impl PatternMatching for Pattern {
@@ -34,64 +59,70 @@ impl PatternMatching for Pattern {
         &self,
         context: &mut EvalContext,
         value: ValueRef,
-    ) -> Result<Option<ValueRef>, PatternMatchingError> {
+    ) -> Result<PatternMatch, PatternMatchingError> {
         match (self, &*value) {
-            (Pattern::Any, _) => Ok(Some(value)),
+            (Pattern::Any, _) => Ok(PatternMatch::Matched(value)),
             (Pattern::Var(id), _) => {
                 context.define_var(id, ValueRef::clone(&value));
-                Ok(Some(value))
+                Ok(PatternMatch::Matched(value))
             }
 
             (Pattern::EmptyList, Value::List(list)) => {
                 if list.is_empty() {
-                    Ok(Some(value))
+                    Ok(PatternMatch::Matched(value))
                 } else {
-                    Ok(None)
+                    Ok(PatternMatch::TryNextPattern)
                 }
             }
 
             (Pattern::ListCons(head, tail), Value::List(list)) => {
                 if list.is_empty() {
-                    return Ok(None);
+                    return Ok(PatternMatch::TryNextPattern);
                 }
 
                 head.pattern_match(context, list.head().unwrap())?;
                 tail.pattern_match(context, list.tail().into())?;
 
-                Ok(Some(value))
+                Ok(PatternMatch::Matched(value))
             }
 
             (Pattern::List(patterns), Value::List(items)) => {
                 if patterns.len() != items.len() {
-                    return Ok(None);
+                    return Ok(PatternMatch::TryNextPattern);
                 }
 
                 for (pat, val) in patterns.iter().zip(items.iter()) {
-                    if pat.pattern_match(context, ValueRef::clone(val))?.is_none() {
-                        return Ok(None);
+                    if pat
+                        .pattern_match(context, ValueRef::clone(val))?
+                        .match_failed()
+                    {
+                        return Ok(PatternMatch::TryNextPattern);
                     }
                 }
 
-                Ok(Some(value))
+                Ok(PatternMatch::Matched(value))
             }
 
             (Pattern::Tuple(len_p, patterns), Value::Tuple(len, items)) => {
                 if len_p != len {
-                    return Ok(None);
+                    return Ok(PatternMatch::TryNextPattern);
                 }
 
                 for (pat, val) in patterns.iter().zip(items.iter()) {
-                    if pat.pattern_match(context, ValueRef::clone(val))?.is_none() {
-                        return Ok(None);
+                    if pat
+                        .pattern_match(context, ValueRef::clone(val))?
+                        .match_failed()
+                    {
+                        return Ok(PatternMatch::TryNextPattern);
                     };
                 }
 
-                Ok(Some(value))
+                Ok(PatternMatch::Matched(value))
             }
 
             (Pattern::Map(kv_pairs_p), Value::Map(map)) => {
                 if kv_pairs_p.len() != map.len() {
-                    return Ok(None);
+                    return Ok(PatternMatch::TryNextPattern);
                 }
 
                 for kv_pair_p in kv_pairs_p.iter() {
@@ -102,7 +133,7 @@ impl PatternMatching for Pattern {
                             key_p.pattern_match(context, ValueRef::clone(key))?,
                             val_p.pattern_match(context, ValueRef::clone(val))?,
                         ) {
-                            (Some(_), Some(_)) => {
+                            (PatternMatch::Matched(_), PatternMatch::Matched(_)) => {
                                 matched_pair = true;
                                 break;
                             }
@@ -111,11 +142,11 @@ impl PatternMatching for Pattern {
                     }
 
                     if !matched_pair {
-                        return Ok(None);
+                        return Ok(PatternMatch::TryNextPattern);
                     }
                 }
 
-                Ok(Some(value))
+                Ok(PatternMatch::Matched(value))
             }
 
             (Pattern::MapCons(kv_pairs_p, rest_p), Value::Map(map)) => {
@@ -128,7 +159,7 @@ impl PatternMatching for Pattern {
                             key_p.pattern_match(context, ValueRef::clone(key))?,
                             val_p.pattern_match(context, ValueRef::clone(val))?,
                         ) {
-                            (Some(_), Some(_)) => {
+                            (PatternMatch::Matched(_), PatternMatch::Matched(_)) => {
                                 matched_pair = true;
                                 rest_items = rest_items.remove(key);
                                 break;
@@ -138,37 +169,37 @@ impl PatternMatching for Pattern {
                     }
 
                     if !matched_pair {
-                        return Ok(None);
+                        return Ok(PatternMatch::TryNextPattern);
                     }
                 }
 
                 match rest_p.pattern_match(context, rest_items.into())? {
-                    Some(_) => Ok(Some(value)),
-                    None => Ok(None),
+                    PatternMatch::Matched(_) => Ok(PatternMatch::Matched(value)),
+                    PatternMatch::TryNextPattern => Ok(PatternMatch::TryNextPattern),
                 }
             }
 
             (Pattern::Bool(pat), Value::Bool(bool)) => {
                 if pat == bool {
-                    Ok(Some(value))
+                    Ok(PatternMatch::Matched(value))
                 } else {
-                    Ok(None)
+                    Ok(PatternMatch::TryNextPattern)
                 }
             }
 
             (Pattern::Number(pat), Value::Number(number)) => {
                 if pat == number {
-                    Ok(Some(value))
+                    Ok(PatternMatch::Matched(value))
                 } else {
-                    Ok(None)
+                    Ok(PatternMatch::TryNextPattern)
                 }
             }
 
             (Pattern::String(pat), Value::String(string)) => {
                 if pat == string {
-                    Ok(Some(value))
+                    Ok(PatternMatch::Matched(value))
                 } else {
-                    Ok(None)
+                    Ok(PatternMatch::TryNextPattern)
                 }
             }
 

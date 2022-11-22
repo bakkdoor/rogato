@@ -10,7 +10,7 @@ use super::{environment::Environment, module::Module, EvalError, Identifier, Val
 use crate::{
     environment::Imports,
     lib_std,
-    pattern_matching::{PatternMatching, PatternMatchingError},
+    pattern_matching::{PatternMatch, PatternMatching, PatternMatchingError},
     query_planner::{QueryPlanner, QueryResult},
     Evaluate,
 };
@@ -143,11 +143,11 @@ impl EvalContext {
                 attempted += 1;
                 last_attempted_pattern = Some(Rc::clone(arg_pattern));
                 match arg_pattern.pattern_match(&mut fn_ctx, ValueRef::clone(arg_val)) {
-                    Ok(Some(_)) => {
+                    Ok(PatternMatch::Matched(_)) => {
                         matched += 1;
                         continue;
                     }
-                    Ok(None) => {
+                    Ok(PatternMatch::TryNextPattern) => {
                         break;
                     }
                     Err(e) => {
