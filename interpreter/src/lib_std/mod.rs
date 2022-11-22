@@ -74,7 +74,7 @@ pub fn std_module() -> Module {
     );
 
     module.fn_def_native("id", &["value"], move |_ctx, args| match args.get(0) {
-        Some(value) => Ok(Rc::clone(value)),
+        Some(value) => Ok(ValueRef::clone(value)),
         None => Err(invalid_args("id")),
     });
 
@@ -92,7 +92,7 @@ pub fn std_module() -> Module {
             (1, Some(func), None) => Ok(ValueRef::clone(func)),
             (2, Some(func), Some(args)) => match (func.deref(), args.deref()) {
                 (Value::Lambda(lambda_ctx, lambda), Value::List(args)) => {
-                    let args: Vec<ValueRef> = args.iter().map(Rc::clone).collect();
+                    let args: Vec<ValueRef> = args.iter().map(ValueRef::clone).collect();
                     lambda_ctx
                         .borrow_mut()
                         .evaluate_lambda_call(lambda, &args)
@@ -101,7 +101,7 @@ pub fn std_module() -> Module {
                         })
                 }
                 (Value::Symbol(fn_id), Value::List(args)) => {
-                    let args: Vec<ValueRef> = args.iter().map(Rc::clone).collect();
+                    let args: Vec<ValueRef> = args.iter().map(ValueRef::clone).collect();
                     match ctx.call_function(fn_id, &args) {
                         Some(val) => Ok(ValueRef::clone(&val?)),
                         None => Err(NativeFnError::EvaluationFailed(
