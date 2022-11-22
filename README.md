@@ -47,6 +47,11 @@ Build with cargo, Rust's package and build manager:
 
     cargo t
 
+
+#### Build and run clippy linter
+
+    cargo clippy
+
 #### Build with parser tracing enabled
 
     cargo b --features trace
