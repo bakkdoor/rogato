@@ -10,8 +10,8 @@ use thiserror::Error;
 type FuncId = Identifier;
 
 #[derive(Error, Debug, PartialEq, Eq, Clone)]
-pub enum PatternBindingError {
-    #[error("Unknown PatternBindingError in {0} : {1}")]
+pub enum PatternMatchingError {
+    #[error("Unknown PatternMatchingError in {0} : {1}")]
     Unknown(FuncId, String),
 
     #[error("Failed to match pattern in {0} : {1} with value: {2}")]
@@ -21,20 +21,20 @@ pub enum PatternBindingError {
     NoFnVariantMatched(FuncId, Option<Rc<Pattern>>, Vec<ValueRef>),
 }
 
-pub trait AttemptBinding {
-    fn attempt_binding(
+pub trait PatternMatching {
+    fn attempt_pattern_matching(
         &self,
         eval_context: &mut crate::EvalContext,
         value: ValueRef,
-    ) -> Result<Option<ValueRef>, PatternBindingError>;
+    ) -> Result<Option<ValueRef>, PatternMatchingError>;
 }
 
-impl AttemptBinding for Pattern {
-    fn attempt_binding(
+impl PatternMatching for Pattern {
+    fn attempt_pattern_matching(
         &self,
         context: &mut EvalContext,
         value: ValueRef,
-    ) -> Result<Option<ValueRef>, PatternBindingError> {
+    ) -> Result<Option<ValueRef>, PatternMatchingError> {
         match (self, &*value) {
             (Pattern::Any, _) => Ok(Some(value)),
             (Pattern::Var(id), _) => {
@@ -55,8 +55,8 @@ impl AttemptBinding for Pattern {
                     return Ok(None);
                 }
 
-                head.attempt_binding(context, list.head().unwrap())?;
-                tail.attempt_binding(context, list.tail().into())?;
+                head.attempt_pattern_matching(context, list.head().unwrap())?;
+                tail.attempt_pattern_matching(context, list.tail().into())?;
 
                 Ok(Some(value))
             }
@@ -68,7 +68,7 @@ impl AttemptBinding for Pattern {
 
                 for (pat, val) in patterns.iter().zip(items.iter()) {
                     if pat
-                        .attempt_binding(context, ValueRef::clone(val))?
+                        .attempt_pattern_matching(context, ValueRef::clone(val))?
                         .is_none()
                     {
                         return Ok(None);
@@ -85,7 +85,7 @@ impl AttemptBinding for Pattern {
 
                 for (pat, val) in patterns.iter().zip(items.iter()) {
                     if pat
-                        .attempt_binding(context, ValueRef::clone(val))?
+                        .attempt_pattern_matching(context, ValueRef::clone(val))?
                         .is_none()
                     {
                         return Ok(None);
@@ -105,8 +105,8 @@ impl AttemptBinding for Pattern {
                     let (key_p, val_p) = kv_pair_p.pair();
                     for (key, val) in map.iter() {
                         match (
-                            key_p.attempt_binding(context, ValueRef::clone(key))?,
-                            val_p.attempt_binding(context, ValueRef::clone(val))?,
+                            key_p.attempt_pattern_matching(context, ValueRef::clone(key))?,
+                            val_p.attempt_pattern_matching(context, ValueRef::clone(val))?,
                         ) {
                             (Some(_), Some(_)) => {
                                 matched_pair = true;
@@ -131,8 +131,8 @@ impl AttemptBinding for Pattern {
                     let (key_p, val_p) = kv_pair_p.pair();
                     for (key, val) in map.iter() {
                         match (
-                            key_p.attempt_binding(context, ValueRef::clone(key))?,
-                            val_p.attempt_binding(context, ValueRef::clone(val))?,
+                            key_p.attempt_pattern_matching(context, ValueRef::clone(key))?,
+                            val_p.attempt_pattern_matching(context, ValueRef::clone(val))?,
                         ) {
                             (Some(_), Some(_)) => {
                                 matched_pair = true;
@@ -148,7 +148,7 @@ impl AttemptBinding for Pattern {
                     }
                 }
 
-                match rest_p.attempt_binding(context, rest_items.into())? {
+                match rest_p.attempt_pattern_matching(context, rest_items.into())? {
                     Some(_) => Ok(Some(value)),
                     None => Ok(None),
                 }
@@ -178,7 +178,7 @@ impl AttemptBinding for Pattern {
                 }
             }
 
-            (_, _) => Err(PatternBindingError::MatchFailed(
+            (_, _) => Err(PatternMatchingError::MatchFailed(
                 context.current_func_id(),
                 self.clone(),
                 ValueRef::clone(&value),

@@ -8,10 +8,10 @@ pub mod environment;
 pub mod eval_context;
 pub mod lib_std;
 pub mod module;
-pub mod pattern;
+pub mod pattern_matching;
 
 pub use eval_context::EvalContext;
-use pattern::PatternBindingError;
+use pattern_matching::PatternMatchingError;
 use query_planner::QueryError;
 pub use rogato_common::{
     native_fn::{NativeFn, NativeFnError},
@@ -68,7 +68,7 @@ pub enum EvalError {
     MapConsInvalidMap(ValueRef),
 
     #[error("EvalError during pattern match in {0} : {1}")]
-    PatternBindingFailed(Identifier, PatternBindingError),
+    PatternBindingFailed(Identifier, PatternMatchingError),
 }
 
 impl From<QueryError> for EvalError {
@@ -89,16 +89,16 @@ impl From<EvalError> for NativeFnError {
     }
 }
 
-impl From<PatternBindingError> for EvalError {
-    fn from(e: PatternBindingError) -> Self {
+impl From<PatternMatchingError> for EvalError {
+    fn from(e: PatternMatchingError) -> Self {
         match &e {
-            PatternBindingError::Unknown(func_id, _) => {
+            PatternMatchingError::Unknown(func_id, _) => {
                 EvalError::PatternBindingFailed(func_id.clone(), e)
             }
-            PatternBindingError::MatchFailed(func_id, _, _) => {
+            PatternMatchingError::MatchFailed(func_id, _, _) => {
                 EvalError::PatternBindingFailed(func_id.clone(), e)
             }
-            PatternBindingError::NoFnVariantMatched(func_id, _, _) => {
+            PatternMatchingError::NoFnVariantMatched(func_id, _, _) => {
                 EvalError::PatternBindingFailed(func_id.clone(), e)
             }
         }

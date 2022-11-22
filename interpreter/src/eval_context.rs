@@ -10,7 +10,7 @@ use super::{environment::Environment, module::Module, EvalError, Identifier, Val
 use crate::{
     environment::Imports,
     lib_std,
-    pattern::{AttemptBinding, PatternBindingError},
+    pattern_matching::{PatternMatching, PatternMatchingError},
     query_planner::{QueryPlanner, QueryResult},
     Evaluate,
 };
@@ -142,7 +142,7 @@ impl EvalContext {
             for (arg_pattern, arg_val) in arg_patterns.iter().zip(args) {
                 attempted += 1;
                 last_attempted_pattern = Some(Rc::clone(arg_pattern));
-                match arg_pattern.attempt_binding(&mut fn_ctx, ValueRef::clone(arg_val)) {
+                match arg_pattern.attempt_pattern_matching(&mut fn_ctx, ValueRef::clone(arg_val)) {
                     Ok(Some(_)) => {
                         matched += 1;
                         continue;
@@ -169,7 +169,7 @@ impl EvalContext {
 
         return Err(EvalError::PatternBindingFailed(
             func.id().clone(),
-            PatternBindingError::NoFnVariantMatched(
+            PatternMatchingError::NoFnVariantMatched(
                 func.id().clone(),
                 last_attempted_pattern,
                 args.to_vec(),
