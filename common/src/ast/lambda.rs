@@ -121,7 +121,7 @@ pub enum LambdaClosureEvalError {
 
 pub trait LambdaClosureContext {
     fn hash_id(&self) -> String;
-    fn lookup_var(&self, id: Identifier) -> Option<ValueRef>;
+    fn lookup_var(&self, id: &Identifier) -> Option<ValueRef>;
     fn define_var(&mut self, id: &Identifier, val: ValueRef);
     fn with_child_env(&self) -> Box<dyn LambdaClosureContext>;
     fn evaluate_lambda_call(

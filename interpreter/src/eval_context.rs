@@ -274,11 +274,11 @@ impl LambdaClosureContext for EvalContext {
         self.id.to_string()
     }
 
-    fn lookup_var(&self, id: Identifier) -> Option<ValueRef> {
+    fn lookup_var(&self, id: &Identifier) -> Option<ValueRef> {
         self.lookup_var(id.as_str())
     }
 
-    fn define_var(&mut self, id: &rogato_common::ast::Identifier, val: ValueRef) {
+    fn define_var(&mut self, id: &Identifier, val: ValueRef) {
         self.define_var(id, val)
     }
 
