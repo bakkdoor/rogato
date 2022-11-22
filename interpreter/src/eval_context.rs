@@ -142,7 +142,7 @@ impl EvalContext {
             for (arg_pattern, arg_val) in arg_patterns.iter().zip(args) {
                 attempted += 1;
                 last_attempted_pattern = Some(Rc::clone(arg_pattern));
-                match arg_pattern.attempt_pattern_matching(&mut fn_ctx, ValueRef::clone(arg_val)) {
+                match arg_pattern.pattern_match(&mut fn_ctx, ValueRef::clone(arg_val)) {
                     Ok(Some(_)) => {
                         matched += 1;
                         continue;

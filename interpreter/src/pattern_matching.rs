@@ -22,7 +22,7 @@ pub enum PatternMatchingError {
 }
 
 pub trait PatternMatching {
-    fn attempt_pattern_matching(
+    fn pattern_match(
         &self,
         eval_context: &mut crate::EvalContext,
         value: ValueRef,
@@ -30,7 +30,7 @@ pub trait PatternMatching {
 }
 
 impl PatternMatching for Pattern {
-    fn attempt_pattern_matching(
+    fn pattern_match(
         &self,
         context: &mut EvalContext,
         value: ValueRef,
@@ -55,8 +55,8 @@ impl PatternMatching for Pattern {
                     return Ok(None);
                 }
 
-                head.attempt_pattern_matching(context, list.head().unwrap())?;
-                tail.attempt_pattern_matching(context, list.tail().into())?;
+                head.pattern_match(context, list.head().unwrap())?;
+                tail.pattern_match(context, list.tail().into())?;
 
                 Ok(Some(value))
             }
@@ -67,10 +67,7 @@ impl PatternMatching for Pattern {
                 }
 
                 for (pat, val) in patterns.iter().zip(items.iter()) {
-                    if pat
-                        .attempt_pattern_matching(context, ValueRef::clone(val))?
-                        .is_none()
-                    {
+                    if pat.pattern_match(context, ValueRef::clone(val))?.is_none() {
                         return Ok(None);
                     }
                 }
@@ -84,10 +81,7 @@ impl PatternMatching for Pattern {
                 }
 
                 for (pat, val) in patterns.iter().zip(items.iter()) {
-                    if pat
-                        .attempt_pattern_matching(context, ValueRef::clone(val))?
-                        .is_none()
-                    {
+                    if pat.pattern_match(context, ValueRef::clone(val))?.is_none() {
                         return Ok(None);
                     };
                 }
@@ -105,8 +99,8 @@ impl PatternMatching for Pattern {
                     let (key_p, val_p) = kv_pair_p.pair();
                     for (key, val) in map.iter() {
                         match (
-                            key_p.attempt_pattern_matching(context, ValueRef::clone(key))?,
-                            val_p.attempt_pattern_matching(context, ValueRef::clone(val))?,
+                            key_p.pattern_match(context, ValueRef::clone(key))?,
+                            val_p.pattern_match(context, ValueRef::clone(val))?,
                         ) {
                             (Some(_), Some(_)) => {
                                 matched_pair = true;
@@ -131,8 +125,8 @@ impl PatternMatching for Pattern {
                     let (key_p, val_p) = kv_pair_p.pair();
                     for (key, val) in map.iter() {
                         match (
-                            key_p.attempt_pattern_matching(context, ValueRef::clone(key))?,
-                            val_p.attempt_pattern_matching(context, ValueRef::clone(val))?,
+                            key_p.pattern_match(context, ValueRef::clone(key))?,
+                            val_p.pattern_match(context, ValueRef::clone(val))?,
                         ) {
                             (Some(_), Some(_)) => {
                                 matched_pair = true;
@@ -148,7 +142,7 @@ impl PatternMatching for Pattern {
                     }
                 }
 
-                match rest_p.attempt_pattern_matching(context, rest_items.into())? {
+                match rest_p.pattern_match(context, rest_items.into())? {
                     Some(_) => Ok(Some(value)),
                     None => Ok(None),
                 }
