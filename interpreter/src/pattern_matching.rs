@@ -21,6 +21,7 @@ pub enum PatternMatchingError {
     NoFnVariantMatched(FuncId, Option<Rc<Pattern>>, Vec<ValueRef>),
 }
 
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub enum PatternMatch {
     Matched(ValueRef),
     TryNextPattern,
