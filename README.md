@@ -11,7 +11,7 @@
 The syntax is inspired mostly by languages like Elm, F#, Haskell and Elixir. The goal is to provide a basic standard library for common tasks. The language is still at a very early stage, so a lot is still missing.
 
 More information will follow here as the language matures.
-For some example source code and syntax ideas (still WIP), check out the code examples under [examples/](examples/).
+For some example source code and syntax ideas (still WIP), check out the code examples under [examples/](examples/) or the standard library under [lib/](lib/).
 
 ### Language design goals
 
