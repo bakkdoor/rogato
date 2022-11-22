@@ -61,7 +61,7 @@ jobs:
 
   clippy:
     name: Clippy
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
@@ -73,7 +73,7 @@ jobs:
         uses: KyleMayes/install-llvm-action@v1.5.2
         with:
           version: 14.0
-      - name: Set LLVM envars
+      - name: environment
         run: |
           echo "export LLVM_SYS_140_PREFIX=$LLVM_PATH" > ~/.bashrc
       - name: get_env
