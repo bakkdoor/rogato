@@ -69,11 +69,11 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
-      - run: rustup component add clippy
       - name: Install LLVM and Clang
         uses: KyleMayes/install-llvm-action@v1.5.2
         with:
           version: 14.0
+      - run: rustup component add clippy
       - name: Set LLVM envars
         run: |
           echo "export LLVM_SYS_140_PREFIX=$LLVM_PATH" > ~/.bashrc
