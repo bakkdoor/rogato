@@ -72,7 +72,7 @@ fn read_parse_file(file_path: &Path, parser_ctx: &ParserContext) {
 
 fn print_help() {
     println!("Possible arguments:");
-    println!("  help\n  repl\n  db\n  <source file path>");
+    println!("  help\n  repl\n  <source file path>");
 }
 
 fn print_parse_result<T: Display, E: Display>(code: &str, result: &Result<T, E>) {
