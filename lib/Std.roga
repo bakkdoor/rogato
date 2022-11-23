@@ -1,7 +1,14 @@
-module Std { always, id }
+module Std { always, id, not }
 
 let always x =
   _ -> x
 
+
 let id x =
   x
+
+
+let not true =
+  false
+let not false =
+  true
