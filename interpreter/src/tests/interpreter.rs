@@ -362,6 +362,43 @@ fn std_list_module() {
                 val::number(4),
             ]),
         ),
+        (
+            "let
+                reverse l = Std.List.reverse l
+
+                zip4 ws xs ys zs =
+                    zip4_ [] ws xs ys zs
+
+                zip4_ acc [] _ _ _ = reverse acc
+                zip4_ acc _ [] _ _ = reverse acc
+                zip4_ acc _ _ [] _ = reverse acc
+                zip4_ acc _ _ _ [] = reverse acc
+
+                zip4_ acc [w :: ws] [x :: xs] [y :: ys] [z :: zs] =
+                    zip4_ [{w, x, y, z} :: acc] ws xs ys zs
+            in
+                zip4 (range 0 3) (range 10 13) (range 100 103) (range 1000 1003)",
+            val::list([
+                val::tuple([
+                    val::number(0),
+                    val::number(10),
+                    val::number(100),
+                    val::number(1000),
+                ]),
+                val::tuple([
+                    val::number(1),
+                    val::number(11),
+                    val::number(101),
+                    val::number(1001),
+                ]),
+                val::tuple([
+                    val::number(2),
+                    val::number(12),
+                    val::number(102),
+                    val::number(1002),
+                ]),
+            ]),
+        ),
     ];
 
     let mut eval_ctx = EvalContext::new();

@@ -80,6 +80,38 @@ let zip_ acc [x :: xs] [y :: ys] =
   zip_ [{x, y} :: acc] xs ys
 
 
+let zip3 xs ys zs =
+  zip3_ [] xs ys zs
+
+let zip3_ acc [] _ _ =
+  reverse acc
+
+let zip3_ acc _ [] _ =
+  reverse acc
+
+let zip3_ acc _ _ [] =
+  reverse acc
+
+let zip3_ acc [x :: xs] [y :: ys] [z :: zs] =
+  zip3_ [{x, y, z} :: acc] xs ys zs
+
+
+let zip4 ws xs ys zs =
+  zip4_ [] ws xs ys zs
+
+let zip4_ acc [] _ _ _ =
+  reverse acc
+let zip4_ acc _ [] _ _ =
+  reverse acc
+let zip4_ acc _ _ [] _ =
+  reverse acc
+let zip4_ acc _ _ _ [] =
+  reverse acc
+
+let zip4_ acc [w :: ws] [x :: xs] [y :: ys] [z :: zs] =
+  zip4_ [{w, x, y, z} :: acc] ws xs ys zs
+
+
 let groupBy list fn =
   groupBy_ {} list fn
 
