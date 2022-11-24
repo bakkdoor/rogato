@@ -107,3 +107,9 @@ impl From<Vector> for ValueRef {
         ValueRef::new(Value::Vector(vector))
     }
 }
+
+impl From<rpds::Vector<ValueRef>> for Vector {
+    fn from(entries: rpds::Vector<ValueRef>) -> Self {
+        Self { entries }
+    }
+}

@@ -103,3 +103,9 @@ impl From<Queue> for ValueRef {
         ValueRef::new(Value::Queue(queue))
     }
 }
+
+impl From<rpds::Queue<ValueRef>> for Queue {
+    fn from(entries: rpds::Queue<ValueRef>) -> Self {
+        Self { entries }
+    }
+}

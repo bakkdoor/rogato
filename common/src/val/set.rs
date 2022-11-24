@@ -127,3 +127,9 @@ impl From<Set> for ValueRef {
         ValueRef::new(Value::Set(set))
     }
 }
+
+impl From<rpds::HashTrieSet<ValueRef>> for Set {
+    fn from(entries: rpds::HashTrieSet<ValueRef>) -> Self {
+        Self { entries }
+    }
+}

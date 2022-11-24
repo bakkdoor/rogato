@@ -95,3 +95,9 @@ impl From<Stack> for ValueRef {
         ValueRef::new(Value::Stack(stack))
     }
 }
+
+impl From<rpds::Stack<ValueRef>> for Stack {
+    fn from(entries: rpds::Stack<ValueRef>) -> Self {
+        Self { entries }
+    }
+}

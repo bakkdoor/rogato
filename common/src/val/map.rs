@@ -131,3 +131,9 @@ impl From<Map> for ValueRef {
         ValueRef::new(Value::Map(map))
     }
 }
+
+impl From<HashTrieMap<ValueRef, ValueRef>> for Map {
+    fn from(entries: HashTrieMap<ValueRef, ValueRef>) -> Self {
+        Self { entries }
+    }
+}

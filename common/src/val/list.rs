@@ -76,6 +76,12 @@ impl From<List> for ValueRef {
     }
 }
 
+impl From<rpds::List<ValueRef>> for List {
+    fn from(entries: rpds::List<ValueRef>) -> Self {
+        Self { entries }
+    }
+}
+
 impl FromIterator<ValueRef> for List {
     fn from_iter<T: IntoIterator<Item = ValueRef>>(iter: T) -> Self {
         Self {
