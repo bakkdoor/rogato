@@ -47,7 +47,7 @@ impl Display for Object {
 }
 
 impl From<Object> for ValueRef {
-    fn from(queue: Object) -> Self {
-        ValueRef::new(Value::Object(queue))
+    fn from(object: Object) -> Self {
+        ValueRef::new(Value::Object(object))
     }
 }
