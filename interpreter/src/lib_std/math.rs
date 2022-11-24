@@ -4,7 +4,7 @@ use rogato_common::{
     ast::module_def::ModuleExports,
     val::{self, Value},
 };
-use rust_decimal::MathematicalOps;
+use rust_decimal::{prelude::ToPrimitive, MathematicalOps};
 use std::ops::Deref;
 
 pub fn module() -> Module {
@@ -22,6 +22,7 @@ pub fn module() -> Module {
         "floor".into(),
         "trunc".into(),
         "fract".into(),
+        "rescale".into(),
         "max".into(),
         "min".into(),
         "sqrt".into(),
@@ -129,6 +130,22 @@ pub fn module() -> Module {
         match args.get(0) {
             Some(val) => match val.deref() {
                 Value::Number(num) => Ok(val::number(num.fract())),
+                _ => error,
+            },
+            _ => error,
+        }
+    });
+
+    module.fn_def_native("rescale", &["num", "scale"], move |_ctx, args| {
+        let error = Err(invalid_args("rescale"));
+        match (args.len(), args.get(0), args.get(1)) {
+            (2, Some(val), Some(scale)) => match (val.deref(), scale.deref()) {
+                (Value::Number(num), Value::Number(scale)) => {
+                    let mut result = *num;
+                    let scale: u32 = Into::<u32>::into(scale.floor().to_u32().unwrap());
+                    result.rescale(scale);
+                    Ok(val::number(result))
+                }
                 _ => error,
             },
             _ => error,

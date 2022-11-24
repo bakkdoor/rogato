@@ -255,6 +255,11 @@ fn std_math_module() {
         ("sqrt 4", val::some(val::number(2))),
         ("sqrt 100", val::some(val::number(10))),
         ("sqrt 10000", val::some(val::number(100))),
+        ("rescale 420 2", val::number(420)),
+        ("rescale 420.69 0", val::number(421)),
+        ("rescale 420.691337 2", val::decimal_str("420.69")),
+        ("rescale 420.691337 3", val::decimal_str("420.691")),
+        ("rescale 420.691337 4", val::decimal_str("420.6913")),
     ];
 
     let mut eval_ctx = EvalContext::new();
