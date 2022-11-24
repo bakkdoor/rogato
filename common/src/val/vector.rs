@@ -40,11 +40,19 @@ impl Vector {
     }
 
     pub fn append_all(&self, other: &Self) -> Self {
-        let mut appended = other.entries.clone();
-        for val in self.iter() {
+        let mut appended = self.entries.clone();
+        for val in other.iter() {
             appended = appended.push_back(ValueRef::clone(val))
         }
         Self { entries: appended }
+    }
+
+    pub fn prepend_all(&self, other: &Self) -> Self {
+        let mut prepended = other.entries.clone();
+        for val in self.iter() {
+            prepended = prepended.push_back(ValueRef::clone(val))
+        }
+        Self { entries: prepended }
     }
 
     pub fn first(&self) -> Option<ValueRef> {
