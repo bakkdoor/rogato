@@ -11,6 +11,12 @@ pub struct Stack {
 type StackIter<'a> = rpds::stack::Iter<'a, ValueRef, archery::RcK>;
 
 impl Stack {
+    pub fn new() -> Self {
+        Self {
+            entries: rpds::Stack::new(),
+        }
+    }
+
     pub fn iter(&self) -> StackIter {
         self.entries.iter()
     }
@@ -21,6 +27,34 @@ impl Stack {
 
     pub fn is_empty(&self) -> bool {
         self.entries.is_empty()
+    }
+
+    pub fn peek(&self) -> Option<ValueRef> {
+        self.entries.peek().map(ValueRef::clone)
+    }
+
+    pub fn push(&self, value: ValueRef) -> Self {
+        Self {
+            entries: self.entries.push(value),
+        }
+    }
+
+    pub fn pop(&self) -> Option<Self> {
+        self.entries.pop().map(|entries| Self { entries })
+    }
+
+    pub fn push_all(&self, other: &Self) -> Self {
+        let mut joined = self.entries.clone();
+        for val in other.iter() {
+            joined = joined.push(ValueRef::clone(val))
+        }
+        Self { entries: joined }
+    }
+}
+
+impl Default for Stack {
+    fn default() -> Self {
+        Stack::new()
     }
 }
 

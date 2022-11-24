@@ -14,6 +14,12 @@ pub struct Set {
 type SetIter<'a> = rpds::set::hash_trie_set::Iter<'a, ValueRef, archery::RcK>;
 
 impl Set {
+    pub fn new() -> Self {
+        Set {
+            entries: rpds::HashTrieSet::new(),
+        }
+    }
+
     pub fn iter(&self) -> SetIter {
         self.entries.iter()
     }
@@ -24,6 +30,48 @@ impl Set {
 
     pub fn is_empty(&self) -> bool {
         self.entries.is_empty()
+    }
+
+    pub fn insert(&self, value: ValueRef) -> Self {
+        Self {
+            entries: self.entries.insert(value),
+        }
+    }
+
+    pub fn remove(&self, value: &ValueRef) -> Self {
+        Self {
+            entries: self.entries.remove(value),
+        }
+    }
+
+    pub fn contains(&self, value: &ValueRef) -> bool {
+        self.entries.contains(value)
+    }
+
+    pub fn merge(&self, other: &Self) -> Self {
+        let mut merged = self.entries.clone();
+        for val in other.iter() {
+            merged = merged.insert(ValueRef::clone(val))
+        }
+        Self { entries: merged }
+    }
+
+    pub fn is_disjoint(&self, other: &Self) -> bool {
+        self.entries.is_disjoint(&other.entries)
+    }
+
+    pub fn is_subset(&self, other: &Self) -> bool {
+        self.entries.is_subset(&other.entries)
+    }
+
+    pub fn is_superset(&self, other: &Self) -> bool {
+        self.entries.is_superset(&other.entries)
+    }
+}
+
+impl Default for Set {
+    fn default() -> Self {
+        Set::new()
     }
 }
 

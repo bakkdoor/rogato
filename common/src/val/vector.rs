@@ -11,6 +11,12 @@ pub struct Vector {
 type VectorIter<'a> = rpds::vector::Iter<'a, ValueRef, archery::RcK>;
 
 impl Vector {
+    pub fn new() -> Self {
+        Vector {
+            entries: rpds::Vector::new(),
+        }
+    }
+
     pub fn iter(&self) -> VectorIter {
         self.entries.iter()
     }
@@ -21,6 +27,46 @@ impl Vector {
 
     pub fn is_empty(&self) -> bool {
         self.entries.is_empty()
+    }
+
+    pub fn push_back(&self, value: ValueRef) -> Self {
+        Self {
+            entries: self.entries.push_back(value),
+        }
+    }
+
+    pub fn drop_last(&self) -> Option<Self> {
+        self.entries.drop_last().map(|entries| Self { entries })
+    }
+
+    pub fn append_all(&self, other: &Self) -> Self {
+        let mut appended = other.entries.clone();
+        for val in self.iter() {
+            appended = appended.push_back(ValueRef::clone(val))
+        }
+        Self { entries: appended }
+    }
+
+    pub fn first(&self) -> Option<ValueRef> {
+        self.entries.first().map(ValueRef::clone)
+    }
+
+    pub fn last(&self) -> Option<ValueRef> {
+        self.entries.last().map(ValueRef::clone)
+    }
+
+    pub fn get(&self, idx: usize) -> Option<ValueRef> {
+        self.entries.get(idx).map(ValueRef::clone)
+    }
+
+    pub fn set(&self, idx: usize, value: ValueRef) -> Option<Self> {
+        self.entries.set(idx, value).map(|entries| Self { entries })
+    }
+}
+
+impl Default for Vector {
+    fn default() -> Self {
+        Vector::new()
     }
 }
 

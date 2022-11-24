@@ -14,6 +14,12 @@ pub struct List {
 type ListIter<'a> = rpds::list::Iter<'a, ValueRef, archery::RcK>;
 
 impl List {
+    pub fn new() -> Self {
+        Self {
+            entries: rpds::List::new(),
+        }
+    }
+
     pub fn iter(&self) -> ListIter<'_> {
         self.entries.iter()
     }
@@ -60,9 +66,7 @@ impl List {
 
 impl Default for List {
     fn default() -> Self {
-        Self {
-            entries: rpds::List::new(),
-        }
+        List::new()
     }
 }
 

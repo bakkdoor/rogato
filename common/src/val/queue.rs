@@ -14,6 +14,12 @@ pub struct Queue {
 type QueueIter<'a> = rpds::queue::Iter<'a, ValueRef, archery::RcK>;
 
 impl Queue {
+    pub fn new() -> Self {
+        Self {
+            entries: rpds::Queue::new(),
+        }
+    }
+
     pub fn iter(&self) -> QueueIter {
         self.entries.iter()
     }
@@ -24,6 +30,26 @@ impl Queue {
 
     pub fn is_empty(&self) -> bool {
         self.entries.is_empty()
+    }
+
+    pub fn enqueue(&self, value: ValueRef) -> Self {
+        Self {
+            entries: self.entries.enqueue(value),
+        }
+    }
+
+    pub fn dequeue(&self) -> Option<Self> {
+        self.entries.dequeue().map(|entries| Self { entries })
+    }
+
+    pub fn peek(&self) -> Option<ValueRef> {
+        self.entries.peek().map(ValueRef::clone)
+    }
+}
+
+impl Default for Queue {
+    fn default() -> Self {
+        Queue::new()
     }
 }
 
