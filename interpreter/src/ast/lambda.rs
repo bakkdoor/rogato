@@ -21,7 +21,7 @@ impl Evaluate<ValueRef> for Rc<Lambda> {
 
 impl<A: Display + ASTDepth + Evaluate<ValueRef>> Evaluate<ValueRef> for LambdaArgs<A> {
     fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
-        let mut vec = Vec::new();
+        let mut vec = Vec::with_capacity(self.len());
         for arg in self.iter() {
             vec.push(arg.evaluate(context)?)
         }
@@ -31,7 +31,7 @@ impl<A: Display + ASTDepth + Evaluate<ValueRef>> Evaluate<ValueRef> for LambdaAr
 
 impl<A: Display + ASTDepth + Evaluate<ValueRef>> Evaluate<Vec<ValueRef>> for LambdaArgs<A> {
     fn evaluate(&self, context: &mut EvalContext) -> Result<Vec<ValueRef>, EvalError> {
-        let mut vec = Vec::new();
+        let mut vec = Vec::with_capacity(self.len());
         for arg in self.iter() {
             vec.push(arg.evaluate(context)?)
         }

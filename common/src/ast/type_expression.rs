@@ -114,6 +114,14 @@ impl StructTypeProperties {
     pub fn iter(&self) -> std::slice::Iter<(Identifier, Rc<TypeExpression>)> {
         self.prop_types.iter()
     }
+
+    pub fn len(&self) -> usize {
+        self.prop_types.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.prop_types.is_empty()
+    }
 }
 
 impl FromIterator<(Identifier, Rc<TypeExpression>)> for StructTypeProperties {

@@ -51,7 +51,7 @@ impl Evaluate<ValueRef> for TypeExpression {
 
 impl Evaluate<ValueRef> for StructTypeProperties {
     fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
-        let mut vec = Vec::new();
+        let mut vec = Vec::with_capacity(self.len());
         for (_id, type_expr) in self.iter() {
             vec.push(type_expr.evaluate(context)?)
         }

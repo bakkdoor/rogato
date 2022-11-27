@@ -175,7 +175,7 @@ impl StructProps {
         first: (Identifier, Rc<Expression>),
         rest: Vec<(Identifier, Rc<Expression>)>,
     ) -> Self {
-        let mut boxed_props = Vec::new();
+        let mut boxed_props = Vec::with_capacity(1 + rest.len());
         let (f_id, f_expr) = first;
         boxed_props.push((f_id, f_expr));
         for (id, expr) in rest {

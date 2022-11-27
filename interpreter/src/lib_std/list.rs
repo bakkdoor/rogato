@@ -41,7 +41,7 @@ pub fn module() -> Module {
             match (args.len(), args.get(0), args.get(1)) {
                 (2, Some(a), Some(b)) => match (a.deref(), b.deref()) {
                     (Value::List(items), Value::Symbol(fn_id)) => {
-                        let mut result: Vec<ValueRef> = Vec::new();
+                        let mut result: Vec<ValueRef> = Vec::with_capacity(items.len());
                         for item in items.iter() {
                             match context.call_function(fn_id, &[ValueRef::clone(item)]) {
                                 Some(val) => result.push(ValueRef::clone(&val?)),
@@ -56,7 +56,7 @@ pub fn module() -> Module {
                         Ok(val::list(result))
                     }
                     (Value::List(items), Value::Lambda(lambda_ctx, lambda)) => {
-                        let mut result: Vec<ValueRef> = Vec::new();
+                        let mut result: Vec<ValueRef> = Vec::with_capacity(items.len());
                         for item in items.iter() {
                             let val = context.call_lambda(
                                 Rc::clone(lambda_ctx),
