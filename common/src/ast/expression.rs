@@ -1,4 +1,4 @@
-pub use super::fn_call::FnCallArgs;
+pub use super::fn_call::{FnCall, FnCallArgs};
 use super::fn_def::FnDef;
 pub use super::fn_def::FnDefArgs;
 pub use super::if_else::IfElse;
@@ -15,7 +15,7 @@ use std::rc::Rc;
 pub enum Expression {
     Commented(String, Rc<Expression>),
     Lit(Literal),
-    FnCall(Identifier, FnCallArgs),
+    FnCall(FnCall),
     OpCall(Identifier, Rc<Expression>, Rc<Expression>),
     Var(Identifier),
     ConstOrTypeRef(Identifier),
@@ -41,9 +41,7 @@ impl PartialEq for Expression {
                 c1.eq(c2) && e1.eq(e2)
             }
             (Expression::Lit(lit1), Expression::Lit(lit2)) => lit1.eq(lit2),
-            (Expression::FnCall(id1, args1), Expression::FnCall(id2, args2)) => {
-                id1.eq(id2) && args1.eq(args2)
-            }
+            (Expression::FnCall(fn_call1), Expression::FnCall(fn_call2)) => fn_call1.eq(fn_call2),
             (Expression::OpCall(id1, left1, right1), Expression::OpCall(id2, left2, right2)) => {
                 id1.eq(id2) && left1.eq(left2) && right1.eq(right2)
             }
@@ -77,10 +75,7 @@ impl core::hash::Hash for Expression {
                 e.hash(state)
             }
             Expression::Lit(lit_exp) => lit_exp.hash(state),
-            Expression::FnCall(id, args) => {
-                id.hash(state);
-                args.hash(state)
-            }
+            Expression::FnCall(fn_call) => fn_call.hash(state),
             Expression::OpCall(id, left, right) => {
                 id.hash(state);
                 left.hash(state);
@@ -113,7 +108,7 @@ impl ASTDepth for Expression {
         match self {
             Expression::Commented(_, e) => 1 + e.ast_depth(),
             Expression::Lit(lit_exp) => lit_exp.ast_depth(),
-            Expression::FnCall(_id, args) => args.ast_depth(),
+            Expression::FnCall(fn_call) => fn_call.ast_depth(),
             Expression::OpCall(_id, left, right) => left.ast_depth() + right.ast_depth(),
             Expression::Var(_id) => 1,
             Expression::ConstOrTypeRef(_id) => 1,
@@ -144,13 +139,7 @@ impl Display for Expression {
                 exp.fmt(f)
             }
             Expression::Lit(lit_exp) => lit_exp.fmt(f),
-            Expression::FnCall(fn_ident, args) => {
-                f.write_str("(")?;
-                fn_ident.fmt(f)?;
-                f.write_str(" ")?;
-                args.fmt(f)?;
-                f.write_str(")")
-            }
+            Expression::FnCall(fn_call) => fn_call.fmt(f),
             Expression::OpCall(op_ident, left, right) => {
                 f.write_str("(")?;
                 left.fmt(f)?;

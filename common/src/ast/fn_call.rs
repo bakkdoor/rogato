@@ -1,7 +1,35 @@
 use super::expression::Expression;
-use super::ASTDepth;
+use super::{ASTDepth, Identifier};
 use std::fmt::Display;
 use std::rc::Rc;
+
+#[derive(Clone, PartialEq, Eq, Debug, Hash)]
+pub struct FnCall {
+    pub id: Identifier,
+    pub args: FnCallArgs,
+}
+
+impl FnCall {
+    pub fn new(id: Identifier, args: FnCallArgs) -> Self {
+        Self { id, args }
+    }
+}
+
+impl ASTDepth for FnCall {
+    fn ast_depth(&self) -> usize {
+        1 + self.args.ast_depth()
+    }
+}
+
+impl Display for FnCall {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("(")?;
+        self.id.fmt(f)?;
+        f.write_str(" ")?;
+        self.args.fmt(f)?;
+        f.write_str(")")
+    }
+}
 
 #[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub struct FnCallArgs<T: Clone = Expression> {

@@ -11,7 +11,7 @@ use inkwell::{
 use rogato_common::{
     ast::{
         expression::Expression,
-        fn_call::FnCallArgs,
+        fn_call::{FnCall, FnCallArgs},
         fn_def::{FnDef, FnDefBody},
         literal::Literal,
         module_def::ModuleDef,
@@ -141,11 +141,10 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         }
     }
 
-    pub fn codegen_fn_call(
-        &mut self,
-        id: &Identifier,
-        args: &FnCallArgs,
-    ) -> CodegenResult<FloatValue<'ctx>> {
+    pub fn codegen_fn_call(&mut self, fn_call: &FnCall) -> CodegenResult<FloatValue<'ctx>> {
+        let id = &fn_call.id;
+        let args = &fn_call.args;
+
         let function = self
             .get_function(id.as_str())
             .ok_or_else(|| CodegenError::FnNotDefined(id.clone()))?;
@@ -232,7 +231,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         match expr {
             Expression::Commented(_c, e) => self.codegen_expr(e),
             Expression::Lit(lit_expr) => self.codegen_lit_expr(lit_expr),
-            Expression::FnCall(id, args) => self.codegen_fn_call(id, args),
+            Expression::FnCall(fn_call) => self.codegen_fn_call(fn_call),
             Expression::OpCall(id, left, right) => self.codegen_op_call(id, left, right),
 
             Expression::Var(id) => match self.lookup_var(id) {
@@ -241,7 +240,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                     .build_load(*var, id.as_str())
                     .into_float_value()),
                 None => {
-                    self.codegen_fn_call(id, &FnCallArgs::empty())
+                    self.codegen_fn_call(&FnCall::new(id.clone(), FnCallArgs::empty()))
                     // Err(CompileError::VarNotFound(id.clone()))
                 }
             },

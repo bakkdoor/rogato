@@ -7,7 +7,7 @@ use rogato_common::{
         helpers::{fn_call, lambda, var},
     },
     val::ValueRef,
-    val::{self, Value},
+    val::{self},
 };
 
 impl Evaluate<ValueRef> for Expression {
@@ -15,26 +15,7 @@ impl Evaluate<ValueRef> for Expression {
         match self {
             Expression::Commented(_c, e) => e.evaluate(context),
             Expression::Lit(lit_exp) => lit_exp.evaluate(context),
-            Expression::FnCall(fn_ident, args) => {
-                let call_args = args.evaluate(context)?;
-                match context.call_function(fn_ident, &call_args) {
-                    Some(val) => Ok(val?),
-                    None => match context.lookup_var(fn_ident) {
-                        Some(val2) => match &*val2 {
-                            Value::Lambda(lambda_ctx, lambda) => {
-                                context.call_lambda(Rc::clone(lambda_ctx), lambda, &call_args)
-                            }
-                            Value::Symbol(fn_id) => {
-                                context.call_function(fn_id, &call_args).unwrap_or_else(|| {
-                                    Err(EvalError::FunctionNotDefined(fn_id.clone()))
-                                })
-                            }
-                            _ => Err(EvalError::FunctionNotDefined(fn_ident.clone())),
-                        },
-                        None => Err(EvalError::FunctionNotDefined(fn_ident.clone())),
-                    },
-                }
-            }
+            Expression::FnCall(fn_call) => fn_call.evaluate(context),
             Expression::OpCall(op_ident, left, right) => {
                 let call_args = [left.evaluate(context)?, right.evaluate(context)?];
                 match context.call_function(op_ident, &call_args) {

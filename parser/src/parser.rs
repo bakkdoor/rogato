@@ -4,8 +4,8 @@ use super::ParserContext;
 use peg::{error::ParseError, parser, str::LineCol};
 use rogato_common::ast::{
     expression::{
-        Expression, FnCallArgs, FnDefArgs, Lambda, LambdaArgs, LetBindings, LetExpression, Literal,
-        Query, QueryBinding, QueryBindings, QueryGuards, StructProps, TupleItems,
+        Expression, FnCall, FnCallArgs, FnDefArgs, Lambda, LambdaArgs, LetBindings, LetExpression,
+        Literal, Query, QueryBinding, QueryBindings, QueryGuards, StructProps, TupleItems,
     },
     fn_def::{FnDef, FnDefBody},
     if_else::IfElse,
@@ -212,10 +212,10 @@ grammar parser(context: &ParserContext) for str {
     rule fn_pipe() -> Expression
         = a:fn_pipe_arg() calls:(fn_pipe_call())+ {
             let call = calls.iter().fold(a, |acc, call|{
-                if let Expression::FnCall(id, args) = call {
-                    let mut args = args.clone();
+                if let Expression::FnCall(fn_call) = call {
+                    let mut args = fn_call.args.clone();
                     args.prepend_arg(Rc::new(acc));
-                    return Expression::FnCall(id.clone(), args)
+                    return Expression::FnCall(FnCall::new(fn_call.id.clone(), args))
                 }
                 panic!("Failed to create fn call pipeline")
             });
@@ -233,7 +233,7 @@ grammar parser(context: &ParserContext) for str {
             fc
         }
         / _ "|>" _ id:identifier() {
-            Expression::FnCall(id, FnCallArgs::new(vec![]))
+            Expression::FnCall(FnCall::new(id, FnCallArgs::empty()))
         }
 
     rule commented_expr() -> Expression
@@ -361,11 +361,11 @@ grammar parser(context: &ParserContext) for str {
     rule fn_call() -> Expression
         = _ ids:(identifier() ** ".") args:(fn_arg())+ _ {
             let args = FnCallArgs::from_owned(args);
-            Expression::FnCall(ids.join(".").into(), args)
+            Expression::FnCall(FnCall::new(ids.join(".").into(), args))
         }
         / _ id:identifier() args:(fn_arg())+ _ {
             let args = FnCallArgs::from_owned(args);
-            Expression::FnCall(id, args)
+            Expression::FnCall(FnCall::new(id, args))
         }
 
     #[cache_left_rec]
@@ -559,7 +559,7 @@ grammar parser(context: &ParserContext) for str {
     rule constant_or_type_ref() -> Expression
         = id:struct_identifier() {
             if is_qualified_fn_call(&id) {
-                Expression::FnCall(id, FnCallArgs::empty())
+                Expression::FnCall(FnCall::new(id, FnCallArgs::empty()))
             }else{
                 Expression::ConstOrTypeRef(id)
             }

@@ -1,4 +1,4 @@
-use fn_call::FnCallArgs;
+use fn_call::FnCall;
 use let_expression::LetExpression;
 
 use super::{
@@ -31,7 +31,7 @@ pub trait Visitor<T: Default> {
     fn lit(&mut self, _lit: &Literal) -> T {
         T::default()
     }
-    fn fn_call(&mut self, _id: &Identifier, _args: &FnCallArgs) -> T {
+    fn fn_call(&mut self, _fn_call: &FnCall) -> T {
         T::default()
     }
     fn op_call(&mut self, _id: &Identifier, _left: &Expression, _right: &Expression) -> T {

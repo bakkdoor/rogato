@@ -1,8 +1,8 @@
 use rust_decimal::Decimal;
 
 use crate::ast::expression::{
-    FnCallArgs, Lambda, LambdaArgs, LetBindings, LetExpression, Query, QueryBinding, QueryBindings,
-    QueryGuards, StructProps, TupleItems,
+    FnCall, FnCallArgs, Lambda, LambdaArgs, LetBindings, LetExpression, Query, QueryBinding,
+    QueryBindings, QueryGuards, StructProps, TupleItems,
 };
 use crate::ast::fn_def::FnDef;
 use crate::ast::module_def::{ModuleDef, ModuleExports};
@@ -165,7 +165,7 @@ pub fn call_args<Args: IntoIterator<Item = Rc<Expression>>>(args: Args) -> FnCal
 }
 
 pub fn fn_call<Args: IntoIterator<Item = Rc<Expression>>>(id: &str, args: Args) -> Rc<Expression> {
-    Rc::new(Expression::FnCall(id.into(), call_args(args)))
+    Rc::new(Expression::FnCall(FnCall::new(id.into(), call_args(args))))
 }
 
 pub fn op_call(id: &str, left: Rc<Expression>, right: Rc<Expression>) -> Rc<Expression> {

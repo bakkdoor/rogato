@@ -76,9 +76,9 @@ impl Walk for Expression {
                     }
                 }
             }
-            Expression::FnCall(id, args) => {
-                v.fn_call(id, args);
-                for a in args.iter() {
+            Expression::FnCall(fn_call) => {
+                v.fn_call(fn_call);
+                for a in fn_call.args.iter() {
                     a.walk(v);
                 }
             }
