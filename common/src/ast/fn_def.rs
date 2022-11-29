@@ -11,6 +11,7 @@ pub struct FnDef {
     pub is_inline: bool,
     pub id: Identifier,
     pub variants: FnDefVariants,
+    is_tail_recursive: bool,
 }
 
 impl PartialEq for FnDef {
@@ -18,6 +19,7 @@ impl PartialEq for FnDef {
         self.is_inline.eq(&other.is_inline)
             && self.id.eq(&other.id)
             && self.variants.eq(&other.variants)
+            && self.is_tail_recursive.eq(&other.is_tail_recursive)
     }
 }
 
@@ -26,6 +28,7 @@ impl Hash for FnDef {
         Hash::hash(&self.id, h);
         Hash::hash(&self.is_inline, h);
         Hash::hash(&self.variants, h);
+        Hash::hash(&self.is_tail_recursive, h);
     }
 }
 
@@ -35,10 +38,13 @@ impl FnDef {
         args: FnDefArgs,
         body: Rc<FnDefBody>,
     ) -> Rc<RefCell<FnDef>> {
+        let id = id.into();
+        let is_tail_recursive = body.is_tail_recursive(&id);
         Rc::new(RefCell::new(FnDef {
             is_inline: false,
-            id: id.into(),
+            id,
             variants: FnDefVariants::new([(args, body)]),
+            is_tail_recursive,
         }))
     }
 
@@ -47,15 +53,19 @@ impl FnDef {
         args: FnDefArgs,
         body: Rc<FnDefBody>,
     ) -> Rc<RefCell<FnDef>> {
+        let id = id.into();
+        let is_tail_recursive = body.is_tail_recursive(&id);
         Rc::new(RefCell::new(FnDef {
             is_inline: true,
-            id: id.into(),
+            id,
             variants: FnDefVariants::new([(args, body)]),
+            is_tail_recursive,
         }))
     }
 
     pub fn add_variant(&mut self, args: FnDefArgs, body: Rc<FnDefBody>) {
-        self.variants.add(args, body)
+        self.is_tail_recursive = self.is_tail_recursive || body.is_tail_recursive(&self.id);
+        self.variants.add(args, body);
     }
 
     pub fn id(&self) -> &Identifier {
@@ -75,24 +85,7 @@ impl FnDef {
     }
 
     pub fn is_tail_recursive(&self) -> bool {
-        for (_args, body) in self.variants.iter() {
-            match body.deref() {
-                FnDefBody::RogatoFn(body) => match body.deref() {
-                    Expression::FnCall(fn_call) => {
-                        if fn_call.id == self.id {
-                            return true;
-                        }
-                    }
-                    _ => {
-                        continue;
-                    }
-                },
-                _ => {
-                    continue;
-                }
-            }
-        }
-        false
+        self.is_tail_recursive
     }
 }
 
@@ -252,6 +245,16 @@ impl FnDefBody {
 
     pub fn rogato(expr: Rc<Expression>) -> FnDefBody {
         FnDefBody::RogatoFn(expr)
+    }
+
+    pub fn is_tail_recursive(&self, id: &Identifier) -> bool {
+        match self {
+            Self::RogatoFn(body) => match body.deref() {
+                Expression::FnCall(fn_call) => fn_call.id == *id,
+                _ => false,
+            },
+            _ => false,
+        }
     }
 }
 
