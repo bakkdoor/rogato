@@ -12,7 +12,7 @@ use rogato_common::{
     ast::{
         expression::Expression,
         fn_call::{FnCall, FnCallArgs},
-        fn_def::{FnDef, FnDefBody},
+        fn_def::{FnDef, FnDefBody, FnDefVariant},
         literal::Literal,
         module_def::ModuleDef,
         pattern::Pattern,
@@ -95,7 +95,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         let f32_type = self.context.f32_type();
 
         // TODO: add support for multiple fn variants
-        let (args, body) = fn_def.get_variant(0).unwrap();
+        let FnDefVariant(args, body) = fn_def.get_variant(0).unwrap();
 
         let fn_arg_types: Vec<BasicMetadataTypeEnum<'ctx>> = args
             .iter()

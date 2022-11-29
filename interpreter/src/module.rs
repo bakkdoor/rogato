@@ -54,7 +54,7 @@ impl Module {
     pub fn fn_def<ID: Into<Identifier>>(&mut self, id: ID, fn_variant: FnDefVariant) {
         let id: Identifier = id.into();
         if self.has_fn_defined(&id) {
-            let (args, body) = fn_variant;
+            let FnDefVariant(args, body) = fn_variant;
             self.state
                 .borrow()
                 .fn_defs
@@ -62,7 +62,7 @@ impl Module {
                 .map(|f| f.borrow_mut().variants.add(args, body))
                 .unwrap_or_else(|| eprintln!("EvalContext::define_fn_variant failed for: {}", id))
         } else {
-            let (args, body) = fn_variant;
+            let FnDefVariant(args, body) = fn_variant;
             let fn_def = FnDef::new(id.clone(), args, body);
             self.state.borrow_mut().fn_defs.insert(id, fn_def);
         }
@@ -78,7 +78,7 @@ impl Module {
         );
         let body = Rc::new(FnDefBody::native(fn_body));
 
-        self.fn_def(id, (args, body));
+        self.fn_def(id, FnDefVariant(args, body));
     }
 
     fn has_fn_defined(&self, id: &Identifier) -> bool {

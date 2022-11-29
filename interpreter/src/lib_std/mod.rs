@@ -286,7 +286,7 @@ pub fn std_module() -> Module {
 }
 
 pub fn op_fn(body: NativeFn) -> FnDefVariant {
-    (
+    FnDefVariant(
         FnDefArgs::new(vec![Rc::new("left".into()), Rc::new("right".into())]),
         Rc::new(FnDefBody::native(body)),
     )

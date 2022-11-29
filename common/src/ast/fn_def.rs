@@ -43,7 +43,7 @@ impl FnDef {
         Rc::new(RefCell::new(FnDef {
             is_inline: false,
             id,
-            variants: FnDefVariants::new([(args, body)]),
+            variants: FnDefVariants::new([FnDefVariant(args, body)]),
             is_tail_recursive,
         }))
     }
@@ -58,7 +58,37 @@ impl FnDef {
         Rc::new(RefCell::new(FnDef {
             is_inline: true,
             id,
-            variants: FnDefVariants::new([(args, body)]),
+            variants: FnDefVariants::new([FnDefVariant(args, body)]),
+            is_tail_recursive,
+        }))
+    }
+
+    pub fn new_with_variants<ID: Into<Identifier>, Variants: Into<FnDefVariants>>(
+        id: ID,
+        variants: Variants,
+    ) -> Rc<RefCell<FnDef>> {
+        let id = id.into();
+        let variants = variants.into();
+        let is_tail_recursive = variants.iter().any(|v| v.is_tail_recursive(&id));
+        Rc::new(RefCell::new(FnDef {
+            is_inline: false,
+            id,
+            variants,
+            is_tail_recursive,
+        }))
+    }
+
+    pub fn new_inline_with_variants<ID: Into<Identifier>, Variants: Into<FnDefVariants>>(
+        id: ID,
+        variants: Variants,
+    ) -> Rc<RefCell<FnDef>> {
+        let id = id.into();
+        let variants = variants.into();
+        let is_tail_recursive = variants.iter().any(|v| v.is_tail_recursive(&id));
+        Rc::new(RefCell::new(FnDef {
+            is_inline: true,
+            id,
+            variants,
             is_tail_recursive,
         }))
     }
@@ -75,7 +105,7 @@ impl FnDef {
     pub fn required_args(&self) -> usize {
         self.variants
             .iter()
-            .map(|(args, _)| args.required_args())
+            .map(|FnDefVariant(args, _)| args.required_args())
             .min()
             .unwrap_or_default()
     }
@@ -91,7 +121,7 @@ impl FnDef {
 
 impl Display for FnDef {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for (args, body) in self.variants.iter() {
+        for FnDefVariant(args, body) in self.variants.iter() {
             if !self.is_inline {
                 f.write_str("let ")?;
             }
@@ -117,7 +147,26 @@ impl ASTDepth for FnDef {
     }
 }
 
-pub type FnDefVariant = (FnDefArgs, Rc<FnDefBody>);
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FnDefVariant(pub FnDefArgs, pub Rc<FnDefBody>);
+
+impl FnDefVariant {
+    pub fn is_tail_recursive(&self, id: &Identifier) -> bool {
+        match self.1.deref() {
+            FnDefBody::RogatoFn(body) => match body.deref() {
+                Expression::FnCall(fn_call) => fn_call.id == *id,
+                _ => false,
+            },
+            _ => false,
+        }
+    }
+}
+
+impl From<(FnDefArgs, Rc<FnDefBody>)> for FnDefVariant {
+    fn from(variant: (FnDefArgs, Rc<FnDefBody>)) -> Self {
+        FnDefVariant(variant.0, variant.1)
+    }
+}
 
 impl ASTDepth for FnDefVariant {
     fn ast_depth(&self) -> usize {
@@ -142,11 +191,21 @@ impl FnDefVariants {
     }
 
     pub fn add(&mut self, args: FnDefArgs, body: Rc<FnDefBody>) {
-        self.variants.push((args, body))
+        self.variants.push(FnDefVariant(args, body))
     }
 
     pub fn get_variant(&self, index: usize) -> Option<&FnDefVariant> {
         self.variants.get(index)
+    }
+}
+
+impl FromIterator<FnDefVariant> for FnDefVariants {
+    fn from_iter<T: IntoIterator<Item = FnDefVariant>>(iter: T) -> Self {
+        let mut variants = Vec::new();
+        for v in iter.into_iter() {
+            variants.push(v);
+        }
+        Self::new(variants)
     }
 }
 

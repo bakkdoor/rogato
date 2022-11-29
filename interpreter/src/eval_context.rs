@@ -141,7 +141,7 @@ impl EvalContext {
 
         let mut last_attempted_pattern = None;
 
-        for (arg_patterns, body) in func.variants.iter() {
+        for FnDefVariant(arg_patterns, body) in func.variants.iter() {
             let mut fn_ctx = self.with_child_env();
             let mut matched = 0;
             let mut attempted = 0;
@@ -200,7 +200,7 @@ impl EvalContext {
         }
 
         'looping: loop {
-            for (arg_patterns, body) in func.variants.iter() {
+            for FnDefVariant(arg_patterns, body) in func.variants.iter() {
                 let mut fn_ctx = self.with_child_env();
                 let mut matched = 0;
                 let mut attempted = 0;
