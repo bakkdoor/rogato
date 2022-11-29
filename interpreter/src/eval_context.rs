@@ -1,5 +1,6 @@
 use rogato_common::{
     ast::{
+        expression::Expression,
         fn_def::{FnDefBody, FnDefVariant},
         lambda::{Lambda, LambdaClosureContext, LambdaClosureEvalError},
     },
@@ -19,7 +20,7 @@ use rogato_common::{
     val,
 };
 use rogato_db::db::ObjectStorage;
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, ops::Deref, rc::Rc};
 use uuid::Uuid;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -112,8 +113,13 @@ impl EvalContext {
         func: Rc<RefCell<FnDef>>,
         args: &[ValueRef],
     ) -> Result<ValueRef, EvalError> {
-        let given_argc = args.len();
         let func = func.borrow();
+
+        if func.is_recursive() {
+            return self.call_tail_recursive_function_direct(func.deref(), args);
+        }
+
+        let given_argc = args.len();
         let required_argc = func.required_args();
 
         if given_argc < required_argc {
@@ -166,6 +172,90 @@ impl EvalContext {
         }
 
         self.current_func_id = last_current_func_id;
+
+        return Err(EvalError::PatternBindingFailed(
+            func.id().clone(),
+            PatternMatchingError::NoFnVariantMatched(
+                func.id().clone(),
+                last_attempted_pattern,
+                args.to_vec(),
+            ),
+        ));
+    }
+
+    pub fn call_tail_recursive_function_direct(
+        &mut self,
+        func: &FnDef,
+        args: &[ValueRef],
+    ) -> Result<ValueRef, EvalError> {
+        let last_current_func_id = self.current_func_id.clone();
+        self.current_func_id = Some(func.id().clone());
+
+        let mut last_attempted_pattern = None;
+
+        let mut return_val = None;
+        let mut loop_args = Vec::with_capacity(args.len());
+        for arg in args.iter() {
+            loop_args.push(ValueRef::clone(arg));
+        }
+
+        'looping: loop {
+            for (arg_patterns, body) in func.variants.iter() {
+                let mut fn_ctx = self.with_child_env();
+                let mut matched = 0;
+                let mut attempted = 0;
+                for (arg_pattern, arg_val) in arg_patterns.iter().zip(loop_args.iter()) {
+                    attempted += 1;
+                    last_attempted_pattern = Some(Rc::clone(arg_pattern));
+                    match arg_pattern.pattern_match(&mut fn_ctx, ValueRef::clone(arg_val)) {
+                        Ok(PatternMatch::Matched(_)) => {
+                            matched += 1;
+                            continue;
+                        }
+                        Ok(PatternMatch::TryNextPattern) => {
+                            break;
+                        }
+                        Err(e) => {
+                            return Err(e.into());
+                        }
+                    }
+                }
+
+                if matched == attempted {
+                    match &**body {
+                        FnDefBody::NativeFn(f) => {
+                            return_val = Some(f(&mut fn_ctx, args).map_err(EvalError::from)?);
+                            break 'looping;
+                        }
+                        FnDefBody::RogatoFn(expr) => match expr.deref() {
+                            Expression::FnCall(fn_call) => {
+                                if fn_call.id == func.id {
+                                    loop_args = Vec::with_capacity(fn_call.args.len());
+                                    for arg_expr in fn_call.args.iter() {
+                                        loop_args.push(arg_expr.evaluate(&mut fn_ctx)?);
+                                    }
+                                    continue 'looping;
+                                } else {
+                                    return_val = Some(expr.evaluate(&mut fn_ctx)?);
+                                    break 'looping;
+                                }
+                            }
+                            _ => {
+                                return_val = Some(expr.evaluate(&mut fn_ctx)?);
+                                break 'looping;
+                            }
+                        },
+                    }
+                }
+            }
+            break 'looping;
+        }
+
+        self.current_func_id = last_current_func_id;
+
+        if let Some(value) = return_val {
+            return Ok(value);
+        }
 
         return Err(EvalError::PatternBindingFailed(
             func.id().clone(),

@@ -3,6 +3,7 @@ use super::{expression::Expression, walker::Walk, ASTDepth, Identifier};
 use crate::{native_fn::NativeFn, util::indent};
 use std::cell::RefCell;
 use std::hash::{Hash, Hasher};
+use std::ops::Deref;
 use std::{fmt::Display, rc::Rc};
 
 #[derive(Clone, Debug, Eq)]
@@ -71,6 +72,27 @@ impl FnDef {
 
     pub fn get_variant(&self, index: usize) -> Option<&FnDefVariant> {
         self.variants.get_variant(index)
+    }
+
+    pub fn is_recursive(&self) -> bool {
+        for (_args, body) in self.variants.iter() {
+            match body.deref() {
+                FnDefBody::RogatoFn(body) => match body.deref() {
+                    Expression::FnCall(fn_call) => {
+                        if fn_call.id == self.id {
+                            return true;
+                        }
+                    }
+                    _ => {
+                        continue;
+                    }
+                },
+                _ => {
+                    continue;
+                }
+            }
+        }
+        false
     }
 }
 
