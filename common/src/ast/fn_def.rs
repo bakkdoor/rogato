@@ -10,7 +10,7 @@ use std::{fmt::Display, rc::Rc};
 pub struct FnDef {
     pub is_inline: bool,
     pub id: Identifier,
-    pub variants: FnDefVariants,
+    variants: FnDefVariants,
     is_tail_recursive: bool,
 }
 
@@ -116,6 +116,10 @@ impl FnDef {
 
     pub fn is_tail_recursive(&self) -> bool {
         self.is_tail_recursive
+    }
+
+    pub fn variants_iter(&self) -> std::slice::Iter<FnDefVariant> {
+        self.variants.iter()
     }
 }
 

@@ -18,7 +18,7 @@ impl Walk for AST {
             AST::FnDef(fn_def) => {
                 let fn_def = fn_def.borrow();
                 v.fn_def(&fn_def);
-                for FnDefVariant(args, body) in fn_def.variants.iter() {
+                for FnDefVariant(args, body) in fn_def.variants_iter() {
                     for a in args.iter() {
                         a.walk(v);
                     }

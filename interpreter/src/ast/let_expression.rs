@@ -14,7 +14,7 @@ impl Evaluate<ValueRef> for LetExpression {
             match &**expr {
                 Expression::InlineFnDef(fn_def) => {
                     let fn_def = fn_def.borrow();
-                    for variant in fn_def.variants.iter() {
+                    for variant in fn_def.variants_iter() {
                         let fn_variant = FnDefVariant(variant.0.clone(), Rc::clone(&variant.1));
                         context.define_fn(fn_def.id(), fn_variant);
                     }

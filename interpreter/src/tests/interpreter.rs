@@ -788,6 +788,15 @@ fn patterns() {
                 ]),
             ]),
         ),
+        (
+            "let
+                count list = count_ 0 list
+                count_ count [] = count
+                count_ count [_ :: rest] = count_ (1 + count) rest
+            in
+                {count (range 10), count (range 10000), count (range 25000)}",
+            val::tuple([val::number(10), val::number(10000), val::number(25000)]),
+        ),
     ];
 
     let mut eval_ctx = EvalContext::new();
