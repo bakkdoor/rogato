@@ -240,6 +240,30 @@ impl EvalContext {
                                     break 'looping;
                                 }
                             }
+                            Expression::Let(let_expr) => {
+                                let mut let_ctx = fn_ctx.with_child_env();
+                                for (id, expr) in let_expr.bindings.iter() {
+                                    self.define_var(id, expr.evaluate(&mut let_ctx)?)
+                                }
+                                match expr.deref() {
+                                    Expression::FnCall(fn_call) => {
+                                        if fn_call.id == func.id {
+                                            loop_args = Vec::with_capacity(fn_call.args.len());
+                                            for arg_expr in fn_call.args.iter() {
+                                                loop_args.push(arg_expr.evaluate(&mut let_ctx)?);
+                                            }
+                                            continue 'looping;
+                                        } else {
+                                            return_val = Some(expr.evaluate(&mut let_ctx)?);
+                                            break 'looping;
+                                        }
+                                    }
+                                    expr => {
+                                        return_val = Some(expr.evaluate(&mut let_ctx)?);
+                                        break 'looping;
+                                    }
+                                }
+                            }
                             _ => {
                                 return_val = Some(expr.evaluate(&mut fn_ctx)?);
                                 break 'looping;

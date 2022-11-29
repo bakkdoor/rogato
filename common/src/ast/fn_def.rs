@@ -314,6 +314,10 @@ impl FnDefBody {
         match self {
             Self::RogatoFn(body) => match body.deref() {
                 Expression::FnCall(fn_call) => fn_call.id == *id,
+                Expression::Let(let_expr) => match let_expr.body.deref() {
+                    Expression::FnCall(fn_call) => fn_call.id == *id,
+                    _ => false,
+                },
                 _ => false,
             },
             _ => false,
