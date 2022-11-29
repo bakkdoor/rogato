@@ -115,7 +115,7 @@ impl EvalContext {
     ) -> Result<ValueRef, EvalError> {
         let func = func.borrow();
 
-        if func.is_recursive() {
+        if func.is_tail_recursive() {
             return self.call_tail_recursive_function_direct(func.deref(), args);
         }
 

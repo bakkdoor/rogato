@@ -74,7 +74,7 @@ impl FnDef {
         self.variants.get_variant(index)
     }
 
-    pub fn is_recursive(&self) -> bool {
+    pub fn is_tail_recursive(&self) -> bool {
         for (_args, body) in self.variants.iter() {
             match body.deref() {
                 FnDefBody::RogatoFn(body) => match body.deref() {
