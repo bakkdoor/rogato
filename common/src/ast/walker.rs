@@ -19,7 +19,6 @@ impl Walk for AST {
                 let fn_def = fn_def.borrow();
                 v.fn_def(&fn_def);
                 for FnDefVariant(args, body) in fn_def.variants.iter() {
-                    // let (args, body) = variant.pair();
                     for a in args.iter() {
                         a.walk(v);
                     }

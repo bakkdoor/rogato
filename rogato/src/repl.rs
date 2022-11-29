@@ -49,7 +49,6 @@ pub fn run_repl(args: Args) -> anyhow::Result<()> {
 
     let mut counter = 0usize;
 
-    // let mut rl = rustyline::Editor::<()>::new()?;
     let mut rl = validated_editor()?;
 
     let mut path_buf = dirs::home_dir().unwrap();
