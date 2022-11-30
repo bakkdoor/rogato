@@ -138,6 +138,12 @@ impl Environment {
         }
     }
 
+    #[inline]
+    pub fn clear_viariables(&self) {
+        let mut state = self.state.borrow_mut();
+        state.variables.clear();
+    }
+
     pub fn child(&self) -> Environment {
         let curr_state = self.state.borrow();
         let state = State {

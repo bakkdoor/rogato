@@ -54,6 +54,7 @@ pub fn std_module() -> Module {
         "++".into(),
         "id".into(),
         "print".into(),
+        "println".into(),
         "apply".into(),
         "toString".into(),
         "inspect".into(),
@@ -80,10 +81,18 @@ pub fn std_module() -> Module {
 
     module.fn_def_native("print", &["value"], move |_ctx, args| match args.get(0) {
         Some(value) => {
-            println!("{}", value);
+            print!("{}", value);
             Ok(ValueRef::clone(value))
         }
         None => Err(invalid_args("print")),
+    });
+
+    module.fn_def_native("println", &["value"], move |_ctx, args| match args.get(0) {
+        Some(value) => {
+            println!("{}", value);
+            Ok(ValueRef::clone(value))
+        }
+        None => Err(invalid_args("println")),
     });
 
     module.fn_def_native("apply", &["func", "?args"], move |ctx, args| {

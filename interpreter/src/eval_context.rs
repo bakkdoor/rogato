@@ -69,6 +69,11 @@ impl EvalContext {
         }
     }
 
+    #[inline]
+    pub fn clear(&mut self) {
+        self.env.clear_viariables()
+    }
+
     pub fn current_func_id(&self) -> Identifier {
         self.current_func_id.clone().unwrap_or_else(|| "N/A".into())
     }
@@ -199,9 +204,10 @@ impl EvalContext {
             loop_args.push(ValueRef::clone(arg));
         }
 
+        let mut fn_ctx = self.with_child_env();
         'looping: loop {
+            fn_ctx.clear();
             for FnDefVariant(arg_patterns, body) in func.variants_iter() {
-                let mut fn_ctx = self.with_child_env();
                 let mut matched = 0;
                 let mut attempted = 0;
                 for (arg_pattern, arg_val) in arg_patterns.iter().zip(loop_args.iter()) {
