@@ -240,30 +240,28 @@ impl EvalContext {
                                     break 'looping;
                                 }
                             }
-                            Expression::Let(let_expr) => {
-                                let mut let_ctx = fn_ctx.with_child_env();
-                                for (id, expr) in let_expr.bindings.iter() {
-                                    self.define_var(id, expr.evaluate(&mut let_ctx)?)
-                                }
-                                match expr.deref() {
-                                    Expression::FnCall(fn_call) => {
-                                        if fn_call.id == func.id {
-                                            loop_args = Vec::with_capacity(fn_call.args.len());
-                                            for arg_expr in fn_call.args.iter() {
-                                                loop_args.push(arg_expr.evaluate(&mut let_ctx)?);
-                                            }
-                                            continue 'looping;
-                                        } else {
-                                            return_val = Some(expr.evaluate(&mut let_ctx)?);
-                                            break 'looping;
-                                        }
+                            Expression::Let(let_expr) => match let_expr.body.deref() {
+                                Expression::FnCall(fn_call) => {
+                                    for (id, expr) in let_expr.bindings.iter() {
+                                        let val = expr.evaluate(&mut fn_ctx)?;
+                                        self.define_var(id, val);
                                     }
-                                    expr => {
-                                        return_val = Some(expr.evaluate(&mut let_ctx)?);
+                                    if fn_call.id == func.id {
+                                        loop_args = Vec::with_capacity(fn_call.args.len());
+                                        for arg_expr in fn_call.args.iter() {
+                                            loop_args.push(arg_expr.evaluate(&mut fn_ctx)?);
+                                        }
+                                        continue 'looping;
+                                    } else {
+                                        return_val = Some(expr.evaluate(&mut fn_ctx)?);
                                         break 'looping;
                                     }
                                 }
-                            }
+                                expr => {
+                                    return_val = Some(expr.evaluate(&mut fn_ctx)?);
+                                    break 'looping;
+                                }
+                            },
                             _ => {
                                 return_val = Some(expr.evaluate(&mut fn_ctx)?);
                                 break 'looping;
@@ -300,35 +298,45 @@ impl EvalContext {
             .map(|func| self.call_function_direct(func, args))
     }
 
+    #[inline]
     pub fn define_var(&mut self, id: &Identifier, val: ValueRef) {
-        self.env.define_var(id, val)
+        if id.as_str() != "_" {
+            self.env.define_var(id, val)
+        }
     }
 
+    #[inline]
     pub fn lookup_var(&self, id: &str) -> Option<ValueRef> {
         self.env.lookup_var(id)
     }
 
+    #[inline]
     pub fn define_module(&mut self, module: Module) {
         self.env.define_module(module);
     }
 
+    #[inline]
     pub fn lookup_module(&self, id: &Identifier) -> Option<Module> {
         self.env.lookup_module(id)
     }
 
+    #[inline]
     pub fn lookup_const(&self, id: &Identifier) -> Option<ValueRef> {
         self.env.lookup_const(id)
     }
 
+    #[inline]
     pub fn lookup_type(&self, id: &Identifier) -> Option<Rc<TypeDef>> {
         self.env.lookup_type(id)
     }
 
+    #[inline]
     pub fn lookup_db_type(&self, id: &Identifier) -> Option<Rc<TypeDef>> {
         // TODO: do lookup / verification with DB instead
         self.env.lookup_type(id)
     }
 
+    #[inline]
     pub fn current_module(&self) -> Module {
         self.env.current_module()
     }
