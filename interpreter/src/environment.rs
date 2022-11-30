@@ -183,6 +183,7 @@ impl Environment {
             .import(module, imports);
     }
 
+    #[inline]
     pub fn define_var(&mut self, id: &Identifier, val: ValueRef) {
         self.state.borrow_mut().variables.insert(id.clone(), val);
     }

@@ -306,9 +306,7 @@ impl EvalContext {
 
     #[inline]
     pub fn define_var(&mut self, id: &Identifier, val: ValueRef) {
-        if id.as_str() != "_" {
-            self.env.define_var(id, val)
-        }
+        self.env.define_var(id, val)
     }
 
     #[inline]
