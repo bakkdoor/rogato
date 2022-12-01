@@ -41,3 +41,10 @@ let mapQuoted list =
   list
   |> List.map (x -> ^(let ~x = "Hello, world!"))
   |> List.map Std.Runtime.evaluate
+
+let lambdasWithPatternMatching list =
+  list
+  |> List.map (
+    0 -> "done",
+    n -> Std.Math.min n 10
+  )

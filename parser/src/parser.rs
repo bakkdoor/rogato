@@ -4,8 +4,9 @@ use super::ParserContext;
 use peg::{error::ParseError, parser, str::LineCol};
 use rogato_common::ast::{
     expression::{
-        Expression, FnCall, FnCallArgs, FnDefArgs, Lambda, LambdaArgs, LetBindings, LetExpression,
-        Literal, Query, QueryBinding, QueryBindings, QueryGuards, StructProps, TupleItems,
+        Expression, FnCall, FnCallArgs, FnDefArgs, Lambda, LambdaArgs, LambdaVariant, LetBindings,
+        LetExpression, Literal, Query, QueryBinding, QueryBindings, QueryGuards, StructProps,
+        TupleItems,
     },
     fn_def::{FnDef, FnDefBody},
     if_else::IfElse,
@@ -133,8 +134,12 @@ grammar parser(context: &ParserContext) for str {
         / "{" _ items:(pattern() ** list_sep()) _ "}" {
             Rc::new(Pattern::Tuple(items.len(), TupleItems::from(items)))
         }
-        / id:identifier() {
-            Rc::new(Pattern::Var(id))
+        / id:variable_identifier() {
+            if id == "_" {
+                Rc::new(Pattern::Any)
+            } else {
+                Rc::new(Pattern::Var(id))
+            }
         }
         / "^" id:symbol_identifier() {
             Rc::new(Pattern::Symbol(id))
@@ -248,7 +253,7 @@ grammar parser(context: &ParserContext) for str {
         / variable()
         / constant_or_type_ref()
         / quoted_expr()
-        / "(" _ l:lambda() _ ")" { l }
+        / lambda()
         / "(" _ c:(fn_pipe() / fn_call() / op_call()) _ ")" { c }
 
 
@@ -537,23 +542,40 @@ grammar parser(context: &ParserContext) for str {
         }
 
     rule lambda() -> Expression
-        = args:lambda_args() " "+ "->" _ body:let_body() {
-            Expression::Lambda(Rc::new(Lambda::new(LambdaArgs::new(args), Rc::new(body))))
+        = "(" _ variants:(lambda_variant() ** (_ "," _)) _ ")" {
+            Expression::Lambda(Rc::new(Lambda::new(variants)))
+        }
+        / variant:lambda_variant() {
+            Expression::Lambda(Rc::new(Lambda::new(vec![variant])))
         }
         / "->" _ body:let_body() {
-            Expression::Lambda(Rc::new(Lambda::new(LambdaArgs::new(vec![]), Rc::new(body))))
+            Expression::Lambda(
+                Rc::new(Lambda::new(vec![
+                    Rc::new(LambdaVariant::new(LambdaArgs::new(vec![]), Rc::new(body)))
+                ]))
+            )
         }
 
-    rule lambda_args() -> Vec<Identifier>
-        = arg:variable_identifier() rest:(additional_lambda_arg())* {
+    rule lambda_variant() -> Rc<LambdaVariant>
+        = args:lambda_args() s() "->" _ body:let_body() {
+            Rc::new(LambdaVariant::new(LambdaArgs::new(args), Rc::new(body)))
+        }
+
+    rule lambda_args() -> Vec<Rc<Pattern>>
+        = arg:lambda_arg() rest:(additional_lambda_arg())* {
             let mut args = rest;
             args.insert(0, arg);
             args
         }
 
-    rule additional_lambda_arg() -> Identifier
-        = " "+ arg:variable_identifier() {
+    rule additional_lambda_arg() -> Rc<Pattern>
+        = " "+ arg:lambda_arg() {
             arg
+        }
+
+    rule lambda_arg() -> Rc<Pattern>
+        = p:pattern() {
+            p
         }
 
     rule constant_or_type_ref() -> Expression

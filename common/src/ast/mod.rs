@@ -25,6 +25,11 @@ pub mod walker;
 use smol_str::SmolStr;
 pub type Identifier = SmolStr;
 
+pub struct ModIdentifier(Identifier);
+pub struct FnIdentifier(Identifier);
+pub struct OpIdentifier(Identifier);
+pub struct VarIdentifier(Identifier);
+
 pub use program::Program;
 
 pub type ASTId = usize;
@@ -84,6 +89,12 @@ pub enum AST {
 
 pub trait ASTDepth {
     fn ast_depth(&self) -> usize;
+}
+
+impl<T: ASTDepth> ASTDepth for Rc<T> {
+    fn ast_depth(&self) -> usize {
+        (**self).ast_depth()
+    }
 }
 
 impl Display for AST {

@@ -4,16 +4,14 @@ use crate::{assert_parse, assert_parse_ast, assert_parse_expr, parse_expr, Parse
 #[cfg(test)]
 use rogato_common::ast::helpers::inline_fn_def;
 use rogato_common::ast::helpers::{
-    any_p, bool_lit, bool_p, empty_list_p, list_cons, list_cons_p, list_lit_p, map_cons_lit,
-    map_cons_lit_p, map_lit, map_lit_p, number_p, string_p, symbol_p, tuple_lit_p, var_p, vars,
+    any_p, bool_lit, bool_p, commented, const_or_type_ref, db_type_ref, edge_prop, empty_list_p,
+    fn_call, fn_def, if_else, int_type, lambda, lambda_p, let_expr, list_cons, list_cons_p,
+    list_lit, list_lit_p, list_type, map_cons_lit, map_cons_lit_p, map_lit, map_lit_p, module_def,
+    number_lit, number_p, op_call, program, prop_fn_ref, query, quoted, quoted_ast, root_comment,
+    string_lit, string_p, string_type, struct_lit, struct_type, symbol, symbol_p, tuple_lit,
+    tuple_lit_p, tuple_type, type_def, type_ref, unquoted, unquoted_ast, var, var_p, vars,
 };
 #[cfg(test)]
-use rogato_common::ast::helpers::{
-    commented, const_or_type_ref, db_type_ref, edge_prop, fn_call, fn_def, if_else, int_type,
-    lambda, let_expr, list_lit, list_type, module_def, number_lit, op_call, program, prop_fn_ref,
-    query, quoted, quoted_ast, root_comment, string_lit, string_type, struct_lit, struct_type,
-    symbol, tuple_lit, tuple_type, type_def, type_ref, unquoted, unquoted_ast, var,
-};
 use rust_decimal_macros::dec;
 
 #[test]
@@ -1015,7 +1013,31 @@ fn lambdas() {
 
     assert_parse_expr!(
         "_ -> {1, 2}",
-        lambda(["_"], tuple_lit([number_lit(1), number_lit(2),]))
+        lambda_p([([any_p()], tuple_lit([number_lit(1), number_lit(2),]))])
+    );
+
+    assert_parse_expr!(
+        "[x :: xs] -> {x, xs}",
+        lambda_p([(
+            [list_cons_p(var_p("x"), var_p("xs"))],
+            tuple_lit([var("x"), var("xs")])
+        )])
+    );
+
+    assert_parse_expr!(
+        "(
+            [x :: xs] -> {x, xs},
+            [x] -> {x, x},
+            [] -> ^end
+        )",
+        lambda_p([
+            (
+                [list_cons_p(var_p("x"), var_p("xs"))],
+                tuple_lit([var("x"), var("xs")])
+            ),
+            ([list_lit_p([var_p("x")])], tuple_lit([var("x"), var("x")])),
+            ([empty_list_p()], symbol("end")),
+        ])
     );
 }
 

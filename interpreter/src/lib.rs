@@ -13,6 +13,7 @@ pub mod pattern_matching;
 pub use eval_context::EvalContext;
 use pattern_matching::PatternMatchingError;
 use query_planner::QueryError;
+use rogato_common::ast::lambda::LambdaClosureEvalError;
 pub use rogato_common::{
     native_fn::{NativeFn, NativeFnError},
     val::{Value, ValueRef},
@@ -54,6 +55,9 @@ pub enum EvalError {
 
     #[error("Lambda arity mismatch: Expected: {0} but got: {1}")]
     LambdaArityMismatch(usize, usize),
+
+    #[error("Lambda closure error: {0}")]
+    LambdaClosureError(LambdaClosureEvalError),
 
     #[error("{0}")]
     NativeFnFailed(NativeFnError),
@@ -102,6 +106,12 @@ impl From<PatternMatchingError> for EvalError {
                 EvalError::PatternBindingFailed(func_id.clone(), e)
             }
         }
+    }
+}
+
+impl From<LambdaClosureEvalError> for EvalError {
+    fn from(lce: LambdaClosureEvalError) -> Self {
+        EvalError::LambdaClosureError(lce)
     }
 }
 

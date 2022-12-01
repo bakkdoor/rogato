@@ -2,7 +2,7 @@ pub use super::fn_call::{FnCall, FnCallArgs};
 use super::fn_def::FnDef;
 pub use super::fn_def::FnDefArgs;
 pub use super::if_else::IfElse;
-pub use super::lambda::{Lambda, LambdaArgs};
+pub use super::lambda::{Lambda, LambdaArgs, LambdaVariant};
 pub use super::let_expression::{LetBindings, LetExpression};
 pub use super::literal::*;
 pub use super::query::{Query, QueryBinding, QueryBindings, QueryGuards};

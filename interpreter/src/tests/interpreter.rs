@@ -797,6 +797,54 @@ fn patterns() {
                 {count (range 10), count (range 10000), count (range 25000)}",
             val::tuple([val::number(10), val::number(10000), val::number(25000)]),
         ),
+        (
+            "(range 5) |> Std.List.map (0 -> ^done, n -> {^got, n})",
+            val::list([
+                val::symbol("done"),
+                val::tuple([val::symbol("got"), val::number(1)]),
+                val::tuple([val::symbol("got"), val::number(2)]),
+                val::tuple([val::symbol("got"), val::number(3)]),
+                val::tuple([val::symbol("got"), val::number(4)]),
+            ]),
+        ),
+        (
+            "(range 5) |> Std.List.reverse |> Std.List.map (0 -> ^done, n -> {^got, n})",
+            val::list([
+                val::tuple([val::symbol("got"), val::number(4)]),
+                val::tuple([val::symbol("got"), val::number(3)]),
+                val::tuple([val::symbol("got"), val::number(2)]),
+                val::tuple([val::symbol("got"), val::number(1)]),
+                val::symbol("done"),
+            ]),
+        ),
+        (
+            "[1,0,1,0,1,1,0,0] |> Std.List.map (0 -> ^zero, 1 -> ^one)",
+            val::list([
+                val::symbol("one"),
+                val::symbol("zero"),
+                val::symbol("one"),
+                val::symbol("zero"),
+                val::symbol("one"),
+                val::symbol("one"),
+                val::symbol("zero"),
+                val::symbol("zero"),
+            ]),
+        ),
+        (
+            "[[], [1,2,3], [1]] |> Std.List.map (
+              [] -> ^empty,
+              [n] -> {n,n,n},
+              [_ :: xs] -> {^rest, xs}
+            )",
+            val::list([
+                val::symbol("empty"),
+                val::tuple([
+                    val::symbol("rest"),
+                    val::list([val::number(2), val::number(3)]),
+                ]),
+                val::tuple([val::number(1), val::number(1), val::number(1)]),
+            ]),
+        ),
     ];
 
     let mut eval_ctx = EvalContext::new();

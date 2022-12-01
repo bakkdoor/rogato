@@ -1,8 +1,8 @@
 use rust_decimal::Decimal;
 
 use crate::ast::expression::{
-    FnCall, FnCallArgs, Lambda, LambdaArgs, LetBindings, LetExpression, Query, QueryBinding,
-    QueryBindings, QueryGuards, StructProps, TupleItems,
+    FnCall, FnCallArgs, Lambda, LambdaArgs, LambdaVariant, LetBindings, LetExpression, Query,
+    QueryBinding, QueryBindings, QueryGuards, StructProps, TupleItems,
 };
 use crate::ast::fn_def::FnDef;
 use crate::ast::module_def::{ModuleDef, ModuleExports};
@@ -253,11 +253,34 @@ pub fn lambda<Args: IntoIterator<Item = &'static str>>(
     args: Args,
     body: Rc<Expression>,
 ) -> Rc<Expression> {
-    let args = args.into_iter().map(|a| a.into()).collect();
-    Rc::new(Expression::Lambda(Rc::new(Lambda::new(
-        LambdaArgs::new(args),
-        body,
-    ))))
+    let args = args.into_iter().map(|a| Rc::new(a.into())).collect();
+    Rc::new(Expression::Lambda(Rc::new(Lambda::new(vec![Rc::new(
+        LambdaVariant::new(LambdaArgs::new(args), body),
+    )]))))
+}
+
+pub fn lambda_<Args: IntoIterator<Item = Rc<Pattern>>>(
+    args: Args,
+    body: Rc<Expression>,
+) -> Rc<LambdaVariant> {
+    let args = args.into_iter().collect();
+    Rc::new(LambdaVariant::new(LambdaArgs::new(args), body))
+}
+
+pub fn lambda_p<
+    Args: IntoIterator<Item = Rc<Pattern>>,
+    Variants: IntoIterator<Item = (Args, Rc<Expression>)>,
+>(
+    variants: Variants,
+) -> Rc<Expression> {
+    let variants = variants
+        .into_iter()
+        .map(|(args, body)| {
+            let args: LambdaArgs<Rc<Pattern>> = LambdaArgs::new(args.into_iter().collect());
+            Rc::new(LambdaVariant::new(args, Rc::clone(&body)))
+        })
+        .collect();
+    Rc::new(Expression::Lambda(Rc::new(Lambda::new(variants))))
 }
 
 pub fn symbol(id: &str) -> Rc<Expression> {

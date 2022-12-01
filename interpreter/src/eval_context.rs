@@ -417,28 +417,47 @@ impl LambdaClosureContext for EvalContext {
         lambda: &Lambda,
         args: &[ValueRef],
     ) -> Result<ValueRef, LambdaClosureEvalError> {
-        let given_argc = args.len();
-        let expected_argc = lambda.args.len();
-        if given_argc != expected_argc {
-            eprintln!(
-                "Lambda arity mismatch: Expected {} but got {}",
-                expected_argc, given_argc
-            );
-            return Err(LambdaClosureEvalError::LambdaArityMismatch(
-                expected_argc,
-                given_argc,
-            ));
+        for lambda_variant in lambda.variants_iter() {
+            let mut call_ctx = self.with_child_env();
+            let mut matched: u32 = 0;
+            let mut attempted: u32 = 0;
+
+            for (arg_pattern, arg_val) in lambda_variant.args.iter().zip(args.iter()) {
+                attempted += 1;
+
+                match arg_pattern.pattern_match(&mut call_ctx, ValueRef::clone(arg_val)) {
+                    Ok(PatternMatch::Matched(_)) => {
+                        matched += 1;
+                        continue;
+                    }
+                    Ok(PatternMatch::TryNextPattern) => {
+                        break;
+                    }
+                    Err(e) => {
+                        eprintln!("evaluate_lambda_call: {}", e);
+                        return Err(LambdaClosureEvalError::LambdaVariantArgumentMismatch(
+                            Rc::clone(lambda_variant),
+                            Rc::clone(arg_pattern),
+                            ValueRef::clone(arg_val),
+                        ));
+                    }
+                }
+            }
+
+            if matched == attempted {
+                return lambda_variant.body.evaluate(&mut call_ctx).map_err(|e| {
+                    eprintln!("evaluate_lambda_call: {}", e);
+                    LambdaClosureEvalError::LambdaVariantArgumentsMismatch(
+                        Rc::clone(lambda_variant),
+                        args.iter().map(ValueRef::clone).collect(),
+                    )
+                });
+            }
         }
 
-        let mut call_ctx = self.with_child_env();
-
-        for (arg_id, arg_val) in lambda.args.iter().zip(args.iter()) {
-            call_ctx.define_var(arg_id, ValueRef::clone(arg_val))
-        }
-
-        lambda
-            .body
-            .evaluate(&mut call_ctx)
-            .map_err(|e| LambdaClosureEvalError::EvaluationFailed(e.to_string()))
+        return Err(LambdaClosureEvalError::LambdaArgumentsMismatch(
+            lambda.clone(),
+            args.iter().map(ValueRef::clone).collect(),
+        ));
     }
 }

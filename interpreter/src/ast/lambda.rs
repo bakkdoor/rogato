@@ -10,15 +10,6 @@ use rogato_common::{
 
 use crate::{EvalContext, EvalError, Evaluate, Identifier};
 
-impl Evaluate<ValueRef> for Rc<Lambda> {
-    fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
-        Ok(val::lambda(
-            Rc::new(RefCell::new(context.clone())),
-            Rc::clone(self),
-        ))
-    }
-}
-
 impl<A: Display + ASTDepth + Evaluate<ValueRef>> Evaluate<ValueRef> for LambdaArgs<A> {
     fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
         let mut vec = Vec::with_capacity(self.len());
@@ -45,5 +36,14 @@ impl Evaluate<ValueRef> for Identifier {
             Some(val) => Ok(val),
             None => Err(EvalError::VarNotDefined(self.clone())),
         }
+    }
+}
+
+impl Evaluate<ValueRef> for Rc<Lambda> {
+    fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
+        Ok(val::lambda(
+            Rc::new(RefCell::new(context.clone())),
+            Rc::clone(self),
+        ))
     }
 }

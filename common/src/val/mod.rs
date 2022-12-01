@@ -22,9 +22,9 @@ pub use set::Set;
 pub use stack::Stack;
 pub use vector::Vector;
 
-use crate::ast::lambda::LambdaClosureContext;
+use crate::ast::lambda::{Lambda, LambdaClosureContext};
 use crate::ast::{
-    expression::{Expression, Lambda, TupleItems},
+    expression::{Expression, TupleItems},
     ASTDepth, Identifier, AST,
 };
 
