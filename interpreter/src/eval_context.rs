@@ -447,9 +447,9 @@ impl LambdaClosureContext for EvalContext {
             if matched == attempted {
                 return lambda_variant.body.evaluate(&mut call_ctx).map_err(|e| {
                     eprintln!("evaluate_lambda_call: {}", e);
-                    LambdaClosureEvalError::LambdaVariantArgumentsMismatch(
+                    LambdaClosureEvalError::EvaluationFailed(
                         Rc::clone(lambda_variant),
-                        args.iter().map(ValueRef::clone).collect(),
+                        e.to_string(),
                     )
                 });
             }

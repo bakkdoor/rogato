@@ -161,7 +161,7 @@ pub enum LambdaClosureEvalError {
     Unknown(Identifier, String),
 
     #[error("Evaluation failed for LambdaClosure with: {0}")]
-    EvaluationFailed(String),
+    EvaluationFailed(Rc<LambdaVariant>, String),
 
     #[error("Lambda arity mismatch: Expected: {0} but got: {1}")]
     LambdaArityMismatch(usize, usize),
