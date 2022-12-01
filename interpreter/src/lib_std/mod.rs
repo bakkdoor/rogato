@@ -10,7 +10,7 @@ use rogato_common::{
         module_def::ModuleExports,
     },
     native_fn::{NativeFn, NativeFnError},
-    val,
+    val::{self, List},
     val::{Value, ValueRef},
 };
 use rust_decimal::{prelude::ToPrimitive, Decimal};
@@ -208,12 +208,8 @@ pub fn std_module() -> Module {
                     }
                     let start = 0i64;
                     let end = end.trunc().to_i64().unwrap();
-                    let mut numbers: Vec<ValueRef> =
-                        Vec::with_capacity(end.try_into().unwrap_or_default());
-                    for i in start..end {
-                        numbers.push(val::number(i))
-                    }
-                    Ok(val::list(numbers))
+                    let numbers = List::from_iter((start..end).map(val::number));
+                    Ok(numbers.into())
                 }
                 _ => error,
             },
@@ -221,13 +217,8 @@ pub fn std_module() -> Module {
                 (Value::Number(start), Value::Number(end)) => {
                     let start: i64 = start.trunc().to_i64().unwrap();
                     let end = end.trunc().to_i64().unwrap();
-                    let mut numbers: Vec<ValueRef> =
-                        Vec::with_capacity((end - start).try_into().unwrap_or_default());
-
-                    for i in start..end {
-                        numbers.push(val::number(i))
-                    }
-                    Ok(val::list(numbers))
+                    let numbers = List::from_iter((start..end).map(val::number));
+                    Ok(numbers.into())
                 }
                 _ => error,
             },
