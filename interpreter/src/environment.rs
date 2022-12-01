@@ -1,5 +1,5 @@
-use super::{module::Module, Identifier, ValueRef};
-use rogato_common::ast::{fn_def::FnDef, type_expression::TypeDef};
+use super::{module::Module, ValueRef};
+use rogato_common::ast::{fn_def::FnDef, type_expression::TypeDef, Identifier};
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 type FuncId = Identifier;

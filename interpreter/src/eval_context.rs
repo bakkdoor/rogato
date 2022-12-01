@@ -1,19 +1,19 @@
-use rogato_common::{
-    ast::{
-        expression::Expression,
-        fn_def::{FnDefBody, FnDefVariant},
-        lambda::{Lambda, LambdaClosureContext, LambdaClosureEvalError},
-    },
-    native_fn::{NativeFnContext, NativeFnError},
-};
-
-use super::{environment::Environment, module::Module, EvalError, Identifier, ValueRef};
+use super::{environment::Environment, module::Module, EvalError, ValueRef};
 use crate::{
     environment::Imports,
     lib_std,
     pattern_matching::{PatternMatch, PatternMatching, PatternMatchingError},
     query_planner::{QueryPlanner, QueryResult},
     Evaluate,
+};
+use rogato_common::{
+    ast::{
+        expression::Expression,
+        fn_def::{FnDefBody, FnDefVariant},
+        lambda::{Lambda, LambdaClosureContext, LambdaClosureEvalError},
+        Identifier,
+    },
+    native_fn::{NativeFnContext, NativeFnError},
 };
 use rogato_common::{
     ast::{expression::Query, fn_def::FnDef, type_expression::TypeDef},

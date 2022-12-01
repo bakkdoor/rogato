@@ -1,19 +1,18 @@
 #[cfg(test)]
 pub mod tests;
 
-pub mod query_planner;
-
 pub mod ast;
 pub mod environment;
 pub mod eval_context;
 pub mod lib_std;
 pub mod module;
 pub mod pattern_matching;
+pub mod query_planner;
 
 pub use eval_context::EvalContext;
 use pattern_matching::PatternMatchingError;
 use query_planner::QueryError;
-use rogato_common::ast::lambda::LambdaClosureEvalError;
+use rogato_common::ast::{lambda::LambdaClosureEvalError, Identifier};
 pub use rogato_common::{
     native_fn::{NativeFn, NativeFnError},
     val::{Value, ValueRef},
@@ -114,8 +113,6 @@ impl From<LambdaClosureEvalError> for EvalError {
         EvalError::LambdaClosureError(lce)
     }
 }
-
-pub type Identifier = rogato_common::ast::Identifier;
 
 pub trait Evaluate<T> {
     fn evaluate(&self, context: &mut EvalContext) -> Result<T, EvalError>;

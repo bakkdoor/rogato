@@ -3,12 +3,12 @@ use std::{cell::RefCell, fmt::Display, rc::Rc};
 use rogato_common::{
     ast::{
         lambda::{Lambda, LambdaArgs},
-        ASTDepth,
+        ASTDepth, Identifier,
     },
     val::{self, ValueRef},
 };
 
-use crate::{EvalContext, EvalError, Evaluate, Identifier};
+use crate::{EvalContext, EvalError, Evaluate};
 
 impl<A: Display + ASTDepth + Evaluate<ValueRef>> Evaluate<ValueRef> for LambdaArgs<A> {
     fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
