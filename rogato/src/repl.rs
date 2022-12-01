@@ -1,4 +1,3 @@
-use std::env::Args;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
@@ -39,7 +38,7 @@ fn validated_editor() -> Result<Editor<InputValidator>, ReadlineError> {
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-pub fn run_repl(args: Args) -> anyhow::Result<()> {
+pub fn run_repl(files_to_load: &[String]) -> anyhow::Result<()> {
     println!("👾 rogātō ⌘ 🏷 ");
     print!("🖥  Interactive Shell ");
     println!("{} 🦀 \n", VERSION);
@@ -59,11 +58,8 @@ pub fn run_repl(args: Args) -> anyhow::Result<()> {
         println!("No previous history.");
     }
 
-    for arg in args {
-        if arg == "repl" {
-            continue;
-        }
-        let file_path = Path::new(arg.as_str());
+    for file_path_string in files_to_load {
+        let file_path = Path::new(file_path_string.as_str());
         match File::open(file_path) {
             Ok(mut file) => {
                 let mut buf = String::new();
@@ -74,16 +70,22 @@ pub fn run_repl(args: Args) -> anyhow::Result<()> {
                             println!("✅ {}", file_path.display());
                         }
                         Err(e) => {
-                            eprintln!("❌ {}\n\t\tFailed to evaluate file: {}", arg, e)
+                            eprintln!(
+                                "❌ {}\n\t\tFailed to evaluate file: {}",
+                                file_path_string, e
+                            )
                         }
                     },
                     Err(e) => {
-                        eprintln!("❌ {}\n\t\tFailed to parse file: {}", arg, e)
+                        eprintln!("❌ {}\n\t\tFailed to parse file: {}", file_path_string, e)
                     }
                 }
             }
             Err(error) => {
-                eprintln!("❌ {}\n\t\tCould not open source file: {:?}", arg, error);
+                eprintln!(
+                    "❌ {}\n\t\tCould not open source file: {:?}",
+                    file_path_string, error
+                );
             }
         }
     }

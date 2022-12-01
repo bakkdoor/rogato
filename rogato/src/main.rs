@@ -4,7 +4,7 @@ use rogato_parser::{parse, ParserContext};
 
 use clap::Parser;
 use indent_write::indentable::Indentable;
-use std::fmt::{Debug, Display};
+use std::fmt::Display;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
@@ -13,43 +13,61 @@ mod repl;
 
 // const DB_PATH: &str = "./rogato.db";
 
-#[derive(Parser, Debug)]
-#[clap(author,version,about,long_about=None)]
+/// Doc comment
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
 struct CLIArgs {
-    #[clap(short, long, value_parser)]
-    name: String,
+    #[command(subcommand)]
+    command: Command,
+}
+
+/// Doc comment
+#[derive(Parser, PartialEq, Eq, Debug)]
+#[command(about = "Which rogātō subcommand to run")]
+enum Command {
+    #[command(name = "repl", about = "Runs the REPL")]
+    RunRepl(ReplInfo),
+
+    #[command(name = "eval", about = "Evaluate / Runs the given source file")]
+    EvaluateFile(FileInfo),
+
+    #[command(name = "compile", about = "Compiles the given source file")]
+    CompileFile(FileInfo),
+}
+
+#[derive(Parser, PartialEq, Eq, Debug)]
+struct FileInfo {
+    #[arg(long, short)]
+    paths: Vec<String>,
+}
+
+#[derive(Parser, PartialEq, Eq, Debug)]
+struct ReplInfo {
+    // Files to parse & load before running REPL
+    #[arg(alias = "load", long, short = 'l')]
+    preload: Vec<String>,
 }
 
 fn main() -> anyhow::Result<()> {
-    let mut args = std::env::args();
-    if args.len() == 1 {
-        println!("No arguments given, but required.");
-        print_help();
-        return Ok(());
-    }
-    let mut help_required = false;
+    let args = CLIArgs::parse();
     let parser_ctx = ParserContext::new();
 
-    match args.nth(1).unwrap().as_str() {
-        "help" => help_required = true,
-        "repl" => {
-            repl::run_repl(args)?;
+    match args.command {
+        Command::RunRepl(repl_info) => {
+            repl::run_repl(&repl_info.preload)?;
         }
-        "compile" => todo!(),
-        file => {
-            println!("Attempting file parse: {}", file);
-            let file_path = Path::new(file);
-            if file_path.exists() {
-                read_parse_file(file_path, &parser_ctx);
-            } else {
-                eprintln!("File not found: {:?}. Aborting.", file);
-                help_required = true;
+        Command::EvaluateFile(file_info) => {
+            for file in file_info.paths.iter() {
+                println!("Attempting file parse: {}", file);
+                let file_path = Path::new(file);
+                if file_path.exists() {
+                    read_parse_file(file_path, &parser_ctx);
+                } else {
+                    eprintln!("File not found: {:?}. Aborting.", file);
+                }
             }
         }
-    }
-
-    if help_required {
-        print_help()
+        Command::CompileFile(_file_info) => todo!(),
     }
 
     Ok(())
@@ -68,11 +86,6 @@ fn read_parse_file(file_path: &Path, parser_ctx: &ParserContext) {
             println!("Could not open source file: {:?}", error);
         }
     }
-}
-
-fn print_help() {
-    println!("Possible arguments:");
-    println!("  help\n  repl\n  <source file path>");
 }
 
 fn print_parse_result<T: Display, E: Display>(code: &str, result: &Result<T, E>) {
