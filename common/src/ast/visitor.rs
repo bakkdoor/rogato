@@ -1,3 +1,4 @@
+use expression::LambdaVariant;
 use fn_call::FnCall;
 use let_expression::LetExpression;
 
@@ -24,7 +25,6 @@ pub trait Visitor<T: Default> {
     fn type_def(&mut self, _type_def: &TypeDef) -> T {
         T::default()
     }
-
     fn commented(&mut self, _commented: &str, _expr: &Expression) -> T {
         T::default()
     }
@@ -59,6 +59,9 @@ pub trait Visitor<T: Default> {
         T::default()
     }
     fn lambda(&mut self, _lambda: &Lambda) -> T {
+        T::default()
+    }
+    fn lambda_variant(&mut self, _lambda_variant: &LambdaVariant) -> T {
         T::default()
     }
     fn query(&mut self, _query: &Query) -> T {

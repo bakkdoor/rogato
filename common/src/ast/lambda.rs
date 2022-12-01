@@ -49,6 +49,10 @@ impl ASTDepth for LambdaVariant {
 
 impl Walk for LambdaVariant {
     fn walk<V: super::visitor::Visitor<()>>(&self, v: &mut V) {
+        v.lambda_variant(self);
+        for arg in self.args.iter() {
+            arg.walk(v);
+        }
         self.body.walk(v);
     }
 }
@@ -147,6 +151,7 @@ impl Display for Lambda {
 
 impl Walk for Lambda {
     fn walk<V: super::visitor::Visitor<()>>(&self, v: &mut V) {
+        v.lambda(self);
         for lambda_variant in self.variants_iter() {
             lambda_variant.walk(v)
         }
