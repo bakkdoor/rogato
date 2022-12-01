@@ -38,7 +38,7 @@ enum Command {
 #[derive(Parser, PartialEq, Eq, Debug)]
 struct FileInfo {
     #[arg(long, short)]
-    paths: Vec<String>,
+    files: Vec<String>,
 }
 
 #[derive(Parser, PartialEq, Eq, Debug)]
@@ -57,7 +57,7 @@ fn main() -> anyhow::Result<()> {
             repl::run_repl(&repl_info.preload)?;
         }
         Command::EvaluateFile(file_info) => {
-            for file in file_info.paths.iter() {
+            for file in file_info.files.iter() {
                 println!("Attempting file parse: {}", file);
                 let file_path = Path::new(file);
                 if file_path.exists() {
