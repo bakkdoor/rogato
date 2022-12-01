@@ -72,7 +72,7 @@ pub enum EvalError {
     MapConsInvalidMap(ValueRef),
 
     #[error("EvalError during pattern match in {0} : {1}")]
-    PatternBindingFailed(Identifier, PatternMatchingError),
+    PatternMatchFailed(Identifier, PatternMatchingError),
 }
 
 impl From<QueryError> for EvalError {
@@ -97,13 +97,13 @@ impl From<PatternMatchingError> for EvalError {
     fn from(e: PatternMatchingError) -> Self {
         match &e {
             PatternMatchingError::Unknown(func_id, _) => {
-                EvalError::PatternBindingFailed(func_id.clone(), e)
+                EvalError::PatternMatchFailed(func_id.clone(), e)
             }
             PatternMatchingError::MatchFailed(func_id, _, _) => {
-                EvalError::PatternBindingFailed(func_id.clone(), e)
+                EvalError::PatternMatchFailed(func_id.clone(), e)
             }
             PatternMatchingError::NoFnVariantMatched(func_id, _, _) => {
-                EvalError::PatternBindingFailed(func_id.clone(), e)
+                EvalError::PatternMatchFailed(func_id.clone(), e)
             }
         }
     }

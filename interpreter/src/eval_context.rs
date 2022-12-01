@@ -178,7 +178,7 @@ impl EvalContext {
 
         self.current_func_id = last_current_func_id;
 
-        return Err(EvalError::PatternBindingFailed(
+        return Err(EvalError::PatternMatchFailed(
             func.id().clone(),
             PatternMatchingError::NoFnVariantMatched(
                 func.id().clone(),
@@ -285,7 +285,7 @@ impl EvalContext {
             return Ok(value);
         }
 
-        return Err(EvalError::PatternBindingFailed(
+        return Err(EvalError::PatternMatchFailed(
             func.id().clone(),
             PatternMatchingError::NoFnVariantMatched(
                 func.id().clone(),
