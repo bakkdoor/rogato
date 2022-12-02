@@ -14,7 +14,7 @@ use rogato_common::ast::{
     module_def::{ModuleDef, ModuleExports},
     pattern::Pattern,
     type_expression::{StructTypeProperties, TypeDef, TypeExpression},
-    Identifier, Program, AST,
+    Identifier, Program, VarIdentifier, AST,
 };
 use rust_decimal::prelude::*;
 use rust_decimal::Decimal;
@@ -138,7 +138,7 @@ grammar parser(context: &ParserContext) for str {
             if id == "_" {
                 Rc::new(Pattern::Any)
             } else {
-                Rc::new(Pattern::Var(id))
+                Rc::new(Pattern::Var(VarIdentifier::new(id)))
             }
         }
         / "^" id:symbol_identifier() {
@@ -259,7 +259,7 @@ grammar parser(context: &ParserContext) for str {
 
     rule variable() -> Expression
         = id:variable_identifier() {
-            Expression::Var(id)
+            Expression::Var(id.into())
         }
         / "." id:variable_identifier() {
             Expression::PropFnRef(id)
@@ -310,16 +310,16 @@ grammar parser(context: &ParserContext) for str {
             QueryBinding::new(vars, Rc::new(expr))
         }
 
-    rule query_binding_vars() -> Vec<Identifier>
+    rule query_binding_vars() -> Vec<VarIdentifier>
         = var:variable_identifier() more_vars:(additional_query_binding_vars())* {
             let mut vars = more_vars;
-            vars.insert(0, var);
+            vars.insert(0, VarIdentifier::new(var));
             vars
         }
 
-    rule additional_query_binding_vars() -> Identifier
+    rule additional_query_binding_vars() -> VarIdentifier
         = _ "," _ var:variable_identifier() {
-            var
+            VarIdentifier::new(var)
         }
 
     rule query_expr() -> Expression
@@ -409,7 +409,7 @@ grammar parser(context: &ParserContext) for str {
             LetBindings::from_owned(bindings)
         }
 
-    rule additional_let_binding() -> (Identifier, Expression)
+    rule additional_let_binding() -> (VarIdentifier, Expression)
         = let_binding_sep()* binding:let_binding() {
             binding
         }
@@ -418,12 +418,12 @@ grammar parser(context: &ParserContext) for str {
         = " "* "\n"+
         / ","
 
-    rule let_binding() -> (Identifier, Expression)
+    rule let_binding() -> (VarIdentifier, Expression)
         = _ id:identifier() _ "=" _ val:let_body() {
-            (id, val)
+            (VarIdentifier::new(id.clone()), val)
         }
         / _ id:identifier() _ args:(pattern() ** s()) _ "=" _ body:let_body() {
-            (id.clone(), Expression::InlineFnDef(FnDef::new_inline(id, FnDefArgs::new(args), Rc::new(FnDefBody::rogato(Rc::new(body))))))
+            (VarIdentifier::new(id.clone()), Expression::InlineFnDef(FnDef::new_inline(id, FnDefArgs::new(args), Rc::new(FnDefBody::rogato(Rc::new(body))))))
         }
 
     rule let_body() -> Expression

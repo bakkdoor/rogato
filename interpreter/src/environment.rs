@@ -1,5 +1,5 @@
 use super::{module::Module, ValueRef};
-use rogato_common::ast::{fn_def::FnDef, type_expression::TypeDef, Identifier};
+use rogato_common::ast::{fn_def::FnDef, type_expression::TypeDef, Identifier, VarIdentifier};
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 type FuncId = Identifier;
@@ -82,7 +82,7 @@ impl Default for ImportedModules {
 #[derive(Clone, PartialEq, Eq, Debug)]
 struct State {
     parent: Option<Environment>,
-    variables: HashMap<Identifier, ValueRef>,
+    variables: HashMap<VarIdentifier, ValueRef>,
     modules: Rc<RefCell<HashMap<Identifier, Module>>>,
     imported_modules: ImportedModules,
     current_module_name: Identifier,
@@ -184,11 +184,11 @@ impl Environment {
     }
 
     #[inline]
-    pub fn define_var(&mut self, id: &Identifier, val: ValueRef) {
+    pub fn define_var(&mut self, id: &VarIdentifier, val: ValueRef) {
         self.state.borrow_mut().variables.insert(id.clone(), val);
     }
 
-    pub fn lookup_var(&self, id: &str) -> Option<ValueRef> {
+    pub fn lookup_var(&self, id: &VarIdentifier) -> Option<ValueRef> {
         let state = self.state.borrow();
         let res = match state.variables.get(id) {
             Some(expr) => Some(expr.clone()),

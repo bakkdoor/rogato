@@ -25,7 +25,7 @@ impl Evaluate<ValueRef> for Expression {
             }
             Expression::Var(id) => match context.lookup_var(id) {
                 Some(var) => Ok(var),
-                None => match context.call_function(id, &[]) {
+                None => match context.call_function(&id.into(), &[]) {
                     Some(val) => Ok(val?),
                     None => Err(EvalError::VarNotDefined(id.clone())),
                 },

@@ -4,7 +4,7 @@ use super::{
     expression::{MapKVPair, TupleItems},
     visitor::Visitor,
     walker::Walk,
-    ASTDepth, Identifier,
+    ASTDepth, Identifier, VarIdentifier,
 };
 use std::{fmt::Display, rc::Rc};
 
@@ -17,7 +17,7 @@ pub enum Pattern {
     Tuple(usize, TupleItems<Pattern>),
     Map(TupleItems<MapKVPair<Pattern>>),
     MapCons(TupleItems<MapKVPair<Pattern>>, Rc<Pattern>),
-    Var(Identifier),
+    Var(VarIdentifier),
     Bool(bool),
     Number(Decimal),
     String(String),
@@ -77,7 +77,7 @@ impl Display for Pattern {
                 rest.fmt(f)?;
                 f.write_str(" }")
             }
-            Self::Var(id) => f.write_str(id),
+            Self::Var(id) => id.fmt(f),
             Self::Bool(b) => b.fmt(f),
             Self::Number(d) => d.fmt(f),
             Self::String(s) => s.fmt(f),
@@ -89,7 +89,7 @@ impl Display for Pattern {
     }
 }
 
-impl<S: Into<Identifier>> From<S> for Pattern {
+impl<S: Into<VarIdentifier>> From<S> for Pattern {
     fn from(s: S) -> Self {
         Pattern::Var(s.into())
     }

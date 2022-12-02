@@ -37,7 +37,7 @@ pub trait Visitor<T: Default> {
     fn op_call(&mut self, _id: &Identifier, _left: &Expression, _right: &Expression) -> T {
         T::default()
     }
-    fn var(&mut self, _id: &Identifier) -> T {
+    fn var(&mut self, _id: &VarIdentifier) -> T {
         T::default()
     }
     fn const_or_type_ref(&mut self, _id: &Identifier) -> T {

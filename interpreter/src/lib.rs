@@ -14,6 +14,7 @@ use pattern_matching::PatternMatchingError;
 use query_planner::QueryError;
 use rogato_common::ast::{lambda::LambdaClosureEvalError, Identifier};
 pub use rogato_common::{
+    ast::VarIdentifier,
     native_fn::{NativeFn, NativeFnError},
     val::{Value, ValueRef},
 };
@@ -44,7 +45,7 @@ pub enum EvalError {
     OperatorNotDefined(Identifier),
 
     #[error("Var not defined: {0}")]
-    VarNotDefined(Identifier),
+    VarNotDefined(VarIdentifier),
 
     #[error("Function not defined: {0}")]
     FunctionNotDefined(Identifier),

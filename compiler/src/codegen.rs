@@ -113,7 +113,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         for (arg, arg_name) in func.get_param_iter().zip(args.iter()) {
             match &**arg_name {
                 Pattern::Var(arg_name) => {
-                    let alloca = self.create_entry_block_alloca(f32_type, arg_name);
+                    let alloca = self.create_entry_block_alloca(f32_type, arg_name.as_str());
                     self.builder.build_store(alloca, arg);
                     self.store_var(arg_name, alloca)
                 }
@@ -240,7 +240,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                     .build_load(*var, id.as_str())
                     .into_float_value()),
                 None => {
-                    self.codegen_fn_call(&FnCall::new(id.clone(), FnCallArgs::empty()))
+                    self.codegen_fn_call(&FnCall::new(id.into(), FnCallArgs::empty()))
                     // Err(CompileError::VarNotFound(id.clone()))
                 }
             },

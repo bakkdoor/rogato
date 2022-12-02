@@ -1,7 +1,10 @@
 use std::rc::Rc;
 
 use rogato_common::{
-    ast::fn_call::{FnCall, FnCallArgs},
+    ast::{
+        fn_call::{FnCall, FnCallArgs},
+        VarIdentifier,
+    },
     val::{Value, ValueRef},
 };
 
@@ -14,7 +17,7 @@ impl Evaluate<ValueRef> for FnCall {
         let call_args = args.evaluate(context)?;
         match context.call_function(fn_ident, &call_args) {
             Some(val) => Ok(val?),
-            None => match context.lookup_var(fn_ident) {
+            None => match context.lookup_var(&VarIdentifier::new(fn_ident.clone())) {
                 Some(val2) => match &*val2 {
                     Value::Lambda(lambda_ctx, lambda) => {
                         context.call_lambda(Rc::clone(lambda_ctx), lambda, &call_args)

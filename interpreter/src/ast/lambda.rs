@@ -3,7 +3,7 @@ use std::{cell::RefCell, fmt::Display, rc::Rc};
 use rogato_common::{
     ast::{
         lambda::{Lambda, LambdaArgs},
-        ASTDepth, Identifier,
+        ASTDepth, VarIdentifier,
     },
     val::{self, ValueRef},
 };
@@ -30,7 +30,7 @@ impl<A: Display + ASTDepth + Evaluate<ValueRef>> Evaluate<Vec<ValueRef>> for Lam
     }
 }
 
-impl Evaluate<ValueRef> for Identifier {
+impl Evaluate<ValueRef> for VarIdentifier {
     fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
         match context.lookup_var(self) {
             Some(val) => Ok(val),

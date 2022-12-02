@@ -22,7 +22,7 @@ use super::expression::{IfElse, MapKVPair};
 use super::fn_def::FnDefBody;
 use super::pattern::Pattern;
 use super::type_expression::StructTypeProperties;
-use super::Identifier;
+use super::{Identifier, VarIdentifier};
 
 pub fn program<Nodes: IntoIterator<Item = Rc<AST>>>(nodes: Nodes) -> Program {
     Program::from_iter(nodes)
@@ -130,13 +130,13 @@ pub fn if_else(
     Rc::new(Expression::IfElse(IfElse::new(cond, then_expr, else_expr)))
 }
 pub fn let_expr<
-    VarName: Into<Identifier>,
+    VarName: Into<VarIdentifier>,
     Bindings: IntoIterator<Item = (VarName, Rc<Expression>)>,
 >(
     bindings: Bindings,
     body: Rc<Expression>,
 ) -> Rc<Expression> {
-    let bindings: Vec<(Identifier, Rc<Expression>)> = bindings
+    let bindings: Vec<(VarIdentifier, Rc<Expression>)> = bindings
         .into_iter()
         .map(|(name, expr)| (name.into(), expr))
         .collect();
@@ -389,7 +389,8 @@ pub fn p<P: Into<Vec<Pattern>>>(vec: P) -> Vec<Rc<Pattern>> {
 pub fn vars(ids: &[&str]) -> Vec<Rc<Pattern>> {
     let mut vec = Vec::with_capacity(ids.len());
     for id in ids.iter() {
-        vec.push(Rc::new(id.into()))
+        let id: VarIdentifier = id.into();
+        vec.push(Rc::new(Pattern::Var(id)))
     }
     vec
 }

@@ -10,6 +10,7 @@ pub mod expression;
 pub mod fn_call;
 pub mod fn_def;
 pub mod helpers;
+pub mod identifier;
 pub mod if_else;
 pub mod lambda;
 pub mod let_expression;
@@ -22,14 +23,7 @@ pub mod type_expression;
 pub mod visitor;
 pub mod walker;
 
-use smol_str::SmolStr;
-pub type Identifier = SmolStr;
-
-pub struct ModIdentifier(Identifier);
-pub struct FnIdentifier(Identifier);
-pub struct OpIdentifier(Identifier);
-pub struct VarIdentifier(Identifier);
-
+pub use identifier::{FnIdentifier, Identifier, ModIdentifier, OpIdentifier, VarIdentifier};
 pub use program::Program;
 
 pub type ASTId = usize;

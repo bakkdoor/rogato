@@ -6,7 +6,9 @@ use std::{
 
 use crate::{util::indent, val::ValueRef};
 
-use super::{expression::Expression, pattern::Pattern, walker::Walk, ASTDepth, Identifier};
+use super::{
+    expression::Expression, pattern::Pattern, walker::Walk, ASTDepth, Identifier, VarIdentifier,
+};
 
 #[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub struct LambdaVariant {
@@ -186,8 +188,8 @@ pub enum LambdaClosureEvalError {
 
 pub trait LambdaClosureContext {
     fn hash_id(&self) -> String;
-    fn lookup_var(&self, id: &Identifier) -> Option<ValueRef>;
-    fn define_var(&mut self, id: &Identifier, val: ValueRef);
+    fn lookup_var(&self, id: &VarIdentifier) -> Option<ValueRef>;
+    fn define_var(&mut self, id: &VarIdentifier, val: ValueRef);
     fn with_child_env(&self) -> Box<dyn LambdaClosureContext>;
 
     fn evaluate_lambda_call(

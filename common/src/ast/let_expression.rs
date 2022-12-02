@@ -2,7 +2,7 @@ use std::{fmt::Display, rc::Rc};
 
 use crate::util::indent;
 
-use super::{expression::Expression, visitor::Visitor, walker::Walk, ASTDepth, Identifier};
+use super::{expression::Expression, visitor::Visitor, walker::Walk, ASTDepth, VarIdentifier};
 
 #[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub struct LetExpression {
@@ -43,15 +43,15 @@ impl Walk for LetExpression {
 
 #[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub struct LetBindings {
-    bindings: Vec<(Identifier, Rc<Expression>)>,
+    bindings: Vec<(VarIdentifier, Rc<Expression>)>,
 }
 
 impl LetBindings {
-    pub fn new(bindings: Vec<(Identifier, Rc<Expression>)>) -> LetBindings {
+    pub fn new(bindings: Vec<(VarIdentifier, Rc<Expression>)>) -> LetBindings {
         LetBindings { bindings }
     }
 
-    pub fn from_owned(bindings: Vec<(Identifier, Expression)>) -> LetBindings {
+    pub fn from_owned(bindings: Vec<(VarIdentifier, Expression)>) -> LetBindings {
         LetBindings {
             bindings: bindings
                 .iter()
@@ -60,7 +60,7 @@ impl LetBindings {
         }
     }
 
-    pub fn iter(&self) -> std::slice::Iter<(Identifier, Rc<Expression>)> {
+    pub fn iter(&self) -> std::slice::Iter<(VarIdentifier, Rc<Expression>)> {
         self.bindings.iter()
     }
 }

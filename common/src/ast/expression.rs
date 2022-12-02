@@ -6,7 +6,7 @@ pub use super::lambda::{Lambda, LambdaArgs, LambdaVariant};
 pub use super::let_expression::{LetBindings, LetExpression};
 pub use super::literal::*;
 pub use super::query::{Query, QueryBinding, QueryBindings, QueryGuards};
-use super::{ASTDepth, Identifier, AST};
+use super::{ASTDepth, Identifier, VarIdentifier, AST};
 use std::cell::RefCell;
 use std::fmt::Display;
 use std::rc::Rc;
@@ -17,7 +17,7 @@ pub enum Expression {
     Lit(Literal),
     FnCall(FnCall),
     OpCall(Identifier, Rc<Expression>, Rc<Expression>),
-    Var(Identifier),
+    Var(VarIdentifier),
     ConstOrTypeRef(Identifier),
     DBTypeRef(Identifier),
     PropFnRef(Identifier),
@@ -149,7 +149,7 @@ impl Display for Expression {
                 right.fmt(f)?;
                 f.write_str(")")
             }
-            Expression::Var(id) => f.write_str(id),
+            Expression::Var(id) => id.fmt(f),
             Expression::ConstOrTypeRef(id) => f.write_str(id),
             Expression::DBTypeRef(id) => {
                 f.write_str("@")?;

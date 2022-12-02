@@ -7,8 +7,8 @@ use crate::ValueRef;
 use rogato_common::ast::fn_def::{FnDefArgs, FnDefBody, FnDefVariant};
 use rogato_common::ast::module_def::ModuleExports;
 use rogato_common::ast::pattern::Pattern;
-use rogato_common::ast::Identifier;
 use rogato_common::ast::{fn_def::FnDef, type_expression::TypeDef};
+use rogato_common::ast::{Identifier, VarIdentifier};
 use rogato_common::native_fn::NativeFn;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -69,11 +69,11 @@ impl Module {
     }
 
     pub fn fn_def_native(&mut self, id: &str, args: &[&str], fn_body: NativeFn) {
-        let id: Identifier = id.into();
+        let id: VarIdentifier = id.into();
 
         let args = FnDefArgs::new(
             args.iter()
-                .map(|a| Rc::new(Pattern::Var(a.into())))
+                .map(|a| Rc::new(Pattern::Var((*a).into())))
                 .collect(),
         );
         let body = Rc::new(FnDefBody::native(fn_body));

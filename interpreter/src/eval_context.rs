@@ -11,7 +11,7 @@ use rogato_common::{
         expression::Expression,
         fn_def::{FnDefBody, FnDefVariant},
         lambda::{Lambda, LambdaClosureContext, LambdaClosureEvalError},
-        Identifier,
+        Identifier, VarIdentifier,
     },
     native_fn::{NativeFnContext, NativeFnError},
 };
@@ -305,12 +305,12 @@ impl EvalContext {
     }
 
     #[inline]
-    pub fn define_var(&mut self, id: &Identifier, val: ValueRef) {
+    pub fn define_var(&mut self, id: &VarIdentifier, val: ValueRef) {
         self.env.define_var(id, val)
     }
 
     #[inline]
-    pub fn lookup_var(&self, id: &str) -> Option<ValueRef> {
+    pub fn lookup_var(&self, id: &VarIdentifier) -> Option<ValueRef> {
         self.env.lookup_var(id)
     }
 
@@ -356,7 +356,7 @@ impl EvalContext {
 }
 
 impl NativeFnContext for EvalContext {
-    fn lookup_var(&self, id: &Identifier) -> Option<ValueRef> {
+    fn lookup_var(&self, id: &VarIdentifier) -> Option<ValueRef> {
         self.lookup_var(id)
     }
 
@@ -400,11 +400,11 @@ impl LambdaClosureContext for EvalContext {
         self.id.to_string()
     }
 
-    fn lookup_var(&self, id: &Identifier) -> Option<ValueRef> {
-        self.lookup_var(id.as_str())
+    fn lookup_var(&self, id: &VarIdentifier) -> Option<ValueRef> {
+        self.lookup_var(id)
     }
 
-    fn define_var(&mut self, id: &Identifier, val: ValueRef) {
+    fn define_var(&mut self, id: &VarIdentifier, val: ValueRef) {
         self.define_var(id, val)
     }
 

@@ -1,4 +1,4 @@
-use super::{expression::Expression, walker::Walk, ASTDepth, Identifier};
+use super::{expression::Expression, walker::Walk, ASTDepth, VarIdentifier};
 use std::{fmt::Display, rc::Rc};
 
 #[derive(Clone, PartialEq, Eq, Debug, Hash)]
@@ -111,13 +111,13 @@ impl Display for QueryGuards {
 
 #[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub struct QueryBinding {
-    ids: Vec<Identifier>,
+    ids: Vec<VarIdentifier>,
     val: Rc<Expression>,
     is_negated: bool,
 }
 
 impl QueryBinding {
-    pub fn new(ids: Vec<Identifier>, val: Rc<Expression>) -> Self {
+    pub fn new(ids: Vec<VarIdentifier>, val: Rc<Expression>) -> Self {
         QueryBinding {
             ids,
             val,
@@ -125,7 +125,7 @@ impl QueryBinding {
         }
     }
 
-    pub fn new_negated(ids: Vec<Identifier>, val: Rc<Expression>) -> Self {
+    pub fn new_negated(ids: Vec<VarIdentifier>, val: Rc<Expression>) -> Self {
         QueryBinding {
             ids,
             val,
@@ -137,7 +137,7 @@ impl QueryBinding {
         self.is_negated
     }
 
-    pub fn ids(&self) -> &Vec<Identifier> {
+    pub fn ids(&self) -> &Vec<VarIdentifier> {
         &self.ids
     }
 

@@ -257,7 +257,7 @@ impl FnDefArgs {
 
     pub fn is_optional_arg(p: &Pattern) -> bool {
         match p {
-            Pattern::Var(v) => v.starts_with('?'),
+            Pattern::Var(v) => v.as_str().starts_with('?'),
             _ => false, // TODO: ???
         }
     }

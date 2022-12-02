@@ -4,7 +4,7 @@ use crate::{
     ast::{
         fn_def::FnDef,
         lambda::{Lambda, LambdaClosureContext, LambdaClosureEvalError},
-        Identifier,
+        Identifier, VarIdentifier,
     },
     val::ValueRef,
 };
@@ -29,7 +29,7 @@ impl From<LambdaClosureEvalError> for NativeFnError {
 }
 
 pub trait NativeFnContext {
-    fn lookup_var(&self, id: &Identifier) -> Option<ValueRef>;
+    fn lookup_var(&self, id: &VarIdentifier) -> Option<ValueRef>;
     fn lookup_const(&self, id: &Identifier) -> Option<ValueRef>;
 
     fn call_function(
