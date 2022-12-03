@@ -22,12 +22,12 @@ pub enum PatternMatchingError {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub enum PatternMatch {
-    Matched(ValueRef),
+pub enum PatternMatch<T> {
+    Matched(T),
     TryNextPattern,
 }
 
-impl PatternMatch {
+impl<T> PatternMatch<T> {
     pub fn matched(&self) -> bool {
         match self {
             Self::Matched(_) => true,
@@ -38,29 +38,31 @@ impl PatternMatch {
     pub fn match_failed(&self) -> bool {
         !self.matched()
     }
+}
 
-    pub fn map(&self, f: fn(ValueRef) -> ValueRef) -> Self {
+impl<T: Clone> PatternMatch<T> {
+    pub fn map(&self, f: fn(T) -> T) -> Self {
         match self {
-            Self::Matched(val) => Self::Matched(f(ValueRef::clone(val))),
+            Self::Matched(val) => Self::Matched(f(T::clone(val))),
             Self::TryNextPattern => Self::TryNextPattern,
         }
     }
 }
 
-pub trait PatternMatching {
+pub trait PatternMatching<T: Clone> {
     fn pattern_match(
         &self,
         eval_context: &mut crate::EvalContext,
         value: ValueRef,
-    ) -> Result<PatternMatch, PatternMatchingError>;
+    ) -> Result<PatternMatch<T>, PatternMatchingError>;
 }
 
-impl PatternMatching for Pattern {
+impl PatternMatching<ValueRef> for Pattern {
     fn pattern_match(
         &self,
         context: &mut EvalContext,
         value: ValueRef,
-    ) -> Result<PatternMatch, PatternMatchingError> {
+    ) -> Result<PatternMatch<ValueRef>, PatternMatchingError> {
         match (self, &*value) {
             (Pattern::Any, _) => Ok(PatternMatch::Matched(value)),
             (Pattern::Var(id), _) => {
