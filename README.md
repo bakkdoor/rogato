@@ -77,7 +77,7 @@ I needed a project to learn Rust with. I always have been interested in graph da
 
 #### What does the name mean?
 
-**rogātō** is the ablative case of the Latin perfect passive participle of [***rogātus***](https://en.wiktionary.org/wiki/rogatus#Latin) (having been enquired / asked / requested / invited).
+**rogātō** is the ablative case of the Latin perfect passive participle of [***rogātus***](https://en.wiktionary.org/wiki/rogatus#Etymology_2) (having been enquired / asked / requested / invited).
 
 ###### How is it pronounced?
 ###### <sup>The a and final o (marked with macrons) are pronounced twice as long as the first o.</sup>
