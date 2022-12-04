@@ -404,6 +404,39 @@ fn std_list_module() {
                 ]),
             ]),
         ),
+        (
+            "let
+                zipWith xs ys fn =
+                    zipWith_ [] xs ys fn
+
+                zipWith_ acc [] _ _ = Std.List.reverse acc
+                zipWith_ acc _ [] _ = Std.List.reverse acc
+                zipWith_ acc [x :: xs] [y :: ys] fn = zipWith_ [fn x y :: acc] xs ys fn
+            in
+                zipWith (range 5) (range 5 10) (x y -> {^x: x, ^y: y})",
+            val::list([
+                val::map([
+                    (val::symbol("x"), val::number(0)),
+                    (val::symbol("y"), val::number(5)),
+                ]),
+                val::map([
+                    (val::symbol("x"), val::number(1)),
+                    (val::symbol("y"), val::number(6)),
+                ]),
+                val::map([
+                    (val::symbol("x"), val::number(2)),
+                    (val::symbol("y"), val::number(7)),
+                ]),
+                val::map([
+                    (val::symbol("x"), val::number(3)),
+                    (val::symbol("y"), val::number(8)),
+                ]),
+                val::map([
+                    (val::symbol("x"), val::number(4)),
+                    (val::symbol("y"), val::number(9)),
+                ]),
+            ]),
+        ),
     ];
 
     let mut eval_ctx = EvalContext::new();

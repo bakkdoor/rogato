@@ -1,4 +1,4 @@
-module Std.List { count, head, isEmpty, groupBy, map, reverse, repeat, skip, tail, take, zip }
+module Std.List { count, head, isEmpty, groupBy, map, reverse, repeat, skip, tail, take, zip, zipWith }
 
 let head [x :: _]  = x
 
@@ -125,3 +125,14 @@ let groupBy_ groups [x :: xs] fn =
     newGroups = groups |> Std.Map.insertOrUpdate key [x] (group -> [x :: group])
   in
     groupBy_ newGroups xs fn
+
+
+let zipWith xs ys fn =
+  zipWith_ [] xs ys fn
+
+let zipWith_ acc [] _ _ =
+  reverse acc
+let zipWith_ acc _ [] _ =
+  reverse acc
+let zipWith_ acc [x ::xs] [y :: ys] fn =
+  zipWith_ [f x y :: acc] xs ys fn
