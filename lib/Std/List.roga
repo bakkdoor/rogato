@@ -135,4 +135,4 @@ let zipWith_ acc [] _ _ =
 let zipWith_ acc _ [] _ =
   reverse acc
 let zipWith_ acc [x ::xs] [y :: ys] fn =
-  zipWith_ [f x y :: acc] xs ys fn
+  zipWith_ [fn x y :: acc] xs ys fn
