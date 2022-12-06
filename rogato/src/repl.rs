@@ -2,6 +2,7 @@ use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 
+use rustyline::config::Configurer;
 use rustyline::error::ReadlineError;
 use rustyline::validate::MatchingBracketValidator;
 use rustyline::{Cmd, Editor, EventHandler, KeyCode, KeyEvent, Modifiers};
@@ -49,6 +50,7 @@ pub fn run_repl(files_to_load: &[String]) -> anyhow::Result<()> {
     let mut counter = 0usize;
 
     let mut rl = validated_editor()?;
+    rl.set_max_history_size(5000);
 
     let mut path_buf = dirs::home_dir().unwrap();
     path_buf.push(".rogato_history.txt");
