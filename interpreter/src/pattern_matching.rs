@@ -9,18 +9,6 @@ use thiserror::Error;
 
 type FuncId = Identifier;
 
-#[derive(Error, Debug, PartialEq, Eq, Clone)]
-pub enum PatternMatchingError {
-    #[error("Unknown PatternMatchingError in {0} : {1}")]
-    Unknown(FuncId, String),
-
-    #[error("Failed to match pattern in {0} : {1} with value: {2}")]
-    MatchFailed(FuncId, Pattern, ValueRef),
-
-    #[error("Failed to match fn {0} variant for pattern: {1:?} with value: {2:?}")]
-    NoFnVariantMatched(FuncId, Option<Rc<Pattern>>, Vec<ValueRef>),
-}
-
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum PatternMatch<T> {
     Matched(T),
@@ -49,15 +37,27 @@ impl<T: Clone> PatternMatch<T> {
     }
 }
 
-pub trait PatternMatching<T: Clone> {
+#[derive(Error, Debug, PartialEq, Eq, Clone)]
+pub enum PatternMatchingError {
+    #[error("Unknown PatternMatchingError in {0} : {1}")]
+    Unknown(FuncId, String),
+
+    #[error("Failed to match pattern in {0} : {1} with value: {2}")]
+    MatchFailed(FuncId, Pattern, ValueRef),
+
+    #[error("Failed to match fn {0} variant for pattern: {1:?} with value: {2:?}")]
+    NoFnVariantMatched(FuncId, Option<Rc<Pattern>>, Vec<ValueRef>),
+}
+
+pub trait PatternMatching<T = ValueRef, V = ValueRef, Ctx = EvalContext> {
     fn pattern_match(
         &self,
-        eval_context: &mut crate::EvalContext,
-        value: ValueRef,
+        context: &mut Ctx,
+        value: V,
     ) -> Result<PatternMatch<T>, PatternMatchingError>;
 }
 
-impl PatternMatching<ValueRef> for Pattern {
+impl PatternMatching<ValueRef, ValueRef, EvalContext> for Pattern {
     fn pattern_match(
         &self,
         context: &mut EvalContext,
