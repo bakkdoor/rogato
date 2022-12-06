@@ -12,3 +12,7 @@ let not true =
   false
 let not false =
   true
+
+
+let match val fn =
+  fn val

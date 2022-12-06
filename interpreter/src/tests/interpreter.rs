@@ -878,6 +878,70 @@ fn patterns() {
                 val::tuple([val::number(1), val::number(1), val::number(1)]),
             ]),
         ),
+        (
+            "let
+                f [] = ^empty
+                f [x] = {^single, x}
+                f [a,b] = {^pair, {a, b}}
+                f [a,b,c] = {^triplet, {a,b,c}}
+                f list = {^list, list}
+            in
+                {
+                    match (range 0) ^f,
+                    match (range 1) ^f,
+                    match (range 2) ^f,
+                    match (range 3) ^f,
+                    match (range 4) ^f,
+                    match (range 5) ^f,
+                    match (range 10) ^f
+                }",
+            val::tuple([
+                val::symbol("empty"),
+                val::tuple([val::symbol("single"), val::number(0)]),
+                val::tuple([
+                    val::symbol("pair"),
+                    val::tuple([val::number(0), val::number(1)]),
+                ]),
+                val::tuple([
+                    val::symbol("triplet"),
+                    val::tuple([val::number(0), val::number(1), val::number(2)]),
+                ]),
+                val::tuple([
+                    val::symbol("list"),
+                    val::list([
+                        val::number(0),
+                        val::number(1),
+                        val::number(2),
+                        val::number(3),
+                    ]),
+                ]),
+                val::tuple([
+                    val::symbol("list"),
+                    val::list([
+                        val::number(0),
+                        val::number(1),
+                        val::number(2),
+                        val::number(3),
+                        val::number(4),
+                    ]),
+                ]),
+                val::tuple([
+                    val::symbol("list"),
+                    val::list([
+                        val::number(0),
+                        val::number(1),
+                        val::number(2),
+                        val::number(3),
+                        val::number(4),
+                        val::number(5),
+                        val::number(6),
+                        val::number(7),
+                        val::number(8),
+                        val::number(9),
+                    ]),
+                ]),
+            ]),
+        ),
     ];
 
     let mut eval_ctx = EvalContext::new();

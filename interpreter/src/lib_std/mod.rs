@@ -67,6 +67,7 @@ pub fn std_module() -> Module {
         "range".into(),
         "random".into(),
         "length".into(),
+        "match".into(),
     ]));
 
     module.fn_def(
@@ -278,6 +279,36 @@ pub fn std_module() -> Module {
                     _ => error,
                 },
                 _ => error,
+            }
+        },
+    );
+
+    module.fn_def_native(
+        "match",
+        &["val", "fn"],
+        move |ctx, args| -> Result<Rc<Value>, NativeFnError> {
+            let error = Err(invalid_args("match"));
+
+            match (args.len(), args.get(0), args.get(1)) {
+                (2, Some(val), Some(func)) => match &**func {
+                    Value::Lambda(lambda_ctx, lambda) => lambda_ctx
+                        .borrow_mut()
+                        .evaluate_lambda_call(lambda.as_ref(), &[ValueRef::clone(val)])
+                        .map_err(|e| e.into()),
+
+                    Value::Symbol(fn_id) => {
+                        match ctx.call_function(fn_id, &[ValueRef::clone(val)]) {
+                            Some(val) => Ok(ValueRef::clone(&val?)),
+                            None => Err(NativeFnError::EvaluationFailed(
+                                fn_id.clone(),
+                                format!("FunctionRef invalid in ^match: ^{}", fn_id),
+                            )),
+                        }
+                    }
+
+                    _ => error,
+                },
+                (_, _, _) => error,
             }
         },
     );
