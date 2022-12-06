@@ -22,6 +22,7 @@
   - [x] `Evaluate<T>` trait + impls (Simple tree-walking dynamic interpreter)
     - Some impls are still `todo!()`
   - [x] `NativeFn` impls for some standard library modules (`Std`, `Std.Math`, `Std.List`, `Std.Map`)
+  - [x] Pattern matching for function and lambda arguments
 - [x] Compiler using `LLVM` & `Inkwell`
   - [x] JITFunction codegen working for:
     - [x] Simple Float arithmetic functions and expressions
