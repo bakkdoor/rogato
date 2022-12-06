@@ -10,12 +10,12 @@ use thiserror::Error;
 type FuncId = Identifier;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub enum PatternMatch<T> {
-    Matched(T),
+pub enum PatternMatch {
+    Matched(ValueRef),
     TryNextPattern,
 }
 
-impl<T> PatternMatch<T> {
+impl PatternMatch {
     pub fn matched(&self) -> bool {
         match self {
             Self::Matched(_) => true,
@@ -26,12 +26,10 @@ impl<T> PatternMatch<T> {
     pub fn match_failed(&self) -> bool {
         !self.matched()
     }
-}
 
-impl<T: Clone> PatternMatch<T> {
-    pub fn map(&self, f: fn(T) -> T) -> Self {
+    pub fn map(&self, f: fn(ValueRef) -> ValueRef) -> Self {
         match self {
-            Self::Matched(val) => Self::Matched(f(T::clone(val))),
+            Self::Matched(val) => Self::Matched(f(ValueRef::clone(val))),
             Self::TryNextPattern => Self::TryNextPattern,
         }
     }
@@ -49,20 +47,20 @@ pub enum PatternMatchingError {
     NoFnVariantMatched(FuncId, Option<Rc<Pattern>>, Vec<ValueRef>),
 }
 
-pub trait PatternMatching<T = ValueRef, V = ValueRef, Ctx = EvalContext> {
-    fn pattern_match(
-        &self,
-        context: &mut Ctx,
-        value: V,
-    ) -> Result<PatternMatch<T>, PatternMatchingError>;
-}
-
-impl PatternMatching<ValueRef, ValueRef, EvalContext> for Pattern {
+pub trait PatternMatching {
     fn pattern_match(
         &self,
         context: &mut EvalContext,
         value: ValueRef,
-    ) -> Result<PatternMatch<ValueRef>, PatternMatchingError> {
+    ) -> Result<PatternMatch, PatternMatchingError>;
+}
+
+impl PatternMatching for Pattern {
+    fn pattern_match(
+        &self,
+        context: &mut EvalContext,
+        value: ValueRef,
+    ) -> Result<PatternMatch, PatternMatchingError> {
         match (self, &*value) {
             (Pattern::Any, _) => Ok(PatternMatch::Matched(value)),
             (Pattern::Var(id), _) => {
