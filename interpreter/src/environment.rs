@@ -139,7 +139,7 @@ impl Environment {
     }
 
     #[inline]
-    pub fn clear_viariables(&self) {
+    pub fn clear_variables(&self) {
         let mut state = self.state.borrow_mut();
         state.variables.clear();
     }

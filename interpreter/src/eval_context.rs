@@ -71,7 +71,7 @@ impl EvalContext {
 
     #[inline]
     pub fn clear(&mut self) {
-        self.env.clear_viariables()
+        self.env.clear_variables()
     }
 
     pub fn current_func_id(&self) -> Identifier {
