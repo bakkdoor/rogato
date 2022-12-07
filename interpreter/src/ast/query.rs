@@ -10,7 +10,11 @@ use rogato_common::{
 
 use crate::{query_planner::QueryError, EvalContext, EvalError, Evaluate, ValueRef};
 
+#[cfg(feature = "flame_it")]
+use flamer::flame;
+
 impl Evaluate<ValueRef> for Query {
+    #[cfg_attr(feature = "flame_it", flame("Query::"))]
     fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
         match context.schedule_query(self) {
             Ok(val) => Ok(val),
@@ -20,6 +24,7 @@ impl Evaluate<ValueRef> for Query {
 }
 
 impl Evaluate<Vec<ValueRef>> for QueryGuards {
+    #[cfg_attr(feature = "flame_it", flame("QueryGuards::"))]
     fn evaluate(&self, context: &mut EvalContext) -> Result<Vec<ValueRef>, EvalError> {
         let mut results = Vec::with_capacity(self.len());
         for guard_expr in self.iter() {
@@ -40,6 +45,7 @@ impl QueryGuard {
 }
 
 impl Evaluate<ValueRef> for QueryGuard {
+    #[cfg_attr(feature = "flame_it", flame("QueryGuard::"))]
     fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
         let result_value = self.guard_expr.evaluate(context)?;
 

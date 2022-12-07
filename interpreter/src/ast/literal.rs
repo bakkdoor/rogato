@@ -6,7 +6,11 @@ use rogato_common::{
     val::{self, Value, ValueRef},
 };
 
+#[cfg(feature = "flame_it")]
+use flamer::flame;
+
 impl Evaluate<ValueRef> for Literal {
+    #[cfg_attr(feature = "flame_it", flame("Literal::"))]
     fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
         match self {
             Literal::Bool(boolean) => Ok(val::bool(*boolean)),

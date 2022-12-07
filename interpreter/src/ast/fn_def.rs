@@ -7,7 +7,11 @@ use rogato_common::{
     val::ValueRef,
 };
 
+#[cfg(feature = "flame_it")]
+use flamer::flame;
+
 impl Evaluate<ValueRef> for FnDef {
+    #[cfg_attr(feature = "flame_it", flame("FnDef::"))]
     fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
         for FnDefVariant(args, body) in self.variants_iter() {
             let fn_def_variant: FnDefVariant = FnDefVariant(args.clone(), Rc::clone(body));

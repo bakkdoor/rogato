@@ -10,7 +10,11 @@ use rogato_common::{
     val::{self},
 };
 
+#[cfg(feature = "flame_it")]
+use flamer::flame;
+
 impl Evaluate<ValueRef> for Expression {
+    #[cfg_attr(feature = "flame_it", flame("Expression::"))]
     fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
         match self {
             Expression::Commented(_c, e) => e.evaluate(context),

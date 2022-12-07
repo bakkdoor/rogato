@@ -5,7 +5,11 @@ use rogato_common::{
 
 use crate::{module::Module, EvalContext, EvalError, Evaluate};
 
+#[cfg(feature = "flame_it")]
+use flamer::flame;
+
 impl Evaluate<ValueRef> for ModuleDef {
+    #[cfg_attr(feature = "flame_it", flame("ModuleDef::"))]
     fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
         match context.lookup_module(self.id()) {
             Some(mut module) => {

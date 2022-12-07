@@ -4,7 +4,11 @@ use rogato_common::{
     val,
 };
 
+#[cfg(feature = "flame_it")]
+use flamer::flame;
+
 impl Evaluate<ValueRef> for TypeDef {
+    #[cfg_attr(feature = "flame_it", flame("TypeDef::"))]
     fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
         Ok(val::object([
             ("type", val::string("TypeDef")),
@@ -22,6 +26,7 @@ fn type_ref<ID: ToString>(id: ID) -> ValueRef {
 }
 
 impl Evaluate<ValueRef> for TypeExpression {
+    #[cfg_attr(feature = "flame_it", flame("TypeExpression::"))]
     fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
         Ok(match self {
             TypeExpression::BoolType => type_ref("Bool"),
@@ -50,6 +55,7 @@ impl Evaluate<ValueRef> for TypeExpression {
 }
 
 impl Evaluate<ValueRef> for StructTypeProperties {
+    #[cfg_attr(feature = "flame_it", flame("StructTypeProperties::"))]
     fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
         let mut vec = Vec::with_capacity(self.len());
         for (_id, type_expr) in self.iter() {

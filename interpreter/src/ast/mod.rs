@@ -19,7 +19,11 @@ pub mod program;
 pub mod query;
 pub mod type_expression;
 
+#[cfg(feature = "flame_it")]
+use flamer::flame;
+
 impl Evaluate<ValueRef> for AST {
+    #[cfg_attr(feature = "flame_it", flame("AST::"))]
     fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
         match self {
             AST::RootComment(_) => Ok(val::none()),

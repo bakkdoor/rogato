@@ -8,9 +8,13 @@ use rogato_common::{
     val::{self, ValueRef},
 };
 
+#[cfg(feature = "flame_it")]
+use flamer::flame;
+
 use crate::{EvalContext, EvalError, Evaluate};
 
 impl<A: Display + ASTDepth + Evaluate<ValueRef>> Evaluate<ValueRef> for LambdaArgs<A> {
+    #[cfg_attr(feature = "flame_it", flame("LambdaArgs::"))]
     fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
         let mut vec = Vec::with_capacity(self.len());
         for arg in self.iter() {
@@ -21,6 +25,7 @@ impl<A: Display + ASTDepth + Evaluate<ValueRef>> Evaluate<ValueRef> for LambdaAr
 }
 
 impl<A: Display + ASTDepth + Evaluate<ValueRef>> Evaluate<Vec<ValueRef>> for LambdaArgs<A> {
+    #[cfg_attr(feature = "flame_it", flame("LambdaArgs<Vec>::"))]
     fn evaluate(&self, context: &mut EvalContext) -> Result<Vec<ValueRef>, EvalError> {
         let mut vec = Vec::with_capacity(self.len());
         for arg in self.iter() {
@@ -31,6 +36,7 @@ impl<A: Display + ASTDepth + Evaluate<ValueRef>> Evaluate<Vec<ValueRef>> for Lam
 }
 
 impl Evaluate<ValueRef> for VarIdentifier {
+    #[cfg_attr(feature = "flame_it", flame("VarIdentifier::"))]
     fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
         match context.lookup_var(self) {
             Some(val) => Ok(val),
@@ -40,6 +46,7 @@ impl Evaluate<ValueRef> for VarIdentifier {
 }
 
 impl Evaluate<ValueRef> for Rc<Lambda> {
+    #[cfg_attr(feature = "flame_it", flame("Lambda::"))]
     fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
         Ok(val::lambda(
             Rc::new(RefCell::new(context.clone())),

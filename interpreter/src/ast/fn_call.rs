@@ -8,9 +8,13 @@ use rogato_common::{
     val::{Value, ValueRef},
 };
 
+#[cfg(feature = "flame_it")]
+use flamer::flame;
+
 use crate::{EvalContext, EvalError, Evaluate};
 
 impl Evaluate<ValueRef> for FnCall {
+    #[cfg_attr(feature = "flame_it", flame("Fncall::"))]
     fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
         let fn_ident = &self.id;
         let args = &self.args;

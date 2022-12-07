@@ -6,7 +6,11 @@ use rogato_common::{
     val::ValueRef,
 };
 
+#[cfg(feature = "flame_it")]
+use flamer::flame;
+
 impl Evaluate<ValueRef> for LetExpression {
+    #[cfg_attr(feature = "flame_it", flame("LetExpression::"))]
     fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
         let mut context = context.with_child_env();
 
