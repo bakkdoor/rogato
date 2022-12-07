@@ -11,6 +11,12 @@ use std::path::Path;
 
 mod repl;
 
+#[cfg(feature = "flame_it")]
+extern crate flame;
+#[cfg(feature = "flame_it")]
+#[macro_use]
+extern crate flamer;
+
 // const DB_PATH: &str = "./rogato.db";
 
 /// Doc comment
@@ -48,6 +54,7 @@ struct ReplInfo {
     preload: Vec<String>,
 }
 
+#[cfg_attr(feature = "flame_it", flame)]
 fn main() -> anyhow::Result<()> {
     let args = CLIArgs::parse();
     let parser_ctx = ParserContext::new();
@@ -69,6 +76,9 @@ fn main() -> anyhow::Result<()> {
         }
         Command::CompileFile(_file_info) => todo!(),
     }
+
+    #[cfg(feature = "flame_it")]
+    flame::dump_html(File::create("flamegraph.html").unwrap()).unwrap();
 
     Ok(())
 }

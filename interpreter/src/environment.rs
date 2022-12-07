@@ -2,6 +2,9 @@ use super::{module::Module, ValueRef};
 use rogato_common::ast::{fn_def::FnDef, type_expression::TypeDef, Identifier, VarIdentifier};
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
+#[cfg(feature = "flame_it")]
+use flamer::flame;
+
 type FuncId = Identifier;
 type TypeId = Identifier;
 
@@ -144,6 +147,7 @@ impl Environment {
         state.variables.clear();
     }
 
+    #[cfg_attr(feature = "flame_it", flame)]
     pub fn child(&self) -> Environment {
         let curr_state = self.state.borrow();
         let state = State {
@@ -158,6 +162,7 @@ impl Environment {
         }
     }
 
+    #[cfg_attr(feature = "flame_it", flame)]
     pub fn child_with_imported_modules(&self, imported_modules: ImportedModules) -> Environment {
         let curr_state = self.state.borrow();
         let state = State {
@@ -176,6 +181,7 @@ impl Environment {
         self.state.borrow().imported_modules.clone()
     }
 
+    #[cfg_attr(feature = "flame_it", flame)]
     pub fn import(&mut self, module: &Module, imports: Imports) {
         self.state
             .borrow_mut()
@@ -183,11 +189,13 @@ impl Environment {
             .import(module, imports);
     }
 
+    #[cfg_attr(feature = "flame_it", flame)]
     #[inline]
     pub fn define_var(&mut self, id: &VarIdentifier, val: ValueRef) {
         self.state.borrow_mut().variables.insert(id.clone(), val);
     }
 
+    #[cfg_attr(feature = "flame_it", flame)]
     pub fn lookup_var(&self, id: &VarIdentifier) -> Option<ValueRef> {
         let state = self.state.borrow();
         let res = match state.variables.get(id) {
@@ -217,6 +225,7 @@ impl Environment {
         state.current_module_name = module_id;
     }
 
+    #[cfg_attr(feature = "flame_it", flame)]
     pub fn lookup_module(&self, id: &Identifier) -> Option<Module> {
         match self.state.borrow().modules.borrow().get(id) {
             Some(module) => Some(module.clone()),
@@ -227,6 +236,7 @@ impl Environment {
         }
     }
 
+    #[cfg_attr(feature = "flame_it", flame)]
     pub fn lookup_const(&self, id: &Identifier) -> Option<ValueRef> {
         if let Some((module_id, fn_id)) = self.qualified_lookup(id) {
             return self
@@ -249,6 +259,7 @@ impl Environment {
         }
     }
 
+    #[cfg_attr(feature = "flame_it", flame)]
     pub fn lookup_type(&self, id: &Identifier) -> Option<Rc<TypeDef>> {
         if let Some((module_id, fn_id)) = self.qualified_lookup(id) {
             return self
@@ -271,6 +282,7 @@ impl Environment {
         }
     }
 
+    #[cfg_attr(feature = "flame_it", flame)]
     pub fn lookup_fn(&self, id: &Identifier) -> Option<Rc<RefCell<FnDef>>> {
         if let Some((module_id, fn_id)) = self.qualified_lookup(id) {
             return self
@@ -304,6 +316,7 @@ impl Environment {
         }
     }
 
+    #[cfg_attr(feature = "flame_it", flame)]
     pub fn lookup_module_for_fn(&self, id: &Identifier) -> Option<Module> {
         let curr_mod = self.current_module();
         match curr_mod.lookup_fn(id) {
@@ -341,6 +354,7 @@ impl Environment {
         }
     }
 
+    #[cfg_attr(feature = "flame_it", flame)]
     pub fn lookup_module_for_type(&self, id: &Identifier) -> Option<Module> {
         let curr_mod = self.current_module();
         match curr_mod.lookup_type(id) {
@@ -378,6 +392,7 @@ impl Environment {
         }
     }
 
+    #[cfg_attr(feature = "flame_it", flame)]
     pub fn lookup_module_for_const(&self, id: &Identifier) -> Option<Module> {
         let curr_mod = self.current_module();
         match curr_mod.lookup_type(id) {

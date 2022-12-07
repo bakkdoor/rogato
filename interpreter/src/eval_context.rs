@@ -23,6 +23,9 @@ use rogato_db::db::ObjectStorage;
 use std::{cell::RefCell, ops::Deref, rc::Rc};
 use uuid::Uuid;
 
+#[cfg(feature = "flame_it")]
+use flamer::flame;
+
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct EvalContext {
     id: Uuid,
@@ -101,6 +104,7 @@ impl EvalContext {
         self.env.lookup_fn(id)
     }
 
+    #[cfg_attr(feature = "flame_it", flame)]
     pub fn call_lambda(
         &mut self,
         lambda_ctx: Rc<RefCell<dyn LambdaClosureContext>>,
@@ -113,6 +117,7 @@ impl EvalContext {
             .map_err(|e| EvalError::Unknown(e.to_string()))
     }
 
+    #[cfg_attr(feature = "flame_it", flame)]
     pub fn call_function_direct(
         &mut self,
         func: Rc<RefCell<FnDef>>,
@@ -145,6 +150,9 @@ impl EvalContext {
         self.current_func_id = Some(func.id().clone());
 
         let mut last_attempted_pattern = None;
+
+        #[cfg(feature = "flame_it")]
+        let _guard = flame::start_guard("call_function_direct PM");
 
         for FnDefVariant(arg_patterns, body) in func.variants_iter() {
             let mut fn_ctx = self.with_child_env();
@@ -188,6 +196,7 @@ impl EvalContext {
         ));
     }
 
+    #[cfg_attr(feature = "flame_it", flame)]
     pub fn call_tail_recursive_function_direct(
         &mut self,
         func: &FnDef,
@@ -207,6 +216,10 @@ impl EvalContext {
         let mut fn_ctx = self.with_child_env();
         'looping: loop {
             fn_ctx.clear();
+
+            #[cfg(feature = "flame_it")]
+            let _guard = flame::start_guard("call_tail_recursive_function_direct PM");
+
             for FnDefVariant(arg_patterns, body) in func.variants_iter() {
                 let mut matched = 0;
                 let mut attempted = 0;
@@ -295,6 +308,7 @@ impl EvalContext {
         ));
     }
 
+    #[cfg_attr(feature = "flame_it", flame)]
     pub fn call_function(
         &mut self,
         id: &Identifier,
@@ -412,6 +426,7 @@ impl LambdaClosureContext for EvalContext {
         Box::new(self.with_child_env())
     }
 
+    #[cfg_attr(feature = "flame_it", flame)]
     fn evaluate_lambda_call(
         &mut self,
         lambda: &Lambda,
@@ -421,6 +436,9 @@ impl LambdaClosureContext for EvalContext {
             let mut call_ctx = self.with_child_env();
             let mut matched: u32 = 0;
             let mut attempted: u32 = 0;
+
+            #[cfg(feature = "flame_it")]
+            let _guard = flame::start_guard("evaluate_lambda_call PM");
 
             for (arg_pattern, arg_val) in lambda_variant.args.iter().zip(args.iter()) {
                 attempted += 1;

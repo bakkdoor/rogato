@@ -11,8 +11,13 @@ rogato-common = { path = "../common" }
 rogato-db = { path = "../db" }
 rogato-parser = { path = "../parser" }
 
+flame = { version = "*", optional = true }
+flamer = { version = "*", optional = true }
 rand = { version = "*" }
 rust_decimal = { version = "*", features = ["maths", "rand"] }
 rust_decimal_macros = "*"
 thiserror = "*"
 uuid = { version = "*", features = ["v4"] }
+
+[features]
+flame_it = ["flame", "flamer"]

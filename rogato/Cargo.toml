@@ -16,8 +16,13 @@ rogato-type-checker = { path = "../type-checker" }
 anyhow = "*"
 clap = { version = "*", features = ["derive"] }
 dirs = "*"
+flame = { version = "*", optional = true }
+flamer = { version = "*", optional = true }
 indent_write = "*"
 regex = "*"
 rustyline = "*"
 rustyline-derive = "*"
 thiserror = "*"
+
+[features]
+flame_it = ["flame", "flamer"]

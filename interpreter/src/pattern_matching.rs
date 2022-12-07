@@ -7,6 +7,9 @@ use rogato_common::{
 };
 use thiserror::Error;
 
+#[cfg(feature = "flame_it")]
+use flamer::flame;
+
 type FuncId = Identifier;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -56,6 +59,7 @@ pub trait PatternMatching {
 }
 
 impl PatternMatching for Pattern {
+    #[cfg_attr(feature = "flame_it", flame)]
     fn pattern_match(
         &self,
         context: &mut EvalContext,
