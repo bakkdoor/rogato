@@ -1,17 +1,16 @@
 use std::{cell::RefCell, fmt::Display, rc::Rc};
 
+use crate::{EvalContext, EvalError, Evaluate};
 use rogato_common::{
     ast::{
         lambda::{Lambda, LambdaArgs},
-        ASTDepth, VarIdentifier,
+        ASTDepth,
     },
     val::{self, ValueRef},
 };
 
 #[cfg(feature = "flame_it")]
 use flamer::flame;
-
-use crate::{EvalContext, EvalError, Evaluate};
 
 impl<A: Display + ASTDepth + Evaluate<ValueRef>> Evaluate<ValueRef> for LambdaArgs<A> {
     #[cfg_attr(feature = "flame_it", flame("LambdaArgs::"))]
@@ -32,16 +31,6 @@ impl<A: Display + ASTDepth + Evaluate<ValueRef>> Evaluate<Vec<ValueRef>> for Lam
             vec.push(arg.evaluate(context)?)
         }
         Ok(vec)
-    }
-}
-
-impl Evaluate<ValueRef> for VarIdentifier {
-    #[cfg_attr(feature = "flame_it", flame("VarIdentifier::"))]
-    fn evaluate(&self, context: &mut EvalContext) -> Result<ValueRef, EvalError> {
-        match context.lookup_var(self) {
-            Some(val) => Ok(val),
-            None => Err(EvalError::VarNotDefined(self.clone())),
-        }
     }
 }
 
