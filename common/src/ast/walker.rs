@@ -5,8 +5,8 @@ use super::{
     AST,
 };
 
-pub trait Walk {
-    fn walk<V: Visitor<()>>(&self, v: &mut V);
+pub trait Walk<T: Default = ()> {
+    fn walk<V: Visitor<T>>(&self, v: &mut V);
 }
 
 impl Walk for AST {
