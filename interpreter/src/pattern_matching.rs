@@ -65,6 +65,9 @@ impl PatternMatching for Pattern {
         context: &mut EvalContext,
         value: ValueRef,
     ) -> Result<PatternMatch, PatternMatchingError> {
+        #[cfg(feature = "flame_it")]
+        let _guard = flame::start_guard(format!("! {}", &self));
+
         match (self, &*value) {
             (Pattern::Any, _) => Ok(PatternMatch::Matched(value)),
             (Pattern::Var(id), _) => {

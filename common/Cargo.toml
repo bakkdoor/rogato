@@ -8,9 +8,14 @@ repository = "https://github.com/bakkdoor/rogato"
 
 [dependencies]
 archery = { version = "*" }
+flame = { version = "*", optional = true }
+flamer = { version = "*", optional = true }
 indent_write = "*"
 rpds = "*"
 rust_decimal = "*"
 serde_json = "*"
 smol_str = { version="*", features = ["std", "serde"] }
 thiserror = "*"
+
+[features]
+flame_it = ["flame", "flamer"]

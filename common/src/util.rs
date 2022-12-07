@@ -1,6 +1,5 @@
-use std::fmt::Display;
-
 use indent_write::indentable::Indentable;
+use std::fmt::Display;
 
 pub fn print_error<E: std::fmt::Debug>(error: E) -> E {
     eprintln!("Error: {:?}", error);
@@ -26,4 +25,12 @@ fn is_envar_set(envar: &str) -> bool {
         }
     }
     false
+}
+
+#[macro_export]
+macro_rules! flame_guard {
+    ($fmt:expr, $($rest:expr),+) => {
+        #[cfg(feature = "flame_it")]
+        let _guard = flame::start_guard(format!($fmt, $($rest),*));
+    };
 }

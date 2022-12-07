@@ -13,6 +13,7 @@ use rogato_common::{
         lambda::{Lambda, LambdaClosureContext, LambdaClosureEvalError},
         Identifier, VarIdentifier,
     },
+    flame_guard,
     native_fn::{NativeFnContext, NativeFnError},
 };
 use rogato_common::{
@@ -72,6 +73,7 @@ impl EvalContext {
         }
     }
 
+    #[cfg_attr(feature = "flame_it", flame)]
     #[inline]
     pub fn clear(&mut self) {
         self.env.clear_variables()
@@ -151,8 +153,7 @@ impl EvalContext {
 
         let mut last_attempted_pattern = None;
 
-        #[cfg(feature = "flame_it")]
-        let _guard = flame::start_guard("call_function_direct PM");
+        flame_guard!("! fn {}", func.id());
 
         for FnDefVariant(arg_patterns, body) in func.variants_iter() {
             let mut fn_ctx = self.with_child_env();
@@ -215,10 +216,10 @@ impl EvalContext {
 
         let mut fn_ctx = self.with_child_env();
         'looping: loop {
+            flame_guard!("loop rfn {}", func.id());
             fn_ctx.clear();
 
-            #[cfg(feature = "flame_it")]
-            let _guard = flame::start_guard("call_tail_recursive_function_direct PM");
+            flame_guard!("! rfn {}", func.id());
 
             for FnDefVariant(arg_patterns, body) in func.variants_iter() {
                 let mut matched = 0;
@@ -437,8 +438,7 @@ impl LambdaClosureContext for EvalContext {
             let mut matched: u32 = 0;
             let mut attempted: u32 = 0;
 
-            #[cfg(feature = "flame_it")]
-            let _guard = flame::start_guard("evaluate_lambda_call PM");
+            flame_guard!("! {}", &lambda_variant);
 
             for (arg_pattern, arg_val) in lambda_variant.args.iter().zip(args.iter()) {
                 attempted += 1;

@@ -1,5 +1,8 @@
 use super::{module::Module, ValueRef};
-use rogato_common::ast::{fn_def::FnDef, type_expression::TypeDef, Identifier, VarIdentifier};
+use rogato_common::{
+    ast::{fn_def::FnDef, type_expression::TypeDef, Identifier, VarIdentifier},
+    flame_guard,
+};
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 #[cfg(feature = "flame_it")]
@@ -192,11 +195,15 @@ impl Environment {
     #[cfg_attr(feature = "flame_it", flame)]
     #[inline]
     pub fn define_var(&mut self, id: &VarIdentifier, val: ValueRef) {
+        flame_guard!("let {} = {}", id, &val);
+
         self.state.borrow_mut().variables.insert(id.clone(), val);
     }
 
     #[cfg_attr(feature = "flame_it", flame)]
     pub fn lookup_var(&self, id: &VarIdentifier) -> Option<ValueRef> {
+        flame_guard!("? {}", &id);
+
         let state = self.state.borrow();
         let res = match state.variables.get(id) {
             Some(expr) => Some(expr.clone()),
