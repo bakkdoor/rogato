@@ -3,6 +3,7 @@ use std::rc::Rc;
 use crate::{EvalContext, Identifier};
 use rogato_common::{
     ast::pattern::Pattern,
+    flame_guard,
     val::{Map, Value, ValueRef},
 };
 use thiserror::Error;
@@ -65,8 +66,7 @@ impl PatternMatching for Pattern {
         context: &mut EvalContext,
         value: ValueRef,
     ) -> Result<PatternMatch, PatternMatchingError> {
-        #[cfg(feature = "flame_it")]
-        let _guard = flame::start_guard(format!("! {}", &self));
+        flame_guard!("! {}", &self);
 
         match (self, &*value) {
             (Pattern::Any, _) => Ok(PatternMatch::Matched(value)),
