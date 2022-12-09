@@ -78,3 +78,11 @@ let values map =
       values_ [v :: acc] rest
   in
     values_ [] map
+
+
+let toList map =
+  let
+    toList_ acc {} = acc
+    toList_ acc {rest :: k : v} = toList_ [{k,v} :: acc] rest
+  in
+    toList_ [] map
