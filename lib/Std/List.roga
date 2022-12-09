@@ -7,21 +7,25 @@ let tail [_ :: xs] = xs
 
 
 let map list f =
-  map_ [] list f
+  let
+    map_ acc [] _ =
+      reverse acc
 
-let map_ acc [] _ =
-  reverse acc
-let map_ acc [x :: xs] f =
-  map_ [f x :: acc] xs f
+    map_ acc [x :: xs] f =
+      map_ [f x :: acc] xs f
+  in
+    map_ [] list f
 
 
 let count list =
-  count_ 0 list
+  let
+    count_ acc [] =
+      acc
 
-let count_ acc [] =
-  acc
-let count_ acc [_ :: xs] =
-  count_ (acc + 1) xs
+    count_ acc [_ :: xs] =
+      count_ (acc + 1) xs
+  in
+    count_ 0 list
 
 
 let isEmpty [] = true
@@ -29,13 +33,13 @@ let isEmpty _  = false
 
 
 let reverse list =
-  reverse_ [] list
-
-let reverse_ acc [] =
-  acc
-let reverse_ acc [x :: xs] =
-  reverse_ [x :: acc] xs
-
+  let
+    reverse_ acc [] =
+      acc
+    reverse_ acc [x :: xs] =
+      reverse_ [x :: acc] xs
+  in
+    reverse_ [] list
 
 let skip list 0 =
   list
@@ -44,14 +48,17 @@ let skip [x :: xs] n =
 
 
 let take list n =
-  take_ [] list n
+  let
+    take_ acc _ 0 =
+      reverse acc
 
-let take_ acc _ 0 =
-  reverse acc
-let take_ acc [] _ =
-  reverse acc
-let take_ acc [x :: xs] n =
-  take_ [x :: acc] xs (n - 1)
+    take_ acc [] _ =
+      reverse acc
+
+    take_ acc [x :: xs] n =
+      take_ [x :: acc] xs (n - 1)
+  in
+    take_ [] list n
 
 
 let repeat iterations fn =
@@ -68,71 +75,82 @@ let repeat_ acc max n fn =
 
 
 let zip xs ys =
-  zip_ [] xs ys
+  let
+    zip_ acc [] _ =
+      reverse acc
 
-let zip_ acc [] _ =
-  reverse acc
+    zip_ acc _ [] =
+      reverse acc
 
-let zip_ acc _ [] =
-  reverse acc
+    zip_ acc [x :: xs] [y :: ys] =
+      zip_ [{x, y} :: acc] xs ys
+  in
+    zip_ [] xs ys
 
-let zip_ acc [x :: xs] [y :: ys] =
-  zip_ [{x, y} :: acc] xs ys
 
 
 let zip3 xs ys zs =
-  zip3_ [] xs ys zs
+  let
+    zip3_ acc [] _ _ =
+      reverse acc
 
-let zip3_ acc [] _ _ =
-  reverse acc
+    zip3_ acc _ [] _ =
+      reverse acc
 
-let zip3_ acc _ [] _ =
-  reverse acc
+    zip3_ acc _ _ [] =
+      reverse acc
 
-let zip3_ acc _ _ [] =
-  reverse acc
+    zip3_ acc [x :: xs] [y :: ys] [z :: zs] =
+      zip3_ [{x, y, z} :: acc] xs ys zs
+  in
+    zip3_ [] xs ys zs
 
-let zip3_ acc [x :: xs] [y :: ys] [z :: zs] =
-  zip3_ [{x, y, z} :: acc] xs ys zs
 
 
 let zip4 ws xs ys zs =
-  zip4_ [] ws xs ys zs
+  let
+    zip4_ acc [] _ _ _ =
+      reverse acc
 
-let zip4_ acc [] _ _ _ =
-  reverse acc
-let zip4_ acc _ [] _ _ =
-  reverse acc
-let zip4_ acc _ _ [] _ =
-  reverse acc
-let zip4_ acc _ _ _ [] =
-  reverse acc
+    zip4_ acc _ [] _ _ =
+      reverse acc
 
-let zip4_ acc [w :: ws] [x :: xs] [y :: ys] [z :: zs] =
-  zip4_ [{w, x, y, z} :: acc] ws xs ys zs
+    zip4_ acc _ _ [] _ =
+      reverse acc
+
+    zip4_ acc _ _ _ [] =
+      reverse acc
+
+    zip4_ acc [w :: ws] [x :: xs] [y :: ys] [z :: zs] =
+      zip4_ [{w, x, y, z} :: acc] ws xs ys zs
+  in
+    zip4_ [] ws xs ys zs
 
 
 let groupBy list fn =
-  groupBy_ {} list fn
-
-let groupBy_ acc [] _ =
-  acc
-  |> Std.Map.mapValues ^Std.List.reverse
-
-let groupBy_ groups [x :: xs] fn =
   let
-    key = fn x
-    newGroups = groups |> Std.Map.insertOrUpdate key [x] (group -> [x :: group])
+    groupBy_ acc [] _ =
+      acc
+      |> Std.Map.mapValues ^Std.List.reverse
+
+    groupBy_ groups [x :: xs] fn =
+      groups
+      |> Std.Map.insertOrUpdate (fn x) [x] (group -> [x :: group])
+      |> groupBy_ xs fn
   in
-    groupBy_ newGroups xs fn
+    groupBy_ {} list fn
+
 
 
 let zipWith xs ys fn =
-  zipWith_ [] xs ys fn
+  let
+    zipWith_ acc [] _ _ =
+      reverse acc
 
-let zipWith_ acc [] _ _ =
-  reverse acc
-let zipWith_ acc _ [] _ =
-  reverse acc
-let zipWith_ acc [x :: xs] [y :: ys] fn =
-  zipWith_ [fn x y :: acc] xs ys fn
+    zipWith_ acc _ [] _ =
+      reverse acc
+
+    zipWith_ acc [x :: xs] [y :: ys] fn =
+      zipWith_ [fn x y :: acc] xs ys fn
+  in
+    zipWith_ [] xs ys fn
