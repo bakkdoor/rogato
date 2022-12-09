@@ -1,37 +1,67 @@
 module Std.Map { count, fromPairs, isEmpty, keys, map, mapKeys, mapValues, reduce, values }
 
-let map m f =
-  map_ {} m f
-
-
-let map_ acc {} _ = acc
-let map_ acc {rest :: k : v} f =
-  map_ (acc |> Std.Map.insert (f k v)) rest f
-
-
-let mapKeys {} f =
-  {}
-let mapKeys {rest :: k : v} f =
-  {mapKeys rest f :: (f k) : v}
-
-
-let mapValues {} f =
-  {}
-let mapValues {rest :: k : v} f =
-  {mapValues rest f :: k : (f v)}
-
-
 let count m =
-  count_ 0 m
+  let
+    count_ acc {} =
+      acc
+    count_ acc {rest :: _ : _} =
+      count_ (acc + 1) rest
+  in
+    count_ 0 m
 
-let count_ acc {} =
-  acc
-let count_ acc {rest :: _ : _} =
-  count_ (acc + 1) rest
+
+let fromPairs list =
+  let
+    fromPairs_ acc [] =
+      acc
+    fromPairs_ acc [{k,v} :: rest] =
+      fromPairs_ {acc :: k : v} rest
+  in
+    fromPairs_ {} list
 
 
 let isEmpty m =
   (count m) == 0
+
+
+let keys m =
+  let
+    keys_ acc {} =
+      acc
+    keys_ acc {rest :: k : _} =
+      keys_ [k :: acc] rest
+  in
+    keys_ [] m
+
+
+let map m f =
+  let
+    map_ acc {} _ =
+      acc
+    map_ acc {rest :: k : v} f =
+      map_ (acc |> Std.Map.insert (f k v)) rest f
+  in
+    map_ {} m f
+
+
+let mapKeys map f =
+  let
+    mapKeys_ acc {} _ =
+      acc
+    mapKeys_ acc {rest :: k : v} f =
+      mapKeys_ {acc :: (f k) : v} rest f
+  in
+    mapKeys_ {} map f
+
+
+let mapValues map f =
+  let
+    mapValues_ acc {} _ =
+      acc
+    mapValues_ acc {rest :: k : v} f =
+      mapValues_ {acc :: k : (f v)} rest f
+  in
+    mapValues_ {} map f
 
 
 let reduce {} acc _ =
@@ -40,23 +70,11 @@ let reduce {rest :: k : v} acc f =
   reduce rest (f {k,v} acc) f
 
 
-let keys m =
-  keys_ [] m
-
-let keys_ acc {} =
-  acc
-let keys_ acc {rest :: k : _} =
-  keys_ [k :: acc] rest
-
-
-let fromPairs list =
-  fromPairs_ {} list
-
-let fromPairs_ acc [] =
-  acc
-let fromPairs_ acc [{k,v} :: rest] =
-  fromPairs_ {acc :: k : v} rest
-
-
-let values {} = []
-let values {rest :: _ : v} = [v :: values rest]
+let values map =
+  let
+    values_ acc {} =
+      acc
+    values_ acc {rest :: _ : v} =
+      values_ [v :: acc] rest
+  in
+    values_ [] map
