@@ -153,13 +153,14 @@ impl EvalContext {
 
         let mut last_attempted_pattern = None;
 
-        flame_guard!("! fn {}", func.id());
+        flame_guard!("ƒ⡟ {}", func.id());
 
         for FnDefVariant(arg_patterns, body) in func.variants_iter() {
             let mut fn_ctx = self.with_child_env();
             let mut matched = 0;
             let mut attempted = 0;
             for (arg_pattern, arg_val) in arg_patterns.iter().zip(args) {
+                flame_guard!("ƒ⡟ {} {}", func.id(), arg_pattern);
                 attempted += 1;
                 last_attempted_pattern = Some(Rc::clone(arg_pattern));
                 match arg_pattern.pattern_match(&mut fn_ctx, ValueRef::clone(arg_val)) {
@@ -216,15 +217,16 @@ impl EvalContext {
 
         let mut fn_ctx = self.with_child_env();
         'looping: loop {
-            flame_guard!("loop rfn {}", func.id());
+            flame_guard!("∞ƒ {}", func.id());
             fn_ctx.clear();
 
-            flame_guard!("! rfn {}", func.id());
+            flame_guard!("∞ƒ⡟ {}", func.id());
 
             for FnDefVariant(arg_patterns, body) in func.variants_iter() {
                 let mut matched = 0;
                 let mut attempted = 0;
                 for (arg_pattern, arg_val) in arg_patterns.iter().zip(loop_args.iter()) {
+                    flame_guard!("∞ƒ⡟ {} {}", func.id(), arg_pattern);
                     attempted += 1;
                     last_attempted_pattern = Some(Rc::clone(arg_pattern));
                     match arg_pattern.pattern_match(&mut fn_ctx, ValueRef::clone(arg_val)) {
@@ -438,7 +440,7 @@ impl LambdaClosureContext for EvalContext {
             let mut matched: u32 = 0;
             let mut attempted: u32 = 0;
 
-            flame_guard!("! {}", &lambda_variant);
+            flame_guard!("Λ {}", &lambda_variant);
 
             for (arg_pattern, arg_val) in lambda_variant.args.iter().zip(args.iter()) {
                 attempted += 1;

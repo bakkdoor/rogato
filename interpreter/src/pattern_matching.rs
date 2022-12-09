@@ -66,7 +66,7 @@ impl PatternMatching for Pattern {
         context: &mut EvalContext,
         value: ValueRef,
     ) -> Result<PatternMatch, PatternMatchingError> {
-        flame_guard!("! {}", &self);
+        flame_guard!("⡟ {}", &self);
 
         match (self, &*value) {
             (Pattern::Any, _) => Ok(PatternMatch::Matched(value)),
