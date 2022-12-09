@@ -27,6 +27,7 @@ use crate::ast::{
     expression::{Expression, TupleItems},
     ASTDepth, Identifier, AST,
 };
+use crate::util::indent;
 
 pub fn option(opt: Option<ValueRef>) -> ValueRef {
     ValueRef::new(Value::Option(opt))
@@ -277,9 +278,17 @@ impl Display for Value {
             Value::Bool(b) => b.fmt(f),
             Value::Number(d) => d.fmt(f),
             Value::Tuple(_size, items) => {
-                f.write_str("{ ")?;
-                TupleItems::from(items.clone()).fmt(f)?;
-                f.write_str(" }")
+                let items: TupleItems<Value> = TupleItems::from(items.clone());
+                if items.ast_depth() > 6 {
+                    let items_str = format!("{}", items);
+                    if items_str.lines().count() == 1 {
+                        f.write_fmt(format_args!("{{ {} }}", items))
+                    } else {
+                        f.write_fmt(format_args!("{{\n{}\n}}", indent(&items)))
+                    }
+                } else {
+                    f.write_fmt(format_args!("{{ {} }}", items))
+                }
             }
             Value::List(list) => list.fmt(f),
             Value::Vector(vector) => vector.fmt(f),
