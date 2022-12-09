@@ -94,7 +94,6 @@ let zip xs ys =
     zip_ [] xs ys
 
 
-
 let zip3 xs ys zs =
   let
     zip3_ acc [] _ _ =
@@ -110,7 +109,6 @@ let zip3 xs ys zs =
       zip3_ [{x, y, z} :: acc] xs ys zs
   in
     zip3_ [] xs ys zs
-
 
 
 let zip4 ws xs ys zs =
@@ -145,7 +143,6 @@ let groupBy list fn =
       |> groupBy_ xs fn
   in
     groupBy_ {} list fn
-
 
 
 let zipWith xs ys fn =
