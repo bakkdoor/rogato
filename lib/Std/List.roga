@@ -1,4 +1,4 @@
-module Std.List { count, head, isEmpty, groupBy, map, reverse, repeat, skip, tail, take, zip, zipWith }
+module Std.List { count, head, isEmpty, groupBy, map, reduce, reverse, repeat, skip, tail, take, zip, zipWith }
 
 let head [x :: _]  = x
 
@@ -30,6 +30,12 @@ let count list =
 
 let isEmpty [] = true
 let isEmpty _  = false
+
+
+let reduce [] acc f =
+  acc
+let reduce [x :: xs] acc f =
+  reduce xs (f x acc) f
 
 
 let reverse list =
