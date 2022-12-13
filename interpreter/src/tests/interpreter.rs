@@ -278,6 +278,9 @@ fn std_string_module() {
         ("Std.String.length \" \"", val::number(1)),
         ("Std.String.length \"hello\"", val::number(5)),
         ("Std.String.length \"hello, world\"", val::number(12)),
+        ("Std.String.reverse \"\"", val::string("")),
+        ("Std.String.reverse \"hello\"", val::string("olleh")),
+        ("Std.String.reverse \"\twat\"", val::string("taw\t")),
     ];
 
     let mut eval_ctx = EvalContext::new();

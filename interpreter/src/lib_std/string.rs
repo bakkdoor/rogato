@@ -21,5 +21,16 @@ pub fn module() -> Module {
         }
     });
 
+    module.fn_def_native("reverse", &["string"], move |_ctx, args| {
+        let error = Err(invalid_args("Std.String.reverse"));
+        match args.get(0) {
+            Some(val) => match val.deref() {
+                Value::String(string) => Ok(val::string(string.chars().rev().collect::<String>())),
+                _ => error,
+            },
+            _ => error,
+        }
+    });
+
     module
 }
