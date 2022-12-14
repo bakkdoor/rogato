@@ -281,6 +281,25 @@ fn std_string_module() {
         ("Std.String.reverse \"\"", val::string("")),
         ("Std.String.reverse \"hello\"", val::string("olleh")),
         ("Std.String.reverse \"\twat\"", val::string("taw\t")),
+        ("Std.String.split \"\" \",\"", val::list([val::string("")])),
+        (
+            "Std.String.split \",hello,\" \",\"",
+            val::list([val::string(""), val::string("hello"), val::string("")]),
+        ),
+        (
+            "Std.String.split \" hello world! \" \",\"",
+            val::list([val::string(" hello world! ")]),
+        ),
+        (
+            "Std.String.split \"hello,world, how ,are,you?\" \",\"",
+            val::list([
+                val::string("hello"),
+                val::string("world"),
+                val::string(" how "),
+                val::string("are"),
+                val::string("you?"),
+            ]),
+        ),
     ];
 
     let mut eval_ctx = EvalContext::new();
