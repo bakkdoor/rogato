@@ -91,6 +91,7 @@ struct State {
     variables: HashMap<VarIdentifier, ValueRef>,
     modules: Rc<RefCell<HashMap<Identifier, Module>>>,
     imported_modules: ImportedModules,
+    aliased_modules: HashMap<Identifier, Identifier>,
     current_module_name: Identifier,
 }
 
@@ -118,6 +119,7 @@ impl Environment {
             variables: HashMap::new(),
             modules,
             imported_modules: ImportedModules::new(),
+            aliased_modules: HashMap::new(),
             current_module_name: mod_name,
         };
         Environment {
@@ -137,6 +139,7 @@ impl Environment {
             variables: HashMap::new(),
             modules,
             imported_modules,
+            aliased_modules: HashMap::new(),
             current_module_name: mod_name,
         };
         Environment {
@@ -158,6 +161,7 @@ impl Environment {
             variables: HashMap::new(),
             modules: Rc::clone(&curr_state.modules),
             imported_modules: self.imported_modules(),
+            aliased_modules: self.aliased_modules(),
             current_module_name: curr_state.current_module_name.clone(),
         };
         Environment {
@@ -173,6 +177,7 @@ impl Environment {
             variables: HashMap::new(),
             modules: Rc::clone(&curr_state.modules),
             imported_modules,
+            aliased_modules: self.aliased_modules(),
             current_module_name: curr_state.current_module_name.clone(),
         };
         Environment {
@@ -184,12 +189,31 @@ impl Environment {
         self.state.borrow().imported_modules.clone()
     }
 
+    pub fn aliased_modules(&self) -> HashMap<Identifier, Identifier> {
+        self.state.borrow().aliased_modules.clone()
+    }
+
     #[cfg_attr(feature = "flame_it", flame)]
     pub fn import(&mut self, module: &Module, imports: Imports) {
         self.state
             .borrow_mut()
             .imported_modules
             .import(module, imports);
+    }
+
+    pub fn alias_module(&mut self, module: &Module, as_str: &str) {
+        self.state
+            .borrow_mut()
+            .aliased_modules
+            .insert(Identifier::from(as_str), module.id());
+    }
+
+    pub fn lookup_module_alias(&self, id: &Identifier) -> Option<Identifier> {
+        self.state
+            .borrow()
+            .aliased_modules
+            .get(id)
+            .map(Identifier::clone)
     }
 
     #[cfg_attr(feature = "flame_it", flame)]
@@ -318,6 +342,9 @@ impl Environment {
                 let (module_id, fn_id) = parts.split_at(len - 1);
                 let mid: Identifier = module_id.join(".").into();
                 let fid: Identifier = fn_id.join("").into();
+                if let Some(mid) = self.lookup_module_alias(&mid) {
+                    return Some((mid, fid));
+                }
                 Some((mid, fid))
             }
         }

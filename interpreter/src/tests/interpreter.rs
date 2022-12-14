@@ -243,11 +243,11 @@ fn std_math_module() {
     let code_with_vals = [
         ("Std.Math.abs -10", val::number(10)),
         ("Std.Math.abs (10 * -10)", val::number(100)),
-        ("Std.Math.abs (100 - 1000)", val::number(900)),
+        ("Math.abs (100 - 1000)", val::number(900)),
         ("abs -10", val::number(10)),
         ("abs (10 * -10)", val::number(100)),
         ("abs (100 - 1000)", val::number(900)),
-        ("Std.Math.sqrt 9", val::some(val::number(3))),
+        ("Math.sqrt 9", val::some(val::number(3))),
         (
             "sqrt 2",
             val::some(val::number(dec!(1.4142135623730950488016887242))),
@@ -276,22 +276,22 @@ fn std_string_module() {
     let code_with_vals = [
         ("Std.String.length \"\"", val::number(0)),
         ("Std.String.length \" \"", val::number(1)),
-        ("Std.String.length \"hello\"", val::number(5)),
-        ("Std.String.length \"hello, world\"", val::number(12)),
-        ("Std.String.reverse \"\"", val::string("")),
-        ("Std.String.reverse \"hello\"", val::string("olleh")),
-        ("Std.String.reverse \"\twat\"", val::string("taw\t")),
-        ("Std.String.split \"\" \",\"", val::list([val::string("")])),
+        ("String.length \"hello\"", val::number(5)),
+        ("String.length \"hello, world\"", val::number(12)),
+        ("String.reverse \"\"", val::string("")),
+        ("String.reverse \"hello\"", val::string("olleh")),
+        ("String.reverse \"\twat\"", val::string("taw\t")),
+        ("String.split \"\" \",\"", val::list([val::string("")])),
         (
-            "Std.String.split \",hello,\" \",\"",
+            "String.split \",hello,\" \",\"",
             val::list([val::string(""), val::string("hello"), val::string("")]),
         ),
         (
-            "Std.String.split \" hello world! \" \",\"",
+            "String.split \" hello world! \" \",\"",
             val::list([val::string(" hello world! ")]),
         ),
         (
-            "Std.String.split \"hello,world, how ,are,you?\" \",\"",
+            "String.split \"hello,world, how ,are,you?\" \",\"",
             val::list([
                 val::string("hello"),
                 val::string("world"),
@@ -299,6 +299,16 @@ fn std_string_module() {
                 val::string("are"),
                 val::string("you?"),
             ]),
+        ),
+        ("String.lowercase \"fooBarBaz\"", val::string("foobarbaz")),
+        (
+            "String.lowercase \" FOOO_baR\t!\"",
+            val::string(" fooo_bar\t!"),
+        ),
+        ("String.uppercase \"fooBarBaz\"", val::string("FOOBARBAZ")),
+        (
+            "String.uppercase \" FOOO_baR\t!\"",
+            val::string(" FOOO_BAR\t!"),
         ),
     ];
 
@@ -332,9 +342,9 @@ fn std_list_module() {
                 cons2 list = [{^foo, ^bar} :: list]
              in
                 {
-                    Std.List.map [1,2,3] insp,
-                    Std.List.map [10,20,30] ^inspect,
-                    Std.List.map [10,20,30] add10,
+                    List.map [1,2,3] insp,
+                    List.map [10,20,30] ^inspect,
+                    List.map [10,20,30] add10,
                     add10 1,
                     add1 1000,
                     add2 0,
@@ -391,15 +401,13 @@ fn std_list_module() {
         ),
         (
             "let
-                reverse l = Std.List.reverse l
-
                 zip4 ws xs ys zs =
                     zip4_ [] ws xs ys zs
 
-                zip4_ acc [] _ _ _ = reverse acc
-                zip4_ acc _ [] _ _ = reverse acc
-                zip4_ acc _ _ [] _ = reverse acc
-                zip4_ acc _ _ _ [] = reverse acc
+                zip4_ acc [] _ _ _ = List.reverse acc
+                zip4_ acc _ [] _ _ = List.reverse acc
+                zip4_ acc _ _ [] _ = List.reverse acc
+                zip4_ acc _ _ _ [] = List.reverse acc
 
                 zip4_ acc [w :: ws] [x :: xs] [y :: ys] [z :: zs] =
                     zip4_ [{w, x, y, z} :: acc] ws xs ys zs
@@ -431,8 +439,8 @@ fn std_list_module() {
                 zipWith xs ys fn =
                     zipWith_ [] xs ys fn
 
-                zipWith_ acc [] _ _ = Std.List.reverse acc
-                zipWith_ acc _ [] _ = Std.List.reverse acc
+                zipWith_ acc [] _ _ = List.reverse acc
+                zipWith_ acc _ [] _ = List.reverse acc
                 zipWith_ acc [x :: xs] [y :: ys] fn = zipWith_ [fn x y :: acc] xs ys fn
             in
                 zipWith (range 5) (range 5 10) (x y -> {^x: x, ^y: y})",
@@ -547,8 +555,8 @@ fn std_map_module() {
             in
                 {
                     map |> Std.Map.remove ^foo,
-                    map |> Std.Map.remove ^bar,
-                    map |> Std.Map.remove {1, 2},
+                    map |> Map.remove ^bar,
+                    map |> Map.remove {1, 2},
                 }",
             val::tuple([
                 val::map([
@@ -585,8 +593,8 @@ fn std_map_module() {
             in
                 {
                     map1 |> Std.Map.merge map2,
-                    map2 |> Std.Map.merge map3,
-                    map1 |> Std.Map.merge map2 |> Std.Map.merge map3
+                    map2 |> Map.merge map3,
+                    map1 |> Map.merge map2 |> Std.Map.merge map3
                 }",
             val::tuple([
                 val::map([

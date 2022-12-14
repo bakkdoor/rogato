@@ -38,6 +38,12 @@ pub fn env() -> Environment {
     env.import(&std_mod, Imports::All);
     env.import(&math_mod, Imports::All);
 
+    env.alias_module(&math_mod, "Math");
+    env.alias_module(&string_mod, "String");
+    env.alias_module(&list_mod, "List");
+    env.alias_module(&map_mod, "Map");
+    env.alias_module(&symbol_mod, "Symbol");
+
     env.define_module(std_mod);
     env.define_module(math_mod);
     env.define_module(string_mod);

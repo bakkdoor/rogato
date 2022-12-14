@@ -39,7 +39,7 @@ let map m f =
     map_ acc {} _ =
       acc
     map_ acc {rest :: k : v} f =
-      map_ (acc |> Std.Map.insert (f k v)) rest f
+      map_ (acc |> Map.insert (f k v)) rest f
   in
     map_ {} m f
 

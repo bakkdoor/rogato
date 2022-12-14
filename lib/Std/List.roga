@@ -135,11 +135,11 @@ let groupBy list fn =
   let
     groupBy_ acc [] _ =
       acc
-      |> Std.Map.mapValues ^Std.List.reverse
+      |> Map.mapValues ^List.reverse
 
     groupBy_ groups [x :: xs] fn =
       groups
-      |> Std.Map.insertOrUpdate (fn x) [x] (group -> [x :: group])
+      |> Map.insertOrUpdate (fn x) [x] (group -> [x :: group])
       |> groupBy_ xs fn
   in
     groupBy_ {} list fn
