@@ -106,7 +106,7 @@ pub fn std_module() -> Module {
         let error = Err(invalid_args("apply"));
         match (args.len(), args.get(0), args.get(1)) {
             (1, Some(func), None) => Ok(ValueRef::clone(func)),
-            (2, Some(func), Some(args)) => match (func.deref(), args.deref()) {
+            (2, Some(func), Some(args)) => match (&**func, &**args) {
                 (Value::Lambda(lambda_ctx, lambda), Value::List(args)) => {
                     let args: Vec<ValueRef> = args.iter().map(ValueRef::clone).collect();
                     lambda_ctx
@@ -134,7 +134,7 @@ pub fn std_module() -> Module {
 
     module.fn_def_native("toString", &["value"], move |_ctx, args| {
         match args.get(0) {
-            Some(value) => match value.deref() {
+            Some(value) => match &**value {
                 Value::String(_) => Ok(ValueRef::clone(value)),
                 _ => Ok(val::string(format!("{}", value))),
             },
@@ -150,7 +150,7 @@ pub fn std_module() -> Module {
     module.fn_def_native(">", &["a", "b"], move |_ctx, args| {
         let error = Err(invalid_args(">"));
         match (args.len(), args.get(0), args.get(1)) {
-            (2, Some(a), Some(b)) => match ((*a).deref(), (*b).deref()) {
+            (2, Some(a), Some(b)) => match (&**a, &**b) {
                 (Value::Number(a), Value::Number(b)) => Ok(val::bool(a.gt(b))),
                 _ => error,
             },
@@ -172,7 +172,7 @@ pub fn std_module() -> Module {
     module.fn_def_native(">=", &["a", "b"], move |_ctx, args| {
         let error = Err(invalid_args(">"));
         match (args.len(), args.get(0), args.get(1)) {
-            (2, Some(a), Some(b)) => match ((*a).deref(), (*b).deref()) {
+            (2, Some(a), Some(b)) => match (&**a, &**b) {
                 (Value::Number(a), Value::Number(b)) => Ok(val::bool(a.ge(b))),
                 _ => error,
             },
@@ -183,7 +183,7 @@ pub fn std_module() -> Module {
     module.fn_def_native("<=", &["a", "b"], move |_ctx, args| {
         let error = Err(invalid_args(">"));
         match (args.len(), args.get(0), args.get(1)) {
-            (2, Some(a), Some(b)) => match ((*a).deref(), (*b).deref()) {
+            (2, Some(a), Some(b)) => match (&**a, &**b) {
                 (Value::Number(a), Value::Number(b)) => Ok(val::bool(a.le(b))),
                 _ => error,
             },
@@ -208,7 +208,7 @@ pub fn std_module() -> Module {
     module.fn_def_native("range", &["?start", "end"], move |_ctx, args| {
         let error = Err(invalid_args("range"));
         match (args.len(), args.get(0), args.get(1)) {
-            (1, Some(a), None) => match (*a).deref() {
+            (1, Some(a), None) => match &**a {
                 Value::Number(end) => {
                     if *end < dec!(0) {
                         return error;
@@ -220,7 +220,7 @@ pub fn std_module() -> Module {
                 }
                 _ => error,
             },
-            (2, Some(a), Some(b)) => match ((*a).deref(), (*b).deref()) {
+            (2, Some(a), Some(b)) => match (&**a, &**b) {
                 (Value::Number(start), Value::Number(end)) => {
                     let start: i64 = start.trunc().to_i64().unwrap();
                     let end = end.trunc().to_i64().unwrap();
@@ -236,7 +236,7 @@ pub fn std_module() -> Module {
     module.fn_def_native("random", &["min", "?max"], move |_ctx, args| {
         let error = Err(invalid_args("random"));
         match (args.len(), args.get(0), args.get(1)) {
-            (1, Some(a), None) => match (*a).deref() {
+            (1, Some(a), None) => match &**a {
                 Value::Number(max) => {
                     if *max == dec!(0) {
                         return Ok(val::number(0));
@@ -250,7 +250,7 @@ pub fn std_module() -> Module {
                 }
                 _ => error,
             },
-            (2, Some(a), Some(b)) => match ((*a).deref(), (*b).deref()) {
+            (2, Some(a), Some(b)) => match (&**a, &**b) {
                 (Value::Number(min), Value::Number(max)) => {
                     let mut rng = rand::rngs::OsRng;
                     if *min == *max {
@@ -274,7 +274,7 @@ pub fn std_module() -> Module {
         move |_ctx, args| -> Result<Rc<Value>, NativeFnError> {
             let error = Err(invalid_args("length"));
             match (args.len(), args.get(0)) {
-                (1, Some(l)) => match (*l).deref() {
+                (1, Some(l)) => match &**l {
                     Value::String(s) => Ok(val::number(s.len())),
                     Value::List(list) => Ok(val::number(list.len())),
                     Value::Map(map) => Ok(val::number(map.len())),
@@ -335,7 +335,7 @@ pub fn with_number_op_args(
     func: fn(Decimal, Decimal) -> Result<Decimal, NativeFnError>,
 ) -> Result<ValueRef, NativeFnError> {
     match (args.len(), args.get(0), args.get(1)) {
-        (2, Some(a), Some(b)) => match ((*a).deref(), (*b).deref()) {
+        (2, Some(a), Some(b)) => match (&**a, &**b) {
             (Value::Number(a), Value::Number(b)) => func(*a, *b).map(val::number),
             _ => Err(invalid_args(id)),
         },
@@ -349,7 +349,7 @@ fn with_string_op_args(
     func: fn(&String, &String) -> Result<String, NativeFnError>,
 ) -> Result<ValueRef, NativeFnError> {
     match (args.len(), args.get(0), args.get(1)) {
-        (2, Some(a), Some(b)) => match ((*a).deref(), (*b).deref()) {
+        (2, Some(a), Some(b)) => match (&**a, &**b) {
             (Value::String(a), Value::String(b)) => func(a, b).map(val::string),
             _ => Err(invalid_args(id)),
         },

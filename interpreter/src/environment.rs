@@ -161,7 +161,7 @@ impl Environment {
             variables: HashMap::new(),
             modules: Rc::clone(&curr_state.modules),
             imported_modules: self.imported_modules(),
-            aliased_modules: self.aliased_modules(),
+            aliased_modules: HashMap::new(),
             current_module_name: curr_state.current_module_name.clone(),
         };
         Environment {
@@ -177,7 +177,7 @@ impl Environment {
             variables: HashMap::new(),
             modules: Rc::clone(&curr_state.modules),
             imported_modules,
-            aliased_modules: self.aliased_modules(),
+            aliased_modules: HashMap::new(),
             current_module_name: curr_state.current_module_name.clone(),
         };
         Environment {
@@ -187,10 +187,6 @@ impl Environment {
 
     pub fn imported_modules(&self) -> ImportedModules {
         self.state.borrow().imported_modules.clone()
-    }
-
-    pub fn aliased_modules(&self) -> HashMap<Identifier, Identifier> {
-        self.state.borrow().aliased_modules.clone()
     }
 
     #[cfg_attr(feature = "flame_it", flame)]
@@ -208,12 +204,17 @@ impl Environment {
             .insert(Identifier::from(as_str), module.id());
     }
 
+    #[cfg_attr(feature = "flame_it", flame)]
+    #[inline]
     pub fn lookup_module_alias(&self, id: &Identifier) -> Option<Identifier> {
-        self.state
-            .borrow()
-            .aliased_modules
-            .get(id)
-            .map(Identifier::clone)
+        let state = self.state.borrow();
+        let opt_mod_name = state.aliased_modules.get(id).map(Identifier::clone);
+
+        match (&opt_mod_name, &state.parent) {
+            (Some(_), _) => opt_mod_name,
+            (None, Some(parent)) => parent.lookup_module_alias(id),
+            (None, None) => None,
+        }
     }
 
     #[cfg_attr(feature = "flame_it", flame)]

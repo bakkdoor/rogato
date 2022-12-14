@@ -1,4 +1,4 @@
-use std::{fmt::Display, ops::Deref};
+use std::fmt::Display;
 
 use crate::{EvalContext, EvalError, Evaluate};
 use rogato_common::{
@@ -33,7 +33,7 @@ impl Evaluate<ValueRef> for Literal {
             Literal::ListCons(first, rest) => {
                 let value = first.evaluate(context)?;
                 let rest = rest.evaluate(context)?;
-                match rest.deref() {
+                match &*rest {
                     Value::List(list) => Ok(list.cons(value).into()),
                     _ => Err(EvalError::ListConsInvalidList(rest)),
                 }
@@ -57,7 +57,7 @@ impl Evaluate<ValueRef> for Literal {
             }
             Literal::MapCons(kv_pairs, rest) => {
                 let rest = rest.evaluate(context)?;
-                match rest.deref() {
+                match &*rest {
                     Value::Map(map) => {
                         let mut pairs: Vec<(ValueRef, ValueRef)> =
                             Vec::with_capacity(kv_pairs.len());

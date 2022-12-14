@@ -3,7 +3,6 @@ use super::{expression::Expression, walker::Walk, ASTDepth, Identifier};
 use crate::{native_fn::NativeFn, util::indent};
 use std::cell::RefCell;
 use std::hash::{Hash, Hasher};
-use std::ops::Deref;
 use std::{fmt::Display, rc::Rc};
 
 #[derive(Clone, Debug, Eq)]
@@ -156,8 +155,8 @@ pub struct FnDefVariant(pub FnDefArgs, pub Rc<FnDefBody>);
 
 impl FnDefVariant {
     pub fn is_tail_recursive(&self, id: &Identifier) -> bool {
-        match self.1.deref() {
-            FnDefBody::RogatoFn(body) => match body.deref() {
+        match &*self.1 {
+            FnDefBody::RogatoFn(body) => match &**body {
                 Expression::FnCall(fn_call) => fn_call.id == *id,
                 _ => false,
             },
@@ -312,9 +311,9 @@ impl FnDefBody {
 
     pub fn is_tail_recursive(&self, id: &Identifier) -> bool {
         match self {
-            Self::RogatoFn(body) => match body.deref() {
+            Self::RogatoFn(body) => match &**body {
                 Expression::FnCall(fn_call) => fn_call.id == *id,
-                Expression::Let(let_expr) => match let_expr.body.deref() {
+                Expression::Let(let_expr) => match &*let_expr.body {
                     Expression::FnCall(fn_call) => fn_call.id == *id,
                     _ => false,
                 },

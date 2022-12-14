@@ -21,7 +21,7 @@ use rogato_common::{
     val,
 };
 use rogato_db::db::ObjectStorage;
-use std::{cell::RefCell, ops::Deref, rc::Rc};
+use std::{cell::RefCell, rc::Rc};
 use uuid::Uuid;
 
 #[cfg(feature = "flame_it")]
@@ -128,7 +128,7 @@ impl EvalContext {
         let func = func.borrow();
 
         if func.is_tail_recursive() {
-            return self.call_tail_recursive_function_direct(func.deref(), args);
+            return self.call_tail_recursive_function_direct(&func, args);
         }
 
         let given_argc = args.len();
@@ -249,7 +249,7 @@ impl EvalContext {
                             return_val = Some(f(&mut fn_ctx, args).map_err(EvalError::from)?);
                             break 'looping;
                         }
-                        FnDefBody::RogatoFn(expr) => match expr.deref() {
+                        FnDefBody::RogatoFn(expr) => match &**expr {
                             Expression::FnCall(fn_call) => {
                                 if fn_call.id == func.id {
                                     loop_args = Vec::with_capacity(fn_call.args.len());
@@ -262,7 +262,7 @@ impl EvalContext {
                                     break 'looping;
                                 }
                             }
-                            Expression::Let(let_expr) => match let_expr.body.deref() {
+                            Expression::Let(let_expr) => match &*let_expr.body {
                                 Expression::FnCall(fn_call) => {
                                     for (id, expr) in let_expr.bindings.iter() {
                                         let val = expr.evaluate(&mut fn_ctx)?;
