@@ -206,19 +206,6 @@ impl Environment {
 
     #[cfg_attr(feature = "flame_it", flame)]
     #[inline]
-    pub fn lookup_module_alias(&self, id: &Identifier) -> Option<Identifier> {
-        let state = self.state.borrow();
-        let opt_mod_name = state.aliased_modules.get(id).map(Identifier::clone);
-
-        match (&opt_mod_name, &state.parent) {
-            (Some(_), _) => opt_mod_name,
-            (None, Some(parent)) => parent.lookup_module_alias(id),
-            (None, None) => None,
-        }
-    }
-
-    #[cfg_attr(feature = "flame_it", flame)]
-    #[inline]
     pub fn define_var(&mut self, id: &VarIdentifier, val: ValueRef) {
         flame_guard!("= {} {}", id, &val);
 
@@ -259,12 +246,33 @@ impl Environment {
 
     #[cfg_attr(feature = "flame_it", flame)]
     pub fn lookup_module(&self, id: &Identifier) -> Option<Module> {
-        match self.state.borrow().modules.borrow().get(id) {
+        let state = self.state.borrow();
+        let modules = state.modules.borrow();
+        match modules.get(id) {
             Some(module) => Some(module.clone()),
-            None => match &self.state.borrow().parent {
-                Some(parent_env) => parent_env.lookup_module(id),
-                None => None,
+            None => match self
+                .lookup_module_alias(id)
+                .and_then(|mod_id| modules.get(&mod_id))
+            {
+                Some(module) => Some(module.clone()),
+                None => match &state.parent {
+                    Some(parent_env) => parent_env.lookup_module(id),
+                    None => None,
+                },
             },
+        }
+    }
+
+    #[cfg_attr(feature = "flame_it", flame)]
+    #[inline]
+    pub fn lookup_module_alias(&self, id: &Identifier) -> Option<Identifier> {
+        let state = self.state.borrow();
+        let opt_mod_name = state.aliased_modules.get(id).map(Identifier::clone);
+
+        match (&opt_mod_name, &state.parent) {
+            (Some(_), _) => opt_mod_name,
+            (None, Some(parent)) => parent.lookup_module_alias(id),
+            (None, None) => None,
         }
     }
 
@@ -343,9 +351,6 @@ impl Environment {
                 let (module_id, fn_id) = parts.split_at(len - 1);
                 let mid: Identifier = module_id.join(".").into();
                 let fid: Identifier = fn_id.join("").into();
-                if let Some(mid) = self.lookup_module_alias(&mid) {
-                    return Some((mid, fid));
-                }
                 Some((mid, fid))
             }
         }
