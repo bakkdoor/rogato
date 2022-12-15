@@ -4,11 +4,13 @@ let doubled x = x + x
 let tripled x = x + (x + x)
 let squared x = x * x
 
-let withLarger x y f = withLarger {x, x > y} {y, x < y} f
-
-// let withLarger {true, x} {false, _} f = f x
-// let withLarger {false, _} {true, y} f = f y
-// let withLarger {_, x} {_, y} f = f (x + y)
+let withLarger x y f =
+  let
+    withLarger_ {true, x} {false, _} f = f x
+    withLarger_ {false, _} {true, y} f = f y
+    withLarger_ {_, x} {_, y} f = f (x + y)
+  in
+    withLarger_ {x, x > y} {y, x < y} f
 
 // example usage within main:
 // main :: [String] -> [IO]
