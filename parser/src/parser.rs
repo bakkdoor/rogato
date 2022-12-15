@@ -548,6 +548,13 @@ grammar parser(context: &ParserContext) for str {
         / variant:lambda_variant() {
             Expression::Lambda(Rc::new(Lambda::new(vec![variant])))
         }
+        / "(" _ "->" _ body:let_body() _ ")" {
+            Expression::Lambda(
+                Rc::new(Lambda::new(vec![
+                    Rc::new(LambdaVariant::new(LambdaArgs::new(vec![]), Rc::new(body)))
+                ]))
+            )
+        }
         / "->" _ body:let_body() {
             Expression::Lambda(
                 Rc::new(Lambda::new(vec![
