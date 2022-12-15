@@ -5,8 +5,8 @@ use rogato_parser::{parse_expr, ParserContext};
 #[test]
 fn std_string_module() {
     let code_with_vals = [
-        ("Std.String.length \"\"", val::number(0)),
-        ("Std.String.length \" \"", val::number(1)),
+        ("String.length \"\"", val::number(0)),
+        ("String.length \" \"", val::number(1)),
         ("String.length \"hello\"", val::number(5)),
         ("String.length \"hello, world\"", val::number(12)),
         ("String.reverse \"\"", val::string("")),

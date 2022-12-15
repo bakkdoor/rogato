@@ -219,9 +219,9 @@ fn if_else_expr() {
 fn lambda_closures() {
     let code_with_vals = vec![(
         "let
-            f x = [1, 2, 3] |> Std.List.map (y -> x + y)
+            f x = [1, 2, 3] |> List.map (y -> x + y)
             g x = {f x, f (x * 2)}
-            list = [10,100,1000] |> Std.List.map ^g
+            list = [10,100,1000] |> List.map ^g
         in
             {f 1, f 10, f 100, g 1, g 5, list}",
         val::tuple([
@@ -391,7 +391,7 @@ fn patterns() {
             val::tuple([val::number(10), val::number(10000), val::number(25000)]),
         ),
         (
-            "(range 5) |> Std.List.map (0 -> ^done, n -> {^got, n})",
+            "(range 5) |> List.map (0 -> ^done, n -> {^got, n})",
             val::list([
                 val::symbol("done"),
                 val::tuple([val::symbol("got"), val::number(1)]),
@@ -401,7 +401,7 @@ fn patterns() {
             ]),
         ),
         (
-            "(range 5) |> Std.List.reverse |> Std.List.map (0 -> ^done, n -> {^got, n})",
+            "(range 5) |> List.reverse |> List.map (0 -> ^done, n -> {^got, n})",
             val::list([
                 val::tuple([val::symbol("got"), val::number(4)]),
                 val::tuple([val::symbol("got"), val::number(3)]),
@@ -411,7 +411,7 @@ fn patterns() {
             ]),
         ),
         (
-            "[1,0,1,0,1,1,0,0] |> Std.List.map (0 -> ^zero, 1 -> ^one)",
+            "[1,0,1,0,1,1,0,0] |> List.map (0 -> ^zero, 1 -> ^one)",
             val::list([
                 val::symbol("one"),
                 val::symbol("zero"),
@@ -424,7 +424,7 @@ fn patterns() {
             ]),
         ),
         (
-            "[[], [1,2,3], [1]] |> Std.List.map (
+            "[[], [1,2,3], [1]] |> List.map (
               [] -> ^empty,
               [n] -> {n,n,n},
               [_ :: xs] -> {^rest, xs}

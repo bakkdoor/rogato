@@ -71,7 +71,7 @@ fn std_map_module() {
                 map = {^foo: 1, ^bar: {1, 2, 3}, {1, 2}: ^wat}
             in
                 {
-                    map |> Std.Map.remove ^foo,
+                    map |> Map.remove ^foo,
                     map |> Map.remove ^bar,
                     map |> Map.remove {1, 2},
                 }",
@@ -109,9 +109,9 @@ fn std_map_module() {
                 map3 = {^foo: 3, ^wat: {420, 69}}
             in
                 {
-                    map1 |> Std.Map.merge map2,
+                    map1 |> Map.merge map2,
                     map2 |> Map.merge map3,
-                    map1 |> Map.merge map2 |> Std.Map.merge map3
+                    map1 |> Map.merge map2 |> Map.merge map3
                 }",
             val::tuple([
                 val::map([
