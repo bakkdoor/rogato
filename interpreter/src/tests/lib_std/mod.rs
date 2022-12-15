@@ -57,7 +57,7 @@ fn std() {
         ("toString 1.0", val::string("1.0")),
         ("toString 1.1", val::string("1.1")),
         ("toString 1.5987", val::string("1.5987")),
-        ("toString {1.0, \"foo\"}", val::string("{ 1.0, \"foo\" }")),
+        ("toString {1.0, \"foo\"}", val::string("{ 1.0, foo }")),
         ("toString \"foo bar baz\"", val::string("foo bar baz")),
         (
             "toString (\"foo\" ++ \" \" ++ \"bar\")",

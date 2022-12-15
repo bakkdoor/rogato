@@ -266,11 +266,7 @@ impl Display for Value {
                 val.fmt(f)?;
                 f.write_str(" }")
             }
-            Value::String(s) => {
-                f.write_str("\"")?;
-                s.fmt(f)?;
-                f.write_str("\"")
-            }
+            Value::String(s) => s.fmt(f),
             Value::Symbol(s) => {
                 f.write_str("^")?;
                 s.fmt(f)
