@@ -102,7 +102,7 @@ impl EvalContext {
         val::string(format!("FnDef {}", id))
     }
 
-    fn lookup_fn(&mut self, id: &Identifier) -> Option<Rc<RefCell<FnDef>>> {
+    fn lookup_fn(&self, id: &Identifier) -> Option<Rc<RefCell<FnDef>>> {
         self.env.lookup_fn(id)
     }
 
@@ -379,6 +379,10 @@ impl NativeFnContext for EvalContext {
 
     fn lookup_const(&self, id: &Identifier) -> Option<ValueRef> {
         self.lookup_const(id)
+    }
+
+    fn lookup_function(&self, id: &Identifier) -> Option<Rc<RefCell<FnDef>>> {
+        self.lookup_fn(id)
     }
 
     fn call_function(

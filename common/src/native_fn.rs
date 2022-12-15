@@ -31,6 +31,7 @@ impl From<LambdaClosureEvalError> for NativeFnError {
 pub trait NativeFnContext {
     fn lookup_var(&self, id: &VarIdentifier) -> Option<ValueRef>;
     fn lookup_const(&self, id: &Identifier) -> Option<ValueRef>;
+    fn lookup_function(&self, id: &Identifier) -> Option<Rc<RefCell<FnDef>>>;
 
     fn call_function(
         &mut self,

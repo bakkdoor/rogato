@@ -120,6 +120,16 @@ impl Lambda {
     pub fn variants_iter(&self) -> std::slice::Iter<Rc<LambdaVariant>> {
         self.variants.iter()
     }
+
+    pub fn max_arg_count(&self) -> usize {
+        let mut max = 0;
+        for v in self.variants_iter() {
+            if v.arg_count() > max {
+                max = v.arg_count();
+            }
+        }
+        max
+    }
 }
 
 impl ASTDepth for Lambda {

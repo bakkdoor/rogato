@@ -333,9 +333,15 @@ pub fn std_module() -> Module {
                             let mut l_ctx = lambda_ctx.borrow_mut();
                             let count_i32 =
                                 count.to_i32().ok_or_else(|| invalid_args("times count"))?;
+                            let max_arg_count = lambda.max_arg_count();
                             for i in 0..count_i32 {
-                                match l_ctx.evaluate_lambda_call(lambda.as_ref(), &[val::number(i)])
-                                {
+                                let result = if max_arg_count > 0 {
+                                    l_ctx.evaluate_lambda_call(lambda.as_ref(), &[val::number(i)])
+                                } else {
+                                    l_ctx.evaluate_lambda_call(lambda.as_ref(), &[])
+                                };
+
+                                match result {
                                     Ok(_) => continue,
                                     Err(e) => return Err(e.into()),
                                 }
@@ -345,14 +351,30 @@ pub fn std_module() -> Module {
                         (Value::Number(count), Value::Symbol(fn_id)) => {
                             let count_i32 =
                                 count.to_i32().ok_or_else(|| invalid_args("times count"))?;
+
+                            let func_rc = ctx.lookup_function(fn_id).ok_or_else(|| {
+                                NativeFnError::Unknown(
+                                    "times".into(),
+                                    format!("Function not found: {}", fn_id),
+                                )
+                            })?;
+                            let func = func_rc.borrow();
+                            let required_arg_count = func.required_args();
+
                             for i in 0..count_i32 {
-                                match ctx.call_function(fn_id, &[val::number(i)]) {
-                                    Some(_) => continue,
-                                    None => {
+                                let result = if required_arg_count > 0 {
+                                    ctx.call_function_direct(Rc::clone(&func_rc), &[val::number(i)])
+                                } else {
+                                    ctx.call_function_direct(Rc::clone(&func_rc), &[])
+                                };
+
+                                match result {
+                                    Ok(_) => continue,
+                                    Err(e) => {
                                         return Err(NativeFnError::EvaluationFailed(
                                             fn_id.clone(),
-                                            format!("FunctionRef invalid in ^match: ^{}", fn_id),
-                                        ))
+                                            format!("FunctionRef invalid in ^match: ^{} - Failed with: {:?}", fn_id, e),
+                                        ));
                                     }
                                 }
                             }
