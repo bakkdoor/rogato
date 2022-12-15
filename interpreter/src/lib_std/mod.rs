@@ -74,6 +74,7 @@ pub fn std_module() -> Module {
         "random".into(),
         "length".into(),
         "match".into(),
+        "times".into(),
     ]));
 
     module.fn_def(
@@ -314,6 +315,55 @@ pub fn std_module() -> Module {
 
                     _ => error,
                 },
+                (_, _, _) => error,
+            }
+        },
+    );
+
+    module.fn_def_native(
+        "times",
+        &["count", "fn"],
+        move |ctx, args| -> Result<Rc<Value>, NativeFnError> {
+            let error = Err(invalid_args("times"));
+
+            match (args.len(), args.get(0), args.get(1)) {
+                (2, Some(count_val), Some(func)) => {
+                    match (&**count_val, &**func) {
+                        (Value::Number(count), Value::Lambda(lambda_ctx, lambda)) => {
+                            let mut l_ctx = lambda_ctx.borrow_mut();
+                            let count_i32 = count.to_i32().ok_or(invalid_args("times count"))?;
+                            for i in 0..count_i32 {
+                                match l_ctx.evaluate_lambda_call(lambda.as_ref(), &[val::number(i)])
+                                {
+                                    Ok(_) => continue,
+                                    Err(e) => return Err(e.into()),
+                                }
+                            }
+                        }
+
+                        (Value::Number(count), Value::Symbol(fn_id)) => {
+                            let count_i32 = count.to_i32().ok_or(invalid_args("times count"))?;
+                            for i in 0..count_i32 {
+                                match ctx.call_function(fn_id, &[val::number(i)]) {
+                                    Some(_) => continue,
+                                    None => {
+                                        return Err(NativeFnError::EvaluationFailed(
+                                            fn_id.clone(),
+                                            format!("FunctionRef invalid in ^match: ^{}", fn_id),
+                                        ))
+                                    }
+                                }
+                            }
+                        }
+
+                        _ => return error,
+                    }
+
+                    Ok(val::tuple([
+                        val::symbol("done"),
+                        ValueRef::clone(count_val),
+                    ]))
+                }
                 (_, _, _) => error,
             }
         },
