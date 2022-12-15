@@ -331,7 +331,8 @@ pub fn std_module() -> Module {
                     match (&**count_val, &**func) {
                         (Value::Number(count), Value::Lambda(lambda_ctx, lambda)) => {
                             let mut l_ctx = lambda_ctx.borrow_mut();
-                            let count_i32 = count.to_i32().ok_or(invalid_args("times count"))?;
+                            let count_i32 =
+                                count.to_i32().ok_or_else(|| invalid_args("times count"))?;
                             for i in 0..count_i32 {
                                 match l_ctx.evaluate_lambda_call(lambda.as_ref(), &[val::number(i)])
                                 {
@@ -342,7 +343,8 @@ pub fn std_module() -> Module {
                         }
 
                         (Value::Number(count), Value::Symbol(fn_id)) => {
-                            let count_i32 = count.to_i32().ok_or(invalid_args("times count"))?;
+                            let count_i32 =
+                                count.to_i32().ok_or_else(|| invalid_args("times count"))?;
                             for i in 0..count_i32 {
                                 match ctx.call_function(fn_id, &[val::number(i)]) {
                                     Some(_) => continue,
