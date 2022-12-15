@@ -551,14 +551,14 @@ grammar parser(context: &ParserContext) for str {
         / "(" _ "->" _ body:let_body() _ ")" {
             Expression::Lambda(
                 Rc::new(Lambda::new(vec![
-                    Rc::new(LambdaVariant::new(LambdaArgs::new(vec![]), Rc::new(body)))
+                    Rc::new(LambdaVariant::new(LambdaArgs::empty(), Rc::new(body)))
                 ]))
             )
         }
         / "->" _ body:let_body() {
             Expression::Lambda(
                 Rc::new(Lambda::new(vec![
-                    Rc::new(LambdaVariant::new(LambdaArgs::new(vec![]), Rc::new(body)))
+                    Rc::new(LambdaVariant::new(LambdaArgs::empty(), Rc::new(body)))
                 ]))
             )
         }

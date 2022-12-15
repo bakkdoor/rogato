@@ -69,6 +69,10 @@ impl<A: Display + ASTDepth> LambdaArgs<A> {
         LambdaArgs { args }
     }
 
+    pub fn empty() -> LambdaArgs<A> {
+        LambdaArgs { args: Vec::new() }
+    }
+
     pub fn len(&self) -> usize {
         self.args.len()
     }
