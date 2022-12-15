@@ -7,7 +7,7 @@ pub mod fn_def;
 #[cfg(test)]
 pub mod interpreter;
 #[cfg(test)]
-pub mod std_lib;
+pub mod lib_std;
 
 fn parse_eval_std(std_mod_name: &str, parser_ctx: &ParserContext, eval_ctx: &mut EvalContext) {
     let curr_dir = env::current_dir().unwrap();
