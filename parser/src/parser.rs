@@ -548,24 +548,16 @@ grammar parser(context: &ParserContext) for str {
         / variant:lambda_variant() {
             Expression::Lambda(Rc::new(Lambda::new(vec![variant])))
         }
-        / "(" _ "->" _ body:let_body() _ ")" {
-            Expression::Lambda(
-                Rc::new(Lambda::new(vec![
-                    Rc::new(LambdaVariant::new(LambdaArgs::empty(), Rc::new(body)))
-                ]))
-            )
-        }
-        / "->" _ body:let_body() {
-            Expression::Lambda(
-                Rc::new(Lambda::new(vec![
-                    Rc::new(LambdaVariant::new(LambdaArgs::empty(), Rc::new(body)))
-                ]))
-            )
-        }
 
     rule lambda_variant() -> Rc<LambdaVariant>
         = args:lambda_args() s() "->" _ body:let_body() {
             Rc::new(LambdaVariant::new(LambdaArgs::new(args), Rc::new(body)))
+        }
+        / "->" _ body:let_body() {
+            Rc::new(LambdaVariant::new(LambdaArgs::empty(), Rc::new(body)))
+        }
+        / "(" _ v:lambda_variant() _ ")" {
+            v
         }
 
     rule lambda_args() -> Vec<Rc<Pattern>>
