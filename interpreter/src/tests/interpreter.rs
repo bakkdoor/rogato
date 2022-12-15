@@ -1,7 +1,28 @@
 use crate::{EvalContext, Evaluate};
-use rogato_common::val;
-use rogato_parser::{parse_expr, ParserContext};
+use rogato_common::val::{self};
+use rogato_parser::{parse, parse_expr, ParserContext};
 use rust_decimal_macros::dec;
+use std::{env, fs::File, io::Read, path::Path};
+
+fn parse_eval_std(std_mod_name: &str, parser_ctx: &ParserContext, eval_ctx: &mut EvalContext) {
+    let curr_dir = env::current_dir().unwrap();
+    let root_path = curr_dir
+        .as_path()
+        .parent()
+        .expect("Parent directory expected to be root");
+    let file_name = format!("lib/Std/{}.roga", std_mod_name);
+    let file_path = root_path.join(Path::new(file_name.as_str()));
+    let mut file = File::open(&file_path)
+        .expect(format!("Std lib file should exist: {:?}", file_path).as_str());
+
+    let mut buf = String::new();
+    file.read_to_string(&mut buf).unwrap();
+
+    parse(buf.as_str(), parser_ctx)
+        .expect(format!("Expected file to parse: {}", file_name).as_str())
+        .evaluate(eval_ctx)
+        .expect(format!("Expected file to evaluate: {}", file_name).as_str());
+}
 
 #[test]
 fn basic_arithmetic() {
@@ -400,19 +421,7 @@ fn std_list_module() {
             ]),
         ),
         (
-            "let
-                zip4 ws xs ys zs =
-                    zip4_ [] ws xs ys zs
-
-                zip4_ acc [] _ _ _ = List.reverse acc
-                zip4_ acc _ [] _ _ = List.reverse acc
-                zip4_ acc _ _ [] _ = List.reverse acc
-                zip4_ acc _ _ _ [] = List.reverse acc
-
-                zip4_ acc [w :: ws] [x :: xs] [y :: ys] [z :: zs] =
-                    zip4_ [{w, x, y, z} :: acc] ws xs ys zs
-            in
-                zip4 (range 0 3) (range 10 13) (range 100 103) (range 1000 1003)",
+            "List.zip4 (range 0 3) (range 10 13) (range 100 103) (range 1000 1003)",
             val::list([
                 val::tuple([
                     val::number(0),
@@ -435,15 +444,7 @@ fn std_list_module() {
             ]),
         ),
         (
-            "let
-                zipWith xs ys fn =
-                    zipWith_ [] xs ys fn
-
-                zipWith_ acc [] _ _ = List.reverse acc
-                zipWith_ acc _ [] _ = List.reverse acc
-                zipWith_ acc [x :: xs] [y :: ys] fn = zipWith_ [fn x y :: acc] xs ys fn
-            in
-                zipWith (range 5) (range 5 10) (x y -> {^x: x, ^y: y})",
+            "List.zipWith (range 5) (range 5 10) (x y -> {^x: x, ^y: y})",
             val::list([
                 val::map([
                     (val::symbol("x"), val::number(0)),
@@ -467,10 +468,20 @@ fn std_list_module() {
                 ]),
             ]),
         ),
+        (
+            "List.countBy (range 5) (x -> x + 1)",
+            val::number(1 + 2 + 3 + 4 + 5),
+        ),
+        (
+            "List.countBy [range 5, range 10, range 100] ^length",
+            val::number(5 + 10 + 100),
+        ),
     ];
 
     let mut eval_ctx = EvalContext::new();
     let parser_ctx = ParserContext::new();
+
+    parse_eval_std("List", &parser_ctx, &mut eval_ctx);
 
     for (code, val) in code_with_vals.iter() {
         let ast = parse_expr(code, &parser_ctx).unwrap();
@@ -515,21 +526,14 @@ fn std_map_module() {
         ),
         (
             "let
-                map m f =
-                    map_ {} m f
-                map_ acc {} _ =
-                    acc
-                map_ acc {rest :: k : v} f =
-                    map_ (acc |> Std.Map.insert (f k v)) rest f
-
                 data = {
                     ^foo: ^bar,
                     ^bar: {1,2,3},
                     ^baz: {^hello, \"world\"},
                     1: {2, 3}
                 }
-        in
-            map data (k v -> {{k,k}, v})",
+            in
+                map data (k v -> {{k,k}, v})",
             val::map([
                 (
                     val::tuple([val::symbol("foo"), val::symbol("foo")]),
@@ -640,6 +644,8 @@ fn std_map_module() {
 
     let mut eval_ctx = EvalContext::new();
     let parser_ctx = ParserContext::new();
+
+    parse_eval_std("Map", &parser_ctx, &mut eval_ctx);
 
     for (code, val) in code_with_vals.iter() {
         let ast = parse_expr(code, &parser_ctx).unwrap();

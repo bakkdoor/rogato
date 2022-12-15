@@ -28,6 +28,17 @@ let count list =
     count_ 0 list
 
 
+let countBy list fn =
+  let
+    countBy_ acc [] =
+      acc
+
+    countBy_ acc [x :: xs] =
+      countBy_ (acc + (fn x)) xs
+  in
+    countBy_ 0 list fn
+
+
 let isEmpty [] = true
 let isEmpty _  = false
 
@@ -46,6 +57,7 @@ let reverse list =
       reverse_ [x :: acc] xs
   in
     reverse_ [] list
+
 
 let skip list 0 =
   list
