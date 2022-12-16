@@ -156,6 +156,9 @@ impl EvalContext {
         flame_guard!("ƒ⡟ {}", func.id());
 
         for FnDefVariant(arg_patterns, body) in func.variants_iter() {
+            if arg_patterns.len() < args.len() {
+                continue;
+            }
             let mut fn_ctx = self.with_child_env();
             let mut matched = 0;
             let mut attempted = 0;

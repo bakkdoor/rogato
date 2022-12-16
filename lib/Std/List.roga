@@ -36,7 +36,7 @@ let countBy list fn =
     countBy_ acc [x :: xs] =
       countBy_ (acc + (fn x)) xs
   in
-    countBy_ 0 list fn
+    countBy_ 0 list
 
 
 let isEmpty [] = true
