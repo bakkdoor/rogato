@@ -4,20 +4,6 @@ on: [push]
 name: Continuous integration
 
 jobs:
-  # check:
-  #   name: Check
-  #   runs-on: self-hosted
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - uses: actions-rs/toolchain@v1
-  #       with:
-  #         profile: minimal
-  #         toolchain: stable
-  #         override: true
-  #     - uses: actions-rs/cargo@v1
-  #       with:
-  #         command: check
-
   test:
     name: Test Suite
     runs-on: self-hosted
@@ -28,24 +14,6 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
-      # - name: Cache LLVM and Clang
-      #   id: cache-llvm
-      #   uses: actions/cache@v2
-      #   with:
-      #     path: ./llvm
-      #     key: llvm-14.0
-      # - name: Install LLVM and Clang
-      #   uses: KyleMayes/install-llvm-action@v1.5.2
-      #   with:
-      #     version: 14.0
-      #     cached: ${{ steps.cache-llvm.outputs.cache-hit }}
-      # - name: environment
-      #   run: |
-      #     echo "export LLVM_SYS_140_PREFIX=$LLVM_PATH" >> ~/.bashrc
-      - name: get_env
-        run: |
-          source ~/.bashrc
-          echo $LLVM_SYS_140_PREFIX
       - uses: Swatinem/rust-cache@v2
       - uses: actions-rs/cargo@v1
         with:
@@ -77,24 +45,6 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
-      # - name: Cache LLVM and Clang
-      #   id: cache-llvm
-      #   uses: actions/cache@v2
-      #   with:
-      #     path: ./llvm
-      #     key: llvm-14.0
-      # - name: Install LLVM and Clang
-      #   uses: KyleMayes/install-llvm-action@v1.5.2
-      #   with:
-      #     version: 14.0
-      #     cached: ${{ steps.cache-llvm.outputs.cache-hit }}
-      # - name: environment
-      #   run: |
-      #     echo "export LLVM_SYS_140_PREFIX=$LLVM_PATH" >> ~/.bashrc
-      - name: get_env
-        run: |
-          source ~/.bashrc
-          echo $LLVM_SYS_140_PREFIX
       - run: rustup component add clippy
       - uses: Swatinem/rust-cache@v2
       - uses: actions-rs/cargo@v1
