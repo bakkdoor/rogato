@@ -272,7 +272,7 @@ pub fn std_module() -> Module {
     module.fn_def_native(
         "length",
         &["collection"],
-        move |_ctx, args| -> Result<Rc<Value>, NativeFnError> {
+        move |_ctx, args| -> Result<ValueRef, NativeFnError> {
             let error = Err(invalid_args("length"));
             match (args.len(), args.get(0)) {
                 (1, Some(l)) => match &**l {
@@ -293,7 +293,7 @@ pub fn std_module() -> Module {
     module.fn_def_native(
         "match",
         &["val", "fn"],
-        move |ctx, args| -> Result<Rc<Value>, NativeFnError> {
+        move |ctx, args| -> Result<ValueRef, NativeFnError> {
             let error = Err(invalid_args("match"));
 
             match (args.len(), args.get(0), args.get(1)) {
@@ -323,7 +323,7 @@ pub fn std_module() -> Module {
     module.fn_def_native(
         "times",
         &["count", "fn"],
-        move |ctx, args| -> Result<Rc<Value>, NativeFnError> {
+        move |ctx, args| -> Result<ValueRef, NativeFnError> {
             let error = Err(invalid_args("times"));
 
             match (args.len(), args.get(0), args.get(1)) {
