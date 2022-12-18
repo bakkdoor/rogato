@@ -1,4 +1,7 @@
-module Std.List { count, head, isEmpty, groupBy, map, reduce, reverse, repeat, skip, tail, take, zip, zipWith }
+module Std.List {
+  count, head, isEmpty, filter, groupBy, map, reduce, reverse, repeat,
+  skip, tail, take, zip, zipWith
+}
 
 let head [x :: _]  = x
 
@@ -41,6 +44,34 @@ let countBy list fn =
 
 let isEmpty [] = true
 let isEmpty _  = false
+
+
+let filter list fn =
+  let
+    filter_ acc [] _ =
+      reverse acc
+
+    filter_ acc [x :: xs] fn =
+      if (fn x) then
+        (filter_ [x :: acc] xs fn)
+      else
+        (filter_ acc xs fn)
+  in
+    filter_ [] list fn
+
+
+let groupBy list fn =
+  let
+    groupBy_ acc [] _ =
+      acc
+      |> Map.mapValues ^List.reverse
+
+    groupBy_ groups [x :: xs] fn =
+      groups
+      |> Map.insertOrUpdate (fn x) [x] (group -> [x :: group])
+      |> groupBy_ xs fn
+  in
+    groupBy_ {} list fn
 
 
 let reduce [] acc f =
@@ -141,20 +172,6 @@ let zip4 ws xs ys zs =
       zip4_ [{w, x, y, z} :: acc] ws xs ys zs
   in
     zip4_ [] ws xs ys zs
-
-
-let groupBy list fn =
-  let
-    groupBy_ acc [] _ =
-      acc
-      |> Map.mapValues ^List.reverse
-
-    groupBy_ groups [x :: xs] fn =
-      groups
-      |> Map.insertOrUpdate (fn x) [x] (group -> [x :: group])
-      |> groupBy_ xs fn
-  in
-    groupBy_ {} list fn
 
 
 let zipWith xs ys fn =

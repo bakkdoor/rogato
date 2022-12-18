@@ -136,6 +136,18 @@ fn std_list_module() {
             "List.countBy [range 5, range 10, range 100] ^length",
             val::number(5 + 10 + 100),
         ),
+        (
+            "List.filter (range 5) (x -> x < 2)",
+            val::list([val::number(0), val::number(1)]),
+        ),
+        (
+            "List.filter (range 5) (x -> x == 2)",
+            val::list([val::number(2)]),
+        ),
+        (
+            "List.filter (range 5) (x -> x > 2)",
+            val::list([val::number(3), val::number(4)]),
+        ),
     ];
 
     let mut eval_ctx = EvalContext::new();
