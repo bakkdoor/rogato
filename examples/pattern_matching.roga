@@ -1,4 +1,4 @@
-module PatternMatching { head, tail, pairts, transform }
+module PatternMatching { head, tail, pairs, transform }
 
 let head [h :: _] = h
 let tail [_ :: t] = t
