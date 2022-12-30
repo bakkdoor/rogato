@@ -25,6 +25,8 @@ pub fn module() -> Module {
         "max".into(),
         "min".into(),
         "sqrt".into(),
+        "isEven".into(),
+        "isOdd".into(),
     ]));
 
     module.fn_def(
@@ -180,6 +182,36 @@ pub fn module() -> Module {
         match args.get(0) {
             Some(a) => match &**a {
                 Value::Number(num) => Ok(val::option(num.sqrt().map(val::number))),
+                _ => error,
+            },
+            _ => error,
+        }
+    });
+
+    module.fn_def_native("isEven", &["num"], move |_ctx, args| {
+        let error = Err(invalid_args("isEven"));
+        match args.get(0) {
+            Some(a) => match &**a {
+                Value::Number(num) => Ok(val::bool(
+                    num.checked_rem(2.into())
+                        .map(|x| x == 0.into())
+                        .unwrap_or(false),
+                )),
+                _ => error,
+            },
+            _ => error,
+        }
+    });
+
+    module.fn_def_native("isOdd", &["num"], move |_ctx, args| {
+        let error = Err(invalid_args("isOdd"));
+        match args.get(0) {
+            Some(a) => match &**a {
+                Value::Number(num) => Ok(val::bool(
+                    num.checked_rem(2.into())
+                        .map(|x| x == 1.into())
+                        .unwrap_or(false),
+                )),
                 _ => error,
             },
             _ => error,
