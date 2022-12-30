@@ -1,6 +1,7 @@
 module Std.List {
-  count, head, isEmpty, filter, groupBy, map, reduce, reverse, repeat,
-  skip, tail, take, zip, zipWith
+  all, any, concat, contains, count, countBy, find, findIndex, flatten, isList,
+  intersection,  head, isEmpty, filter, groupBy, map, merge, partition, reduce,
+  reverse, repeat, skip, sort, sortBy, tail, take, zip, zipWith
 }
 
 let head [x :: _]  = x
@@ -18,6 +19,59 @@ let map list f =
       map_ [f x :: acc] xs f
   in
     map_ [] list f
+
+
+let all list fn =
+  let
+    all_ acc [] _ =
+      acc
+
+    all_ acc [x :: xs] fn =
+      if (fn x) then
+        (all_ true xs fn)
+      else
+        false
+  in
+    all_ true list fn
+
+
+let any list fn =
+  let
+    any_ acc [] _ =
+      acc
+
+    any_ acc [x :: xs] fn =
+      if (fn x) then
+        true
+      else
+        (any_ false xs fn)
+  in
+    any_ false list fn
+
+
+let concat lists =
+  let
+    concat_ acc [] =
+      (reverse acc)
+
+    concat_ acc [list :: lists] =
+      (concat_ (List.join (List.reverse list) acc) lists)
+  in
+    concat_ [] lists
+
+
+let contains element list =
+  let
+    contains_ acc [] _ =
+      acc
+
+    contains_ acc [x :: xs] element =
+      if (x == element) then
+        true
+      else
+        (contains_ false xs element)
+  in
+    contains_ false list element
 
 
 let count list =
@@ -42,8 +96,59 @@ let countBy list fn =
     countBy_ 0 list
 
 
+let find list fn =
+  let
+    find_ acc [] _ =
+      acc
+
+    find_ acc [x :: xs] fn =
+      if (fn x) then
+        x
+      else
+        (find_ null xs fn)
+  in
+    find_ null list fn
+
+
+let findIndex list fn =
+  let
+    findIndex_ acc [] _ =
+      acc
+
+    findIndex_ acc [x :: xs] fn =
+      if (fn x) then
+        acc
+      else
+        (findIndex_ (acc + 1) xs fn)
+  in
+    findIndex_ 0 list fn
+
+
+let flatten list =
+  let
+    flatten_ acc [] =
+      (reverse acc)
+
+    flatten_ acc [x :: xs] =
+      if (isList x) then
+        (flatten_ (List.join (List.reverse x) acc) xs)
+      else
+        (flatten_ [x :: acc] xs)
+  in
+    flatten_ [] list
+
+
+let isList [] = true
+let isList [_ :: _] = true
+let isList _ = false
+
+
 let isEmpty [] = true
 let isEmpty _  = false
+
+
+let intersection list1 list2 =
+  filter list1 (element -> (List.contains element list2))
 
 
 let filter list fn =
@@ -190,29 +295,55 @@ let zipWith xs ys fn =
     zipWith_ [] xs ys fn
 
 
-let all list fn =
+let merge sorted1 sorted2 comparisonFn =
   let
-    all_ acc [] _ =
-      acc
+    merge_ acc [] [] _ =
+      reverse acc
 
-    all_ acc [x :: xs] fn =
-      if (fn x) then
-        (all_ true xs fn)
+    merge_ acc [] sorted2 _ =
+      reverse (List.join sorted2 acc)
+
+    merge_ acc sorted1 [] _ =
+      reverse (List.join sorted1 acc)
+
+    merge_ acc [x :: xs] [y :: ys] comparisonFn =
+      if (comparisonFn x y) then
+        (merge_ [x :: acc] xs [y :: ys] comparisonFn)
       else
-        false
+        (merge_ [y :: acc] [x :: xs] ys comparisonFn)
   in
-    all_ true list fn
+    merge_ [] sorted1 sorted2 comparisonFn
 
 
-let any list fn =
+let partition list fn =
   let
-    any_ acc [] _ =
-      acc
+    partition_ acc1 acc2 [] _ =
+      {true:  (List.reverse acc1), false: (List.reverse acc2)}
 
-    any_ acc [x :: xs] fn =
+    partition_ acc1 acc2 [x :: xs] fn =
       if (fn x) then
-        true
+        (partition_ [x :: acc1] acc2 xs fn)
       else
-        (any_ false xs fn)
+        (partition_ acc1 [x :: acc2] xs fn)
   in
-    (any_ false list fn)
+    partition_ [] [] list fn
+
+
+let sort list ascending =
+  if ascending then
+    (List.sortBy list (a b -> (a < b)))
+  else
+    (List.sortBy list (a b -> (a > b)))
+
+
+let sortBy [] _ =
+  []
+let sortBy [x] _ =
+  [x]
+let sortBy list comparisonFn =
+  let
+    mid = Math.ceil ((length list) / 2)
+    left = (List.take list mid)
+    right = (List.skip list mid)
+  in
+    merge (sortBy left comparisonFn) (sortBy right comparisonFn) comparisonFn
