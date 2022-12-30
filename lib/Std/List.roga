@@ -92,6 +92,8 @@ let reverse list =
 
 let skip list 0 =
   list
+let skip [] n =
+  []
 let skip [x :: xs] n =
   skip xs (n - 1)
 
