@@ -186,3 +186,31 @@ let zipWith xs ys fn =
       zipWith_ [fn x y :: acc] xs ys fn
   in
     zipWith_ [] xs ys fn
+
+
+let all list fn =
+  let
+    all_ acc [] _ =
+      acc
+
+    all_ acc [x :: xs] fn =
+      if (fn x) then
+        (all_ true xs fn)
+      else
+        false
+  in
+    all_ true list fn
+
+
+let any list fn =
+  let
+    any_ acc [] _ =
+      acc
+
+    any_ acc [x :: xs] fn =
+      if (fn x) then
+        true
+      else
+        (any_ false xs fn)
+  in
+    (any_ false list fn)
