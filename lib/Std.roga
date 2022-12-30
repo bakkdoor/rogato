@@ -16,3 +16,12 @@ let not false =
 
 let match val fn =
   fn val
+
+
+let or true _ = true
+let or _ true = true
+let or _ _ = false
+
+
+let and true true = true
+let and _ _ = false
