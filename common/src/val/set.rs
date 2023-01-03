@@ -3,7 +3,7 @@ use std::{
     hash::{Hash, Hasher},
 };
 
-use super::{Value, ValueRef};
+use super::{List, Value, ValueRef};
 use crate::ast::ASTDepth;
 
 #[derive(Clone, Eq, Debug)]
@@ -131,5 +131,21 @@ impl From<Set> for ValueRef {
 impl From<rpds::HashTrieSet<ValueRef>> for Set {
     fn from(entries: rpds::HashTrieSet<ValueRef>) -> Self {
         Self { entries }
+    }
+}
+
+impl From<rpds::List<ValueRef>> for Set {
+    fn from(items: rpds::List<ValueRef>) -> Self {
+        Self {
+            entries: rpds::HashTrieSet::from_iter(items.iter().map(ValueRef::clone)),
+        }
+    }
+}
+
+impl From<&List> for Set {
+    fn from(items: &List) -> Self {
+        Self {
+            entries: rpds::HashTrieSet::from_iter(items.iter().map(ValueRef::clone)),
+        }
     }
 }

@@ -10,6 +10,9 @@ pub mod math;
 #[cfg(test)]
 pub mod string;
 
+#[cfg(test)]
+pub mod set;
+
 use crate::{EvalContext, Evaluate};
 use rogato_common::val::{self};
 use rogato_parser::{parse_expr, ParserContext};

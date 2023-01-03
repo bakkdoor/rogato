@@ -22,6 +22,7 @@ use std::rc::Rc;
 pub mod list;
 pub mod map;
 pub mod math;
+pub mod set;
 pub mod string;
 pub mod symbol;
 
@@ -34,6 +35,7 @@ pub fn env() -> Environment {
     let list_mod = list::module();
     let map_mod = map::module();
     let symbol_mod = symbol::module();
+    let set_mod = set::module();
 
     env.import(&std_mod, Imports::All);
     env.import(&math_mod, Imports::All);
@@ -43,6 +45,7 @@ pub fn env() -> Environment {
     env.alias_module(&list_mod, "List");
     env.alias_module(&map_mod, "Map");
     env.alias_module(&symbol_mod, "Symbol");
+    env.alias_module(&set_mod, "Set");
 
     env.define_module(std_mod);
     env.define_module(math_mod);
@@ -50,6 +53,7 @@ pub fn env() -> Environment {
     env.define_module(list_mod);
     env.define_module(map_mod);
     env.define_module(symbol_mod);
+    env.define_module(set_mod);
 
     env
 }
