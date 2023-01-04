@@ -154,6 +154,12 @@ impl From<Option<ValueRef>> for Value {
 
 pub type ValueRef = Rc<Value>;
 
+impl From<bool> for Value {
+    fn from(value: bool) -> Self {
+        Value::Bool(value)
+    }
+}
+
 impl From<serde_json::Value> for Value {
     fn from(json_val: serde_json::Value) -> Self {
         match json_val {
