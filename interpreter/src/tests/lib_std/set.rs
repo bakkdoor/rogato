@@ -1,4 +1,4 @@
-use crate::{EvalContext, Evaluate};
+use crate::{tests::parse_eval_std, EvalContext, Evaluate};
 use rogato_common::val::{self};
 use rogato_parser::{parse_expr, ParserContext};
 
@@ -11,6 +11,23 @@ fn std_set_module() {
         ("Set.contains (Set.from [1,2]) 1", val::bool(true)),
         ("Set.contains (Set.from [1,2]) 2", val::bool(true)),
         ("Set.contains (Set.from [1,2]) 3", val::bool(false)),
+        (
+            "Set.filter (Set.from [1,2,3,4,5]) ^Math.isEven",
+            val::set([val::number(2), val::number(4)]),
+        ),
+        (
+            "Set.filter (Set.from [1,2,3,4,5]) ^Math.isOdd",
+            val::set([val::number(1), val::number(3), val::number(5)]),
+        ),
+        (
+            "Set.filter (Set.from (range 10)) (x -> 0 == (x % 3))",
+            val::set([
+                val::number(0),
+                val::number(3),
+                val::number(6),
+                val::number(9),
+            ]),
+        ),
         ("Set.from []", val::set([])),
         ("Set.from [1]", val::set([val::number(1)])),
         (
@@ -159,10 +176,22 @@ fn std_set_module() {
             "Set.remove (Set.from [1,2,3]) 1",
             val::set([val::number(2), val::number(3)]),
         ),
+        (
+            "(Set.from [1,2,3,2,3,4,5]) |> Set.toList |> List.sortBy (a b -> a < b)",
+            val::list([
+                val::number(1),
+                val::number(2),
+                val::number(3),
+                val::number(4),
+                val::number(5),
+            ]),
+        ),
     ];
 
     let mut eval_ctx = EvalContext::new();
     let parser_ctx = ParserContext::new();
+
+    parse_eval_std("List", &parser_ctx, &mut eval_ctx);
 
     for (code, val) in code_with_vals.iter() {
         let ast = parse_expr(code, &parser_ctx).unwrap();

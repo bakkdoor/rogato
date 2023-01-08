@@ -12,6 +12,7 @@ pub fn module() -> Module {
     module.export(&ModuleExports::new(vec![
         "contains".into(),
         "empty".into(),
+        "filter".into(),
         "from".into(),
         "insert".into(),
         "isDisjoint".into(),
@@ -22,6 +23,7 @@ pub fn module() -> Module {
         "map".into(),
         "merge".into(),
         "remove".into(),
+        "toList".into(),
     ]));
 
     module.fn_def_native(
@@ -46,6 +48,62 @@ pub fn module() -> Module {
             let error = Err(invalid_args("Std.Set.empty"));
             match args.len() {
                 0 => Ok(val::set([])),
+                _ => error,
+            }
+        },
+    );
+
+    module.fn_def_native(
+        "filter",
+        &["set", "f"],
+        move |context, args| -> Result<ValueRef, NativeFnError> {
+            let error = Err(invalid_args("Std.Set.filter"));
+            match (args.len(), args.get(0), args.get(1)) {
+                (2, Some(a), Some(b)) => match (&**a, &**b) {
+                    (Value::Set(items), Value::Symbol(fn_id)) => {
+                        let mut result: Vec<ValueRef> = Vec::with_capacity(items.len());
+                        for item in items.iter() {
+                            match context.call_function(fn_id, &[ValueRef::clone(item)]) {
+                                Some(Ok(value)) => match &*value {
+                                    Value::Bool(true) => result.push(ValueRef::clone(item)),
+                                    _ => {}
+                                },
+                                Some(Err(error)) => {
+                                    return Err(NativeFnError::Unknown(
+                                        fn_id.clone(),
+                                        error.to_string(),
+                                    ))
+                                }
+                                None => {
+                                    return Err(NativeFnError::EvaluationFailed(
+                                        fn_id.clone(),
+                                        format!(
+                                            "FunctionRef invalid in ^Std.List.filter: ^{}",
+                                            fn_id
+                                        ),
+                                    ))
+                                }
+                            }
+                        }
+                        Ok(val::set(result))
+                    }
+                    (Value::Set(items), Value::Lambda(lambda_ctx, lambda)) => {
+                        let mut result: Vec<ValueRef> = Vec::with_capacity(items.len());
+                        for item in items.iter() {
+                            let val = context.call_lambda(
+                                Rc::clone(lambda_ctx),
+                                lambda,
+                                &[ValueRef::clone(item)],
+                            )?;
+                            match &*val {
+                                Value::Bool(true) => result.push(ValueRef::clone(item)),
+                                _ => {}
+                            }
+                        }
+                        Ok(val::set(result))
+                    }
+                    _ => error,
+                },
                 _ => error,
             }
         },
@@ -169,7 +227,7 @@ pub fn module() -> Module {
                                 None => {
                                     return Err(NativeFnError::EvaluationFailed(
                                         fn_id.clone(),
-                                        format!("FunctionRef invalid in ^map: ^{}", fn_id),
+                                        format!("FunctionRef invalid in ^Std.List.map: ^{}", fn_id),
                                     ))
                                 }
                             }
@@ -218,6 +276,21 @@ pub fn module() -> Module {
             match (args.len(), args.get(0), args.get(1)) {
                 (2, Some(set), Some(value)) => match &**set {
                     Value::Set(set) => Ok(set.remove(value).into()),
+                    _ => error,
+                },
+                _ => error,
+            }
+        },
+    );
+
+    module.fn_def_native(
+        "toList",
+        &["set"],
+        move |_ctx, args| -> Result<ValueRef, NativeFnError> {
+            let error = Err(invalid_args("Std.Set.toList"));
+            match (args.len(), args.get(0)) {
+                (1, Some(set)) => match &**set {
+                    Value::Set(set) => Ok(set.to_list().into()),
                     _ => error,
                 },
                 _ => error,

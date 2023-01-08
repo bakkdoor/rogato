@@ -67,6 +67,10 @@ impl Set {
     pub fn is_superset(&self, other: &Self) -> bool {
         self.entries.is_superset(&other.entries)
     }
+
+    pub fn to_list(&self) -> List {
+        List::from_iter(self.iter().map(ValueRef::clone))
+    }
 }
 
 impl Default for Set {

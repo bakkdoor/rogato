@@ -1,7 +1,7 @@
 module Std.List {
-  all, any, concat, contains, count, countBy, find, findIndex, flatten, isList,
-  intersection,  head, isEmpty, filter, groupBy, map, merge, partition, reduce,
-  reverse, repeat, skip, sort, sortBy, tail, take, zip, zipWith
+  all, any, concat, contains, count, countBy, drop, find, findIndex, flatten, isList,
+  intersection,  head, isEmpty, filter, groupBy, map, merge, mergeSort, partition,
+  reduce, repeat, reverse, reverseAppend, skip, sort, sortBy, tail, take, zip, zipWith
 }
 
 let head [x :: _]  = x
@@ -96,6 +96,10 @@ let countBy list fn =
     countBy_ 0 list
 
 
+let drop list n =
+  skip list n
+
+
 let find list fn =
   let
     find_ acc [] _ =
@@ -179,10 +183,68 @@ let groupBy list fn =
     groupBy_ {} list fn
 
 
+let merge left right cmp =
+  merge_ [] left right cmp
+
+
+let merge_ acc [] right _ =
+  reverseAppend acc right
+let merge_ acc left [] _ =
+  reverseAppend acc left
+let merge_ acc [l :: ls] [r :: rs] cmp =
+  if (cmp l r) then
+    (merge_ [l :: acc] ls [r :: rs] cmp)
+  else
+    (merge_ [r :: acc] [l :: ls] rs cmp)
+
+
+let mergeSort [] _ =
+  []
+let mergeSort [x] _ =
+  [x]
+let mergeSort list cmp =
+  let
+    half =
+      Math.ceil ((List.length list) / 2)
+    left =
+      mergeSort (List.take list half) cmp
+    right =
+      mergeSort (List.drop list half) cmp
+  in
+      merge left right cmp
+
+
+let partition list fn =
+  let
+    partition_ acc1 acc2 [] _ =
+      {true:  (List.reverse acc1), false: (List.reverse acc2)}
+
+    partition_ acc1 acc2 [x :: xs] fn =
+      if (fn x) then
+        (partition_ [x :: acc1] acc2 xs fn)
+      else
+        (partition_ acc1 [x :: acc2] xs fn)
+  in
+    partition_ [] [] list fn
+
+
 let reduce [] acc f =
   acc
 let reduce [x :: xs] acc f =
   reduce xs (f x acc) f
+
+
+let repeat iterations fn =
+  repeat_ [] iterations 0 fn
+
+let repeat_ acc max n fn =
+  let
+    values = [fn n :: acc]
+  in
+    if (n == (max - 1)) then
+      (reverse values)
+    else
+      (repeat_ values max (n + 1) fn)
 
 
 let reverse list =
@@ -195,12 +257,27 @@ let reverse list =
     reverse_ [] list
 
 
+let reverseAppend left right =
+  join (reverse left) right
+
+
 let skip list 0 =
   list
 let skip [] n =
   []
 let skip [x :: xs] n =
   skip xs (n - 1)
+
+
+let sort list ascending =
+  if ascending then
+    (sortBy list (a b -> (a < b)))
+  else
+    (sortBy list (a b -> (a > b)))
+
+
+let sortBy list cmp =
+  mergeSort list cmp
 
 
 let take list n =
@@ -215,19 +292,6 @@ let take list n =
       take_ [x :: acc] xs (n - 1)
   in
     take_ [] list n
-
-
-let repeat iterations fn =
-  repeat_ [] iterations 0 fn
-
-let repeat_ acc max n fn =
-  let
-    values = [fn n :: acc]
-  in
-    if (n == (max - 1)) then
-      (reverse values)
-    else
-      (repeat_ values max (n + 1) fn)
 
 
 let zip xs ys =
@@ -293,57 +357,3 @@ let zipWith xs ys fn =
       zipWith_ [fn x y :: acc] xs ys fn
   in
     zipWith_ [] xs ys fn
-
-
-let merge sorted1 sorted2 comparisonFn =
-  let
-    merge_ acc [] [] _ =
-      reverse acc
-
-    merge_ acc [] sorted2 _ =
-      reverse (List.join sorted2 acc)
-
-    merge_ acc sorted1 [] _ =
-      reverse (List.join sorted1 acc)
-
-    merge_ acc [x :: xs] [y :: ys] comparisonFn =
-      if (comparisonFn x y) then
-        (merge_ [x :: acc] xs [y :: ys] comparisonFn)
-      else
-        (merge_ [y :: acc] [x :: xs] ys comparisonFn)
-  in
-    merge_ [] sorted1 sorted2 comparisonFn
-
-
-let partition list fn =
-  let
-    partition_ acc1 acc2 [] _ =
-      {true:  (List.reverse acc1), false: (List.reverse acc2)}
-
-    partition_ acc1 acc2 [x :: xs] fn =
-      if (fn x) then
-        (partition_ [x :: acc1] acc2 xs fn)
-      else
-        (partition_ acc1 [x :: acc2] xs fn)
-  in
-    partition_ [] [] list fn
-
-
-let sort list ascending =
-  if ascending then
-    (List.sortBy list (a b -> (a < b)))
-  else
-    (List.sortBy list (a b -> (a > b)))
-
-
-let sortBy [] _ =
-  []
-let sortBy [x] _ =
-  [x]
-let sortBy list comparisonFn =
-  let
-    mid = Math.ceil ((length list) / 2)
-    left = (List.take list mid)
-    right = (List.skip list mid)
-  in
-    merge (sortBy left comparisonFn) (sortBy right comparisonFn) comparisonFn
