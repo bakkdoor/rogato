@@ -60,13 +60,13 @@ pub fn module() -> Module {
             let error = Err(invalid_args("Std.Set.filter"));
             match (args.len(), args.get(0), args.get(1)) {
                 (2, Some(a), Some(b)) => match (&**a, &**b) {
-                    (Value::Set(items), Value::Symbol(fn_id)) => {
-                        let mut result: Vec<ValueRef> = Vec::with_capacity(items.len());
-                        for item in items.iter() {
+                    (Value::Set(set), Value::Symbol(fn_id)) => {
+                        let mut filtered_set = set.clone();
+                        for item in set.iter() {
                             match context.call_function(fn_id, &[ValueRef::clone(item)]) {
                                 Some(Ok(value)) => {
-                                    if let Value::Bool(true) = &*value {
-                                        result.push(ValueRef::clone(item));
+                                    if let Value::Bool(false) = &*value {
+                                        filtered_set = filtered_set.remove(item);
                                     }
                                 }
                                 Some(Err(error)) => {
@@ -86,21 +86,21 @@ pub fn module() -> Module {
                                 }
                             }
                         }
-                        Ok(val::set(result))
+                        Ok(filtered_set.into())
                     }
-                    (Value::Set(items), Value::Lambda(lambda_ctx, lambda)) => {
-                        let mut result: Vec<ValueRef> = Vec::with_capacity(items.len());
-                        for item in items.iter() {
+                    (Value::Set(set), Value::Lambda(lambda_ctx, lambda)) => {
+                        let mut filtered_set = set.clone();
+                        for item in set.iter() {
                             let val = context.call_lambda(
                                 Rc::clone(lambda_ctx),
                                 lambda,
                                 &[ValueRef::clone(item)],
                             )?;
-                            if let Value::Bool(true) = &*val {
-                                result.push(ValueRef::clone(item));
+                            if let Value::Bool(false) = &*val {
+                                filtered_set = filtered_set.remove(item);
                             }
                         }
-                        Ok(val::set(result))
+                        Ok(filtered_set.into())
                     }
                     _ => error,
                 },
