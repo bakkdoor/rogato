@@ -64,10 +64,11 @@ pub fn module() -> Module {
                         let mut result: Vec<ValueRef> = Vec::with_capacity(items.len());
                         for item in items.iter() {
                             match context.call_function(fn_id, &[ValueRef::clone(item)]) {
-                                Some(Ok(value)) => match &*value {
-                                    Value::Bool(true) => result.push(ValueRef::clone(item)),
-                                    _ => {}
-                                },
+                                Some(Ok(value)) => {
+                                    if let Value::Bool(true) = &*value {
+                                        result.push(ValueRef::clone(item));
+                                    }
+                                }
                                 Some(Err(error)) => {
                                     return Err(NativeFnError::Unknown(
                                         fn_id.clone(),
@@ -95,9 +96,8 @@ pub fn module() -> Module {
                                 lambda,
                                 &[ValueRef::clone(item)],
                             )?;
-                            match &*val {
-                                Value::Bool(true) => result.push(ValueRef::clone(item)),
-                                _ => {}
+                            if let Value::Bool(true) = &*val {
+                                result.push(ValueRef::clone(item));
                             }
                         }
                         Ok(val::set(result))
