@@ -15,7 +15,11 @@ fn parse_eval_std(std_mod_name: &str, parser_ctx: &ParserContext, eval_ctx: &mut
         .as_path()
         .parent()
         .expect("Parent directory expected to be root");
-    let file_name = format!("lib/Std/{}.roga", std_mod_name);
+    let file_name = if std_mod_name == "Std" {
+        "lib/Std.roga".into()
+    } else {
+        format!("lib/Std/{}.roga", std_mod_name)
+    };
     let file_path = root_path.join(Path::new(file_name.as_str()));
     let mut file = File::open(&file_path)
         .expect(format!("Std lib file should exist: {:?}", file_path).as_str());

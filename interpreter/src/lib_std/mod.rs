@@ -74,6 +74,8 @@ pub fn std_module() -> Module {
         "<=".into(),
         "==".into(),
         "!=".into(),
+        "||".into(),
+        "&&".into(),
         "range".into(),
         "random".into(),
         "length".into(),
@@ -207,6 +209,28 @@ pub fn std_module() -> Module {
         match (args.len(), args.get(0), args.get(1)) {
             (2, Some(a), Some(b)) => Ok(val::bool(a.ne(b))),
             _ => Err(invalid_args("!=")),
+        }
+    });
+
+    module.fn_def_native("||", &["a", "b"], move |_ctx, args| {
+        let error = Err(invalid_args("||"));
+        match (args.len(), args.get(0), args.get(1)) {
+            (2, Some(a), Some(b)) => match (&**a, &**b) {
+                (Value::Bool(a), Value::Bool(b)) => Ok(val::bool(*a || *b)),
+                _ => error,
+            },
+            _ => error,
+        }
+    });
+
+    module.fn_def_native("&&", &["a", "b"], move |_ctx, args| {
+        let error = Err(invalid_args("&&"));
+        match (args.len(), args.get(0), args.get(1)) {
+            (2, Some(a), Some(b)) => match (&**a, &**b) {
+                (Value::Bool(a), Value::Bool(b)) => Ok(val::bool(*a && *b)),
+                _ => error,
+            },
+            _ => error,
         }
     });
 

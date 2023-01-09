@@ -1,7 +1,7 @@
 module Std.List {
   all, any, concat, contains, count, countBy, drop, find, findIndex, flatten, isList,
   intersection,  head, isEmpty, filter, groupBy, map, merge, mergeSort, partition,
-  reduce, repeat, reverse, reverseAppend, skip, sort, sortBy, tail, take, zip, zipWith
+  reduce, reject, repeat, reverse, reverseAppend, skip, sort, sortBy, tail, take, zip, zipWith
 }
 
 let head [x :: _]  = x
@@ -232,6 +232,11 @@ let reduce [] acc f =
   acc
 let reduce [x :: xs] acc f =
   reduce xs (f x acc) f
+
+
+let reject list f =
+  list
+  |> filter (x -> not (f x))
 
 
 let repeat iterations fn =

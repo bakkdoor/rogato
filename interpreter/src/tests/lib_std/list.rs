@@ -148,11 +148,26 @@ fn std_list_module() {
             "List.filter (range 5) (x -> x > 2)",
             val::list([val::number(3), val::number(4)]),
         ),
+        ("List.reject [] ^Math.isOdd", val::list([])),
+        ("List.reject [] ^Math.isEven", val::list([])),
+        (
+            "List.reject (range 5) (x -> (Math.isEven x) || (Math.isOdd x))",
+            val::list([]),
+        ),
+        (
+            "List.reject (range 5) ^Math.isEven",
+            val::list([val::number(1), val::number(3)]),
+        ),
+        (
+            "List.reject (range 5) ^Math.isOdd",
+            val::list([val::number(0), val::number(2), val::number(4)]),
+        ),
     ];
 
     let mut eval_ctx = EvalContext::new();
     let parser_ctx = ParserContext::new();
 
+    parse_eval_std("Std", &parser_ctx, &mut eval_ctx);
     parse_eval_std("List", &parser_ctx, &mut eval_ctx);
 
     for (code, val) in code_with_vals.iter() {
