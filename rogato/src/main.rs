@@ -4,6 +4,7 @@ use rogato_parser::{parse, ParserContext};
 
 use clap::Parser;
 use indent_write::indentable::Indentable;
+use std::collections::HashSet;
 use std::fmt::Display;
 use std::fs::File;
 use std::io::Read;
@@ -54,6 +55,14 @@ struct ReplInfo {
     preload: Vec<String>,
 }
 
+fn std_lib_preloads() -> HashSet<String> {
+    HashSet::from([
+        "lib/Std.roga".into(),
+        "lib/Std/List.roga".into(),
+        "lib/Std/Map.roga".into(),
+    ])
+}
+
 #[cfg_attr(feature = "flame_it", flame)]
 fn main() -> anyhow::Result<()> {
     let args = CLIArgs::parse();
@@ -61,7 +70,11 @@ fn main() -> anyhow::Result<()> {
 
     match args.command {
         Command::RunRepl(repl_info) => {
-            repl::run_repl(&repl_info.preload)?;
+            let mut preloads: HashSet<String> = std_lib_preloads();
+            preloads.extend(repl_info.preload.into_iter());
+
+            let unique_preloads: Vec<String> = preloads.into_iter().collect();
+            repl::run_repl(&unique_preloads)?;
         }
         Command::EvaluateFile(file_info) => {
             for file in file_info.files.iter() {

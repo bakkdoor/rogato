@@ -3,7 +3,7 @@ use rogato_common::{
     val::{self, ValueRef},
 };
 
-use crate::{module::Module, EvalContext, EvalError, Evaluate};
+use crate::{environment::Imports, module::Module, EvalContext, EvalError, Evaluate};
 
 #[cfg(feature = "flame_it")]
 use flamer::flame;
@@ -14,13 +14,15 @@ impl Evaluate<ValueRef> for ModuleDef {
         match context.lookup_module(self.id()) {
             Some(mut module) => {
                 module.export(self.exports());
-                context.set_current_module(self.id().clone())
+                context.set_current_module(self.id().clone());
+                context.import(self.id(), Imports::All)?;
             }
             None => {
                 let mut module = Module::new(self.id());
                 module.export(self.exports());
                 context.define_module(module);
                 context.set_current_module(self.id().clone());
+                context.import(self.id(), Imports::All)?;
             }
         }
 
