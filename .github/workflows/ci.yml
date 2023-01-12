@@ -1,7 +1,11 @@
-on: [push]
-# on: [push, pull_request]
-
 name: Continuous integration
+on:
+  push:
+    paths-ignore:
+      - "**.md"
+  pull_request:
+    paths-ignore:
+      - "**.md"
 
 jobs:
   test:
