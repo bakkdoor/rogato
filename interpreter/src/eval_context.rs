@@ -99,7 +99,7 @@ impl EvalContext {
     pub fn define_fn(&mut self, id: &Identifier, fn_variant: FnDefVariant) -> ValueRef {
         let mut module = self.current_module();
         module.fn_def(id.clone(), fn_variant);
-        val::string(format!("FnDef {}", id))
+        val::string(format!("FnDef {id}"))
     }
 
     fn lookup_fn(&self, id: &Identifier) -> Option<Rc<RefCell<FnDef>>> {
@@ -461,7 +461,7 @@ impl LambdaClosureContext for EvalContext {
                         break;
                     }
                     Err(e) => {
-                        eprintln!("evaluate_lambda_call: {}", e);
+                        eprintln!("evaluate_lambda_call: {e}");
                         return Err(LambdaClosureEvalError::LambdaVariantArgumentMismatch(
                             Rc::clone(lambda_variant),
                             Rc::clone(arg_pattern),
@@ -473,7 +473,7 @@ impl LambdaClosureContext for EvalContext {
 
             if matched == attempted {
                 return lambda_variant.body.evaluate(&mut call_ctx).map_err(|e| {
-                    eprintln!("evaluate_lambda_call: {}", e);
+                    eprintln!("evaluate_lambda_call: {e}");
                     LambdaClosureEvalError::EvaluationFailed(
                         Rc::clone(lambda_variant),
                         e.to_string(),

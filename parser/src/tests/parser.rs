@@ -607,7 +607,7 @@ fn type_defs() {
             name :: String,     age :: Int
                  country :: Country
         }",
-        person_type_def.to_owned()
+        person_type_def
     );
 
     assert_parse_ast!(

@@ -48,7 +48,7 @@ pub fn module() -> Module {
                                 None => {
                                     return Err(NativeFnError::EvaluationFailed(
                                         fn_id.clone(),
-                                        format!("FunctionRef invalid in ^map: ^{}", fn_id),
+                                        format!("FunctionRef invalid in ^map: ^{fn_id}"),
                                     ))
                                 }
                             }

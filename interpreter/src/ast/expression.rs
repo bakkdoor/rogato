@@ -40,7 +40,7 @@ impl Evaluate<ValueRef> for Expression {
                     Some(type_) => Ok(val::object([
                         ("type", val::string("TypeExpression")),
                         ("id", val::string(type_.id())),
-                        ("expression", val::string(format!("{}", type_))),
+                        ("expression", val::string(format!("{type_}"))),
                     ])),
                     None => Err(EvalError::ConstOrTypeNotFound(id.clone())),
                 },
@@ -49,7 +49,7 @@ impl Evaluate<ValueRef> for Expression {
                 Some(type_) => Ok(val::object([
                     ("type", val::string("DBType")),
                     ("id", val::string(type_.id())),
-                    ("expression", val::string(format!("{}", type_))),
+                    ("expression", val::string(format!("{type_}"))),
                 ])),
                 None => Err(EvalError::DBTypeNotFound(id.clone())),
             },
@@ -65,8 +65,8 @@ impl Evaluate<ValueRef> for Expression {
             Expression::Symbol(id) => Ok(val::symbol(id.clone())),
             Expression::Quoted(expr) => Ok(val::quoted(Rc::clone(expr))),
             Expression::QuotedAST(ast) => Ok(val::quoted_ast(Rc::clone(ast))),
-            Expression::Unquoted(expr) => Ok(val::string(format!("~({})", expr))),
-            Expression::UnquotedAST(ast) => Ok(val::string(format!("~({})", ast))),
+            Expression::Unquoted(expr) => Ok(val::string(format!("~({expr})"))),
+            Expression::UnquotedAST(ast) => Ok(val::string(format!("~({ast})"))),
             Expression::InlineFnDef(fn_def) => fn_def.borrow().evaluate(context),
         }
     }

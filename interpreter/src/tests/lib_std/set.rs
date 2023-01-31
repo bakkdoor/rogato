@@ -145,7 +145,7 @@ fn std_set_module() {
             in
                 s3 |> Set.map (val -> val * 2)",
             val::set([
-                val::number(1 * 2),
+                val::number(2),
                 val::number(2 * 2),
                 val::number(3 * 2),
                 val::number(4 * 2),

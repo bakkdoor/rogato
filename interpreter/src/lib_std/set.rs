@@ -79,8 +79,7 @@ pub fn module() -> Module {
                                     return Err(NativeFnError::EvaluationFailed(
                                         fn_id.clone(),
                                         format!(
-                                            "FunctionRef invalid in ^Std.List.filter: ^{}",
-                                            fn_id
+                                            "FunctionRef invalid in ^Std.List.filter: ^{fn_id}"
                                         ),
                                     ))
                                 }
@@ -227,7 +226,7 @@ pub fn module() -> Module {
                                 None => {
                                     return Err(NativeFnError::EvaluationFailed(
                                         fn_id.clone(),
-                                        format!("FunctionRef invalid in ^Std.List.map: ^{}", fn_id),
+                                        format!("FunctionRef invalid in ^Std.List.map: ^{fn_id}"),
                                     ))
                                 }
                             }

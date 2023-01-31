@@ -89,7 +89,7 @@ impl From<NativeFnError> for EvalError {
 
 impl From<EvalError> for NativeFnError {
     fn from(e: EvalError) -> Self {
-        NativeFnError::EvaluationFailed("EvalError: NativeFnError:".into(), format!("{}", e))
+        NativeFnError::EvaluationFailed("EvalError: NativeFnError:".into(), format!("{e}"))
     }
 }
 

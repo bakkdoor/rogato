@@ -85,7 +85,7 @@ pub fn std_module() -> Module {
 
     module.fn_def(
         "++",
-        op_fn(move |_ctx, args| with_string_op_args("++", args, |a, b| Ok(format!("{}{}", a, b)))),
+        op_fn(move |_ctx, args| with_string_op_args("++", args, |a, b| Ok(format!("{a}{b}")))),
     );
 
     module.fn_def_native("id", &["value"], move |_ctx, args| match args.get(0) {
@@ -95,7 +95,7 @@ pub fn std_module() -> Module {
 
     module.fn_def_native("print", &["value"], move |_ctx, args| match args.get(0) {
         Some(value) => {
-            print!("{}", value);
+            print!("{value}");
             Ok(ValueRef::clone(value))
         }
         None => Err(invalid_args("print")),
@@ -103,7 +103,7 @@ pub fn std_module() -> Module {
 
     module.fn_def_native("println", &["value"], move |_ctx, args| match args.get(0) {
         Some(value) => {
-            println!("{}", value);
+            println!("{value}");
             Ok(ValueRef::clone(value))
         }
         None => Err(invalid_args("println")),
@@ -129,7 +129,7 @@ pub fn std_module() -> Module {
                         Some(val) => Ok(ValueRef::clone(&val?)),
                         None => Err(NativeFnError::EvaluationFailed(
                             fn_id.clone(),
-                            format!("FunctionRef invalid in ^apply: ^{}", fn_id),
+                            format!("FunctionRef invalid in ^apply: ^{fn_id}"),
                         )),
                     }
                 }
@@ -143,14 +143,14 @@ pub fn std_module() -> Module {
         match args.get(0) {
             Some(value) => match &**value {
                 Value::String(_) => Ok(ValueRef::clone(value)),
-                _ => Ok(val::string(format!("{}", value))),
+                _ => Ok(val::string(format!("{value}"))),
             },
             None => Err(invalid_args("inspect")),
         }
     });
 
     module.fn_def_native("inspect", &["value"], move |_ctx, args| match args.get(0) {
-        Some(value) => Ok(val::string(format!("{}", value))),
+        Some(value) => Ok(val::string(format!("{value}"))),
         None => Err(invalid_args("inspect")),
     });
 
@@ -336,7 +336,7 @@ pub fn std_module() -> Module {
                             Some(val) => Ok(ValueRef::clone(&val?)),
                             None => Err(NativeFnError::EvaluationFailed(
                                 fn_id.clone(),
-                                format!("FunctionRef invalid in ^match: ^{}", fn_id),
+                                format!("FunctionRef invalid in ^match: ^{fn_id}"),
                             )),
                         }
                     }
@@ -383,7 +383,7 @@ pub fn std_module() -> Module {
                             let func_rc = ctx.lookup_function(fn_id).ok_or_else(|| {
                                 NativeFnError::Unknown(
                                     "times".into(),
-                                    format!("Function not found: {}", fn_id),
+                                    format!("Function not found: {fn_id}"),
                                 )
                             })?;
                             let func = func_rc.borrow();
@@ -401,7 +401,7 @@ pub fn std_module() -> Module {
                                     Err(e) => {
                                         return Err(NativeFnError::EvaluationFailed(
                                             fn_id.clone(),
-                                            format!("FunctionRef invalid in ^match: ^{} - Failed with: {:?}", fn_id, e),
+                                            format!("FunctionRef invalid in ^match: ^{fn_id} - Failed with: {e:?}"),
                                         ));
                                     }
                                 }
@@ -464,5 +464,5 @@ pub fn invalid_args(id: &str) -> NativeFnError {
 }
 
 pub fn unknown_err<E: Debug>(id: &str, error: E) -> NativeFnError {
-    NativeFnError::Unknown(id.into(), format!("{:?}", error))
+    NativeFnError::Unknown(id.into(), format!("{error:?}"))
 }

@@ -6,7 +6,7 @@ pub use crate::{parse, parse_ast, parse_expr, ParserContext};
 #[macro_export]
 macro_rules! assert_parse {
     ($code:expr, $expected:expr) => {
-        let parsed = crate::parse($code, &crate::ParserContext::new());
+        let parsed = $crate::parse($code, &crate::ParserContext::new());
         let expected = Ok($expected);
         assert_eq!(
             parsed.clone(),
@@ -22,7 +22,7 @@ macro_rules! assert_parse {
 #[macro_export]
 macro_rules! assert_parse_ast {
     ($code:expr, $expected:expr) => {
-        let parsed = crate::parse_ast($code, &crate::ParserContext::new());
+        let parsed = $crate::parse_ast($code, &crate::ParserContext::new());
         let expected = Ok($expected);
         assert_eq!(
             parsed.clone(),
@@ -38,7 +38,7 @@ macro_rules! assert_parse_ast {
 #[macro_export]
 macro_rules! assert_parse_expr {
     ($code:expr, $expected:expr) => {
-        let parsed = crate::parse_expr($code, &crate::ParserContext::new());
+        let parsed = $crate::parse_expr($code, &crate::ParserContext::new());
         let expected = Ok($expected);
         assert_eq!(
             parsed.clone(),

@@ -78,7 +78,7 @@ impl Display for LetBindings {
                     if expr.ast_depth() > 5 {
                         format!("{} =\n{}", ident, indent(expr))
                     } else {
-                        format!("{} = {}", ident, expr)
+                        format!("{ident} = {expr}")
                     }
                 }
             })
@@ -86,11 +86,11 @@ impl Display for LetBindings {
                 if acc.is_empty() {
                     fmt
                 } else {
-                    format!("{}\n\n{}", acc, fmt)
+                    format!("{acc}\n\n{fmt}")
                 }
             });
 
-        f.write_fmt(format_args!("{}", fmt_str))
+        f.write_fmt(format_args!("{fmt_str}"))
     }
 }
 

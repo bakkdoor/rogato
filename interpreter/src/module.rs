@@ -60,7 +60,7 @@ impl Module {
                 .fn_defs
                 .get(&id)
                 .map(|f| f.borrow_mut().add_variant(args, body))
-                .unwrap_or_else(|| eprintln!("EvalContext::define_fn_variant failed for: {}", id))
+                .unwrap_or_else(|| eprintln!("EvalContext::define_fn_variant failed for: {id}"))
         } else {
             let FnDefVariant(args, body) = fn_variant;
             let fn_def = FnDef::new(id.clone(), args, body);

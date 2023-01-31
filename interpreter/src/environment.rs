@@ -35,10 +35,10 @@ impl Imports {
                     ImportedIdentifier::Func(id) => id.clone(),
                     ImportedIdentifier::Type(id) => id.clone(),
                     ImportedIdentifier::AliasedFunc(id, alias) => {
-                        format!("{} as {}", id, alias).into()
+                        format!("{id} as {alias}").into()
                     }
                     ImportedIdentifier::AliasedType(id, alias) => {
-                        format!("{} as {}", id, alias).into()
+                        format!("{id} as {alias}").into()
                     }
                 })
                 .collect(),
@@ -378,8 +378,7 @@ impl Environment {
                                     let module =
                                         self.lookup_module(module_id).unwrap_or_else(|| {
                                             panic!(
-                                                "module should exist: {} for fn: {}",
-                                                module_id, id
+                                                "module should exist: {module_id} for fn: {id}"
                                             )
                                         });
                                     return Some(module);
@@ -416,8 +415,7 @@ impl Environment {
                                     let module =
                                         self.lookup_module(module_id).unwrap_or_else(|| {
                                             panic!(
-                                                "module should exist: {} for type: {}",
-                                                module_id, id
+                                                "module should exist: {module_id} for type: {id}"
                                             )
                                         });
                                     return Some(module);
@@ -454,8 +452,7 @@ impl Environment {
                                     let module =
                                         self.lookup_module(module_id).unwrap_or_else(|| {
                                             panic!(
-                                                "module should exist: {} for const: {}",
-                                                module_id, id
+                                                "module should exist: {module_id} for const: {id}"
                                             )
                                         });
                                     return Some(module);

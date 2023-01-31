@@ -37,7 +37,7 @@ fn multiplication() {
     for i in -100..100 {
         let a = i * 10;
         let b = i * 100;
-        let ast = parse_expr(format!("{} * {}", a, b).as_str(), &parser_ctx).unwrap();
+        let ast = parse_expr(format!("{a} * {b}").as_str(), &parser_ctx).unwrap();
         assert_eq!(ast.evaluate(&mut eval_ctx), Ok(val::number(a * b)));
     }
 }
@@ -57,7 +57,7 @@ fn string_literals() {
     ];
 
     for string_lit in string_literals.iter() {
-        let parse_result = parse_expr(format!("{:?}", string_lit).as_str(), &parser_ctx);
+        let parse_result = parse_expr(format!("{string_lit:?}").as_str(), &parser_ctx);
         assert!(parse_result.is_ok());
         if let Ok(ast) = parse_result {
             assert_eq!(ast.evaluate(&mut eval_ctx), Ok(val::string(string_lit)));
@@ -157,21 +157,21 @@ fn equality() {
     let parser_ctx = ParserContext::new();
 
     for (left, right) in not_equal.iter() {
-        let code = format!("{} == {}", left, right);
+        let code = format!("{left} == {right}");
         let ast = parse_expr(code.as_str(), &parser_ctx).unwrap();
         assert_eq!(ast.evaluate(&mut eval_ctx), Ok(val::bool(false)));
 
-        let code = format!("{} != {}", left, right);
+        let code = format!("{left} != {right}");
         let ast = parse_expr(code.as_str(), &parser_ctx).unwrap();
         assert_eq!(ast.evaluate(&mut eval_ctx), Ok(val::bool(true)));
     }
 
     for (left, right) in equal.iter() {
-        let code = format!("{} == {}", left, right);
+        let code = format!("{left} == {right}");
         let ast = parse_expr(code.as_str(), &parser_ctx).unwrap();
         assert_eq!(ast.evaluate(&mut eval_ctx), Ok(val::bool(true)));
 
-        let code = format!("{} != {}", left, right);
+        let code = format!("{left} != {right}");
         let ast = parse_expr(code.as_str(), &parser_ctx).unwrap();
         assert_eq!(ast.evaluate(&mut eval_ctx), Ok(val::bool(false)));
     }

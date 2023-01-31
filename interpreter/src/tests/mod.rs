@@ -18,17 +18,17 @@ fn parse_eval_std(std_mod_name: &str, parser_ctx: &ParserContext, eval_ctx: &mut
     let file_name = if std_mod_name == "Std" {
         "lib/Std.roga".into()
     } else {
-        format!("lib/Std/{}.roga", std_mod_name)
+        format!("lib/Std/{std_mod_name}.roga")
     };
     let file_path = root_path.join(Path::new(file_name.as_str()));
     let mut file = File::open(&file_path)
-        .expect(format!("Std lib file should exist: {:?}", file_path).as_str());
+        .unwrap_or_else(|_| panic!("Std lib file should exist: {file_path:?}"));
 
     let mut buf = String::new();
     file.read_to_string(&mut buf).unwrap();
 
     parse(buf.as_str(), parser_ctx)
-        .expect(format!("Expected file to parse: {}", file_name).as_str())
+        .unwrap_or_else(|_| panic!("Expected file to parse: {file_name}"))
         .evaluate(eval_ctx)
-        .expect(format!("Expected file to evaluate: {}", file_name).as_str());
+        .unwrap_or_else(|_| panic!("Expected file to evaluate: {file_name}"));
 }

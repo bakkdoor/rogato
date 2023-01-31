@@ -21,48 +21,48 @@ impl Display for Literal {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Literal::Bool(b) => b.fmt(f),
-            Literal::Number(num) => f.write_fmt(format_args!("{}", num)),
-            Literal::String(string) => f.write_fmt(format_args!("\"{}\"", string)),
+            Literal::Number(num) => f.write_fmt(format_args!("{num}")),
+            Literal::String(string) => f.write_fmt(format_args!("\"{string}\"")),
             Literal::Tuple(items) => {
                 if items.ast_depth() > 6 {
-                    let items_str = format!("{}", items);
+                    let items_str = format!("{items}");
                     if items_str.split('\n').count() == 1 {
-                        f.write_fmt(format_args!("{{ {} }}", items))
+                        f.write_fmt(format_args!("{{ {items} }}"))
                     } else {
                         f.write_fmt(format_args!("{{\n{}\n}}", indent(items)))
                     }
                 } else {
-                    f.write_fmt(format_args!("{{ {} }}", items))
+                    f.write_fmt(format_args!("{{ {items} }}"))
                 }
             }
             Literal::List(items) => {
                 if items.ast_depth() > 6 {
-                    let items_str = format!("{}", items);
+                    let items_str = format!("{items}");
                     if items_str.split('\n').count() == 1 {
-                        f.write_fmt(format_args!("[ {} ]", items))
+                        f.write_fmt(format_args!("[ {items} ]"))
                     } else {
                         f.write_fmt(format_args!("[\n{}\n]", indent(items)))
                     }
                 } else {
-                    f.write_fmt(format_args!("[ {} ]", items))
+                    f.write_fmt(format_args!("[ {items} ]"))
                 }
             }
             Literal::ListCons(first, rest) => {
                 if first.ast_depth() > 6 || rest.ast_depth() > 6 {
-                    let first_lines = format!("{}", first).lines().count();
-                    let rest_lines = format!("{}", rest).lines().count();
+                    let first_lines = format!("{first}").lines().count();
+                    let rest_lines = format!("{rest}").lines().count();
 
                     match (first_lines, rest_lines) {
-                        (1, 1) => f.write_fmt(format_args!("[ {} :: {} ]", first, rest)),
+                        (1, 1) => f.write_fmt(format_args!("[ {first} :: {rest} ]")),
                         _ => {
                             f.write_fmt(format_args!("[\n{} :: {}\n]", indent(first), indent(rest)))
                         }
                     }
                 } else {
-                    f.write_fmt(format_args!("[ {} :: {} ]", first, rest))
+                    f.write_fmt(format_args!("[ {first} :: {rest} ]"))
                 }
             }
-            Literal::Struct(id, props) => f.write_fmt(format_args!("{}{{ {} }}", id, props)),
+            Literal::Struct(id, props) => f.write_fmt(format_args!("{id}{{ {props} }}")),
             Literal::Map(kv_pairs) => {
                 f.write_str("{ ")?;
                 kv_pairs.fmt(f)?;
@@ -205,13 +205,13 @@ impl Display for StructProps {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let fmt_str = self.iter().fold(String::from(""), |acc, (id, expr)| {
             if acc.is_empty() {
-                format!("{}: {}", id, expr)
+                format!("{id}: {expr}")
             } else {
-                format!("{}, {}: {}", acc, id, expr)
+                format!("{acc}, {id}: {expr}")
             }
         });
 
-        f.write_fmt(format_args!("{}", fmt_str))
+        f.write_fmt(format_args!("{fmt_str}"))
     }
 }
 

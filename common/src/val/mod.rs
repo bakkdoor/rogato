@@ -282,14 +282,14 @@ impl Display for Value {
             Value::Tuple(_size, items) => {
                 let items: TupleItems<Value> = TupleItems::from(items.clone());
                 if items.ast_depth() > 6 {
-                    let items_str = format!("{}", items);
+                    let items_str = format!("{items}");
                     if items_str.lines().count() == 1 {
-                        f.write_fmt(format_args!("{{ {} }}", items))
+                        f.write_fmt(format_args!("{{ {items} }}"))
                     } else {
                         f.write_fmt(format_args!("{{\n{}\n}}", indent(&items)))
                     }
                 } else {
-                    f.write_fmt(format_args!("{{ {} }}", items))
+                    f.write_fmt(format_args!("{{ {items} }}"))
                 }
             }
             Value::List(list) => list.fmt(f),

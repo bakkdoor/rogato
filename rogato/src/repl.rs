@@ -42,7 +42,7 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub fn run_repl(files_to_load: &[String]) -> anyhow::Result<()> {
     println!("👾 rogātō ⌘ 🏷 ");
     print!("🖥  Interactive Shell ");
-    println!("{} 🦀 \n", VERSION);
+    println!("{VERSION} 🦀 \n");
     println!("Enter rogātō expressions below. You can add new lines via SHIFT-DOWN.\n");
     let mut eval_ctx = EvalContext::new();
     let parser_ctx = ParserContext::new();
@@ -73,20 +73,18 @@ pub fn run_repl(files_to_load: &[String]) -> anyhow::Result<()> {
                         }
                         Err(e) => {
                             eprintln!(
-                                "❌ {}\n\t\tFailed to evaluate file: {}",
-                                file_path_string, e
+                                "❌ {file_path_string}\n\t\tFailed to evaluate file: {e}"
                             )
                         }
                     },
                     Err(e) => {
-                        eprintln!("❌ {}\n\t\tFailed to parse file: {}", file_path_string, e)
+                        eprintln!("❌ {file_path_string}\n\t\tFailed to parse file: {e}")
                     }
                 }
             }
             Err(error) => {
                 eprintln!(
-                    "❌ {}\n\t\tCould not open source file: {:?}",
-                    file_path_string, error
+                    "❌ {file_path_string}\n\t\tCould not open source file: {error:?}"
                 );
             }
         }
@@ -101,7 +99,7 @@ pub fn run_repl(files_to_load: &[String]) -> anyhow::Result<()> {
         let mut compiler = Codegen::new(&context, &module, &builder, &fpm, &ee);
 
         counter += 1;
-        let readline = rl.readline(format!("{:03} >  ", counter).as_str());
+        let readline = rl.readline(format!("{counter:03} >  ").as_str());
         match readline {
             Ok(line) => {
                 rl.add_history_entry(line.as_str());
@@ -110,7 +108,7 @@ pub fn run_repl(files_to_load: &[String]) -> anyhow::Result<()> {
                         continue;
                     }
                     Err(error) => {
-                        eprintln!("REPL: {}", error);
+                        eprintln!("REPL: {error}");
                         continue;
                     }
                 }
@@ -124,7 +122,7 @@ pub fn run_repl(files_to_load: &[String]) -> anyhow::Result<()> {
                 break;
             }
             Err(err) => {
-                eprintln!("Error: {:?}", err);
+                eprintln!("Error: {err:?}");
                 break;
             }
         }
@@ -176,7 +174,7 @@ fn parse_eval_print(
     match parse(code, parse_ctx) {
         Ok(ast) => {
             if rogato_common::util::is_debug_enabled() {
-                println!("{:03} 🌳 {:?}\n\n{}\n", counter, ast, ast);
+                println!("{counter:03} 🌳 {ast:?}\n\n{ast}\n");
             }
 
             if rogato_common::util::is_compilation_enabled() {
@@ -190,7 +188,7 @@ fn parse_eval_print(
                         .get_function::<F32JITFunc>("main")?;
 
                     let result = main_fn.call();
-                    println!("{:03} ✅ {}\n", counter, result);
+                    println!("{counter:03} ✅ {result}\n");
                     return Ok(());
                 }
             }
@@ -198,14 +196,14 @@ fn parse_eval_print(
             match ast.evaluate(eval_ctx) {
                 Ok(val) => {
                     if val.ast_depth() > 5 {
-                        println!("{:03} ✅\n{}\n", counter, val);
+                        println!("{counter:03} ✅\n{val}\n");
                     } else {
-                        println!("{:03} ✅ {}\n", counter, val);
+                        println!("{counter:03} ✅ {val}\n");
                     }
                     Ok(())
                 }
                 Err(e) => {
-                    eprintln!("{:03} ❌ {}\n", counter, e);
+                    eprintln!("{counter:03} ❌ {e}\n");
                     Ok(())
                 }
             }
@@ -213,12 +211,12 @@ fn parse_eval_print(
 
         Err(_) => {
             if rogato_common::util::is_compilation_enabled() {
-                let func_name = format!("repl_{}", counter);
+                let func_name = format!("repl_{counter}");
                 let code = format!("let {} = {}", func_name, code.trim());
                 return match parse(code.as_str(), parse_ctx) {
                     Ok(ast) => {
                         if rogato_common::util::is_debug_enabled() {
-                            println!("{:03} 🌳 {:?}\n\n{}\n", counter, ast, ast);
+                            println!("{counter:03} 🌳 {ast:?}\n\n{ast}\n");
                         }
 
                         compiler.codegen_program(&ast)?;
@@ -229,12 +227,12 @@ fn parse_eval_print(
                                 .get_function::<F32JITFunc>(func_name.as_str())?;
 
                             let result = tmp_function.call();
-                            println!("{:03} ✅ {}\n", counter, result);
+                            println!("{counter:03} ✅ {result}\n");
                             return Ok(());
                         }
                     }
                     Err(e) => {
-                        eprintln!("{:03} ❌ {:?}\n", counter, e);
+                        eprintln!("{counter:03} ❌ {e:?}\n");
                         Ok(())
                     }
                 };
@@ -243,26 +241,26 @@ fn parse_eval_print(
             match parse_expr(code.trim(), parse_ctx) {
                 Ok(ast) => {
                     if rogato_common::util::is_debug_enabled() {
-                        println!("{:03} 🌳 {:?}\n\n{}\n", counter, ast, ast);
+                        println!("{counter:03} 🌳 {ast:?}\n\n{ast}\n");
                     }
 
                     match ast.evaluate(eval_ctx) {
                         Ok(val) => {
                             if val.ast_depth() > 5 {
-                                println!("{:03} ✅\n{}\n", counter, val);
+                                println!("{counter:03} ✅\n{val}\n");
                             } else {
-                                println!("{:03} ✅ {}\n", counter, val);
+                                println!("{counter:03} ✅ {val}\n");
                             }
                             Ok(())
                         }
                         Err(e) => {
-                            eprintln!("{:03} ❌ {}\n", counter, e);
+                            eprintln!("{counter:03} ❌ {e}\n");
                             Ok(())
                         }
                     }
                 }
                 Err(e) => {
-                    eprintln!("{:03} ❌ {:?}\n", counter, e);
+                    eprintln!("{counter:03} ❌ {e:?}\n");
                     Ok(())
                 }
             }

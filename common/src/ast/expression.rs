@@ -185,7 +185,7 @@ fn display_quoted_expr<Expr: Display>(
     f: &mut std::fmt::Formatter<'_>,
     expr: &Expr,
 ) -> std::fmt::Result {
-    let expr_fmt = format!("{}", expr);
+    let expr_fmt = format!("{expr}");
     if expr_fmt.starts_with('(') && expr_fmt.ends_with(')') {
         f.write_str("^")?;
         expr_fmt.fmt(f)
@@ -200,7 +200,7 @@ fn display_unquoted_expr<Expr: Display>(
     f: &mut std::fmt::Formatter<'_>,
     expr: &Expr,
 ) -> std::fmt::Result {
-    let expr_fmt = format!("{}", expr);
+    let expr_fmt = format!("{expr}");
     if expr_fmt.starts_with('(') && expr_fmt.ends_with(')') {
         f.write_str("~")?;
         expr_fmt.fmt(f)

@@ -2,7 +2,7 @@ use indent_write::indentable::Indentable;
 use std::fmt::Display;
 
 pub fn print_error<E: std::fmt::Debug>(error: E) -> E {
-    eprintln!("Error: {:?}", error);
+    eprintln!("Error: {error:?}");
     error
 }
 

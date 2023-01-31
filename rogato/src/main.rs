@@ -78,12 +78,12 @@ fn main() -> anyhow::Result<()> {
         }
         Command::EvaluateFile(file_info) => {
             for file in file_info.files.iter() {
-                println!("Attempting file parse: {}", file);
+                println!("Attempting file parse: {file}");
                 let file_path = Path::new(file);
                 if file_path.exists() {
                     read_parse_file(file_path, &parser_ctx);
                 } else {
-                    eprintln!("File not found: {:?}. Aborting.", file);
+                    eprintln!("File not found: {file:?}. Aborting.");
                 }
             }
         }
@@ -106,7 +106,7 @@ fn read_parse_file(file_path: &Path, parser_ctx: &ParserContext) {
             print_parse_result(buf.as_str(), &parse_result);
         }
         Err(error) => {
-            println!("Could not open source file: {:?}", error);
+            println!("Could not open source file: {error:?}");
         }
     }
 }
@@ -115,12 +115,12 @@ fn print_parse_result<T: Display, E: Display>(code: &str, result: &Result<T, E>)
     let lines = code.split('\n');
     let line_count = Vec::from_iter(lines.to_owned()).len();
     let (_, code_with_line_numbers) = lines.fold((1, String::new()), |(counter, acc), line| {
-        let mut string = format!("{}\n{:02}  {}", acc, counter, line);
+        let mut string = format!("{acc}\n{counter:02}  {line}");
         if line_count > 100 {
-            string = format!("{}\n{:03}  {}", acc, counter, line)
+            string = format!("{acc}\n{counter:03}  {line}")
         }
         if line_count > 1000 {
-            string = format!("{}\n{:03}  {}", acc, counter, line)
+            string = format!("{acc}\n{counter:03}  {line}")
         }
 
         (counter + 1, string)
@@ -128,6 +128,6 @@ fn print_parse_result<T: Display, E: Display>(code: &str, result: &Result<T, E>)
 
     match result {
         Ok(expr) => println!("🌳 ✅\n{}\n\n", expr.indented("\t")),
-        Err(error) => println!("❌{}\n\n❌\t{}\n\n", code_with_line_numbers, error),
+        Err(error) => println!("❌{code_with_line_numbers}\n\n❌\t{error}\n\n"),
     }
 }

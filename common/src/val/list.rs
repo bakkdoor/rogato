@@ -101,14 +101,14 @@ impl Display for List {
         let items: TupleItems<Value> = TupleItems::from_iter(self.iter().map(Rc::clone));
 
         if items.ast_depth() > 6 {
-            let items_str = format!("{}", items);
+            let items_str = format!("{items}");
             if items_str.lines().count() == 1 {
-                fmt.write_fmt(format_args!("[ {} ]", items))
+                fmt.write_fmt(format_args!("[ {items} ]"))
             } else {
                 fmt.write_fmt(format_args!("[\n{}\n]", indent(&items)))
             }
         } else {
-            fmt.write_fmt(format_args!("[ {} ]", items))
+            fmt.write_fmt(format_args!("[ {items} ]"))
         }
     }
 }
