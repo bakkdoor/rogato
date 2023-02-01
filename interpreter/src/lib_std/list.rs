@@ -138,5 +138,34 @@ pub fn module() -> Module {
         }
     });
 
+    module.fn_def_native(
+        "inChunksOf",
+        &["list", "chunkSize"],
+        move |_ctx, args| -> Result<ValueRef, NativeFnError> {
+            let error = Err(invalid_args("Std.List.inChunksOf"));
+            match (args.len(), args.get(0), args.get(1)) {
+                (2, Some(a), Some(b)) => match (&**a, &**b) {
+                    (Value::List(items), Value::Number(chunk_size)) => {
+                        if chunk_size.is_zero() {
+                            return Err(NativeFnError::EvaluationFailed(
+                                "Std.List.inChunksOf".into(),
+                                "chunkSize must be greater than 0".into(),
+                            ));
+                        }
+                        let chunk_size: usize = usize::try_from(*chunk_size).unwrap();
+                        let mut result: Vec<ValueRef> =
+                            Vec::with_capacity(items.len() / chunk_size);
+                        for chunk in items.chunks(chunk_size) {
+                            result.push(chunk.into())
+                        }
+                        Ok(val::list(result))
+                    }
+                    _ => error,
+                },
+                _ => error,
+            }
+        },
+    );
+
     module
 }

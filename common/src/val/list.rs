@@ -62,6 +62,17 @@ impl List {
         }
         Self { entries: joined }
     }
+
+    pub fn chunks(&self, chunk_size: usize) -> Vec<Self> {
+        let mut chunks = Vec::with_capacity(self.len() / chunk_size);
+        let entries: Vec<ValueRef> = self.entries.iter().cloned().collect();
+
+        for chunk in entries.chunks(chunk_size).into_iter() {
+            chunks.push(List::from_iter(chunk.iter().cloned()));
+        }
+
+        chunks
+    }
 }
 
 impl Default for List {

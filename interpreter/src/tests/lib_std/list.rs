@@ -162,6 +162,15 @@ fn std_list_module() {
             "List.reject (range 5) ^Math.isOdd",
             val::list([val::number(0), val::number(2), val::number(4)]),
         ),
+        (
+            "range 1 11 |> List.inChunksOf 3",
+            val::list([
+                val::list([val::number(1), val::number(2), val::number(3)]),
+                val::list([val::number(4), val::number(5), val::number(6)]),
+                val::list([val::number(7), val::number(8), val::number(9)]),
+                val::list([val::number(10)]),
+            ]),
+        ),
     ];
 
     let mut eval_ctx = EvalContext::new();
