@@ -72,9 +72,7 @@ pub fn run_repl(files_to_load: &[String]) -> anyhow::Result<()> {
                             println!("✅ {}", file_path.display());
                         }
                         Err(e) => {
-                            eprintln!(
-                                "❌ {file_path_string}\n\t\tFailed to evaluate file: {e}"
-                            )
+                            eprintln!("❌ {file_path_string}\n\t\tFailed to evaluate file: {e}")
                         }
                     },
                     Err(e) => {
@@ -83,9 +81,7 @@ pub fn run_repl(files_to_load: &[String]) -> anyhow::Result<()> {
                 }
             }
             Err(error) => {
-                eprintln!(
-                    "❌ {file_path_string}\n\t\tCould not open source file: {error:?}"
-                );
+                eprintln!("❌ {file_path_string}\n\t\tCould not open source file: {error:?}");
             }
         }
     }

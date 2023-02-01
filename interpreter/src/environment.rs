@@ -34,12 +34,8 @@ impl Imports {
                 .map(|id| match id {
                     ImportedIdentifier::Func(id) => id.clone(),
                     ImportedIdentifier::Type(id) => id.clone(),
-                    ImportedIdentifier::AliasedFunc(id, alias) => {
-                        format!("{id} as {alias}").into()
-                    }
-                    ImportedIdentifier::AliasedType(id, alias) => {
-                        format!("{id} as {alias}").into()
-                    }
+                    ImportedIdentifier::AliasedFunc(id, alias) => format!("{id} as {alias}").into(),
+                    ImportedIdentifier::AliasedType(id, alias) => format!("{id} as {alias}").into(),
                 })
                 .collect(),
         }
@@ -377,9 +373,7 @@ impl Environment {
                                 if import_id_matches(iid, id) {
                                     let module =
                                         self.lookup_module(module_id).unwrap_or_else(|| {
-                                            panic!(
-                                                "module should exist: {module_id} for fn: {id}"
-                                            )
+                                            panic!("module should exist: {module_id} for fn: {id}")
                                         });
                                     return Some(module);
                                 }
