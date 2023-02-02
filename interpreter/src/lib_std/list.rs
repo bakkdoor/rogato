@@ -244,5 +244,35 @@ pub fn module() -> Module {
         },
     );
 
+    module.fn_def_native(
+        "pairWithNext",
+        &["list"],
+        move |_ctx, args| -> Result<ValueRef, NativeFnError> {
+            let error = Err(invalid_args("Std.List.pairWithNext"));
+            match (args.len(), args.get(0)) {
+                (1, Some(a)) => match &**a {
+                    Value::List(items) => {
+                        let mut result: Vec<ValueRef> = Vec::with_capacity(items.len() * 2);
+                        let mut iter = items.iter();
+                        if let Some(first) = iter.next() {
+                            let mut prev = first;
+                            for item in iter {
+                                result.push(val::tuple([
+                                    ValueRef::clone(prev),
+                                    ValueRef::clone(item),
+                                ]));
+
+                                prev = item;
+                            }
+                        }
+                        Ok(val::list(result))
+                    }
+                    _ => error,
+                },
+                _ => error,
+            }
+        },
+    );
+
     module
 }
