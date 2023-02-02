@@ -193,6 +193,18 @@ fn std_list_module() {
                 (val::number(5), val::number(2)),
             ]),
         ),
+        (
+            "range 1 5 |> List.intersperse 0",
+            val::list([
+                val::number(1),
+                val::number(0),
+                val::number(2),
+                val::number(0),
+                val::number(3),
+                val::number(0),
+                val::number(4),
+            ]),
+        ),
     ];
 
     let mut eval_ctx = EvalContext::new();

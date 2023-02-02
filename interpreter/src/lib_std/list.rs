@@ -221,5 +221,28 @@ pub fn module() -> Module {
         },
     );
 
+    module.fn_def_native(
+        "intersperse",
+        &["list", "value"],
+        move |_ctx, args| -> Result<ValueRef, NativeFnError> {
+            let error = Err(invalid_args("Std.List.intersperse"));
+            match (args.len(), args.get(0), args.get(1)) {
+                (2, Some(a), Some(value)) => match &**a {
+                    Value::List(items) => {
+                        let mut result: Vec<ValueRef> = Vec::with_capacity(items.len() * 2);
+                        for item in items.iter() {
+                            result.push(ValueRef::clone(item));
+                            result.push(ValueRef::clone(value));
+                        }
+                        result.pop();
+                        Ok(val::list(result))
+                    }
+                    _ => error,
+                },
+                _ => error,
+            }
+        },
+    );
+
     module
 }
