@@ -67,7 +67,7 @@ impl List {
         let mut chunks = Vec::with_capacity(self.len() / chunk_size);
         let entries: Vec<ValueRef> = self.entries.iter().cloned().collect();
 
-        for chunk in entries.chunks(chunk_size).into_iter() {
+        for chunk in entries.chunks(chunk_size) {
             chunks.push(List::from_iter(chunk.iter().cloned()));
         }
 
