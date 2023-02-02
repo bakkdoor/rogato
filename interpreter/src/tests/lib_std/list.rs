@@ -261,6 +261,62 @@ fn std_list_module() {
                 val::tuple([val::number(5), val::number(5)]),
             ]),
         ),
+        ("List.flatten []", val::list([])),
+        (
+            "List.flatten [[1,2,3]]",
+            val::list([val::number(1), val::number(2), val::number(3)]),
+        ),
+        (
+            "List.flatten [[1,2,3], [4,5,6]]",
+            val::list([
+                val::number(1),
+                val::number(2),
+                val::number(3),
+                val::number(4),
+                val::number(5),
+                val::number(6),
+            ]),
+        ),
+        (
+            "List.flatten [[1,2,3], [^hello, \"world\"]]",
+            val::list([
+                val::number(1),
+                val::number(2),
+                val::number(3),
+                val::symbol("hello"),
+                val::string("world"),
+            ]),
+        ),
+        ("List.flatMap [] (x -> [x])", val::list([])),
+        (
+            "List.flatMap [1,2,3] (x -> [x])",
+            val::list([val::number(1), val::number(2), val::number(3)]),
+        ),
+        (
+            "List.flatMap [1,2,3] (x -> [x, x])",
+            val::list([
+                val::number(1),
+                val::number(1),
+                val::number(2),
+                val::number(2),
+                val::number(3),
+                val::number(3),
+            ]),
+        ),
+        (
+            "List.flatMap [^hello, 1, ^world] (x -> [x, x, x])",
+            val::list([
+                val::symbol("hello"),
+                val::symbol("hello"),
+                val::symbol("hello"),
+                val::number(1),
+                val::number(1),
+                val::number(1),
+                val::symbol("world"),
+                val::symbol("world"),
+                val::symbol("world"),
+            ]),
+        ),
     ];
 
     let mut eval_ctx = EvalContext::new();
