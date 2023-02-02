@@ -239,6 +239,28 @@ fn std_list_module() {
                 val::tuple([val::string("bar"), val::string("baz")]),
             ]),
         ),
+        (
+            "List.reduceRight [1,2,3,4,5] 0 (acc x -> acc + x)",
+            val::number(15),
+        ),
+        (
+            "List.reduceRight [1,2,3,4,5] 1 (acc x -> acc * x)",
+            val::number(120),
+        ),
+        (
+            "List.reduceRight [1,2,3,4,5] 0 (acc x -> acc - x)",
+            val::number(-15),
+        ),
+        (
+            "List.reduceRight [1,2,3,4,5] [] (acc x -> [{x, x} :: acc])",
+            val::list([
+                val::tuple([val::number(1), val::number(1)]),
+                val::tuple([val::number(2), val::number(2)]),
+                val::tuple([val::number(3), val::number(3)]),
+                val::tuple([val::number(4), val::number(4)]),
+                val::tuple([val::number(5), val::number(5)]),
+            ]),
+        ),
     ];
 
     let mut eval_ctx = EvalContext::new();

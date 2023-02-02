@@ -303,5 +303,49 @@ pub fn module() -> Module {
         },
     );
 
+    // a list of common Std.List helper function used in many algorithms:
+
+    module.fn_def_native(
+        "reduceRight",
+        &["list", "initial", "fn"],
+        move |ctx, args| -> Result<ValueRef, NativeFnError> {
+            let error = Err(invalid_args("Std.List.reduceRight"));
+            match (args.len(), args.get(0), args.get(1), args.get(2)) {
+                (3, Some(a), Some(initial), Some(fn_val)) => match (&**a, &**fn_val) {
+                    (Value::List(items), Value::Symbol(fn_id)) => {
+                        let mut result = ValueRef::clone(initial);
+                        for item in items.reverse().iter() {
+                            result = match ctx
+                                .call_function(fn_id, &[result, ValueRef::clone(item)])
+                            {
+                                Some(val) => ValueRef::clone(&val?),
+                                None => return Err(NativeFnError::EvaluationFailed(
+                                    fn_id.clone(),
+                                    format!(
+                                        "FunctionRef invalid in ^Std.List.reduceRight: ^{fn_id}"
+                                    ),
+                                )),
+                            }
+                        }
+                        Ok(result)
+                    }
+                    (Value::List(items), Value::Lambda(lambda_ctx, lambda)) => {
+                        let mut result = ValueRef::clone(initial);
+                        for item in items.reverse().iter() {
+                            result = ctx.call_lambda(
+                                Rc::clone(lambda_ctx),
+                                lambda,
+                                &[result, ValueRef::clone(item)],
+                            )?;
+                        }
+                        Ok(result)
+                    }
+                    _ => error,
+                },
+                _ => error,
+            }
+        },
+    );
+
     module
 }
