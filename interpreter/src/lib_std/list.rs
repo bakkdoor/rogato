@@ -24,6 +24,8 @@ pub fn module() -> Module {
         "reduceRight".into(),
         "flatten".into(),
         "flatMap".into(),
+        "contains".into(),
+        "findIndex".into(),
     ]));
 
     module.fn_def_native(
@@ -414,6 +416,58 @@ pub fn module() -> Module {
                             }
                         }
                         Ok(val::list(result))
+                    }
+                    _ => error,
+                },
+                _ => error,
+            }
+        },
+    );
+
+    module.fn_def_native(
+        "contains",
+        &["list", "item"],
+        move |_ctx, args| -> Result<ValueRef, NativeFnError> {
+            let error = Err(invalid_args("Std.List.contains"));
+            match (args.len(), args.get(0), args.get(1)) {
+                (2, Some(a), Some(item)) => match &**a {
+                    Value::List(items) => Ok(val::bool(items.contains(item))),
+                    _ => error,
+                },
+                _ => error,
+            }
+        },
+    );
+
+    module.fn_def_native(
+        "findIndex",
+        &["list", "item"],
+        move |ctx, args| -> Result<ValueRef, NativeFnError> {
+            let error = Err(invalid_args("Std.List.findIndex"));
+            match (args.len(), args.get(0), args.get(1)) {
+                (2, Some(a), Some(item)) => match (&**a, &**item) {
+                    (Value::List(items), Value::Lambda(lambda_ctx, lambda)) => {
+                        for (index, item) in items.iter().enumerate() {
+                            match &*ctx.call_lambda(
+                                Rc::clone(lambda_ctx),
+                                lambda,
+                                &[ValueRef::clone(item)],
+                            )? {
+                                Value::Bool(true) => return Ok(val::number(index)),
+                                Value::Bool(false) => {}
+                                _ => continue,
+                            }
+                        }
+                        Ok(val::none())
+                    }
+                    (Value::List(items), _) => {
+                        let index = items
+                            .iter()
+                            .position(|x| x == item)
+                            .map(val::number)
+                            .unwrap_or(val::none());
+
+                        Ok(index)
                     }
                     _ => error,
                 },

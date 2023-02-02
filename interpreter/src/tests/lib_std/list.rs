@@ -317,6 +317,15 @@ fn std_list_module() {
                 val::symbol("world"),
             ]),
         ),
+        ("List.contains [1,2,3] 1", val::bool(true)),
+        ("List.contains [1,2,3] 4", val::bool(false)),
+        ("List.contains [1,2,3] 2", val::bool(true)),
+        ("List.findIndex [1,2,3] 1", val::number(0)),
+        ("List.findIndex [1,2,3] 4", val::none()),
+        ("List.findIndex [1,2,3] 2", val::number(1)),
+        ("List.findIndex [1,2,3] (x -> x == 1)", val::number(0)),
+        ("List.findIndex [1,2,3] (x -> x == 4)", val::none()),
+        ("List.findIndex [1,2,3] (x -> x == 2)", val::number(1)),
     ];
 
     let mut eval_ctx = EvalContext::new();

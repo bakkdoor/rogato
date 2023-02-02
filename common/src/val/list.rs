@@ -73,6 +73,10 @@ impl List {
 
         chunks
     }
+
+    pub fn contains(&self, item: &ValueRef) -> bool {
+        self.entries.iter().any(|i| i.eq(item))
+    }
 }
 
 impl Default for List {
