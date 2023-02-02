@@ -5,7 +5,7 @@ use rogato_common::{
     native_fn::NativeFnError,
     val::{self, Value, ValueRef},
 };
-use std::rc::Rc;
+use std::{collections::HashMap, rc::Rc};
 
 pub fn module() -> Module {
     let mut module = Module::new("Std.List");
@@ -159,6 +159,60 @@ pub fn module() -> Module {
                             result.push(chunk.into())
                         }
                         Ok(val::list(result))
+                    }
+                    _ => error,
+                },
+                _ => error,
+            }
+        },
+    );
+
+    module.fn_def_native(
+        "countByGroups",
+        &["list", "groupByFn"],
+        move |ctx, args| -> Result<ValueRef, NativeFnError> {
+            let error = Err(invalid_args("Std.List.countByGroups"));
+            match (args.len(), args.get(0), args.get(1)) {
+                (2, Some(a), Some(b)) => match (&**a, &**b) {
+                    (Value::List(items), Value::Symbol(fn_id)) => {
+                        let mut result: HashMap<ValueRef, usize> = HashMap::new();
+                        for item in items.iter() {
+                            let key = match ctx.call_function(fn_id, &[ValueRef::clone(item)]) {
+                                Some(val) => val?,
+                                None => {
+                                    return Err(NativeFnError::EvaluationFailed(
+                                        fn_id.clone(),
+                                        format!("FunctionRef invalid in ^countByGroups: ^{fn_id}"),
+                                    ))
+                                }
+                            };
+                            let count = result.entry(key).or_insert(0);
+                            *count += 1;
+                        }
+
+                        Ok(val::map(
+                            result
+                                .iter()
+                                .map(|(k, v)| (ValueRef::clone(k), val::number(*v))),
+                        ))
+                    }
+                    (Value::List(items), Value::Lambda(lambda_ctx, lambda)) => {
+                        let mut result: HashMap<ValueRef, usize> = HashMap::new();
+                        for item in items.iter() {
+                            let key = ctx.call_lambda(
+                                Rc::clone(lambda_ctx),
+                                lambda,
+                                &[ValueRef::clone(item)],
+                            )?;
+                            let count = result.entry(key).or_insert(0);
+                            *count += 1;
+                        }
+
+                        Ok(val::map(
+                            result
+                                .iter()
+                                .map(|(k, v)| (ValueRef::clone(k), val::number(*v))),
+                        ))
                     }
                     _ => error,
                 },

@@ -171,6 +171,28 @@ fn std_list_module() {
                 val::list([val::number(10)]),
             ]),
         ),
+        (
+            "range 0 10 |> List.countByGroups ^Math.isEven",
+            val::map([
+                (val::bool(true), val::number(5)),
+                (val::bool(false), val::number(5)),
+            ]),
+        ),
+        (
+            "range 0 10 |> List.countByGroups ^Math.isOdd",
+            val::map([
+                (val::bool(true), val::number(5)),
+                (val::bool(false), val::number(5)),
+            ]),
+        ),
+        (
+            "[\"foo\", \"hello\", \"bar\", \"world\", \"baz\"]
+            |> List.countByGroups ^String.length",
+            val::map([
+                (val::number(3), val::number(3)),
+                (val::number(5), val::number(2)),
+            ]),
+        ),
     ];
 
     let mut eval_ctx = EvalContext::new();
