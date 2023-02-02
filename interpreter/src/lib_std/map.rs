@@ -144,5 +144,22 @@ pub fn module() -> Module {
         }
     });
 
+    module.fn_def_native(
+        "getOrElse",
+        &["map", "key", "default"],
+        move |_ctx, args| {
+            let error = Err(invalid_args("Std.Map.getOrElse"));
+
+            match (args.len(), args.get(0), args.get(1), args.get(2)) {
+                (3, Some(map), Some(key), Some(default)) => match &**map {
+                    Value::Map(map) => Ok(map.get(key).unwrap_or(ValueRef::clone(default))),
+                    _ => error,
+                },
+
+                (_, _, _, _) => error,
+            }
+        },
+    );
+
     module
 }

@@ -153,6 +153,23 @@ fn std_map_module() {
                 ]),
             ]),
         ),
+        (
+            "let
+                map = {^foo: 1, ^bar: {1, 2, 3}, {1, 2}: ^wat}
+            in
+                {
+                    map |> Map.getOrElse ^foo 2,
+                    map |> Map.getOrElse ^baz 2,
+                    map |> Map.getOrElse {1, 2} 2,
+                    map |> Map.getOrElse {1, 3} 2,
+                }",
+            val::tuple([
+                val::number(1),
+                val::number(2),
+                val::symbol("wat"),
+                val::number(2),
+            ]),
+        ),
     ];
 
     let mut eval_ctx = EvalContext::new();
