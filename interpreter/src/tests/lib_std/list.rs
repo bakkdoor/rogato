@@ -221,6 +221,24 @@ fn std_list_module() {
                 val::tuple([val::string("bar"), val::string("baz")]),
             ]),
         ),
+        (
+            "List.pairWithPrevious [1,2,3,4,5]",
+            val::list([
+                val::tuple([val::none(), val::number(1)]),
+                val::tuple([val::number(1), val::number(2)]),
+                val::tuple([val::number(2), val::number(3)]),
+                val::tuple([val::number(3), val::number(4)]),
+                val::tuple([val::number(4), val::number(5)]),
+            ]),
+        ),
+        (
+            "List.pairWithPrevious [\"foo\", \"bar\", \"baz\"]",
+            val::list([
+                val::tuple([val::none(), val::string("foo")]),
+                val::tuple([val::string("foo"), val::string("bar")]),
+                val::tuple([val::string("bar"), val::string("baz")]),
+            ]),
+        ),
     ];
 
     let mut eval_ctx = EvalContext::new();
