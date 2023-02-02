@@ -16,6 +16,10 @@ pub fn module() -> Module {
         "head".into(),
         "tail".into(),
         "length".into(),
+        "inChunksOf".into(),
+        "countByGroups".into(),
+        "intersperse".into(),
+        "pairWithNext".into(),
     ]));
 
     module.fn_def_native(
