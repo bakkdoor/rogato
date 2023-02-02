@@ -170,6 +170,36 @@ fn std_map_module() {
                 val::number(2),
             ]),
         ),
+        (
+            "let
+                map = {^foo: 1, ^bar: {1, 2, 3}, {1, 2}: ^wat}
+            in
+                map |> Map.filter (k v -> k == ^foo)",
+            val::map([(val::symbol("foo"), val::number(1))]),
+        ),
+        (
+            "let
+                map = {^foo: 1, ^bar: {1, 2, 3}, {1, 2}: ^wat}
+            in
+                map |> Map.filter (k v -> v == {1, 2, 3})",
+            val::map([(
+                val::symbol("bar"),
+                val::tuple([val::number(1), val::number(2), val::number(3)]),
+            )]),
+        ),
+        (
+            "let
+                map = {^foo: 1, ^bar: {1, 2, 3}, {1, 2}: ^wat}
+            in
+                map |> Map.filter (k v -> (k == ^foo) || (v == {1, 2, 3}))",
+            val::map([
+                (val::symbol("foo"), val::number(1)),
+                (
+                    val::symbol("bar"),
+                    val::tuple([val::number(1), val::number(2), val::number(3)]),
+                ),
+            ]),
+        ),
     ];
 
     let mut eval_ctx = EvalContext::new();

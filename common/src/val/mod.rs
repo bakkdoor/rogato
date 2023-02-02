@@ -144,6 +144,14 @@ impl Value {
     pub fn is_none(&self) -> bool {
         matches!(self, Value::Option(None))
     }
+
+    pub fn is_falsy(&self) -> bool {
+        matches!(self, Value::Option(None) | Value::Bool(false))
+    }
+
+    pub fn is_truthy(&self) -> bool {
+        !self.is_falsy()
+    }
 }
 
 impl From<Option<ValueRef>> for Value {

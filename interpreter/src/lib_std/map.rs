@@ -161,5 +161,58 @@ pub fn module() -> Module {
         },
     );
 
+    module.fn_def_native("filter", &["map", "func"], move |ctx, args| {
+        let error = Err(invalid_args("Std.Map.filter"));
+
+        match (args.len(), args.get(0), args.get(1)) {
+            (2, Some(map), Some(func)) => match (&**map, &**func) {
+                (Value::Map(map), Value::Lambda(lambda_ctx, lambda)) => {
+                    let mut new_map = val::Map::new();
+
+                    for (key, value) in map.iter() {
+                        let result = ctx.call_lambda(
+                            Rc::clone(lambda_ctx),
+                            lambda,
+                            &[ValueRef::clone(key), ValueRef::clone(value)],
+                        )?;
+
+                        if result.is_truthy() {
+                            new_map = new_map.insert(ValueRef::clone(key), ValueRef::clone(value));
+                        }
+                    }
+
+                    Ok(ValueRef::new(Value::Map(new_map)))
+                }
+                (Value::Map(map), Value::Symbol(fn_id)) => {
+                    let mut new_map = val::Map::new();
+
+                    for (key, value) in map.iter() {
+                        match ctx.call_function(fn_id, &[ValueRef::clone(value)]) {
+                            Some(Ok(result)) => {
+                                if result.is_truthy() {
+                                    new_map = new_map
+                                        .insert(ValueRef::clone(key), ValueRef::clone(value));
+                                }
+                            }
+                            Some(Err(e)) => return Err(e),
+                            None => {
+                                return Err(
+                                    rogato_common::native_fn::NativeFnError::InvalidArguments(
+                                        "Std.Map.filter".into(),
+                                    ),
+                                )
+                            }
+                        }
+                    }
+
+                    Ok(ValueRef::new(Value::Map(new_map)))
+                }
+                _ => error,
+            },
+
+            (_, _, _) => error,
+        }
+    });
+
     module
 }
