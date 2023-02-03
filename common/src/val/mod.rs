@@ -46,7 +46,11 @@ pub fn string<S: ToString>(s: S) -> ValueRef {
 }
 
 pub fn symbol<ID: Into<Identifier>>(s: ID) -> ValueRef {
-    ValueRef::new(Value::Symbol(s.into()))
+    let id: Identifier = s.into();
+    if id.is_empty() {
+        panic!("Blank identifier is not allowed as a symbol")
+    }
+    ValueRef::new(Value::Symbol(id))
 }
 
 pub fn bool(b: bool) -> ValueRef {

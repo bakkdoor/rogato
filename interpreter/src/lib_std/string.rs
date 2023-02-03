@@ -13,6 +13,7 @@ pub fn module() -> Module {
         "split".into(),
         "uppercase".into(),
         "lowercase".into(),
+        "toSymbol".into(),
     ]));
 
     module.fn_def_native("length", &["string"], move |_ctx, args| {
@@ -69,6 +70,26 @@ pub fn module() -> Module {
         match args.get(0) {
             Some(val) => match &**val {
                 Value::String(string) => Ok(val::string(string.to_lowercase())),
+                _ => error,
+            },
+            _ => error,
+        }
+    });
+
+    module.fn_def_native("toSymbol", &["string"], move |_ctx, args| {
+        let error = Err(invalid_args("Std.String.toSymbol"));
+        match args.get(0) {
+            Some(val) => match &**val {
+                Value::String(string) => {
+                    let string = string.trim();
+                    if string.contains(' ') {
+                        return Err(invalid_args("Std.String.toSymbol: string contains spaces"));
+                    }
+                    if string.is_empty() {
+                        return Err(invalid_args("Std.String.toSymbol: empty string"));
+                    }
+                    Ok(val::symbol(string))
+                }
                 _ => error,
             },
             _ => error,

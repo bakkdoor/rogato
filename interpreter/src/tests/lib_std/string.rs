@@ -41,6 +41,13 @@ fn std_string_module() {
             "String.uppercase \" FOOO_baR\t!\"",
             val::string(" FOOO_BAR\t!"),
         ),
+        ("String.toSymbol \"foo\"", val::symbol("foo")),
+        ("String.toSymbol \"foo \"", val::symbol("foo")),
+        ("String.toSymbol \" foo\"", val::symbol("foo")),
+        ("String.toSymbol \" foo \"", val::symbol("foo")),
+        ("String.toSymbol \"fooBar\"", val::symbol("fooBar")),
+        ("String.toSymbol \"fooBarBaz\"", val::symbol("fooBarBaz")),
+        ("String.toSymbol \" fooBarBaz \"", val::symbol("fooBarBaz")),
     ];
 
     let mut eval_ctx = EvalContext::new();
