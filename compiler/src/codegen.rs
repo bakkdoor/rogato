@@ -192,6 +192,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             "-" => Ok(self.builder.build_float_sub(left, right, "tmp_sub")),
             "*" => Ok(self.builder.build_float_mul(left, right, "tmp_mul")),
             "/" => Ok(self.builder.build_float_div(left, right, "tmp_div")),
+            "%" => Ok(self.builder.build_float_rem(left, right, "tmp_rem")),
             _ => Err(CodegenError::OpNotDefined(id.clone())),
         }
     }
