@@ -153,15 +153,33 @@ fn std_map_module() {
                 ]),
             ]),
         ),
+        // 3 test cases for Std.Map.getOrElse
         (
             "let
                 map = {^foo: 1, ^bar: {1, 2, 3}, {1, 2}: ^wat}
             in
                 {
-                    map |> Map.getOrElse ^foo 2,
-                    map |> Map.getOrElse ^baz 2,
-                    map |> Map.getOrElse {1, 2} 2,
-                    map |> Map.getOrElse {1, 3} 2,
+                    map |> Map.getOrElse ^foo (-> {2, 2}),
+                    map |> Map.getOrElse ^baz (-> {2, 2}),
+                    map |> Map.getOrElse {1, 2} (-> 2),
+                    map |> Map.getOrElse {1, 3} (-> 2),
+                }",
+            val::tuple([
+                val::number(1),
+                val::tuple([val::number(2), val::number(2)]),
+                val::symbol("wat"),
+                val::number(2),
+            ]),
+        ),
+        (
+            "let
+                map = {^foo: 1, ^bar: {1, 2, 3}, {1, 2}: ^wat}
+            in
+                {
+                    map |> Map.getOrDefault ^foo 2,
+                    map |> Map.getOrDefault ^baz 2,
+                    map |> Map.getOrDefault {1, 2} 2,
+                    map |> Map.getOrDefault {1, 3} 2,
                 }",
             val::tuple([
                 val::number(1),

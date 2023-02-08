@@ -18,6 +18,9 @@ pub fn module() -> Module {
         "remove".into(),
         "merge".into(),
         "length".into(),
+        "getOrDefault".into(),
+        "getOrElse".into(),
+        "filter".into(),
     ]));
 
     module.fn_def_native("new", &[], move |_ctx, _args| {
@@ -145,14 +148,42 @@ pub fn module() -> Module {
     });
 
     module.fn_def_native(
-        "getOrElse",
+        "getOrDefault",
         &["map", "key", "default"],
         move |_ctx, args| {
-            let error = Err(invalid_args("Std.Map.getOrElse"));
+            let error = Err(invalid_args("Std.Map.getOrDefault"));
 
             match (args.len(), args.get(0), args.get(1), args.get(2)) {
                 (3, Some(map), Some(key), Some(default)) => match &**map {
                     Value::Map(map) => Ok(map.get(key).unwrap_or(ValueRef::clone(default))),
+                    _ => error,
+                },
+
+                (_, _, _, _) => error,
+            }
+        },
+    );
+
+    module.fn_def_native(
+        "getOrElse",
+        &["map", "key", "defaultFn"],
+        move |ctx, args| {
+            let error = Err(invalid_args("Std.Map.getOrElse"));
+
+            match (args.len(), args.get(0), args.get(1), args.get(2)) {
+                (3, Some(map), Some(key), Some(default_fn)) => match (&**map, &**default_fn) {
+                    (Value::Map(map), Value::Lambda(lambda_ctx, lambda)) => match map.get(key) {
+                        Some(value) => Ok(value),
+                        None => ctx.call_lambda(Rc::clone(lambda_ctx), lambda, &[]),
+                    },
+                    (Value::Map(map), Value::Symbol(fn_id)) => match map.get(key) {
+                        Some(value) => Ok(value),
+                        None => match ctx.call_function(fn_id, &[]) {
+                            Some(Ok(value)) => Ok(value),
+                            Some(Err(e)) => Err(e),
+                            None => error,
+                        },
+                    },
                     _ => error,
                 },
 
@@ -195,13 +226,7 @@ pub fn module() -> Module {
                                 }
                             }
                             Some(Err(e)) => return Err(e),
-                            None => {
-                                return Err(
-                                    rogato_common::native_fn::NativeFnError::InvalidArguments(
-                                        "Std.Map.filter".into(),
-                                    ),
-                                )
-                            }
+                            None => return error,
                         }
                     }
 
