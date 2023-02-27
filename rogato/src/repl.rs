@@ -4,8 +4,11 @@ use std::path::Path;
 
 use rustyline::config::Configurer;
 use rustyline::error::ReadlineError;
+use rustyline::history::FileHistory;
 use rustyline::validate::MatchingBracketValidator;
-use rustyline::{Cmd, Editor, EventHandler, KeyCode, KeyEvent, Modifiers};
+use rustyline::{
+    Cmd, CompletionType, Config, EditMode, Editor, EventHandler, KeyCode, KeyEvent, Modifiers,
+};
 use rustyline_derive::{Completer, Helper, Highlighter, Hinter, Validator};
 
 use rogato_common::ast::ASTDepth;
@@ -20,11 +23,16 @@ struct InputValidator {
     brackets: MatchingBracketValidator,
 }
 
-fn validated_editor() -> Result<Editor<InputValidator>, ReadlineError> {
+fn validated_editor() -> Result<Editor<InputValidator, FileHistory>, ReadlineError> {
+    let config = Config::builder()
+        .history_ignore_space(true)
+        .completion_type(CompletionType::List)
+        .edit_mode(EditMode::Emacs)
+        .build();
     let h = InputValidator {
         brackets: MatchingBracketValidator::new(),
     };
-    let mut editor = Editor::new()?;
+    let mut editor = Editor::with_config(config)?;
     editor.set_helper(Some(h));
     editor.bind_sequence(
         KeyEvent(KeyCode::Down, Modifiers::SHIFT),
@@ -50,7 +58,7 @@ pub fn run_repl(files_to_load: &[String]) -> anyhow::Result<()> {
     let mut counter = 0usize;
 
     let mut rl = validated_editor()?;
-    rl.set_max_history_size(5000);
+    rl.set_max_history_size(5000)?;
 
     let mut path_buf = dirs::home_dir().unwrap();
     path_buf.push(".rogato_history.txt");
@@ -98,7 +106,7 @@ pub fn run_repl(files_to_load: &[String]) -> anyhow::Result<()> {
         let readline = rl.readline(format!("{counter:03} >  ").as_str());
         match readline {
             Ok(line) => {
-                rl.add_history_entry(line.as_str());
+                rl.add_history_entry(line.as_str())?;
                 match parse_eval_print(&parser_ctx, &mut eval_ctx, &mut compiler, counter, &line) {
                     Ok(_) => {
                         continue;
