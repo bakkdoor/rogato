@@ -77,6 +77,14 @@ impl List {
     pub fn contains(&self, item: &ValueRef) -> bool {
         self.entries.iter().any(|i| i.eq(item))
     }
+
+    pub fn contains_all(&self, other: &Self) -> bool {
+        other.iter().all(|i| self.contains(i))
+    }
+
+    pub fn contains_any(&self, other: &Self) -> bool {
+        other.iter().any(|i| self.contains(i))
+    }
 }
 
 impl Default for List {

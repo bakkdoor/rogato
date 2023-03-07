@@ -42,8 +42,50 @@ impl Queue {
         self.entries.dequeue().map(|entries| Self { entries })
     }
 
+    pub fn dequeue_or(&self, default: ValueRef) -> (ValueRef, Self) {
+        let value = self.peek_or(default);
+        let queue = self.dequeue().unwrap_or_default();
+        (value, queue)
+    }
+
+    pub fn dequeue_or_else(&self, default: impl FnOnce() -> ValueRef) -> (ValueRef, Self) {
+        let value = self.peek_or_else(default);
+        let queue = self.dequeue().unwrap_or_default();
+        (value, queue)
+    }
+
+    pub fn dequeue_or_insert(&self, default: ValueRef) -> (ValueRef, Self) {
+        let value = self.peek_or(ValueRef::clone(&default));
+        let queue = self.dequeue().unwrap_or_default();
+        (value, queue.enqueue(default))
+    }
+
+    pub fn dequeue_or_insert_with(&self, default: impl FnOnce() -> ValueRef) -> (ValueRef, Self) {
+        let value = self.peek_or_else(default);
+        let queue = self.dequeue().unwrap_or_default();
+        (ValueRef::clone(&value), queue.enqueue(value))
+    }
+
     pub fn peek(&self) -> Option<ValueRef> {
         self.entries.peek().map(ValueRef::clone)
+    }
+
+    pub fn peek_or(&self, default: ValueRef) -> ValueRef {
+        self.peek().unwrap_or(default)
+    }
+
+    pub fn peek_or_else(&self, default: impl FnOnce() -> ValueRef) -> ValueRef {
+        self.peek().unwrap_or_else(default)
+    }
+
+    pub fn peek_or_insert(&self, default: ValueRef) -> (ValueRef, Self) {
+        let value = self.peek_or(ValueRef::clone(&default));
+        (value, self.enqueue(default))
+    }
+
+    pub fn peek_or_insert_with(&self, default: impl FnOnce() -> ValueRef) -> (ValueRef, Self) {
+        let value = self.peek_or_else(default);
+        (ValueRef::clone(&value), self.enqueue(value))
     }
 }
 

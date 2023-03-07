@@ -38,6 +38,28 @@ impl Map {
         self.entries.get(key).map(ValueRef::clone)
     }
 
+    pub fn get_or(&self, key: &ValueRef, default: ValueRef) -> ValueRef {
+        self.get(key).unwrap_or(default)
+    }
+
+    pub fn get_or_else(&self, key: &ValueRef, default: impl FnOnce() -> ValueRef) -> ValueRef {
+        self.get(key).unwrap_or_else(default)
+    }
+
+    pub fn get_or_insert(&self, key: ValueRef, default: ValueRef) -> (ValueRef, Self) {
+        let value = self.get_or(&key, ValueRef::clone(&default));
+        (value, self.insert(key, default))
+    }
+
+    pub fn get_or_insert_with(
+        &self,
+        key: ValueRef,
+        default: impl FnOnce() -> ValueRef,
+    ) -> (ValueRef, Self) {
+        let value = self.get_or_else(&key, default);
+        (ValueRef::clone(&value), self.insert(key, value))
+    }
+
     pub fn is_empty(&self) -> bool {
         self.entries.is_empty()
     }
