@@ -34,7 +34,7 @@ impl ObjectStorage {
             Some(id) => id.to_owned(),
             None => {
                 let new_id = id(&id_s);
-                self.ids.insert(id_s.clone(), new_id.clone());
+                self.ids.insert(id_s.clone(), new_id);
                 new_id
             }
         }
