@@ -1,10 +1,7 @@
+use indradb::Database;
 pub use indradb::{
-    BulkInsertItem, Datastore, Edge, EdgeDirection, EdgeKey, EdgeProperties, EdgeProperty,
-    EdgePropertyQuery, EdgeQuery, EdgeQueryExt, Error, Identifier, PipePropertyPresenceEdgeQuery,
-    PipePropertyValueEdgeQuery, PipeVertexQuery, PropertyPresenceEdgeQuery,
-    PropertyPresenceVertexQuery, PropertyValueEdgeQuery, PropertyValueVertexQuery,
-    RangeVertexQuery, RocksdbDatastore, SpecificVertexQuery, Vertex, VertexPropertyQuery,
-    VertexQuery, VertexQueryExt,
+    BulkInsertItem, Datastore, Edge, EdgeDirection, EdgeProperties, EdgeProperty, Error,
+    Identifier, RangeVertexQuery, RocksdbDatastore, SpecificVertexQuery, Vertex,
 };
 pub use serde_json::Number;
 use std::path::Path;
@@ -15,12 +12,12 @@ pub mod object_storage;
 
 pub use object_storage::ObjectStorage;
 
-pub type DBResult<T> = Result<T, indradb::Error>;
+pub type DBResult<T> = Result<Database<T>, indradb::Error>;
 
 pub type ValidationResult<T> = Result<T, indradb::ValidationError>;
 
 pub fn open<P: AsRef<Path>>(db_path: P) -> DBResult<RocksdbDatastore> {
-    RocksdbDatastore::new(db_path, None)
+    RocksdbDatastore::new_db(db_path)
 }
 
 pub fn id<ID: ToString>(id: ID) -> Identifier {

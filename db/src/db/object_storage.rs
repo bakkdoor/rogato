@@ -1,13 +1,7 @@
+use std::collections::HashMap;
 use std::fmt::Debug;
-use std::{collections::HashMap, rc::Rc};
 
-use indradb::VertexPropertyQuery;
-
-use super::{
-    id,
-    object::{Object, PersistedObject},
-    DBResult, Datastore, Identifier, SpecificVertexQuery, VertexQuery,
-};
+use super::{id, Identifier};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct ObjectStorage {
@@ -46,28 +40,31 @@ impl ObjectStorage {
         }
     }
 
-    pub fn store_object<DB: Datastore>(
-        &mut self,
-        db: &DB,
-        object: Rc<Object>,
-    ) -> DBResult<Rc<PersistedObject>> {
-        let vtx = object.vertex();
-        db.create_vertex(&vtx)?;
-        let p_obj = PersistedObject::new_boxed(vtx.to_owned(), object.to_owned());
-        let props_p = self.get_id("object_props");
+    // pub fn store_object<DB: Datastore>(
+    //     &mut self,
+    //     db: &'a DB,
+    //     identifier: Identifier,
+    //     object: Rc<Object>,
+    // ) -> DBResult<Rc<PersistedObject>> {
+    //     let vtx = object.vertex();
+    //     db.create_vertex(&vtx)?;
+    //     let p_obj = PersistedObject::new_boxed(vtx.to_owned(), object.to_owned());
+    //     let props_p = self.get_id("object_props");
+    //     let json: Json = Json::new(object.value());
 
-        db.set_vertex_properties(
-            VertexPropertyQuery::new(
-                VertexQuery::Specific(SpecificVertexQuery::single(vtx.id)),
-                props_p,
-            ),
-            object.value(),
-        )?;
+    //     db.set_vertex_properties(
+    //         VertexPropertyQuery::new(
+    //             VertexQuery::Specific(SpecificVertexQuery::single(vtx.id)),
+    //             props_p,
+    //         ),
+    //         identifier,
+    //         &json,
+    //     )?;
 
-        self.define_type("Person", vec![]);
+    //     self.define_type("Person", vec![]);
 
-        Ok(p_obj)
-    }
+    //     Ok(p_obj)
+    // }
 
     pub fn define_type<ID, Props>(&mut self, ident: ID, prop_types: Props) -> Identifier
     where
