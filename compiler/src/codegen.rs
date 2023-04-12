@@ -6,13 +6,14 @@ use inkwell::{
     passes::PassManager,
     types::{BasicMetadataTypeEnum, BasicType},
     values::{AnyValue, BasicMetadataValueEnum, FloatValue, FunctionValue, PointerValue},
-    OptimizationLevel,
+    FloatPredicate, OptimizationLevel,
 };
 use rogato_common::{
     ast::{
         expression::Expression,
         fn_call::{FnCall, FnCallArgs},
         fn_def::{FnDef, FnDefBody, FnDefVariant},
+        if_else::IfElse,
         literal::Literal,
         module_def::ModuleDef,
         pattern::Pattern,
@@ -193,6 +194,46 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             "*" => Ok(self.builder.build_float_mul(left, right, "tmp_mul")),
             "/" => Ok(self.builder.build_float_div(left, right, "tmp_div")),
             "%" => Ok(self.builder.build_float_rem(left, right, "tmp_rem")),
+            ">" => {
+                let int_val =
+                    self.builder
+                        .build_float_compare(FloatPredicate::OGT, left, right, "gt");
+                Ok(self.builder.build_unsigned_int_to_float(
+                    int_val,
+                    left.get_type(),
+                    "bool_to_float",
+                ))
+            }
+            "<" => {
+                let int_val =
+                    self.builder
+                        .build_float_compare(FloatPredicate::OLT, left, right, "lt");
+                Ok(self.builder.build_unsigned_int_to_float(
+                    int_val,
+                    left.get_type(),
+                    "bool_to_float",
+                ))
+            }
+            ">=" => {
+                let int_val =
+                    self.builder
+                        .build_float_compare(FloatPredicate::OGE, left, right, "ge");
+                Ok(self.builder.build_unsigned_int_to_float(
+                    int_val,
+                    left.get_type(),
+                    "bool_to_float",
+                ))
+            }
+            "<=" => {
+                let int_val =
+                    self.builder
+                        .build_float_compare(FloatPredicate::OLE, left, right, "le");
+                Ok(self.builder.build_unsigned_int_to_float(
+                    int_val,
+                    left.get_type(),
+                    "bool_to_float",
+                ))
+            }
             _ => Err(CodegenError::OpNotDefined(id.clone())),
         }
     }
@@ -250,7 +291,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             Expression::DBTypeRef(_id) => todo!(),
             Expression::PropFnRef(_id) => todo!(),
             Expression::EdgeProp(_id, _edge) => todo!(),
-            Expression::IfElse(_if_else) => todo!(),
+            Expression::IfElse(if_else) => self.codegen_if_else(if_else),
             Expression::Let(_let_expr) => todo!(),
             Expression::Lambda(_lambda) => todo!(),
             Expression::Query(_query) => todo!(),
@@ -264,6 +305,41 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                 Ok(self.context.f32_type().const_zero()) // TODO: Hmmm?!
             }
         }
+    }
+
+    fn codegen_if_else(&mut self, if_else: &IfElse) -> CodegenResult<FloatValue<'ctx>> {
+        let cond = self.codegen_expr(&if_else.condition)?;
+        let zero = self.context.f32_type().const_zero();
+        let cmp =
+            self.builder
+                .build_float_compare(inkwell::FloatPredicate::ONE, cond, zero, "ifcond");
+
+        let then_block = self
+            .context
+            .append_basic_block(self.current_fn_value(), "then");
+        let else_block = self
+            .context
+            .append_basic_block(self.current_fn_value(), "else");
+        let merge_block = self
+            .context
+            .append_basic_block(self.current_fn_value(), "merge");
+
+        self.builder
+            .build_conditional_branch(cmp, then_block, else_block);
+
+        self.builder.position_at_end(then_block);
+        let then_value = self.codegen_expr(&if_else.then_expr)?;
+        self.builder.build_unconditional_branch(merge_block);
+
+        self.builder.position_at_end(else_block);
+        let else_value = self.codegen_expr(&if_else.else_expr)?;
+        self.builder.build_unconditional_branch(merge_block);
+
+        self.builder.position_at_end(merge_block);
+        let phi = self.builder.build_phi(self.context.f32_type(), "if-phi");
+        phi.add_incoming(&[(&then_value, then_block), (&else_value, else_block)]);
+
+        Ok(phi.as_basic_value().into_float_value())
     }
 
     pub fn codegen_program(&mut self, program: &Program) -> CodegenResult<()> {

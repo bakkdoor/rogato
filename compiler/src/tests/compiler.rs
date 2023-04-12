@@ -193,3 +193,46 @@ fn codegen_0_arg_fn() {
         assert_eq!(test2.call(), 420.0);
     }
 }
+
+#[test]
+fn codegen_if_else() {
+    let context = Codegen::new_context();
+    let builder = context.create_builder();
+    let module = context.create_module("compiler_test");
+    let fpm = Codegen::default_function_pass_manager(&module);
+    let ee = Codegen::default_execution_engine(&module);
+    let mut compiler = Codegen::new(&context, &module, &builder, &fpm, &ee);
+
+    let func_def = parse_fn_def(
+        "
+        let if_else_cond x y z =
+            if (x > y) then
+                (x * z)
+            else
+                (y * z)
+        ",
+    );
+    compiler.codegen_fn_def(&func_def.borrow()).unwrap();
+
+    unsafe {
+        let function = compiler
+            .execution_engine
+            .get_function::<F32FnType>("if_else_cond")
+            .unwrap();
+
+        let params_and_results = [
+            ((1.0, 2.0, 3.0), 6.0),
+            ((2.0, 1.0, 3.0), 6.0),
+            ((0.0, 0.0, 0.0), 0.0),
+            ((1.0, 0.0, 0.0), 0.0),
+            ((0.0, 2.2, 0.0), 0.0),
+            ((0.0, 0.0, 3.3), 0.0),
+            ((0.5, 10.0, 2.5), 25.0),
+        ];
+
+        for ((x, y, z), result) in params_and_results {
+            let val = function.call(x, y, z);
+            assert_eq!(val, result);
+        }
+    }
+}
