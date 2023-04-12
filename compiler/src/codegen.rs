@@ -5,7 +5,9 @@ use inkwell::{
     module::Module,
     passes::PassManager,
     types::{BasicMetadataTypeEnum, BasicType},
-    values::{AnyValue, BasicMetadataValueEnum, FloatValue, FunctionValue, PointerValue},
+    values::{
+        AnyValue, BasicMetadataValueEnum, BasicValueEnum, FloatValue, FunctionValue, PointerValue,
+    },
     FloatPredicate, OptimizationLevel,
 };
 use rogato_common::{
@@ -27,6 +29,7 @@ use std::collections::HashMap;
 use crate::error::CodegenError;
 
 pub type CodegenResult<T> = Result<T, CodegenError>;
+pub type TypeMap<'ctx> = HashMap<Identifier, BasicMetadataTypeEnum<'ctx>>;
 
 #[inline]
 fn unknown_error<S: Into<String>>(message: S) -> CodegenError {
@@ -43,6 +46,7 @@ pub struct Codegen<'a, 'ctx> {
     context: &'ctx Context,
     current_fn_value: Option<FunctionValue<'ctx>>,
     variables: HashMap<String, PointerValue<'ctx>>,
+    type_map: TypeMap<'ctx>,
 }
 
 impl<'a, 'ctx> Codegen<'a, 'ctx> {
@@ -61,6 +65,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             execution_engine,
             current_fn_value: None,
             variables: HashMap::new(),
+            type_map: Self::default_type_map(context),
         }
     }
 
@@ -92,8 +97,44 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         fpm
     }
 
+    pub fn default_type_map(context: &'ctx Context) -> TypeMap<'ctx> {
+        let mut type_map = HashMap::new();
+        type_map.insert(
+            "f32".into(),
+            BasicMetadataTypeEnum::FloatType(context.f32_type()),
+        );
+        type_map.insert(
+            "i32".into(),
+            BasicMetadataTypeEnum::IntType(context.i32_type()),
+        );
+        type_map.insert(
+            "bool".into(),
+            BasicMetadataTypeEnum::IntType(context.bool_type()),
+        );
+        type_map
+    }
+
     pub fn codegen_fn_def(&mut self, fn_def: &FnDef) -> CodegenResult<FunctionValue<'ctx>> {
         let f32_type = self.context.f32_type();
+
+        // Get function return type and argument types from type_map instead of using hardcoded f32
+        let ret_type = self
+            .type_map
+            .get(&fn_def.ret_type)
+            .ok_or_else(|| CodegenError::TypeNotFound(fn_def.ret_type.clone()))?;
+
+        let fn_arg_types: Vec<BasicMetadataTypeEnum<'ctx>> = fn_def
+            .variants_iter()
+            .map(|(args, _)| {
+                args.iter()
+                    .map(|arg| {
+                        self.type_map
+                            .get(arg.get_type())
+                            .ok_or_else(|| CodegenError::TypeNotFound(arg.get_type().clone()))
+                    })
+                    .collect::<Result<Vec<_>, _>>()
+            })
+            .collect::<Result<Vec<_>, _>>()?;
 
         // TODO: add support for multiple fn variants
         let FnDefVariant(args, body) = fn_def.get_variant(0).unwrap();
@@ -246,12 +287,26 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         todo!()
     }
 
-    pub fn codegen_lit_expr(&mut self, literal: &Literal) -> CodegenResult<FloatValue<'ctx>> {
+    pub fn codegen_lit_expr(&mut self, literal: &Literal) -> CodegenResult<BasicValueEnum<'ctx>> {
         match literal {
             Literal::Number(num) => {
                 let float_val = val::number_to_f64(num).unwrap();
-                Ok(self.context.f32_type().const_float(float_val))
+                Ok(self.context.f32_type().const_float(float_val).into())
             }
+            // Literal::Int(num) => {
+            //     let int_val = *num as i32;
+            //     Ok(self
+            //         .context
+            //         .i32_type()
+            //         .const_int(int_val as u64, false)
+            //         .into())
+            // }
+            Literal::Bool(val) => Ok(self
+                .context
+                .bool_type()
+                .const_int(if *val { 1 } else { 0 }, false)
+                .into()),
+
             _ => Err(unknown_error("Literals not yet implemented!")),
         }
     }

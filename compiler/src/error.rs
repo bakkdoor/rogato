@@ -23,4 +23,6 @@ pub enum CodegenError {
 
     #[error("FnDef codegen validation failed for: {0}")]
     FnDefValidationFailed(Identifier),
+    #[error("Type not found: {0}")]
+    TypeNotFound(Identifier),
 }

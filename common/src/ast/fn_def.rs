@@ -1,4 +1,5 @@
 use super::pattern::Pattern;
+use super::type_expression::TypeExpression;
 use super::{expression::Expression, walker::Walk, ASTDepth, Identifier};
 use crate::{native_fn::NativeFn, util::indent};
 use std::cell::RefCell;
