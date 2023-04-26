@@ -326,6 +326,16 @@ fn std_list_module() {
         ("List.findIndex [1,2,3] (x -> x == 1)", val::number(0)),
         ("List.findIndex [1,2,3] (x -> x == 4)", val::none()),
         ("List.findIndex [1,2,3] (x -> x == 2)", val::number(1)),
+        ("List.findLastIndex [1,2,3] 1", val::number(0)),
+        ("List.findLastIndex [1,2,3] 4", val::none()),
+        ("List.findLastIndex [1,2,3] 2", val::number(1)),
+        ("List.findLastIndex [1,2,3] (x -> x == 1)", val::number(0)),
+        ("List.findLastIndex [1,2,3] (x -> x == 4)", val::none()),
+        ("List.findLastIndex [1,2,3] (x -> x == 2)", val::number(1)),
+        (
+            "List.findLastIndex [5,4,3,2,1] (x -> x == 2)",
+            val::number(3),
+        ),
     ];
 
     let mut eval_ctx = EvalContext::new();

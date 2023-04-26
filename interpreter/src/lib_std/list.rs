@@ -26,6 +26,7 @@ pub fn module() -> Module {
         "flatMap".into(),
         "contains".into(),
         "findIndex".into(),
+        "findLastIndex".into(),
     ]));
 
     module.fn_def_native(
@@ -471,6 +472,49 @@ pub fn module() -> Module {
                     }
                     _ => error,
                 },
+                _ => error,
+            }
+        },
+    );
+
+    module.fn_def_native(
+        "findLastIndex",
+        &["list", "item"],
+        move |ctx, args| -> Result<ValueRef, NativeFnError> {
+            let error = Err(invalid_args("Std.List.findLastIndex"));
+            match (args.len(), args.get(0), args.get(1)) {
+                (2, Some(a), Some(item)) => match (&**a, &**item) {
+                    (Value::List(items), Value::Lambda(lambda_ctx, lambda)) => {
+                        let mut index = items.len();
+                        for item in items.reverse().iter() {
+                            index = index - 1;
+                            match &*ctx.call_lambda(
+                                Rc::clone(lambda_ctx),
+                                lambda,
+                                &[ValueRef::clone(item)],
+                            )? {
+                                Value::Bool(true) => return Ok(val::number(index)),
+                                Value::Bool(false) => {}
+                                _ => continue,
+                            }
+                        }
+                        Ok(val::none())
+                    }
+                    (Value::List(items), find_item) => {
+                        let mut index = items.len();
+                        for item in items.reverse().iter() {
+                            index = index - 1;
+                            if &**item == find_item {
+                                return Ok(val::number(index));
+                            } else {
+                                continue;
+                            }
+                        }
+                        Ok(val::none())
+                    }
+                    _ => error,
+                },
+
                 _ => error,
             }
         },
