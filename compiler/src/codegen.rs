@@ -43,7 +43,7 @@ pub struct Codegen<'a, 'ctx> {
     pub fpm: &'a PassManager<FunctionValue<'ctx>>,
     pub execution_engine: &'a ExecutionEngine<'ctx>,
 
-    context: &'ctx Context,
+    pub context: &'ctx Context,
     current_fn_value: Option<FunctionValue<'ctx>>,
     variables: HashMap<String, PointerValue<'ctx>>,
     type_map: TypeMap<'ctx>,

@@ -50,6 +50,17 @@ pub enum TypeExpression {
     StructType(StructTypeProperties),
 }
 
+impl TypeExpression {
+    pub fn is_primitive(&self) -> bool {
+        match self {
+            TypeExpression::BoolType => true,
+            TypeExpression::NumberType => true,
+            TypeExpression::StringType => true,
+            _ => false,
+        }
+    }
+}
+
 impl Display for TypeExpression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
