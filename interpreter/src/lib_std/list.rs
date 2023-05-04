@@ -487,7 +487,7 @@ pub fn module() -> Module {
                     (Value::List(items), Value::Lambda(lambda_ctx, lambda)) => {
                         let mut index = items.len();
                         for item in items.reverse().iter() {
-                            index = index - 1;
+                            index -= 1;
                             match &*ctx.call_lambda(
                                 Rc::clone(lambda_ctx),
                                 lambda,
@@ -503,7 +503,7 @@ pub fn module() -> Module {
                     (Value::List(items), find_item) => {
                         let mut index = items.len();
                         for item in items.reverse().iter() {
-                            index = index - 1;
+                            index -= 1;
                             if &**item == find_item {
                                 return Ok(val::number(index));
                             } else {
