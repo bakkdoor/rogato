@@ -98,6 +98,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "archery"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ab7d8a6d00b222909638a01ddcc8c533219e9d5bfada1613afae43481f2fc699"
+dependencies = [
+ "static_assertions",
+]
+
+[[package]]
 name = "arrayvec"
 version = "0.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1115,7 +1124,7 @@ dependencies = [
 name = "rogato-common"
 version = "0.1.0"
 dependencies = [
- "archery",
+ "archery 1.0.0",
  "flame",
  "flamer",
  "indent_write",
@@ -1186,7 +1195,7 @@ version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9bd6ce569b15c331b1e5fd8cf6adb0bf240678b5f0cdc4d0f41e11683f6feba9"
 dependencies = [
- "archery",
+ "archery 0.5.0",
 ]
 
 [[package]]
