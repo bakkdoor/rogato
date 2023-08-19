@@ -84,9 +84,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.72"
+version = "1.0.75"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3b13c32d80ecc7ab747b80c3784bce54ee8a7a0cc4fbda9bf4cda2cf6fe90854"
+checksum = "a4668cab20f66d8d020e1fbc0ebe47217433c1b6c8f2040faf858554e394ace6"
 
 [[package]]
 name = "archery"
@@ -545,7 +545,7 @@ dependencies = [
 [[package]]
 name = "inkwell"
 version = "0.2.0"
-source = "git+https://github.com/TheDan64/inkwell?branch=master#4030f764f1c889f36429ac02ef32e04fcfa8ce33"
+source = "git+https://github.com/TheDan64/inkwell?branch=master#bbe1f3d76c45fc137a125665861fc6382ab352d6"
 dependencies = [
  "either",
  "inkwell_internals",
@@ -558,7 +558,7 @@ dependencies = [
 [[package]]
 name = "inkwell_internals"
 version = "0.8.0"
-source = "git+https://github.com/TheDan64/inkwell?branch=master#4030f764f1c889f36429ac02ef32e04fcfa8ce33"
+source = "git+https://github.com/TheDan64/inkwell?branch=master#bbe1f3d76c45fc137a125665861fc6382ab352d6"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1286,9 +1286,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.104"
+version = "1.0.105"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "076066c5f1078eac5b722a31827a8832fe108bed65dfa75e233c89f8206e976c"
+checksum = "693151e1ac27563d6dbcec9dee9fbd5da8539b20fa14ad3752b2e6d363ace360"
 dependencies = [
  "itoa",
  "ryu",
