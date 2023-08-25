@@ -74,27 +74,27 @@ pub fn tuple<I: IntoIterator<Item = ValueRef>>(items: I) -> ValueRef {
 }
 
 pub fn list<I: IntoIterator<Item = ValueRef>>(items: I) -> ValueRef {
-    ValueRef::new(Value::List(List::from_iter(items.into_iter())))
+    ValueRef::new(Value::List(List::from_iter(items)))
 }
 
 pub fn queue<I: IntoIterator<Item = ValueRef>>(items: I) -> ValueRef {
-    ValueRef::new(Value::Queue(Queue::from_iter(items.into_iter())))
+    ValueRef::new(Value::Queue(Queue::from_iter(items)))
 }
 
 pub fn set<I: IntoIterator<Item = ValueRef>>(items: I) -> ValueRef {
-    ValueRef::new(Value::Set(Set::from_iter(items.into_iter())))
+    ValueRef::new(Value::Set(Set::from_iter(items)))
 }
 
 pub fn stack<I: IntoIterator<Item = ValueRef>>(items: I) -> ValueRef {
-    ValueRef::new(Value::Stack(Stack::from_iter(items.into_iter())))
+    ValueRef::new(Value::Stack(Stack::from_iter(items)))
 }
 
 pub fn vector<I: IntoIterator<Item = ValueRef>>(items: I) -> ValueRef {
-    ValueRef::new(Value::Vector(Vector::from_iter(items.into_iter())))
+    ValueRef::new(Value::Vector(Vector::from_iter(items)))
 }
 
 pub fn map<I: IntoIterator<Item = (ValueRef, ValueRef)>>(items: I) -> ValueRef {
-    ValueRef::new(Value::Map(Map::from_iter(items.into_iter())))
+    ValueRef::new(Value::Map(Map::from_iter(items)))
 }
 
 pub fn object<S: ToString, Props: IntoIterator<Item = (S, ValueRef)>>(props: Props) -> ValueRef {
