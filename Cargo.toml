@@ -1,4 +1,5 @@
 [workspace]
+resolver = "2"
 members = [
   "common",
   "compiler",
@@ -6,5 +7,5 @@ members = [
   "interpreter",
   "parser",
   "rogato",
-  "type-checker"
+  "type-checker",
 ]

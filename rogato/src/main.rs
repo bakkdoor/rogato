@@ -71,7 +71,7 @@ fn main() -> anyhow::Result<()> {
     match args.command {
         Command::RunRepl(repl_info) => {
             let mut preloads: HashSet<String> = std_lib_preloads();
-            preloads.extend(repl_info.preload.into_iter());
+            preloads.extend(repl_info.preload);
 
             let unique_preloads: Vec<String> = preloads.into_iter().collect();
             repl::run_repl(&unique_preloads)?;
