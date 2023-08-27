@@ -67,7 +67,7 @@ impl ImportedModules {
 impl FromIterator<(Identifier, Imports)> for ImportedModules {
     fn from_iter<T: IntoIterator<Item = (Identifier, Imports)>>(iter: T) -> Self {
         ImportedModules {
-            imports: HashMap::from_iter(iter.into_iter()),
+            imports: HashMap::from_iter(iter),
         }
     }
 }
