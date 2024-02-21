@@ -7,7 +7,7 @@ license = "BSD 3-Clause"
 repository = "https://github.com/bakkdoor/rogato"
 
 [dependencies]
-archery = { version = "0.5.0" }
+archery = { version = "1.2.0" }
 flame = { version = "*", optional = true }
 flamer = { version = "*", optional = true }
 indent_write = "*"
