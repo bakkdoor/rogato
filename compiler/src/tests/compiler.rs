@@ -21,9 +21,9 @@ fn codegen_add3() {
     let context = Codegen::new_context();
     let builder = context.create_builder();
     let module = context.create_module("compiler_test");
-    let fpm = Codegen::default_function_pass_manager(&module);
+    let target_machine = Codegen::default_target_machine(&module);
     let ee = Codegen::default_execution_engine(&module);
-    let mut compiler = Codegen::new(&context, &module, &builder, &fpm, &ee);
+    let mut compiler = Codegen::new(&context, &module, &builder, &target_machine, &ee);
 
     let func_def = parse_fn_def("let add3 x y z = (x + y) + z");
     compiler.codegen_fn_def(&func_def.borrow()).unwrap();
@@ -55,9 +55,9 @@ fn codegen_add2_mul() {
     let context = Codegen::new_context();
     let builder = context.create_builder();
     let module = context.create_module("compiler_test");
-    let fpm = Codegen::default_function_pass_manager(&module);
+    let target_machine = Codegen::default_target_machine(&module);
     let ee = Codegen::default_execution_engine(&module);
-    let mut compiler = Codegen::new(&context, &module, &builder, &fpm, &ee);
+    let mut compiler = Codegen::new(&context, &module, &builder, &target_machine, &ee);
 
     let func_def = parse_fn_def("let add2_mul x y z = (x + y) * z");
     compiler.codegen_fn_def(&func_def.borrow()).unwrap();
@@ -90,9 +90,9 @@ fn codegen_multiple_functions() {
     let context = Codegen::new_context();
     let builder = context.create_builder();
     let module = context.create_module("compiler_test");
-    let fpm = Codegen::default_function_pass_manager(&module);
+    let target_machine = Codegen::default_target_machine(&module);
     let ee = Codegen::default_execution_engine(&module);
-    let mut compiler = Codegen::new(&context, &module, &builder, &fpm, &ee);
+    let mut compiler = Codegen::new(&context, &module, &builder, &target_machine, &ee);
 
     let fn_def = parse_fn_def("let tripleSum x y z = (x + y + z) * 3.0");
     compiler.codegen_fn_def(&fn_def.borrow()).unwrap();
@@ -163,9 +163,9 @@ fn codegen_0_arg_fn() {
     let context = Codegen::new_context();
     let builder = context.create_builder();
     let module = context.create_module("compiler_test");
-    let fpm = Codegen::default_function_pass_manager(&module);
+    let target_machine = Codegen::default_target_machine(&module);
     let ee = Codegen::default_execution_engine(&module);
-    let mut compiler = Codegen::new(&context, &module, &builder, &fpm, &ee);
+    let mut compiler = Codegen::new(&context, &module, &builder, &target_machine, &ee);
 
     let func_def = parse_fn_def("let test1 = 100 * 420.69");
     compiler.codegen_fn_def(&func_def.borrow()).unwrap();
@@ -199,9 +199,9 @@ fn codegen_if_else() {
     let context = Codegen::new_context();
     let builder = context.create_builder();
     let module = context.create_module("compiler_test");
-    let fpm = Codegen::default_function_pass_manager(&module);
+    let target_machine = Codegen::default_target_machine(&module);
     let ee = Codegen::default_execution_engine(&module);
-    let mut compiler = Codegen::new(&context, &module, &builder, &fpm, &ee);
+    let mut compiler = Codegen::new(&context, &module, &builder, &target_machine, &ee);
 
     let func_def = parse_fn_def(
         "

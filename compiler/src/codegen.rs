@@ -3,7 +3,8 @@ use inkwell::{
     context::Context,
     execution_engine::ExecutionEngine,
     module::Module,
-    passes::PassManager,
+    passes::PassBuilderOptions,
+    targets::{CodeModel, InitializationConfig, RelocMode, Target, TargetMachine},
     types::{BasicMetadataTypeEnum, BasicType},
     values::{AnyValue, BasicMetadataValueEnum, FloatValue, FunctionValue, PointerValue},
     FloatPredicate, OptimizationLevel,
@@ -37,7 +38,7 @@ fn unknown_error<S: Into<String>>(message: S) -> CodegenError {
 pub struct Codegen<'a, 'ctx> {
     pub module: &'a Module<'ctx>,
     pub builder: &'a Builder<'ctx>,
-    pub fpm: &'a PassManager<FunctionValue<'ctx>>,
+    pub target_machine: &'a TargetMachine,
     pub execution_engine: &'a ExecutionEngine<'ctx>,
 
     context: &'ctx Context,
@@ -50,14 +51,14 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         context: &'ctx Context,
         module: &'a Module<'ctx>,
         builder: &'a Builder<'ctx>,
-        fpm: &'a PassManager<FunctionValue<'ctx>>,
+        target_machine: &'a TargetMachine,
         execution_engine: &'a ExecutionEngine<'ctx>,
     ) -> Self {
         Self {
             context,
             module,
             builder,
-            fpm,
+            target_machine,
             execution_engine,
             current_fn_value: None,
             variables: HashMap::new(),
@@ -74,10 +75,29 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             .unwrap()
     }
 
-    pub fn default_function_pass_manager(
-        module: &Module<'ctx>,
-    ) -> PassManager<FunctionValue<'ctx>> {
-        PassManager::create(module)
+    pub fn default_target_machine(_module: &Module<'ctx>) -> TargetMachine {
+        Target::initialize_native(&InitializationConfig::default()).ok();
+
+        let target_triple = TargetMachine::get_default_triple();
+        let target = Target::from_triple(&target_triple).unwrap();
+        target
+            .create_target_machine(
+                &target_triple,
+                "",
+                "",
+                OptimizationLevel::None,
+                RelocMode::Default,
+                CodeModel::Default,
+            )
+            .unwrap()
+    }
+
+    pub fn run_function_passes(&self) {
+        let passes = "default<O0>";
+        let options = PassBuilderOptions::create();
+        self.module
+            .run_passes(passes, self.target_machine, options)
+            .ok();
     }
 
     pub fn codegen_fn_def(&mut self, fn_def: &FnDef) -> CodegenResult<FunctionValue<'ctx>> {
@@ -115,7 +135,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                 let body = self.codegen_expr(expr)?;
                 self.builder.build_return(Some(&body))?;
                 if func.verify(true) {
-                    self.fpm.run_on(&func);
+                    self.run_function_passes();
                     self.clear_current_fn();
                     Ok(func)
                 } else {

@@ -98,9 +98,9 @@ pub fn run_repl(files_to_load: &[String]) -> anyhow::Result<()> {
         let context = Codegen::new_context();
         let builder = context.create_builder();
         let module = context.create_module("rogato.repl");
-        let fpm = Codegen::default_function_pass_manager(&module);
+        let target_machine = Codegen::default_target_machine(&module);
         let ee = Codegen::default_execution_engine(&module);
-        let mut compiler = Codegen::new(&context, &module, &builder, &fpm, &ee);
+        let mut compiler = Codegen::new(&context, &module, &builder, &target_machine, &ee);
 
         counter += 1;
         let readline = rl.readline(format!("{counter:03} >  ").as_str());
