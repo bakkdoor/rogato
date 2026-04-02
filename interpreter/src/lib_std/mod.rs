@@ -270,25 +270,30 @@ pub fn std_module() -> Module {
                     if *max == dec!(0) {
                         return Ok(val::number(0));
                     }
-                    let mut rng = rand::rngs::OsRng;
+                    let r: u64 = rand::random();
                     if *max < dec!(0) {
-                        Ok(val::number(rng.gen_range(*max..dec!(0))))
+                        let neg_max = -*max;
+                        let scaled = (r as i64) % (neg_max.to_i64().unwrap_or(i64::MAX));
+                        Ok(val::number(Decimal::from(-scaled)))
                     } else {
-                        Ok(val::number(rng.gen_range(dec!(0)..*max)))
+                        let scaled = r % (max.to_u64().unwrap_or(u64::MAX) * 10000);
+                        Ok(val::number(Decimal::from(scaled) / dec!(1)))
                     }
                 }
                 _ => error,
             },
             (2, Some(a), Some(b)) => match (&**a, &**b) {
                 (Value::Number(min), Value::Number(max)) => {
-                    let mut rng = rand::rngs::OsRng;
                     if *min == *max {
                         return Ok(val::number(*min));
                     }
-                    if *min < *max {
-                        Ok(val::number(rng.gen_range(*min..*max)))
+                    let r: u64 = rand::random();
+                    let range_decimal = *max - *min;
+                    if range_decimal > dec!(0) {
+                        let scaled = r as i128 % (range_decimal.to_i128().unwrap_or(1));
+                        Ok(val::number(*min + Decimal::from(scaled)))
                     } else {
-                        Ok(val::number(rng.gen_range(*max..*min)))
+                        Ok(val::number(dec!(0)))
                     }
                 }
                 _ => error,

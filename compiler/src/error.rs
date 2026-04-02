@@ -24,3 +24,9 @@ pub enum CodegenError {
     #[error("FnDef codegen validation failed for: {0}")]
     FnDefValidationFailed(Identifier),
 }
+
+impl From<inkwell::builder::BuilderError> for CodegenError {
+    fn from(e: inkwell::builder::BuilderError) -> Self {
+        CodegenError::Unknown(format!("{:?}", e))
+    }
+}

@@ -25,15 +25,15 @@ For some example source code and syntax ideas (still WIP), check out the code ex
 
 ### Build instructions
 
-#### LLVM v14 Dependency
+#### LLVM v22 Dependency
 
-*rogātō* depends on LLVM version 14 to build. LLVM is used by the [`compiler`](compiler/) crate to generate optimized native machine code.
+*rogātō* depends on LLVM version 22 to build. LLVM is used by the [`compiler`](compiler/) crate to generate optimized native machine code.
 
 LLVM website with documentation and installation instructions:
 - https://llvm.org
 
 Latest compatible LLVM release:
-- https://github.com/llvm/llvm-project/releases/tag/llvmorg-14.0.6
+- https://github.com/llvm/llvm-project/releases/tag/llvmorg-22.1.0
 
 #### Build without optimizations (debug mode)
 

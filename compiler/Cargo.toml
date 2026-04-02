@@ -10,5 +10,5 @@ repository = "https://github.com/bakkdoor/rogato"
 rogato-common = { path = "../common" }
 rogato-parser = { path = "../parser" }
 
-inkwell = { git = "https://github.com/TheDan64/inkwell", branch = "master", features = ["llvm14-0"] }
+inkwell = { git = "https://github.com/TheDan64/inkwell", branch = "master", features = ["llvm22-1"] }
 thiserror = "*"

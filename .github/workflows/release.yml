@@ -38,11 +38,11 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ./llvm
-          key: llvm-14.0
+          key: llvm-22.1
       - name: Install LLVM and Clang
         uses: KyleMayes/install-llvm-action@v1.5.2
         with:
-          version: 14.0
+          version: 22.1
           cached: ${{ steps.cache-llvm.outputs.cache-hit }}
       - uses: taiki-e/upload-rust-binary-action@v1
         with:

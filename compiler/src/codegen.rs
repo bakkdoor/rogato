@@ -77,19 +77,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
     pub fn default_function_pass_manager(
         module: &Module<'ctx>,
     ) -> PassManager<FunctionValue<'ctx>> {
-        // Create FPM
-        let fpm = PassManager::create(module);
-
-        fpm.add_instruction_combining_pass();
-        fpm.add_reassociate_pass();
-        fpm.add_gvn_pass();
-        fpm.add_cfg_simplification_pass();
-        fpm.add_basic_alias_analysis_pass();
-        fpm.add_promote_memory_to_register_pass();
-        fpm.add_instruction_combining_pass();
-        fpm.add_reassociate_pass();
-        fpm.initialize();
-        fpm
+        PassManager::create(module)
     }
 
     pub fn codegen_fn_def(&mut self, fn_def: &FnDef) -> CodegenResult<FunctionValue<'ctx>> {
@@ -169,11 +157,11 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             .map(|&val| val.into())
             .collect();
 
-        let value = self
-            .builder
-            .build_call(function, argsv.as_slice(), "tmp")
+        let call_site = self.builder.build_call(function, argsv.as_slice(), "tmp")?;
+
+        let value = call_site
             .try_as_basic_value()
-            .left()
+            .basic()
             .ok_or_else(|| unknown_error("Invalid call produced."))?;
 
         Ok(value.into_float_value())
@@ -189,50 +177,57 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         let right = self.codegen_expr(right)?;
 
         match id.as_str() {
-            "+" => Ok(self.builder.build_float_add(left, right, "tmp_add")),
-            "-" => Ok(self.builder.build_float_sub(left, right, "tmp_sub")),
-            "*" => Ok(self.builder.build_float_mul(left, right, "tmp_mul")),
-            "/" => Ok(self.builder.build_float_div(left, right, "tmp_div")),
-            "%" => Ok(self.builder.build_float_rem(left, right, "tmp_rem")),
+            "+" => self
+                .builder
+                .build_float_add(left, right, "tmp_add")
+                .map_err(|e| unknown_error(format!("{:?}", e))),
+            "-" => self
+                .builder
+                .build_float_sub(left, right, "tmp_sub")
+                .map_err(|e| unknown_error(format!("{:?}", e))),
+            "*" => self
+                .builder
+                .build_float_mul(left, right, "tmp_mul")
+                .map_err(|e| unknown_error(format!("{:?}", e))),
+            "/" => self
+                .builder
+                .build_float_div(left, right, "tmp_div")
+                .map_err(|e| unknown_error(format!("{:?}", e))),
+            "%" => self
+                .builder
+                .build_float_rem(left, right, "tmp_rem")
+                .map_err(|e| unknown_error(format!("{:?}", e))),
             ">" => {
                 let int_val =
                     self.builder
-                        .build_float_compare(FloatPredicate::OGT, left, right, "gt");
-                Ok(self.builder.build_unsigned_int_to_float(
-                    int_val,
-                    left.get_type(),
-                    "bool_to_float",
-                ))
+                        .build_float_compare(FloatPredicate::OGT, left, right, "gt")?;
+                self.builder
+                    .build_unsigned_int_to_float(int_val, left.get_type(), "bool_to_float")
+                    .map_err(|e| unknown_error(format!("{:?}", e)))
             }
             "<" => {
                 let int_val =
                     self.builder
-                        .build_float_compare(FloatPredicate::OLT, left, right, "lt");
-                Ok(self.builder.build_unsigned_int_to_float(
-                    int_val,
-                    left.get_type(),
-                    "bool_to_float",
-                ))
+                        .build_float_compare(FloatPredicate::OLT, left, right, "lt")?;
+                self.builder
+                    .build_unsigned_int_to_float(int_val, left.get_type(), "bool_to_float")
+                    .map_err(|e| unknown_error(format!("{:?}", e)))
             }
             ">=" => {
                 let int_val =
                     self.builder
-                        .build_float_compare(FloatPredicate::OGE, left, right, "ge");
-                Ok(self.builder.build_unsigned_int_to_float(
-                    int_val,
-                    left.get_type(),
-                    "bool_to_float",
-                ))
+                        .build_float_compare(FloatPredicate::OGE, left, right, "ge")?;
+                self.builder
+                    .build_unsigned_int_to_float(int_val, left.get_type(), "bool_to_float")
+                    .map_err(|e| unknown_error(format!("{:?}", e)))
             }
             "<=" => {
                 let int_val =
                     self.builder
-                        .build_float_compare(FloatPredicate::OLE, left, right, "le");
-                Ok(self.builder.build_unsigned_int_to_float(
-                    int_val,
-                    left.get_type(),
-                    "bool_to_float",
-                ))
+                        .build_float_compare(FloatPredicate::OLE, left, right, "le")?;
+                self.builder
+                    .build_unsigned_int_to_float(int_val, left.get_type(), "bool_to_float")
+                    .map_err(|e| unknown_error(format!("{:?}", e)))
             }
             _ => Err(CodegenError::OpNotDefined(id.clone())),
         }
@@ -277,14 +272,12 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             Expression::OpCall(id, left, right) => self.codegen_op_call(id, left, right),
 
             Expression::Var(id) => match self.lookup_var(id) {
-                Some(var) => Ok(self
-                    .builder
-                    .build_load(*var, id.as_str())
-                    .into_float_value()),
-                None => {
-                    self.codegen_fn_call(&FnCall::new(id.into(), FnCallArgs::empty()))
-                    // Err(CompileError::VarNotFound(id.clone()))
+                Some(var) => {
+                    let f32_type = self.context.f32_type();
+                    let load_result = self.builder.build_load(f32_type, *var, "load_var")?;
+                    Ok(load_result.into_float_value())
                 }
+                None => self.codegen_fn_call(&FnCall::new(id.into(), FnCallArgs::empty())),
             },
 
             Expression::ConstOrTypeRef(_id) => todo!(),
@@ -312,7 +305,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         let zero = self.context.f32_type().const_zero();
         let cmp =
             self.builder
-                .build_float_compare(inkwell::FloatPredicate::ONE, cond, zero, "ifcond");
+                .build_float_compare(inkwell::FloatPredicate::ONE, cond, zero, "ifcond")?;
 
         let then_block = self
             .context
@@ -325,18 +318,18 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             .append_basic_block(self.current_fn_value(), "merge");
 
         self.builder
-            .build_conditional_branch(cmp, then_block, else_block);
+            .build_conditional_branch(cmp, then_block, else_block)?;
 
         self.builder.position_at_end(then_block);
         let then_value = self.codegen_expr(&if_else.then_expr)?;
-        self.builder.build_unconditional_branch(merge_block);
+        self.builder.build_unconditional_branch(merge_block)?;
 
         self.builder.position_at_end(else_block);
         let else_value = self.codegen_expr(&if_else.else_expr)?;
-        self.builder.build_unconditional_branch(merge_block);
+        self.builder.build_unconditional_branch(merge_block)?;
 
         self.builder.position_at_end(merge_block);
-        let phi = self.builder.build_phi(self.context.f32_type(), "if-phi");
+        let phi = self.builder.build_phi(self.context.f32_type(), "if-phi")?;
         phi.add_incoming(&[(&then_value, then_block), (&else_value, else_block)]);
 
         Ok(phi.as_basic_value().into_float_value())
@@ -400,6 +393,6 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             None => builder.position_at_end(entry),
         }
 
-        builder.build_alloca(ty, name)
+        builder.build_alloca(ty, name).unwrap()
     }
 }
