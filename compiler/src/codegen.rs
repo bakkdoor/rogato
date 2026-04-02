@@ -267,6 +267,13 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                 let float_val = val::number_to_f64(num).unwrap();
                 Ok(self.context.f32_type().const_float(float_val))
             }
+            Literal::Bool(b) => {
+                if *b {
+                    Ok(self.context.f32_type().const_float(1.0))
+                } else {
+                    Ok(self.context.f32_type().const_zero())
+                }
+            }
             _ => Err(unknown_error("Literals not yet implemented!")),
         }
     }
@@ -294,8 +301,10 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             Expression::Var(id) => match self.lookup_var(id) {
                 Some(var) => {
                     let f32_type = self.context.f32_type();
-                    let load_result = self.builder.build_load(f32_type, *var, "load_var")?;
-                    Ok(load_result.into_float_value())
+                    Ok(self
+                        .builder
+                        .build_load(f32_type, *var, "load_var")?
+                        .into_float_value())
                 }
                 None => self.codegen_fn_call(&FnCall::new(id.into(), FnCallArgs::empty())),
             },
@@ -305,7 +314,18 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             Expression::PropFnRef(_id) => todo!(),
             Expression::EdgeProp(_id, _edge) => todo!(),
             Expression::IfElse(if_else) => self.codegen_if_else(if_else),
-            Expression::Let(_let_expr) => todo!(),
+            Expression::Let(let_expr) => {
+                let f32_type = self.context.f32_type();
+
+                for (var_id, var_expr) in let_expr.bindings.iter() {
+                    let value = self.codegen_expr(var_expr)?;
+                    let alloca = self.create_entry_block_alloca(f32_type, var_id.as_str());
+                    self.builder.build_store(alloca, value)?;
+                    self.store_var(var_id.as_str(), alloca);
+                }
+
+                self.codegen_expr(&let_expr.body)
+            }
             Expression::Lambda(_lambda) => todo!(),
             Expression::Query(_query) => todo!(),
             Expression::Symbol(_id) => todo!(),

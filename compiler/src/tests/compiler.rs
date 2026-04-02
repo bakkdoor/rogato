@@ -236,3 +236,127 @@ fn codegen_if_else() {
         }
     }
 }
+
+#[test]
+fn codegen_bool_literals() {
+    let context = Codegen::new_context();
+    let builder = context.create_builder();
+    let module = context.create_module("compiler_test");
+    let target_machine = Codegen::default_target_machine(&module);
+    let ee = Codegen::default_execution_engine(&module);
+    let mut compiler = Codegen::new(&context, &module, &builder, &target_machine, &ee);
+
+    let func_def = parse_fn_def("let returnTrue = true");
+    compiler.codegen_fn_def(&func_def.borrow()).unwrap();
+
+    let func_def = parse_fn_def("let returnFalse = false");
+    compiler.codegen_fn_def(&func_def.borrow()).unwrap();
+
+    unsafe {
+        let true_fn = compiler
+            .execution_engine
+            .get_function::<unsafe extern "C" fn() -> f32>("returnTrue")
+            .unwrap();
+
+        let false_fn = compiler
+            .execution_engine
+            .get_function::<unsafe extern "C" fn() -> f32>("returnFalse")
+            .unwrap();
+
+        assert_eq!(true_fn.call(), 1.0);
+        assert_eq!(false_fn.call(), 0.0);
+    }
+}
+
+#[test]
+fn codegen_bool_with_comparisons() {
+    let context = Codegen::new_context();
+    let builder = context.create_builder();
+    let module = context.create_module("compiler_test");
+    let target_machine = Codegen::default_target_machine(&module);
+    let ee = Codegen::default_execution_engine(&module);
+    let mut compiler = Codegen::new(&context, &module, &builder, &target_machine, &ee);
+
+    let func_def = parse_fn_def("let isGreater x y = x > y");
+    compiler.codegen_fn_def(&func_def.borrow()).unwrap();
+
+    unsafe {
+        let function = compiler
+            .execution_engine
+            .get_function::<unsafe extern "C" fn(f32, f32) -> f32>("isGreater")
+            .unwrap();
+
+        assert_eq!(function.call(5.0, 3.0), 1.0);
+        assert_eq!(function.call(3.0, 5.0), 0.0);
+        assert_eq!(function.call(3.0, 3.0), 0.0);
+    }
+}
+
+#[test]
+fn codegen_let_bindings() {
+    let context = Codegen::new_context();
+    let builder = context.create_builder();
+    let module = context.create_module("compiler_test");
+    let target_machine = Codegen::default_target_machine(&module);
+    let ee = Codegen::default_execution_engine(&module);
+    let mut compiler = Codegen::new(&context, &module, &builder, &target_machine, &ee);
+
+    let func_def = parse_fn_def("let testLet x y = (x * 2.0) + (y + 10.0)");
+    compiler.codegen_fn_def(&func_def.borrow()).unwrap();
+
+    unsafe {
+        let function = compiler
+            .execution_engine
+            .get_function::<unsafe extern "C" fn(f32, f32) -> f32>("testLet")
+            .unwrap();
+
+        assert_eq!(function.call(5.0, 3.0), (5.0 * 2.0) + (3.0 + 10.0));
+        assert_eq!(function.call(1.0, 2.0), (1.0 * 2.0) + (2.0 + 10.0));
+        assert_eq!(function.call(0.0, 0.0), (0.0 * 2.0) + (0.0 + 10.0));
+    }
+}
+
+#[test]
+fn codegen_let_bindings_nested() {
+    let context = Codegen::new_context();
+    let builder = context.create_builder();
+    let module = context.create_module("compiler_test");
+    let target_machine = Codegen::default_target_machine(&module);
+    let ee = Codegen::default_execution_engine(&module);
+    let mut compiler = Codegen::new(&context, &module, &builder, &target_machine, &ee);
+
+    let func_def = parse_fn_def("let testNestedLet x y z = ((x * y) + (y * 3.0))");
+    compiler.codegen_fn_def(&func_def.borrow()).unwrap();
+
+    unsafe {
+        let function = compiler
+            .execution_engine
+            .get_function::<unsafe extern "C" fn(f32, f32, f32) -> f32>("testNestedLet")
+            .unwrap();
+
+        assert_eq!(function.call(2.0, 3.0, 4.0), (2.0 * 3.0) + (3.0 * 3.0));
+    }
+}
+
+#[test]
+fn codegen_bool_comparisons_chain() {
+    let context = Codegen::new_context();
+    let builder = context.create_builder();
+    let module = context.create_module("compiler_test");
+    let target_machine = Codegen::default_target_machine(&module);
+    let ee = Codegen::default_execution_engine(&module);
+    let mut compiler = Codegen::new(&context, &module, &builder, &target_machine, &ee);
+
+    let func_def = parse_fn_def("let checkRange x y z = (x > y) + (y >= z)");
+    compiler.codegen_fn_def(&func_def.borrow()).unwrap();
+
+    unsafe {
+        let function = compiler
+            .execution_engine
+            .get_function::<unsafe extern "C" fn(f32, f32, f32) -> f32>("checkRange")
+            .unwrap();
+
+        assert_eq!(function.call(5.0, 3.0, 1.0), 2.0);
+        assert_eq!(function.call(3.0, 5.0, 1.0), 1.0);
+    }
+}
