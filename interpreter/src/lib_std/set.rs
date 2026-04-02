@@ -31,7 +31,7 @@ pub fn module() -> Module {
         &["set", "value"],
         move |_ctx, args| -> Result<ValueRef, NativeFnError> {
             let error = Err(invalid_args("Std.Set.contains"));
-            match (args.len(), args.get(0), args.get(1)) {
+            match (args.len(), args.first(), args.get(1)) {
                 (2, Some(set), Some(value)) => match &**set {
                     Value::Set(set) => Ok(val::bool(set.contains(value))),
                     _ => error,
@@ -58,7 +58,7 @@ pub fn module() -> Module {
         &["set", "f"],
         move |context, args| -> Result<ValueRef, NativeFnError> {
             let error = Err(invalid_args("Std.Set.filter"));
-            match (args.len(), args.get(0), args.get(1)) {
+            match (args.len(), args.first(), args.get(1)) {
                 (2, Some(a), Some(b)) => match (&**a, &**b) {
                     (Value::Set(set), Value::Symbol(fn_id)) => {
                         let mut filtered_set = set.clone();
@@ -113,7 +113,7 @@ pub fn module() -> Module {
         &["items"],
         move |_ctx, args| -> Result<ValueRef, NativeFnError> {
             let error = Err(invalid_args("Std.Set.from"));
-            match (args.len(), args.get(0)) {
+            match (args.len(), args.first()) {
                 (1, Some(a)) => match &**a {
                     Value::List(items) => Ok(val::Set::from(items).into()),
                     _ => error,
@@ -128,7 +128,7 @@ pub fn module() -> Module {
         &["set", "value"],
         move |_ctx, args| -> Result<ValueRef, NativeFnError> {
             let error = Err(invalid_args("Std.Set.insert"));
-            match (args.len(), args.get(0), args.get(1)) {
+            match (args.len(), args.first(), args.get(1)) {
                 (2, Some(set), Some(value)) => match &**set {
                     Value::Set(set) => Ok(set.insert(ValueRef::clone(value)).into()),
                     _ => error,
@@ -143,7 +143,7 @@ pub fn module() -> Module {
         &["set1", "set2"],
         move |_ctx, args| -> Result<ValueRef, NativeFnError> {
             let error = Err(invalid_args("Std.Set.isDisjoint"));
-            match (args.len(), args.get(0), args.get(1)) {
+            match (args.len(), args.first(), args.get(1)) {
                 (2, Some(set1), Some(set2)) => match (&**set1, &**set2) {
                     (Value::Set(set1), Value::Set(set2)) => Ok(val::bool(set1.is_disjoint(set2))),
                     _ => error,
@@ -158,7 +158,7 @@ pub fn module() -> Module {
         &["set"],
         move |_ctx, args| -> Result<ValueRef, NativeFnError> {
             let error = Err(invalid_args("Std.Set.isEmpty"));
-            match (args.len(), args.get(0)) {
+            match (args.len(), args.first()) {
                 (1, Some(set)) => match &**set {
                     Value::Set(set) => Ok(val::bool(set.is_empty())),
                     _ => error,
@@ -173,7 +173,7 @@ pub fn module() -> Module {
         &["set1", "set2"],
         move |_ctx, args| -> Result<ValueRef, NativeFnError> {
             let error = Err(invalid_args("Std.Set.isSubset"));
-            match (args.len(), args.get(0), args.get(1)) {
+            match (args.len(), args.first(), args.get(1)) {
                 (2, Some(set1), Some(set2)) => match (&**set1, &**set2) {
                     (Value::Set(set1), Value::Set(set2)) => Ok(val::bool(set1.is_subset(set2))),
                     _ => error,
@@ -188,7 +188,7 @@ pub fn module() -> Module {
         &["set1", "set2"],
         move |_ctx, args| -> Result<ValueRef, NativeFnError> {
             let error = Err(invalid_args("Std.Set.isSuperset"));
-            match (args.len(), args.get(0), args.get(1)) {
+            match (args.len(), args.first(), args.get(1)) {
                 (2, Some(set1), Some(set2)) => match (&**set1, &**set2) {
                     (Value::Set(set1), Value::Set(set2)) => Ok(val::bool(set1.is_superset(set2))),
                     _ => error,
@@ -201,7 +201,7 @@ pub fn module() -> Module {
     module.fn_def_native("length", &["set"], move |_ctx, args| {
         let error = Err(invalid_args("Std.Set.length"));
 
-        match (args.len(), args.get(0)) {
+        match (args.len(), args.first()) {
             (1, Some(map1)) => match &**map1 {
                 Value::Set(list) => Ok(val::number(list.len())),
                 _ => error,
@@ -216,7 +216,7 @@ pub fn module() -> Module {
         &["set", "f"],
         move |context, args| -> Result<ValueRef, NativeFnError> {
             let error = Err(invalid_args("Std.Set.map"));
-            match (args.len(), args.get(0), args.get(1)) {
+            match (args.len(), args.first(), args.get(1)) {
                 (2, Some(a), Some(b)) => match (&**a, &**b) {
                     (Value::Set(items), Value::Symbol(fn_id)) => {
                         let mut result: Vec<ValueRef> = Vec::with_capacity(items.len());
@@ -257,7 +257,7 @@ pub fn module() -> Module {
         &["set1", "set2"],
         move |_ctx, args| -> Result<ValueRef, NativeFnError> {
             let error = Err(invalid_args("Std.Set.reverse"));
-            match (args.len(), args.get(0), args.get(1)) {
+            match (args.len(), args.first(), args.get(1)) {
                 (2, Some(a), Some(b)) => match (&**a, &**b) {
                     (Value::Set(items1), Value::Set(items2)) => Ok(items1.merge(items2).into()),
                     _ => error,
@@ -272,7 +272,7 @@ pub fn module() -> Module {
         &["set", "value"],
         move |_ctx, args| -> Result<ValueRef, NativeFnError> {
             let error = Err(invalid_args("Std.Set.remove"));
-            match (args.len(), args.get(0), args.get(1)) {
+            match (args.len(), args.first(), args.get(1)) {
                 (2, Some(set), Some(value)) => match &**set {
                     Value::Set(set) => Ok(set.remove(value).into()),
                     _ => error,
@@ -287,7 +287,7 @@ pub fn module() -> Module {
         &["set"],
         move |_ctx, args| -> Result<ValueRef, NativeFnError> {
             let error = Err(invalid_args("Std.Set.toList"));
-            match (args.len(), args.get(0)) {
+            match (args.len(), args.first()) {
                 (1, Some(set)) => match &**set {
                     Value::Set(set) => Ok(set.to_list().into()),
                     _ => error,

@@ -85,7 +85,7 @@ impl QueryGuards {
         self.guards.len()
     }
 
-    pub fn iter(&self) -> std::slice::Iter<Rc<Expression>> {
+    pub fn iter(&self) -> std::slice::Iter<'_, Rc<Expression>> {
         self.guards.iter()
     }
 
@@ -186,7 +186,7 @@ impl QueryBindings {
         self.len() == 0
     }
 
-    pub fn iter(&self) -> std::slice::Iter<QueryBinding> {
+    pub fn iter(&self) -> std::slice::Iter<'_, QueryBinding> {
         self.bindings.iter()
     }
 }

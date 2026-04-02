@@ -263,7 +263,7 @@ impl Environment {
     #[inline]
     pub fn lookup_module_alias(&self, id: &Identifier) -> Option<Identifier> {
         let state = self.state.borrow();
-        let opt_mod_name = state.aliased_modules.get(id).map(Identifier::clone);
+        let opt_mod_name = state.aliased_modules.get(id).cloned();
 
         match (&opt_mod_name, &state.parent) {
             (Some(_), _) => opt_mod_name,

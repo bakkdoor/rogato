@@ -111,7 +111,7 @@ impl StructTypeProperties {
         StructTypeProperties { prop_types }
     }
 
-    pub fn iter(&self) -> std::slice::Iter<(Identifier, Rc<TypeExpression>)> {
+    pub fn iter(&self) -> std::slice::Iter<'_, (Identifier, Rc<TypeExpression>)> {
         self.prop_types.iter()
     }
 

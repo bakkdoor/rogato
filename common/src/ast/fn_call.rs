@@ -65,7 +65,7 @@ impl<T: Clone> FnCallArgs<T> {
         self.len() == 0
     }
 
-    pub fn iter(&self) -> std::slice::Iter<Rc<T>> {
+    pub fn iter(&self) -> std::slice::Iter<'_, Rc<T>> {
         self.args.iter()
     }
 }

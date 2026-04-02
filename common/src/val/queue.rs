@@ -20,7 +20,7 @@ impl Queue {
         }
     }
 
-    pub fn iter(&self) -> QueueIter {
+    pub fn iter(&self) -> QueueIter<'_> {
         self.entries.iter()
     }
 

@@ -127,7 +127,7 @@ impl<I: Display> TupleItems<I> {
         self.len() == 0
     }
 
-    pub fn iter(&self) -> std::slice::Iter<Rc<I>> {
+    pub fn iter(&self) -> std::slice::Iter<'_, Rc<I>> {
         self.items.iter()
     }
 }
@@ -196,7 +196,7 @@ impl StructProps {
         self.len() == 0
     }
 
-    pub fn iter(&self) -> std::slice::Iter<(Identifier, Rc<Expression>)> {
+    pub fn iter(&self) -> std::slice::Iter<'_, (Identifier, Rc<Expression>)> {
         self.props.iter()
     }
 }

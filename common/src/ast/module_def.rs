@@ -54,7 +54,7 @@ impl ModuleExports {
         self.len() == 0
     }
 
-    pub fn iter(&self) -> std::slice::Iter<Identifier> {
+    pub fn iter(&self) -> std::slice::Iter<'_, Identifier> {
         self.exports.iter()
     }
 }

@@ -22,7 +22,7 @@ impl Map {
         }
     }
 
-    pub fn iter(&self) -> MapIter {
+    pub fn iter(&self) -> MapIter<'_> {
         self.entries.iter()
     }
 

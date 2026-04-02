@@ -20,7 +20,7 @@ impl Set {
         }
     }
 
-    pub fn iter(&self) -> SetIter {
+    pub fn iter(&self) -> SetIter<'_> {
         self.entries.iter()
     }
 

@@ -2,7 +2,6 @@ use crate::{
     environment::{Environment, Imports},
     module::Module,
 };
-use rand::Rng;
 use rogato_common::{
     ast::{
         expression::FnDefArgs,
@@ -88,12 +87,12 @@ pub fn std_module() -> Module {
         op_fn(move |_ctx, args| with_string_op_args("++", args, |a, b| Ok(format!("{a}{b}")))),
     );
 
-    module.fn_def_native("id", &["value"], move |_ctx, args| match args.get(0) {
+    module.fn_def_native("id", &["value"], move |_ctx, args| match args.first() {
         Some(value) => Ok(ValueRef::clone(value)),
         None => Err(invalid_args("id")),
     });
 
-    module.fn_def_native("print", &["value"], move |_ctx, args| match args.get(0) {
+    module.fn_def_native("print", &["value"], move |_ctx, args| match args.first() {
         Some(value) => {
             print!("{value}");
             Ok(ValueRef::clone(value))
@@ -101,7 +100,7 @@ pub fn std_module() -> Module {
         None => Err(invalid_args("print")),
     });
 
-    module.fn_def_native("println", &["value"], move |_ctx, args| match args.get(0) {
+    module.fn_def_native("println", &["value"], move |_ctx, args| match args.first() {
         Some(value) => {
             println!("{value}");
             Ok(ValueRef::clone(value))
@@ -111,7 +110,7 @@ pub fn std_module() -> Module {
 
     module.fn_def_native("apply", &["func", "?args"], move |ctx, args| {
         let error = Err(invalid_args("apply"));
-        match (args.len(), args.get(0), args.get(1)) {
+        match (args.len(), args.first(), args.get(1)) {
             (1, Some(func), None) => Ok(ValueRef::clone(func)),
             (2, Some(func), Some(args)) => match (&**func, &**args) {
                 (Value::Lambda(lambda_ctx, lambda), Value::List(args)) => {
@@ -140,7 +139,7 @@ pub fn std_module() -> Module {
     });
 
     module.fn_def_native("toString", &["value"], move |_ctx, args| {
-        match args.get(0) {
+        match args.first() {
             Some(value) => match &**value {
                 Value::String(_) => Ok(ValueRef::clone(value)),
                 _ => Ok(val::string(format!("{value}"))),
@@ -149,14 +148,14 @@ pub fn std_module() -> Module {
         }
     });
 
-    module.fn_def_native("inspect", &["value"], move |_ctx, args| match args.get(0) {
+    module.fn_def_native("inspect", &["value"], move |_ctx, args| match args.first() {
         Some(value) => Ok(val::string(format!("{value}"))),
         None => Err(invalid_args("inspect")),
     });
 
     module.fn_def_native(">", &["a", "b"], move |_ctx, args| {
         let error = Err(invalid_args(">"));
-        match (args.len(), args.get(0), args.get(1)) {
+        match (args.len(), args.first(), args.get(1)) {
             (2, Some(a), Some(b)) => match (&**a, &**b) {
                 (Value::Number(a), Value::Number(b)) => Ok(val::bool(a.gt(b))),
                 _ => error,
@@ -167,7 +166,7 @@ pub fn std_module() -> Module {
 
     module.fn_def_native("<", &["a", "b"], move |_ctx, args| {
         let error = Err(invalid_args(">"));
-        match (args.len(), args.get(0), args.get(1)) {
+        match (args.len(), args.first(), args.get(1)) {
             (2, Some(a), Some(b)) => match ((*a).deref(), (*b).deref()) {
                 (Value::Number(a), Value::Number(b)) => Ok(val::bool(a.lt(b))),
                 _ => error,
@@ -178,7 +177,7 @@ pub fn std_module() -> Module {
 
     module.fn_def_native(">=", &["a", "b"], move |_ctx, args| {
         let error = Err(invalid_args(">"));
-        match (args.len(), args.get(0), args.get(1)) {
+        match (args.len(), args.first(), args.get(1)) {
             (2, Some(a), Some(b)) => match (&**a, &**b) {
                 (Value::Number(a), Value::Number(b)) => Ok(val::bool(a.ge(b))),
                 _ => error,
@@ -189,7 +188,7 @@ pub fn std_module() -> Module {
 
     module.fn_def_native("<=", &["a", "b"], move |_ctx, args| {
         let error = Err(invalid_args(">"));
-        match (args.len(), args.get(0), args.get(1)) {
+        match (args.len(), args.first(), args.get(1)) {
             (2, Some(a), Some(b)) => match (&**a, &**b) {
                 (Value::Number(a), Value::Number(b)) => Ok(val::bool(a.le(b))),
                 _ => error,
@@ -199,14 +198,14 @@ pub fn std_module() -> Module {
     });
 
     module.fn_def_native("==", &["a", "b"], move |_ctx, args| {
-        match (args.len(), args.get(0), args.get(1)) {
+        match (args.len(), args.first(), args.get(1)) {
             (2, Some(a), Some(b)) => Ok(val::bool(a.eq(b))),
             _ => Err(invalid_args("==")),
         }
     });
 
     module.fn_def_native("!=", &["a", "b"], move |_ctx, args| {
-        match (args.len(), args.get(0), args.get(1)) {
+        match (args.len(), args.first(), args.get(1)) {
             (2, Some(a), Some(b)) => Ok(val::bool(a.ne(b))),
             _ => Err(invalid_args("!=")),
         }
@@ -214,7 +213,7 @@ pub fn std_module() -> Module {
 
     module.fn_def_native("||", &["a", "b"], move |_ctx, args| {
         let error = Err(invalid_args("||"));
-        match (args.len(), args.get(0), args.get(1)) {
+        match (args.len(), args.first(), args.get(1)) {
             (2, Some(a), Some(b)) => match (&**a, &**b) {
                 (Value::Bool(a), Value::Bool(b)) => Ok(val::bool(*a || *b)),
                 _ => error,
@@ -225,7 +224,7 @@ pub fn std_module() -> Module {
 
     module.fn_def_native("&&", &["a", "b"], move |_ctx, args| {
         let error = Err(invalid_args("&&"));
-        match (args.len(), args.get(0), args.get(1)) {
+        match (args.len(), args.first(), args.get(1)) {
             (2, Some(a), Some(b)) => match (&**a, &**b) {
                 (Value::Bool(a), Value::Bool(b)) => Ok(val::bool(*a && *b)),
                 _ => error,
@@ -236,7 +235,7 @@ pub fn std_module() -> Module {
 
     module.fn_def_native("range", &["?start", "end"], move |_ctx, args| {
         let error = Err(invalid_args("range"));
-        match (args.len(), args.get(0), args.get(1)) {
+        match (args.len(), args.first(), args.get(1)) {
             (1, Some(a), None) => match &**a {
                 Value::Number(end) => {
                     if *end < dec!(0) {
@@ -264,7 +263,7 @@ pub fn std_module() -> Module {
 
     module.fn_def_native("random", &["min", "?max"], move |_ctx, args| {
         let error = Err(invalid_args("random"));
-        match (args.len(), args.get(0), args.get(1)) {
+        match (args.len(), args.first(), args.get(1)) {
             (1, Some(a), None) => match &**a {
                 Value::Number(max) => {
                     if *max == dec!(0) {
@@ -307,7 +306,7 @@ pub fn std_module() -> Module {
         &["collection"],
         move |_ctx, args| -> Result<ValueRef, NativeFnError> {
             let error = Err(invalid_args("length"));
-            match (args.len(), args.get(0)) {
+            match (args.len(), args.first()) {
                 (1, Some(l)) => match &**l {
                     Value::String(s) => Ok(val::number(s.len())),
                     Value::List(list) => Ok(val::number(list.len())),
@@ -329,7 +328,7 @@ pub fn std_module() -> Module {
         move |ctx, args| -> Result<ValueRef, NativeFnError> {
             let error = Err(invalid_args("match"));
 
-            match (args.len(), args.get(0), args.get(1)) {
+            match (args.len(), args.first(), args.get(1)) {
                 (2, Some(val), Some(func)) => match &**func {
                     Value::Lambda(lambda_ctx, lambda) => lambda_ctx
                         .borrow_mut()
@@ -359,7 +358,7 @@ pub fn std_module() -> Module {
         move |ctx, args| -> Result<ValueRef, NativeFnError> {
             let error = Err(invalid_args("times"));
 
-            match (args.len(), args.get(0), args.get(1)) {
+            match (args.len(), args.first(), args.get(1)) {
                 (2, Some(count_val), Some(func)) => {
                     match (&**count_val, &**func) {
                         (Value::Number(count), Value::Lambda(lambda_ctx, lambda)) => {
@@ -441,7 +440,7 @@ pub fn with_number_op_args(
     args: &[ValueRef],
     func: fn(Decimal, Decimal) -> Result<Decimal, NativeFnError>,
 ) -> Result<ValueRef, NativeFnError> {
-    match (args.len(), args.get(0), args.get(1)) {
+    match (args.len(), args.first(), args.get(1)) {
         (2, Some(a), Some(b)) => match (&**a, &**b) {
             (Value::Number(a), Value::Number(b)) => func(*a, *b).map(val::number),
             _ => Err(invalid_args(id)),
@@ -455,7 +454,7 @@ fn with_string_op_args(
     args: &[ValueRef],
     func: fn(&String, &String) -> Result<String, NativeFnError>,
 ) -> Result<ValueRef, NativeFnError> {
-    match (args.len(), args.get(0), args.get(1)) {
+    match (args.len(), args.first(), args.get(1)) {
         (2, Some(a), Some(b)) => match (&**a, &**b) {
             (Value::String(a), Value::String(b)) => func(a, b).map(val::string),
             _ => Err(invalid_args(id)),

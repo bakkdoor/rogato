@@ -20,7 +20,7 @@ impl Program {
         self.len() == 0
     }
 
-    pub fn iter(&self) -> std::slice::Iter<Rc<AST>> {
+    pub fn iter(&self) -> std::slice::Iter<'_, Rc<AST>> {
         self.nodes.iter()
     }
 }

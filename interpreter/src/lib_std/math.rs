@@ -48,7 +48,7 @@ pub fn module() -> Module {
         "/",
         op_fn(move |_ctx, args| {
             with_number_op_args("/", args, |a, b| {
-                a.checked_div(b).map_or(Err(invalid_args("/")), Ok)
+                a.checked_div(b).ok_or(invalid_args("/"))
             })
         }),
     );
@@ -57,7 +57,7 @@ pub fn module() -> Module {
         "%",
         op_fn(move |_ctx, args| {
             with_number_op_args("%", args, |a, b| {
-                a.checked_rem(b).map_or(Err(invalid_args("%")), Ok)
+                a.checked_rem(b).ok_or(invalid_args("%"))
             })
         }),
     );
@@ -66,14 +66,14 @@ pub fn module() -> Module {
         "^",
         op_fn(move |_ctx, args| {
             with_number_op_args("^", args, |a, b| {
-                a.checked_powd(b).map_or(Err(invalid_args("^")), Ok)
+                a.checked_powd(b).ok_or(invalid_args("^"))
             })
         }),
     );
 
     module.fn_def_native("abs", &["num"], move |_ctx, args| {
         let error = Err(invalid_args("abs"));
-        match args.get(0) {
+        match args.first() {
             Some(val) => match &**val {
                 Value::Number(num) => Ok(val::number(num.abs())),
                 _ => error,
@@ -84,7 +84,7 @@ pub fn module() -> Module {
 
     module.fn_def_native("round", &["num"], move |_ctx, args| {
         let error = Err(invalid_args("round"));
-        match args.get(0) {
+        match args.first() {
             Some(val) => match &**val {
                 Value::Number(num) => Ok(val::number(num.round())),
                 _ => error,
@@ -95,7 +95,7 @@ pub fn module() -> Module {
 
     module.fn_def_native("ceil", &["num"], move |_ctx, args| {
         let error = Err(invalid_args("ceil"));
-        match args.get(0) {
+        match args.first() {
             Some(val) => match &**val {
                 Value::Number(num) => Ok(val::number(num.ceil())),
                 _ => error,
@@ -106,7 +106,7 @@ pub fn module() -> Module {
 
     module.fn_def_native("floor", &["num"], move |_ctx, args| {
         let error = Err(invalid_args("floor"));
-        match args.get(0) {
+        match args.first() {
             Some(val) => match &**val {
                 Value::Number(num) => Ok(val::number(num.floor())),
                 _ => error,
@@ -117,7 +117,7 @@ pub fn module() -> Module {
 
     module.fn_def_native("trunc", &["num"], move |_ctx, args| {
         let error = Err(invalid_args("trunc"));
-        match args.get(0) {
+        match args.first() {
             Some(val) => match &**val {
                 Value::Number(num) => Ok(val::number(num.trunc())),
                 _ => error,
@@ -128,7 +128,7 @@ pub fn module() -> Module {
 
     module.fn_def_native("fract", &["num"], move |_ctx, args| {
         let error = Err(invalid_args("fract"));
-        match args.get(0) {
+        match args.first() {
             Some(val) => match &**val {
                 Value::Number(num) => Ok(val::number(num.fract())),
                 _ => error,
@@ -139,7 +139,7 @@ pub fn module() -> Module {
 
     module.fn_def_native("rescale", &["num", "scale"], move |_ctx, args| {
         let error = Err(invalid_args("rescale"));
-        match (args.len(), args.get(0), args.get(1)) {
+        match (args.len(), args.first(), args.get(1)) {
             (2, Some(val), Some(scale)) => match (&**val, &**scale) {
                 (Value::Number(num), Value::Number(scale)) => match scale.floor().to_u32() {
                     Some(scale) => {
@@ -157,7 +157,7 @@ pub fn module() -> Module {
 
     module.fn_def_native("max", &["a", "b"], move |_ctx, args| {
         let error = Err(invalid_args("max"));
-        match (args.get(0), args.get(1)) {
+        match (args.first(), args.get(1)) {
             (Some(a), Some(b)) => match (&**a, &**b) {
                 (Value::Number(ad), Value::Number(bd)) => Ok(val::number((*ad).max(*bd))),
                 _ => error,
@@ -168,7 +168,7 @@ pub fn module() -> Module {
 
     module.fn_def_native("min", &["a", "b"], move |_ctx, args| {
         let error = Err(invalid_args("min"));
-        match (args.get(0), args.get(1)) {
+        match (args.first(), args.get(1)) {
             (Some(a), Some(b)) => match (&**a, &**b) {
                 (Value::Number(ad), Value::Number(bd)) => Ok(val::number((*ad).min(*bd))),
                 _ => error,
@@ -179,7 +179,7 @@ pub fn module() -> Module {
 
     module.fn_def_native("sqrt", &["num"], move |_ctx, args| {
         let error = Err(invalid_args("srqt"));
-        match args.get(0) {
+        match args.first() {
             Some(a) => match &**a {
                 Value::Number(num) => Ok(val::option(num.sqrt().map(val::number))),
                 _ => error,
@@ -190,7 +190,7 @@ pub fn module() -> Module {
 
     module.fn_def_native("isEven", &["num"], move |_ctx, args| {
         let error = Err(invalid_args("isEven"));
-        match args.get(0) {
+        match args.first() {
             Some(a) => match &**a {
                 Value::Number(num) => Ok(val::bool(
                     num.checked_rem(2.into())
@@ -205,7 +205,7 @@ pub fn module() -> Module {
 
     module.fn_def_native("isOdd", &["num"], move |_ctx, args| {
         let error = Err(invalid_args("isOdd"));
-        match args.get(0) {
+        match args.first() {
             Some(a) => match &**a {
                 Value::Number(num) => Ok(val::bool(
                     num.checked_rem(2.into())

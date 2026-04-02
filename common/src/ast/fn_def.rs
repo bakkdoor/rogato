@@ -117,7 +117,7 @@ impl FnDef {
         self.is_tail_recursive
     }
 
-    pub fn variants_iter(&self) -> std::slice::Iter<FnDefVariant> {
+    pub fn variants_iter(&self) -> std::slice::Iter<'_, FnDefVariant> {
         self.variants.iter()
     }
 }
@@ -189,7 +189,7 @@ impl FnDefVariants {
         }
     }
 
-    pub fn iter(&self) -> std::slice::Iter<FnDefVariant> {
+    pub fn iter(&self) -> std::slice::Iter<'_, FnDefVariant> {
         self.variants.iter()
     }
 
@@ -269,7 +269,7 @@ impl FnDefArgs {
         self.len() == 0
     }
 
-    pub fn iter(&self) -> std::slice::Iter<Rc<Pattern>> {
+    pub fn iter(&self) -> std::slice::Iter<'_, Rc<Pattern>> {
         self.args.iter()
     }
 }

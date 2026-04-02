@@ -17,7 +17,7 @@ impl Vector {
         }
     }
 
-    pub fn iter(&self) -> VectorIter {
+    pub fn iter(&self) -> VectorIter<'_> {
         self.entries.iter()
     }
 

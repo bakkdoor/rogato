@@ -191,14 +191,14 @@ impl EvalContext {
 
         self.current_func_id = last_current_func_id;
 
-        return Err(EvalError::PatternMatchFailed(
+        Err(EvalError::PatternMatchFailed(
             func.id().clone(),
             PatternMatchingError::NoFnVariantMatched(
                 func.id().clone(),
                 last_attempted_pattern,
                 args.to_vec(),
             ),
-        ));
+        ))
     }
 
     #[cfg_attr(feature = "flame_it", flame)]
@@ -304,14 +304,14 @@ impl EvalContext {
             return Ok(value);
         }
 
-        return Err(EvalError::PatternMatchFailed(
+        Err(EvalError::PatternMatchFailed(
             func.id().clone(),
             PatternMatchingError::NoFnVariantMatched(
                 func.id().clone(),
                 last_attempted_pattern,
                 args.to_vec(),
             ),
-        ));
+        ))
     }
 
     #[cfg_attr(feature = "flame_it", flame)]
@@ -482,9 +482,9 @@ impl LambdaClosureContext for EvalContext {
             }
         }
 
-        return Err(LambdaClosureEvalError::LambdaArgumentsMismatch(
+        Err(LambdaClosureEvalError::LambdaArgumentsMismatch(
             lambda.clone(),
             args.iter().map(ValueRef::clone).collect(),
-        ));
+        ))
     }
 }

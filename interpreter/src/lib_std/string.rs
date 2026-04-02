@@ -18,7 +18,7 @@ pub fn module() -> Module {
 
     module.fn_def_native("length", &["string"], move |_ctx, args| {
         let error = Err(invalid_args("Std.String.length"));
-        match args.get(0) {
+        match args.first() {
             Some(val) => match &**val {
                 Value::String(string) => Ok(val::number(string.len())),
                 _ => error,
@@ -29,7 +29,7 @@ pub fn module() -> Module {
 
     module.fn_def_native("reverse", &["string"], move |_ctx, args| {
         let error = Err(invalid_args("Std.String.reverse"));
-        match args.get(0) {
+        match args.first() {
             Some(val) => match &**val {
                 Value::String(string) => Ok(val::string(string.chars().rev().collect::<String>())),
                 _ => error,
@@ -40,7 +40,7 @@ pub fn module() -> Module {
 
     module.fn_def_native("split", &["string", "pattern"], move |_ctx, args| {
         let error = Err(invalid_args("Std.String.split"));
-        match (args.len(), args.get(0), args.get(1)) {
+        match (args.len(), args.first(), args.get(1)) {
             (2, Some(string), Some(pattern)) => match (&**string, &**pattern) {
                 (Value::String(string), Value::String(split_str)) => Ok(val::list(
                     string
@@ -56,7 +56,7 @@ pub fn module() -> Module {
 
     module.fn_def_native("uppercase", &["string"], move |_ctx, args| {
         let error = Err(invalid_args("Std.String.uppercase"));
-        match args.get(0) {
+        match args.first() {
             Some(val) => match &**val {
                 Value::String(string) => Ok(val::string(string.to_uppercase())),
                 _ => error,
@@ -67,7 +67,7 @@ pub fn module() -> Module {
 
     module.fn_def_native("lowercase", &["string"], move |_ctx, args| {
         let error = Err(invalid_args("Std.String.lowercase"));
-        match args.get(0) {
+        match args.first() {
             Some(val) => match &**val {
                 Value::String(string) => Ok(val::string(string.to_lowercase())),
                 _ => error,
@@ -78,7 +78,7 @@ pub fn module() -> Module {
 
     module.fn_def_native("toSymbol", &["string"], move |_ctx, args| {
         let error = Err(invalid_args("Std.String.toSymbol"));
-        match args.get(0) {
+        match args.first() {
             Some(val) => match &**val {
                 Value::String(string) => {
                     let string = string.trim();

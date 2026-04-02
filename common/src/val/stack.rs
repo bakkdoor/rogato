@@ -17,7 +17,7 @@ impl Stack {
         }
     }
 
-    pub fn iter(&self) -> StackIter {
+    pub fn iter(&self) -> StackIter<'_> {
         self.entries.iter()
     }
 

@@ -136,6 +136,7 @@ pub fn run_repl(files_to_load: &[String]) -> anyhow::Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 #[derive(Error, Debug)]
 pub enum REPLError {
     #[error("EvalError: {0}")]

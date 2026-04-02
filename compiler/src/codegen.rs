@@ -103,7 +103,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             match &**arg_name {
                 Pattern::Var(arg_name) => {
                     let alloca = self.create_entry_block_alloca(f32_type, arg_name.as_str());
-                    self.builder.build_store(alloca, arg);
+                    self.builder.build_store(alloca, arg)?;
                     self.store_var(arg_name, alloca)
                 }
                 _ => todo!("pattern matching not yet supported"),
@@ -113,7 +113,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         match body.as_ref() {
             FnDefBody::RogatoFn(expr) => {
                 let body = self.codegen_expr(expr)?;
-                self.builder.build_return(Some(&body));
+                self.builder.build_return(Some(&body))?;
                 if func.verify(true) {
                     self.fpm.run_on(&func);
                     self.clear_current_fn();

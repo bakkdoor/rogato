@@ -30,7 +30,7 @@ pub fn module() -> Module {
     module.fn_def_native("contains", &["map", "key"], move |_ctx, args| {
         let error = Err(invalid_args("Std.Map.contains"));
 
-        match (args.len(), args.get(0), args.get(1)) {
+        match (args.len(), args.first(), args.get(1)) {
             (2, Some(map), Some(key)) => match &**map {
                 Value::Map(map) => Ok(val::bool(map.contains(key))),
                 _ => error,
@@ -42,9 +42,9 @@ pub fn module() -> Module {
     module.fn_def_native("insert", &["map", "key", "?value"], move |_ctx, args| {
         let error = Err(invalid_args("Std.Map.insert"));
 
-        match (args.len(), args.get(0), args.get(1), args.get(2)) {
+        match (args.len(), args.first(), args.get(1), args.get(2)) {
             (2, Some(map), Some(kv_pair), None) => match (&**map, &**kv_pair) {
-                (Value::Map(map), Value::Tuple(2, pair)) => match (pair.get(0), pair.get(1)) {
+                (Value::Map(map), Value::Tuple(2, pair)) => match (pair.first(), pair.get(1)) {
                     (Some(key), Some(value)) => Ok(map
                         .insert(ValueRef::clone(key), ValueRef::clone(value))
                         .into()),
@@ -72,7 +72,7 @@ pub fn module() -> Module {
 
             match (
                 args.len(),
-                args.get(0),
+                args.first(),
                 args.get(1),
                 args.get(2),
                 args.get(3),
@@ -111,7 +111,7 @@ pub fn module() -> Module {
     module.fn_def_native("remove", &["map", "key"], move |_ctx, args| {
         let error = Err(invalid_args("Std.Map.remove"));
 
-        match (args.len(), args.get(0), args.get(1)) {
+        match (args.len(), args.first(), args.get(1)) {
             (2, Some(map), Some(key)) => match &**map {
                 Value::Map(map) => Ok(map.remove(key).into()),
                 _ => error,
@@ -124,7 +124,7 @@ pub fn module() -> Module {
     module.fn_def_native("merge", &["map1", "map2"], move |_ctx, args| {
         let error = Err(invalid_args("Std.Map.merge"));
 
-        match (args.len(), args.get(0), args.get(1)) {
+        match (args.len(), args.first(), args.get(1)) {
             (2, Some(map1), Some(map2)) => match (&**map1, &**map2) {
                 (Value::Map(map1), Value::Map(map2)) => Ok(map1.merge(map2).into()),
                 _ => error,
@@ -137,7 +137,7 @@ pub fn module() -> Module {
     module.fn_def_native("length", &["map"], move |_ctx, args| {
         let error = Err(invalid_args("Std.Map.length"));
 
-        match (args.len(), args.get(0)) {
+        match (args.len(), args.first()) {
             (1, Some(map1)) => match &**map1 {
                 Value::Map(map) => Ok(val::number(map.len())),
                 _ => error,
@@ -153,7 +153,7 @@ pub fn module() -> Module {
         move |_ctx, args| {
             let error = Err(invalid_args("Std.Map.getOrDefault"));
 
-            match (args.len(), args.get(0), args.get(1), args.get(2)) {
+            match (args.len(), args.first(), args.get(1), args.get(2)) {
                 (3, Some(map), Some(key), Some(default)) => match &**map {
                     Value::Map(map) => Ok(map.get(key).unwrap_or(ValueRef::clone(default))),
                     _ => error,
@@ -170,7 +170,7 @@ pub fn module() -> Module {
         move |ctx, args| {
             let error = Err(invalid_args("Std.Map.getOrElse"));
 
-            match (args.len(), args.get(0), args.get(1), args.get(2)) {
+            match (args.len(), args.first(), args.get(1), args.get(2)) {
                 (3, Some(map), Some(key), Some(default_fn)) => match (&**map, &**default_fn) {
                     (Value::Map(map), Value::Lambda(lambda_ctx, lambda)) => match map.get(key) {
                         Some(value) => Ok(value),
@@ -195,7 +195,7 @@ pub fn module() -> Module {
     module.fn_def_native("filter", &["map", "func"], move |ctx, args| {
         let error = Err(invalid_args("Std.Map.filter"));
 
-        match (args.len(), args.get(0), args.get(1)) {
+        match (args.len(), args.first(), args.get(1)) {
             (2, Some(map), Some(func)) => match (&**map, &**func) {
                 (Value::Map(map), Value::Lambda(lambda_ctx, lambda)) => {
                     let mut new_map = val::Map::new();

@@ -60,7 +60,7 @@ impl LetBindings {
         }
     }
 
-    pub fn iter(&self) -> std::slice::Iter<(VarIdentifier, Rc<Expression>)> {
+    pub fn iter(&self) -> std::slice::Iter<'_, (VarIdentifier, Rc<Expression>)> {
         self.bindings.iter()
     }
 }

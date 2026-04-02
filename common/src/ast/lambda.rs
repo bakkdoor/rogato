@@ -81,7 +81,7 @@ impl<A: Display + ASTDepth> LambdaArgs<A> {
         self.len() == 0
     }
 
-    pub fn iter(&self) -> std::slice::Iter<A> {
+    pub fn iter(&self) -> std::slice::Iter<'_, A> {
         self.args.iter()
     }
 
@@ -121,7 +121,7 @@ impl Lambda {
         Self { variants }
     }
 
-    pub fn variants_iter(&self) -> std::slice::Iter<Rc<LambdaVariant>> {
+    pub fn variants_iter(&self) -> std::slice::Iter<'_, Rc<LambdaVariant>> {
         self.variants.iter()
     }
 
