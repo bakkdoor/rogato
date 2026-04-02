@@ -47,27 +47,21 @@ pub fn module() -> Module {
     module.fn_def(
         "/",
         op_fn(move |_ctx, args| {
-            with_number_op_args("/", args, |a, b| {
-                a.checked_div(b).ok_or(invalid_args("/"))
-            })
+            with_number_op_args("/", args, |a, b| a.checked_div(b).ok_or(invalid_args("/")))
         }),
     );
 
     module.fn_def(
         "%",
         op_fn(move |_ctx, args| {
-            with_number_op_args("%", args, |a, b| {
-                a.checked_rem(b).ok_or(invalid_args("%"))
-            })
+            with_number_op_args("%", args, |a, b| a.checked_rem(b).ok_or(invalid_args("%")))
         }),
     );
 
     module.fn_def(
         "^",
         op_fn(move |_ctx, args| {
-            with_number_op_args("^", args, |a, b| {
-                a.checked_powd(b).ok_or(invalid_args("^"))
-            })
+            with_number_op_args("^", args, |a, b| a.checked_powd(b).ok_or(invalid_args("^")))
         }),
     );
 

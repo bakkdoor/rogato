@@ -100,12 +100,14 @@ pub fn std_module() -> Module {
         None => Err(invalid_args("print")),
     });
 
-    module.fn_def_native("println", &["value"], move |_ctx, args| match args.first() {
-        Some(value) => {
-            println!("{value}");
-            Ok(ValueRef::clone(value))
+    module.fn_def_native("println", &["value"], move |_ctx, args| {
+        match args.first() {
+            Some(value) => {
+                println!("{value}");
+                Ok(ValueRef::clone(value))
+            }
+            None => Err(invalid_args("println")),
         }
-        None => Err(invalid_args("println")),
     });
 
     module.fn_def_native("apply", &["func", "?args"], move |ctx, args| {
@@ -148,9 +150,11 @@ pub fn std_module() -> Module {
         }
     });
 
-    module.fn_def_native("inspect", &["value"], move |_ctx, args| match args.first() {
-        Some(value) => Ok(val::string(format!("{value}"))),
-        None => Err(invalid_args("inspect")),
+    module.fn_def_native("inspect", &["value"], move |_ctx, args| {
+        match args.first() {
+            Some(value) => Ok(val::string(format!("{value}"))),
+            None => Err(invalid_args("inspect")),
+        }
     });
 
     module.fn_def_native(">", &["a", "b"], move |_ctx, args| {
