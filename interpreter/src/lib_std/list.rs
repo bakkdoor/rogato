@@ -265,7 +265,7 @@ pub fn module() -> Module {
             match (args.len(), args.first()) {
                 (1, Some(a)) => match &**a {
                     Value::List(items) => {
-                        let mut result: Vec<ValueRef> = Vec::with_capacity(items.len() * 2);
+                        let mut result: Vec<ValueRef> = Vec::with_capacity(items.len());
                         let mut iter = items.iter();
                         if let Some(first) = iter.next() {
                             let mut prev = first;
@@ -295,7 +295,7 @@ pub fn module() -> Module {
             match (args.len(), args.first()) {
                 (1, Some(a)) => match &**a {
                     Value::List(items) => {
-                        let mut result: Vec<ValueRef> = Vec::with_capacity(items.len() * 2);
+                        let mut result: Vec<ValueRef> = Vec::with_capacity(items.len());
                         let iter = items.iter();
                         let mut prev = &val::none();
                         for item in iter {
