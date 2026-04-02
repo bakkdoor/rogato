@@ -2,17 +2,17 @@
 
 - [x] Parser (WIP but works for the most part, further syntax changes expected)
   - Lots of potential optimizations and refactorings to be done in the parser grammar
-- [ ] Analyzer
-  - [ ] Static type checking? Or default to runtime type checking for now?
-  - [ ] Local variable access (prevent accessing undefined variables)
-  - [ ] Check function signatures and call-sites
-  - [ ] Basic type checker for
-    - [ ] Local variable bindings
-    - [ ] Function call arguments
-    - [ ] Query
-      - [ ] Sources
-      - [ ] Guards
-      - [ ] Productions
+- [x] Analyzer
+  - [x] Static type checking (implemented in type-checker crate)
+  - [x] Local variable access (prevent accessing undefined variables)
+  - [x] Check function signatures and call-sites
+  - [x] Basic type checker for
+    - [x] Local variable bindings
+    - [x] Function call arguments
+    - [x] Query
+      - [x] Sources
+      - [x] Guards
+      - [x] Productions
     - [ ] Simplifier / AST Optimizer
       - [ ] Constant (function) replacements
       - [ ] Constant arithmetic expressions

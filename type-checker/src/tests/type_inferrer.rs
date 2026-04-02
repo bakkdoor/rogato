@@ -1,10 +1,16 @@
 use rogato_common::ast::{
-    expression::Expression, literal::Literal, type_expression::TypeExpression, Identifier,
-    VarIdentifier,
+    expression::Expression,
+    fn_call::{FnCall, FnCallArgs},
+    if_else::IfElse,
+    let_expression::{LetBindings, LetExpression},
+    literal::Literal,
+    query::{Query, QueryBinding, QueryBindings, QueryGuards},
+    type_expression::TypeExpression,
+    Identifier, VarIdentifier,
 };
 use std::rc::Rc;
 
-use crate::{InferredType, TypeInferrer};
+use crate::{InferredType, TypeCheck, TypeEnvironment, TypeInferrer};
 
 #[test]
 fn infer_number_literal() {
@@ -141,4 +147,327 @@ fn infer_logical_op() {
 
     let result = inferrer.infer_expression(&expr);
     assert!(matches!(result, InferredType::Known(_)));
+}
+
+#[cfg(test)]
+mod type_check_tests {
+    use super::*;
+
+    #[test]
+    fn type_check_undefined_variable_returns_error() {
+        let var: VarIdentifier = "undefined_var".into();
+        let expr = Expression::Var(var);
+        let mut context = TypeEnvironment::new();
+
+        let result = expr.type_check(&mut context);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn type_check_defined_variable_returns_type() {
+        let var: VarIdentifier = "x".into();
+        let expr = Expression::Var(var);
+        let mut context = TypeEnvironment::new();
+
+        context.insert_variable("x".into(), Rc::new(TypeExpression::NumberType));
+
+        let result = expr.type_check(&mut context);
+        assert!(matches!(result, Ok(InferredType::Known(_))));
+    }
+
+    #[test]
+    fn type_check_undefined_function_returns_error() {
+        let args = FnCallArgs::new(vec![]);
+        let fn_call = FnCall::new("undefined_fn".into(), args);
+        let expr = Expression::FnCall(fn_call);
+        let mut context = TypeEnvironment::new();
+
+        let result = expr.type_check(&mut context);
+        assert!(matches!(
+            result,
+            Err(crate::TypeCheckError::UndefinedFunction(_))
+        ));
+    }
+
+    #[test]
+    fn type_check_function_call_returns_return_type() {
+        let args = FnCallArgs::new(vec![]);
+        let fn_call = FnCall::new("my_fn".into(), args);
+        let expr = Expression::FnCall(fn_call);
+        let mut context = TypeEnvironment::new();
+
+        context.insert_function(crate::FnSignature {
+            name: "my_fn".into(),
+            arg_types: vec![],
+            return_type: Rc::new(TypeExpression::NumberType),
+        });
+
+        let result = expr.type_check(&mut context);
+        assert!(matches!(result, Ok(InferredType::Known(_))));
+    }
+
+    #[test]
+    fn type_check_fn_call_argument_count_mismatch() {
+        let args = FnCallArgs::new(vec![Rc::new(Expression::Lit(Literal::Number(1i32.into())))]);
+        let fn_call = FnCall::new("my_fn".into(), args);
+        let expr = Expression::FnCall(fn_call);
+        let mut context = TypeEnvironment::new();
+
+        context.insert_function(crate::FnSignature {
+            name: "my_fn".into(),
+            arg_types: vec![],
+            return_type: Rc::new(TypeExpression::NumberType),
+        });
+
+        let result = expr.type_check(&mut context);
+        assert!(matches!(
+            result,
+            Err(crate::TypeCheckError::ArgumentCountMismatch { .. })
+        ));
+    }
+
+    #[test]
+    fn type_check_let_binding() {
+        let bindings = LetBindings::new(vec![(
+            "x".into(),
+            Rc::new(Expression::Lit(Literal::Number(1i32.into()))),
+        )]);
+        let body = Rc::new(Expression::Var("x".into()));
+        let let_expr = LetExpression::new(bindings, body);
+        let expr = Expression::Let(let_expr);
+        let mut context = TypeEnvironment::new();
+
+        let result = expr.type_check(&mut context);
+        assert!(matches!(result, Ok(InferredType::Known(_))));
+    }
+
+    #[test]
+    fn type_check_if_else_returns_then_or_else_type() {
+        let condition = Rc::new(Expression::Lit(Literal::Bool(true)));
+        let then_expr = Rc::new(Expression::Lit(Literal::Number(1i32.into())));
+        let else_expr = Rc::new(Expression::Lit(Literal::Number(2i32.into())));
+        let if_else = IfElse::new(condition, then_expr, else_expr);
+        let expr = Expression::IfElse(if_else);
+
+        let result = expr.type_check(&mut TypeEnvironment::new());
+        assert!(matches!(result, Ok(InferredType::Known(_))));
+    }
+
+    #[test]
+    fn type_check_if_else_condition_must_be_bool() {
+        let condition = Rc::new(Expression::Lit(Literal::Number(1i32.into())));
+        let then_expr = Rc::new(Expression::Lit(Literal::Number(1i32.into())));
+        let else_expr = Rc::new(Expression::Lit(Literal::Number(2i32.into())));
+        let if_else = IfElse::new(condition, then_expr, else_expr);
+        let expr = Expression::IfElse(if_else);
+
+        let result = expr.type_check(&mut TypeEnvironment::new());
+        assert!(matches!(
+            result,
+            Err(crate::TypeCheckError::TypeMismatch { .. })
+        ));
+    }
+
+    #[test]
+    fn type_check_number_arithmetic_op() {
+        let left = Rc::new(Expression::Lit(Literal::Number(1i32.into())));
+        let right = Rc::new(Expression::Lit(Literal::Number(2i32.into())));
+
+        for op in ["+", "-", "*", "/", "%"] {
+            let expr = Expression::OpCall(op.into(), left.clone(), right.clone());
+            let result = expr.type_check(&mut TypeEnvironment::new());
+            assert!(
+                matches!(result, Ok(InferredType::Known(_))),
+                "Failed for operator: {}",
+                op
+            );
+        }
+    }
+
+    #[test]
+    fn type_check_comparison_op_returns_bool() {
+        let left = Rc::new(Expression::Lit(Literal::Number(1i32.into())));
+        let right = Rc::new(Expression::Lit(Literal::Number(2i32.into())));
+
+        for op in [">", "<", ">=", "<="] {
+            let expr = Expression::OpCall(op.into(), left.clone(), right.clone());
+            let result = expr.type_check(&mut TypeEnvironment::new());
+            assert!(
+                matches!(result, Ok(InferredType::Known(_))),
+                "Failed for operator: {}",
+                op
+            );
+        }
+    }
+
+    #[test]
+    fn type_check_equality_op_returns_bool() {
+        let left = Rc::new(Expression::Lit(Literal::Number(1i32.into())));
+        let right = Rc::new(Expression::Lit(Literal::Number(2i32.into())));
+
+        for op in ["==", "!="] {
+            let expr = Expression::OpCall(op.into(), left.clone(), right.clone());
+            let result = expr.type_check(&mut TypeEnvironment::new());
+            assert!(
+                matches!(result, Ok(InferredType::Known(_))),
+                "Failed for operator: {}",
+                op
+            );
+        }
+    }
+
+    #[test]
+    fn type_check_logical_op_both_operands_must_be_bool() {
+        let left = Rc::new(Expression::Lit(Literal::Number(1i32.into())));
+        let right = Rc::new(Expression::Lit(Literal::Bool(true)));
+
+        for op in ["&&", "||"] {
+            let expr = Expression::OpCall(op.into(), left.clone(), right.clone());
+            let result = expr.type_check(&mut TypeEnvironment::new());
+            assert!(
+                matches!(result, Err(crate::TypeCheckError::TypeMismatch { .. })),
+                "Should fail for operator: {}",
+                op
+            );
+        }
+    }
+
+    #[test]
+    fn type_check_query() {
+        let binding = QueryBinding::new(
+            vec!["person".into()],
+            Rc::new(Expression::Symbol("Person".into())),
+        );
+        let bindings = QueryBindings::new(vec![binding]);
+        let guards = QueryGuards::new(vec![]);
+        let production = Rc::new(Expression::Symbol("name".into()));
+        let query = Query::new(bindings, guards, production);
+
+        let expr = Expression::Query(query);
+        let result = expr.type_check(&mut TypeEnvironment::new());
+
+        assert!(matches!(result, Ok(InferredType::Known(_))));
+    }
+
+    #[test]
+    fn type_check_query_with_guard() {
+        let binding = QueryBinding::new(
+            vec!["person".into()],
+            Rc::new(Expression::Symbol("Person".into())),
+        );
+        let bindings = QueryBindings::new(vec![binding]);
+
+        let guard = Rc::new(Expression::Lit(Literal::Bool(true)));
+        let guards = QueryGuards::new(vec![guard]);
+
+        let production = Rc::new(Expression::Symbol("name".into()));
+        let query = Query::new(bindings, guards, production);
+
+        let expr = Expression::Query(query);
+        let result = expr.type_check(&mut TypeEnvironment::new());
+
+        assert!(matches!(result, Ok(InferredType::Known(_))));
+    }
+
+    #[test]
+    fn type_check_query_guard_must_be_bool() {
+        let binding = QueryBinding::new(
+            vec!["person".into()],
+            Rc::new(Expression::Symbol("Person".into())),
+        );
+        let bindings = QueryBindings::new(vec![binding]);
+
+        let guard = Rc::new(Expression::Lit(Literal::Number(42i32.into())));
+        let guards = QueryGuards::new(vec![guard]);
+
+        let production = Rc::new(Expression::Symbol("name".into()));
+        let query = Query::new(bindings, guards, production);
+
+        let expr = Expression::Query(query);
+        let result = expr.type_check(&mut TypeEnvironment::new());
+
+        assert!(matches!(
+            result,
+            Err(crate::TypeCheckError::TypeMismatch { .. })
+        ));
+    }
+
+    #[test]
+    fn type_check_symbol() {
+        let expr = Expression::Symbol("my_symbol".into());
+        let result = expr.type_check(&mut TypeEnvironment::new());
+
+        assert!(matches!(result, Ok(InferredType::Known(_))));
+    }
+
+    #[test]
+    fn type_check_const_or_type_ref() {
+        let mut context = TypeEnvironment::new();
+        context.insert_type_def("Person".into(), Rc::new(TypeExpression::SymbolType));
+
+        let expr = Expression::ConstOrTypeRef("Person".into());
+        let result = expr.type_check(&mut context);
+
+        assert!(matches!(result, Ok(InferredType::Known(_))));
+    }
+
+    #[test]
+    fn type_check_undefined_const_or_type_ref() {
+        let expr = Expression::ConstOrTypeRef("UndefinedType".into());
+        let result = expr.type_check(&mut TypeEnvironment::new());
+
+        assert!(matches!(
+            result,
+            Err(crate::TypeCheckError::UndefinedVariable(_))
+        ));
+    }
+
+    #[test]
+    fn type_check_map_literal() {
+        let kv_pairs = rogato_common::ast::literal::TupleItems::from(vec![
+            Rc::new(rogato_common::ast::literal::MapKVPair {
+                key: Rc::new(Expression::Lit(Literal::String("key1".to_string()))),
+                value: Rc::new(Expression::Lit(Literal::Number(1i32.into()))),
+            }),
+            Rc::new(rogato_common::ast::literal::MapKVPair {
+                key: Rc::new(Expression::Lit(Literal::String("key2".to_string()))),
+                value: Rc::new(Expression::Lit(Literal::Number(2i32.into()))),
+            }),
+        ]);
+        let literal = Literal::Map(kv_pairs);
+        let expr = Expression::Lit(literal);
+
+        let result = expr.type_check(&mut TypeEnvironment::new());
+        assert!(matches!(result, Ok(InferredType::Known(_))));
+    }
+
+    #[test]
+    fn type_check_lambda() {
+        use rogato_common::ast::lambda::{Lambda, LambdaArgs};
+
+        let args = LambdaArgs::new(vec![]);
+        let body = Rc::new(Expression::Lit(Literal::Number(1i32.into())));
+        let variant = rogato_common::ast::lambda::LambdaVariant::new(args, body);
+        let lambda = Rc::new(Lambda::new(vec![Rc::new(variant)]));
+        let expr = Expression::Lambda(lambda);
+
+        let result = expr.type_check(&mut TypeEnvironment::new());
+        assert!(matches!(result, Ok(InferredType::Known(_))));
+    }
+
+    #[test]
+    fn type_check_inline_fn_def() {
+        use rogato_common::ast::fn_def::FnDefArgs;
+        use rogato_common::ast::fn_def::{FnDef, FnDefBody};
+
+        let args = FnDefArgs::new(vec![]);
+        let body = Rc::new(FnDefBody::RogatoFn(Rc::new(Expression::Lit(
+            Literal::Number(1i32.into()),
+        ))));
+        let fn_def = FnDef::new("my_fn", args, body);
+        let expr = Expression::InlineFnDef(fn_def);
+
+        let result = expr.type_check(&mut TypeEnvironment::new());
+        assert!(matches!(result, Ok(_)));
+    }
 }
