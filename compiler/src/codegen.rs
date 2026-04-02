@@ -104,7 +104,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         let f32_type = self.context.f32_type();
 
         // TODO: add support for multiple fn variants
-        let FnDefVariant(args, body) = fn_def.get_variant(0).unwrap();
+        let FnDefVariant(args, body, _return_type) = fn_def.get_variant(0).unwrap();
 
         let fn_arg_types: Vec<BasicMetadataTypeEnum<'ctx>> = args
             .iter()

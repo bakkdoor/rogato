@@ -1,5 +1,7 @@
 use super::pattern::Pattern;
-use super::{expression::Expression, walker::Walk, ASTDepth, Identifier};
+use super::{
+    expression::Expression, type_expression::TypeExpression, walker::Walk, ASTDepth, Identifier,
+};
 use crate::{native_fn::NativeFn, util::indent};
 use std::cell::RefCell;
 use std::hash::{Hash, Hasher};
@@ -42,7 +44,7 @@ impl FnDef {
         Rc::new(RefCell::new(FnDef {
             is_inline: false,
             id,
-            variants: FnDefVariants::new([FnDefVariant(args, body)]),
+            variants: FnDefVariants::new([FnDefVariant::new(args, body)]),
             is_tail_recursive,
         }))
     }
@@ -57,7 +59,7 @@ impl FnDef {
         Rc::new(RefCell::new(FnDef {
             is_inline: true,
             id,
-            variants: FnDefVariants::new([FnDefVariant(args, body)]),
+            variants: FnDefVariants::new([FnDefVariant::new(args, body)]),
             is_tail_recursive,
         }))
     }
@@ -104,7 +106,7 @@ impl FnDef {
     pub fn required_args(&self) -> usize {
         self.variants
             .iter()
-            .map(|FnDefVariant(args, _)| args.required_args())
+            .map(|FnDefVariant(args, _, _)| args.required_args())
             .min()
             .unwrap_or_default()
     }
@@ -124,7 +126,7 @@ impl FnDef {
 
 impl Display for FnDef {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for FnDefVariant(args, body) in self.variants.iter() {
+        for FnDefVariant(args, body, _return_type) in self.variants.iter() {
             if !self.is_inline {
                 f.write_str("let ")?;
             }
@@ -150,10 +152,41 @@ impl ASTDepth for FnDef {
     }
 }
 
+pub type ArgTypeAnnotations = Vec<Option<Rc<TypeExpression>>>;
+
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct FnDefVariant(pub FnDefArgs, pub Rc<FnDefBody>);
+pub struct FnDefVariant(
+    pub FnDefArgs,
+    pub Rc<FnDefBody>,
+    pub Option<Rc<TypeExpression>>,
+);
 
 impl FnDefVariant {
+    pub fn new(args: FnDefArgs, body: Rc<FnDefBody>) -> Self {
+        FnDefVariant(args, body, None)
+    }
+
+    pub fn new_with_types(
+        args: FnDefArgs,
+        body: Rc<FnDefBody>,
+        _arg_types: ArgTypeAnnotations,
+        return_type: Option<Rc<TypeExpression>>,
+    ) -> Self {
+        FnDefVariant(args, body, return_type)
+    }
+
+    pub fn new_with_return_type(
+        args: FnDefArgs,
+        body: Rc<FnDefBody>,
+        return_type: Rc<TypeExpression>,
+    ) -> Self {
+        FnDefVariant(args, body, Some(return_type))
+    }
+
+    pub fn return_type(&self) -> Option<&Rc<TypeExpression>> {
+        self.2.as_ref()
+    }
+
     pub fn is_tail_recursive(&self, id: &Identifier) -> bool {
         match &*self.1 {
             FnDefBody::RogatoFn(body) => match &**body {
@@ -167,7 +200,7 @@ impl FnDefVariant {
 
 impl From<(FnDefArgs, Rc<FnDefBody>)> for FnDefVariant {
     fn from(variant: (FnDefArgs, Rc<FnDefBody>)) -> Self {
-        FnDefVariant(variant.0, variant.1)
+        FnDefVariant::new(variant.0, variant.1)
     }
 }
 
@@ -194,7 +227,7 @@ impl FnDefVariants {
     }
 
     pub fn add(&mut self, args: FnDefArgs, body: Rc<FnDefBody>) {
-        self.variants.push(FnDefVariant(args, body))
+        self.variants.push(FnDefVariant::new(args, body))
     }
 
     pub fn get_variant(&self, index: usize) -> Option<&FnDefVariant> {

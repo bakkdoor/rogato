@@ -214,6 +214,34 @@ pub fn string_type() -> Rc<TypeExpression> {
     Rc::new(TypeExpression::StringType)
 }
 
+pub fn symbol_type() -> Rc<TypeExpression> {
+    Rc::new(TypeExpression::SymbolType)
+}
+
+pub fn bool_type() -> Rc<TypeExpression> {
+    Rc::new(TypeExpression::BoolType)
+}
+
+pub fn set_type(type_expr: Rc<TypeExpression>) -> Rc<TypeExpression> {
+    Rc::new(TypeExpression::SetType(type_expr))
+}
+
+pub fn map_type(key: Rc<TypeExpression>, value: Rc<TypeExpression>) -> Rc<TypeExpression> {
+    Rc::new(TypeExpression::MapType(key, value))
+}
+
+pub fn vector_type(type_expr: Rc<TypeExpression>) -> Rc<TypeExpression> {
+    Rc::new(TypeExpression::VectorType(type_expr))
+}
+
+pub fn stack_type(type_expr: Rc<TypeExpression>) -> Rc<TypeExpression> {
+    Rc::new(TypeExpression::StackType(type_expr))
+}
+
+pub fn queue_type(type_expr: Rc<TypeExpression>) -> Rc<TypeExpression> {
+    Rc::new(TypeExpression::QueueType(type_expr))
+}
+
 pub fn type_ref(id: &str) -> Rc<TypeExpression> {
     Rc::new(TypeExpression::TypeRef(id.into()))
 }

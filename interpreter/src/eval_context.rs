@@ -151,11 +151,11 @@ impl EvalContext {
         let last_current_func_id = self.current_func_id.clone();
         self.current_func_id = Some(func.id().clone());
 
-        let mut last_attempted_pattern = None;
+        let mut last_attempted_pattern: Option<Rc<rogato_common::ast::pattern::Pattern>> = None;
 
         flame_guard!("ƒ⡟ {}", func.id());
 
-        for FnDefVariant(arg_patterns, body) in func.variants_iter() {
+        for FnDefVariant(arg_patterns, body, _return_type) in func.variants_iter() {
             if arg_patterns.len() < args.len() {
                 continue;
             }
@@ -225,7 +225,7 @@ impl EvalContext {
 
             flame_guard!("∞ƒ⡟ {}", func.id());
 
-            for FnDefVariant(arg_patterns, body) in func.variants_iter() {
+            for FnDefVariant(arg_patterns, body, _return_type) in func.variants_iter() {
                 let mut matched = 0;
                 let mut attempted = 0;
                 for (arg_pattern, arg_val) in arg_patterns.iter().zip(loop_args.iter()) {

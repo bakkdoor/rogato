@@ -2,7 +2,10 @@ use std::rc::Rc;
 
 use crate::{EvalContext, EvalError, Evaluate};
 use rogato_common::{
-    ast::{expression::Expression, fn_def::FnDefVariant, let_expression::LetExpression},
+    ast::{
+        expression::Expression, fn_def::FnDefVariant as CommonFnDefVariant,
+        let_expression::LetExpression,
+    },
     val::ValueRef,
 };
 
@@ -19,7 +22,16 @@ impl Evaluate<ValueRef> for LetExpression {
                 Expression::InlineFnDef(fn_def) => {
                     let fn_def = fn_def.borrow();
                     for variant in fn_def.variants_iter() {
-                        let fn_variant = FnDefVariant(variant.0.clone(), Rc::clone(&variant.1));
+                        let fn_variant = match &variant.2 {
+                            Some(rt) => CommonFnDefVariant::new_with_return_type(
+                                variant.0.clone(),
+                                Rc::clone(&variant.1),
+                                Rc::clone(rt),
+                            ),
+                            None => {
+                                CommonFnDefVariant::new(variant.0.clone(), Rc::clone(&variant.1))
+                            }
+                        };
                         context.define_fn(fn_def.id(), fn_variant);
                     }
                 }

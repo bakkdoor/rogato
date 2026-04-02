@@ -40,28 +40,31 @@ impl ASTDepth for TypeDef {
 
 #[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub enum TypeExpression {
+    Unknown,
     BoolType,
     NumberType,
     StringType,
-    TypeRef(Identifier),
-    FunctionType(LambdaArgs<TypeExpression>, Rc<TypeExpression>), // args & return type
+    SymbolType,
     TupleType(TupleItems<TypeExpression>),
     ListType(Rc<TypeExpression>),
+    SetType(Rc<TypeExpression>),
+    MapType(Rc<TypeExpression>, Rc<TypeExpression>),
+    VectorType(Rc<TypeExpression>),
+    StackType(Rc<TypeExpression>),
+    QueueType(Rc<TypeExpression>),
     StructType(StructTypeProperties),
+    TypeRef(Identifier),
+    FunctionType(LambdaArgs<TypeExpression>, Rc<TypeExpression>),
 }
 
 impl Display for TypeExpression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            TypeExpression::Unknown => f.write_str("?"),
             TypeExpression::BoolType => f.write_str("Bool"),
             TypeExpression::NumberType => f.write_str("Number"),
             TypeExpression::StringType => f.write_str("String"),
-            TypeExpression::TypeRef(id) => f.write_str(id),
-            TypeExpression::FunctionType(arg_types, return_type) => {
-                arg_types.fmt(f)?;
-                f.write_str(" -> ")?;
-                return_type.fmt(f)
-            }
+            TypeExpression::SymbolType => f.write_str("Symbol"),
             TypeExpression::TupleType(element_types) => {
                 f.write_str("{ ")?;
                 element_types.fmt(f)?;
@@ -72,10 +75,43 @@ impl Display for TypeExpression {
                 type_expr.fmt(f)?;
                 f.write_str(" ]")
             }
+            TypeExpression::SetType(type_expr) => {
+                f.write_str("#{ ")?;
+                type_expr.fmt(f)?;
+                f.write_str(" }")
+            }
+            TypeExpression::MapType(key_type, value_type) => {
+                f.write_str("{ ")?;
+                key_type.fmt(f)?;
+                f.write_str(" : ")?;
+                value_type.fmt(f)?;
+                f.write_str(" }")
+            }
+            TypeExpression::VectorType(type_expr) => {
+                f.write_str("[| ")?;
+                type_expr.fmt(f)?;
+                f.write_str(" |]")
+            }
+            TypeExpression::StackType(type_expr) => {
+                f.write_str("Stack[ ")?;
+                type_expr.fmt(f)?;
+                f.write_str(" ]")
+            }
+            TypeExpression::QueueType(type_expr) => {
+                f.write_str("Queue[ ")?;
+                type_expr.fmt(f)?;
+                f.write_str(" ]")
+            }
             TypeExpression::StructType(struct_type_props) => {
                 f.write_str("{\n")?;
                 indent(struct_type_props).fmt(f)?;
                 f.write_str("\n}")
+            }
+            TypeExpression::TypeRef(id) => f.write_str(id),
+            TypeExpression::FunctionType(arg_types, return_type) => {
+                arg_types.fmt(f)?;
+                f.write_str(" -> ")?;
+                return_type.fmt(f)
             }
         }
     }
@@ -84,18 +120,27 @@ impl Display for TypeExpression {
 impl ASTDepth for TypeExpression {
     fn ast_depth(&self) -> usize {
         match self {
+            TypeExpression::Unknown => 1,
             TypeExpression::BoolType => 1,
             TypeExpression::NumberType => 1,
             TypeExpression::StringType => 1,
-            TypeExpression::TypeRef(_) => 1,
-            TypeExpression::FunctionType(arg_types, return_type) => {
-                1 + arg_types.ast_depth() + return_type.ast_depth()
-            }
+            TypeExpression::SymbolType => 1,
             TypeExpression::TupleType(el_types) => {
                 1 + el_types.iter().map(|t| t.ast_depth()).sum::<usize>()
             }
             TypeExpression::ListType(type_expr) => 1 + type_expr.ast_depth(),
+            TypeExpression::SetType(type_expr) => 1 + type_expr.ast_depth(),
+            TypeExpression::MapType(key_type, value_type) => {
+                1 + key_type.ast_depth() + value_type.ast_depth()
+            }
+            TypeExpression::VectorType(type_expr) => 1 + type_expr.ast_depth(),
+            TypeExpression::StackType(type_expr) => 1 + type_expr.ast_depth(),
+            TypeExpression::QueueType(type_expr) => 1 + type_expr.ast_depth(),
             TypeExpression::StructType(struct_type) => 1 + struct_type.ast_depth(),
+            TypeExpression::TypeRef(_) => 1,
+            TypeExpression::FunctionType(arg_types, return_type) => {
+                1 + arg_types.ast_depth() + return_type.ast_depth()
+            }
         }
     }
 }
