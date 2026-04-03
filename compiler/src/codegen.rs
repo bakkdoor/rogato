@@ -4,7 +4,7 @@ use inkwell::{
     execution_engine::ExecutionEngine,
     module::Module,
     passes::PassBuilderOptions,
-    targets::{CodeModel, InitializationConfig, RelocMode, Target, TargetMachine},
+    targets::{CodeModel, FileType, InitializationConfig, RelocMode, Target, TargetMachine},
     types::{BasicMetadataTypeEnum, BasicType},
     values::{AnyValue, BasicMetadataValueEnum, FloatValue, FunctionValue, PointerValue},
     FloatPredicate, OptimizationLevel,
@@ -254,7 +254,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
     }
 
     pub fn codegen_module_def(&mut self, _mod_def: &ModuleDef) -> CodegenResult<()> {
-        todo!()
+        Ok(())
     }
 
     pub fn codegen_type_def(&mut self, _mod_def: &TypeDef) -> CodegenResult<()> {
@@ -434,5 +434,37 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         }
 
         builder.build_alloca(ty, name).unwrap()
+    }
+
+    pub fn emit_ir_to_string(&self) -> String {
+        self.module.print_to_string().to_string()
+    }
+
+    pub fn write_ir_to_file(&self, path: &std::path::Path) -> CodegenResult<()> {
+        let ir = self.emit_ir_to_string();
+        std::fs::write(path, ir).map_err(|e| unknown_error(format!("Failed to write IR: {e}")))
+    }
+
+    pub fn write_bitcode_to_file(&self, path: &std::path::Path) -> CodegenResult<()> {
+        if !self.module.write_bitcode_to_path(path) {
+            return Err(unknown_error("Failed to write bitcode"));
+        }
+        Ok(())
+    }
+
+    pub fn write_object_to_file(&self, path: &std::path::Path) -> CodegenResult<()> {
+        self.target_machine
+            .write_to_file(self.module, FileType::Object, path)
+            .map_err(|e| unknown_error(format!("Failed to write object file: {e}")))
+    }
+
+    pub fn write_assembly_to_file(&self, path: &std::path::Path) -> CodegenResult<()> {
+        self.target_machine
+            .write_to_file(self.module, FileType::Assembly, path)
+            .map_err(|e| unknown_error(format!("Failed to write assembly: {e}")))
+    }
+
+    pub fn context(&self) -> &'ctx Context {
+        self.context
     }
 }

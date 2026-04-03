@@ -12,3 +12,6 @@ rogato-parser = { path = "../parser" }
 
 inkwell = { git = "https://github.com/TheDan64/inkwell", branch = "master", features = ["llvm22-1"] }
 thiserror = "*"
+
+[dev-dependencies]
+tempfile = "3"

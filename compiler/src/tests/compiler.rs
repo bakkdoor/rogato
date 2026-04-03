@@ -360,3 +360,104 @@ fn codegen_bool_comparisons_chain() {
         assert_eq!(function.call(3.0, 5.0, 1.0), 1.0);
     }
 }
+
+#[cfg(test)]
+mod output_tests {
+    use super::*;
+    use std::fs;
+
+    #[test]
+    fn test_all_output_formats() {
+        // Setup: create compiler and compile a simple function
+        let context = Codegen::new_context();
+        let builder = context.create_builder();
+        let module = context.create_module("output_test");
+        let target_machine = Codegen::default_target_machine(&module);
+        let ee = Codegen::default_execution_engine(&module);
+        let mut compiler = Codegen::new(&context, &module, &builder, &target_machine, &ee);
+
+        let func_def = parse_fn_def("let testFn x y = x + y");
+        compiler.codegen_fn_def(&func_def.borrow()).unwrap();
+
+        let temp_dir = tempfile::TempDir::new().expect("Failed to create temp dir");
+        let base_path = temp_dir.path();
+
+        // === IR Output Tests ===
+        let ir_path = base_path.join("test.ll");
+        compiler
+            .write_ir_to_file(&ir_path)
+            .expect("Failed to write IR");
+
+        // IR file exists and has content
+        assert!(ir_path.exists(), "IR file should exist");
+
+        let ir_content = fs::read_to_string(&ir_path).expect("Failed to read IR file");
+        assert!(!ir_content.is_empty(), "IR should have content");
+
+        // IR contains expected elements
+        assert!(
+            ir_content.contains("define float @testFn"),
+            "IR should contain function definition"
+        );
+        assert!(
+            ir_content.contains("target datalayout"),
+            "IR should contain target datalayout"
+        );
+        assert!(
+            ir_content.contains("ret float"),
+            "IR should contain return instruction"
+        );
+        assert!(
+            ir_content.contains("fadd") || ir_content.contains("add"),
+            "IR should contain add operation"
+        );
+
+        // === Bitcode Output Tests ===
+        let bc_path = base_path.join("test.bc");
+        compiler
+            .write_bitcode_to_file(&bc_path)
+            .expect("Failed to write bitcode");
+
+        // Bitcode file exists and has content
+        assert!(bc_path.exists(), "Bitcode file should exist");
+
+        let bc_metadata = fs::metadata(&bc_path).expect("Failed to get bitcode file size");
+        assert!(bc_metadata.len() > 0, "Bitcode should not be empty");
+
+        let bc_bytes = fs::read(&bc_path).expect("Failed to read bitcode file");
+        assert!(!bc_bytes.is_empty(), "Bitcode should have content");
+
+        // === Object File Output Tests ===
+        let obj_path = base_path.join("test.o");
+        compiler
+            .write_object_to_file(&obj_path)
+            .expect("Failed to write object file");
+
+        // Object file exists and has content
+        assert!(obj_path.exists(), "Object file should exist");
+
+        let obj_metadata = fs::metadata(&obj_path).expect("Failed to get object file size");
+        assert!(obj_metadata.len() > 0, "Object should not be empty");
+
+        let obj_bytes = fs::read(&obj_path).expect("Failed to read object file");
+        assert!(!obj_bytes.is_empty(), "Object should have content");
+
+        // === Assembly Output Tests ===
+        let asm_path = base_path.join("test.s");
+        compiler
+            .write_assembly_to_file(&asm_path)
+            .expect("Failed to write assembly");
+
+        // Assembly file exists
+        assert!(asm_path.exists(), "Assembly file should exist");
+
+        let asm_content = fs::read_to_string(&asm_path).expect("Failed to read assembly file");
+        assert!(!asm_content.is_empty(), "Assembly should have content");
+
+        // Assembly contains expected elements
+        assert!(
+            asm_content.contains(".text") || asm_content.contains("testFn"),
+            "Assembly should contain function"
+        );
+    }
+}
