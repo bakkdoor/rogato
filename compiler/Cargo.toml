@@ -9,6 +9,7 @@ repository = "https://github.com/bakkdoor/rogato"
 [dependencies]
 rogato-common = { path = "../common" }
 rogato-parser = { path = "../parser" }
+rogato-type-checker = { path = "../type-checker" }
 
 inkwell = { git = "https://github.com/TheDan64/inkwell", branch = "master", features = ["llvm22-1"] }
 thiserror = "*"

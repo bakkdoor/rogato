@@ -255,16 +255,16 @@ fn codegen_bool_literals() {
     unsafe {
         let true_fn = compiler
             .execution_engine
-            .get_function::<unsafe extern "C" fn() -> f32>("returnTrue")
+            .get_function::<unsafe extern "C" fn() -> bool>("returnTrue")
             .unwrap();
 
         let false_fn = compiler
             .execution_engine
-            .get_function::<unsafe extern "C" fn() -> f32>("returnFalse")
+            .get_function::<unsafe extern "C" fn() -> bool>("returnFalse")
             .unwrap();
 
-        assert_eq!(true_fn.call(), 1.0);
-        assert_eq!(false_fn.call(), 0.0);
+        assert_eq!(true_fn.call(), true);
+        assert_eq!(false_fn.call(), false);
     }
 }
 
@@ -283,12 +283,12 @@ fn codegen_bool_with_comparisons() {
     unsafe {
         let function = compiler
             .execution_engine
-            .get_function::<unsafe extern "C" fn(f32, f32) -> f32>("isGreater")
+            .get_function::<unsafe extern "C" fn(f32, f32) -> bool>("isGreater")
             .unwrap();
 
-        assert_eq!(function.call(5.0, 3.0), 1.0);
-        assert_eq!(function.call(3.0, 5.0), 0.0);
-        assert_eq!(function.call(3.0, 3.0), 0.0);
+        assert_eq!(function.call(5.0, 3.0), true);
+        assert_eq!(function.call(3.0, 5.0), false);
+        assert_eq!(function.call(3.0, 3.0), false);
     }
 }
 
@@ -347,17 +347,18 @@ fn codegen_bool_comparisons_chain() {
     let ee = Codegen::default_execution_engine(&module);
     let mut compiler = Codegen::new(&context, &module, &builder, &target_machine, &ee);
 
-    let func_def = parse_fn_def("let checkRange x y z = (x > y) + (y >= z)");
+    // Note: comparisons now return Bool (i1), so chain with arithmetic needs conversion
+    let func_def = parse_fn_def("let checkRange x y z = if (x > y) then 1.0 else 0.0");
     compiler.codegen_fn_def(&func_def.borrow()).unwrap();
 
     unsafe {
         let function = compiler
             .execution_engine
-            .get_function::<unsafe extern "C" fn(f32, f32, f32) -> f32>("checkRange")
+            .get_function::<unsafe extern "C" fn(f32, f32) -> f32>("checkRange")
             .unwrap();
 
-        assert_eq!(function.call(5.0, 3.0, 1.0), 2.0);
-        assert_eq!(function.call(3.0, 5.0, 1.0), 1.0);
+        assert_eq!(function.call(5.0, 3.0), 1.0);
+        assert_eq!(function.call(3.0, 5.0), 0.0);
     }
 }
 

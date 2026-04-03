@@ -124,6 +124,14 @@ pub fn number_to_f64(num: &Decimal) -> Option<f64> {
     Decimal::to_f64(num)
 }
 
+pub fn number_to_i32(num: &Decimal) -> Option<i32> {
+    num.to_string().parse::<i32>().ok()
+}
+
+pub fn number_to_i64(num: &Decimal) -> Option<i64> {
+    num.to_string().parse::<i64>().ok()
+}
+
 #[derive(Clone, Eq, std::fmt::Debug)]
 pub enum Value {
     Option(Option<ValueRef>),

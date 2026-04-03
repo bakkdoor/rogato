@@ -34,6 +34,8 @@ impl Evaluate<ValueRef> for TypeExpression {
             TypeExpression::NumberType => type_ref("Int"),
             TypeExpression::StringType => type_ref("String"),
             TypeExpression::SymbolType => type_ref("Symbol"),
+            TypeExpression::Int32Type => type_ref("I32"),
+            TypeExpression::Int64Type => type_ref("I64"),
             TypeExpression::TupleType(el_types) => val::object([
                 ("type", val::string("TupleType")),
                 ("el_types", el_types.evaluate(context)?),

@@ -45,6 +45,8 @@ pub enum TypeExpression {
     NumberType,
     StringType,
     SymbolType,
+    Int32Type,
+    Int64Type,
     TupleType(TupleItems<TypeExpression>),
     ListType(Rc<TypeExpression>),
     SetType(Rc<TypeExpression>),
@@ -65,6 +67,8 @@ impl Display for TypeExpression {
             TypeExpression::NumberType => f.write_str("Number"),
             TypeExpression::StringType => f.write_str("String"),
             TypeExpression::SymbolType => f.write_str("Symbol"),
+            TypeExpression::Int32Type => f.write_str("I32"),
+            TypeExpression::Int64Type => f.write_str("I64"),
             TypeExpression::TupleType(element_types) => {
                 f.write_str("{ ")?;
                 element_types.fmt(f)?;
@@ -125,6 +129,8 @@ impl ASTDepth for TypeExpression {
             TypeExpression::NumberType => 1,
             TypeExpression::StringType => 1,
             TypeExpression::SymbolType => 1,
+            TypeExpression::Int32Type => 1,
+            TypeExpression::Int64Type => 1,
             TypeExpression::TupleType(el_types) => {
                 1 + el_types.iter().map(|t| t.ast_depth()).sum::<usize>()
             }

@@ -298,7 +298,7 @@ impl TypeInferrer {
     fn infer_op_call(&self, op: &Identifier) -> InferredType {
         match op.as_str() {
             "+" | "-" | "*" | "/" | "%" => InferredType::Known(Rc::new(TypeExpression::NumberType)),
-            ">" | "<" | ">=" | "<=" => InferredType::Known(Rc::new(TypeExpression::NumberType)),
+            ">" | "<" | ">=" | "<=" => InferredType::Known(Rc::new(TypeExpression::BoolType)),
             "==" | "!=" => InferredType::Known(Rc::new(TypeExpression::BoolType)),
             "&&" | "||" => InferredType::Known(Rc::new(TypeExpression::BoolType)),
             _ => InferredType::Unknown,

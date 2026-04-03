@@ -5,9 +5,12 @@ use inkwell::{
     module::Module,
     passes::PassBuilderOptions,
     targets::{CodeModel, FileType, InitializationConfig, RelocMode, Target, TargetMachine},
-    types::{BasicMetadataTypeEnum, BasicType},
-    values::{AnyValue, BasicMetadataValueEnum, FloatValue, FunctionValue, PointerValue},
-    FloatPredicate, OptimizationLevel,
+    types::{BasicMetadataTypeEnum, BasicType, BasicTypeEnum, IntType, PointerType},
+    values::{
+        AnyValue, BasicMetadataValueEnum, BasicValueEnum, FloatValue, FunctionValue, IntValue,
+        PointerValue,
+    },
+    AddressSpace, FloatPredicate, IntPredicate, OptimizationLevel,
 };
 use rogato_common::{
     ast::{
@@ -18,20 +21,110 @@ use rogato_common::{
         literal::Literal,
         module_def::ModuleDef,
         pattern::Pattern,
-        type_expression::TypeDef,
-        Identifier, Program, AST,
+        type_expression::{TypeDef, TypeExpression},
+        Identifier, Program, VarIdentifier, AST,
     },
     val,
 };
-use std::collections::HashMap;
+use std::{collections::HashMap, ops::Deref, rc::Rc};
 
 use crate::error::CodegenError;
+
+#[derive(Debug, Clone)]
+pub enum CompiledValue<'ctx> {
+    Float(FloatValue<'ctx>),
+    Int32(IntValue<'ctx>),
+    Int64(IntValue<'ctx>),
+    String(PointerValue<'ctx>),
+    Bool(IntValue<'ctx>),
+}
+
+impl<'ctx> CompiledValue<'ctx> {
+    pub fn into_basic_value(self) -> BasicValueEnum<'ctx> {
+        match self {
+            CompiledValue::Float(v) => v.into(),
+            CompiledValue::Int32(v) => v.into(),
+            CompiledValue::Int64(v) => v.into(),
+            CompiledValue::String(v) => v.into(),
+            CompiledValue::Bool(v) => v.into(),
+        }
+    }
+
+    pub fn as_basic_value(&self) -> BasicValueEnum<'ctx> {
+        match self {
+            CompiledValue::Float(v) => (*v).into(),
+            CompiledValue::Int32(v) => (*v).into(),
+            CompiledValue::Int64(v) => (*v).into(),
+            CompiledValue::String(v) => (*v).into(),
+            CompiledValue::Bool(v) => (*v).into(),
+        }
+    }
+
+    pub fn get_type(&self) -> CompiledType {
+        match self {
+            CompiledValue::Float(_) => CompiledType::Float,
+            CompiledValue::Int32(_) => CompiledType::Int32,
+            CompiledValue::Int64(_) => CompiledType::Int64,
+            CompiledValue::String(_) => CompiledType::String,
+            CompiledValue::Bool(_) => CompiledType::Bool,
+        }
+    }
+}
 
 pub type CodegenResult<T> = Result<T, CodegenError>;
 
 #[inline]
 fn unknown_error<S: Into<String>>(message: S) -> CodegenError {
     CodegenError::Unknown(message.into())
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CompiledType {
+    Float,
+    Int32,
+    Int64,
+    String,
+    Bool,
+}
+
+impl<'ctx> CompiledType {
+    #[allow(dead_code)]
+    pub fn from_type_expression(te: &rogato_common::ast::type_expression::TypeExpression) -> Self {
+        let te_str = format!("{:?}", te);
+        if te_str.contains("Int32") {
+            CompiledType::Int32
+        } else if te_str.contains("Int64") {
+            CompiledType::Int64
+        } else if te_str.contains("String") || te_str.contains("Symbol") {
+            CompiledType::String
+        } else if te_str.contains("Bool") || te_str.contains("True") {
+            CompiledType::Bool
+        } else {
+            CompiledType::Float
+        }
+    }
+
+    pub fn as_basic_type_enum(&self, ctx: &'ctx Context) -> BasicTypeEnum<'ctx> {
+        match self {
+            CompiledType::Float => ctx.f32_type().into(),
+            CompiledType::Int32 => ctx.i32_type().into(),
+            CompiledType::Int64 => ctx.i64_type().into(),
+            CompiledType::String => ctx.i8_type().ptr_type(AddressSpace::default()).into(),
+            CompiledType::Bool => ctx.bool_type().into(),
+        }
+    }
+
+    pub fn as_metadata_type_enum(&self, ctx: &'ctx Context) -> BasicMetadataTypeEnum<'ctx> {
+        match self {
+            CompiledType::Float => BasicMetadataTypeEnum::FloatType(ctx.f32_type()),
+            CompiledType::Int32 => BasicMetadataTypeEnum::IntType(ctx.i32_type()),
+            CompiledType::Int64 => BasicMetadataTypeEnum::IntType(ctx.i64_type()),
+            CompiledType::String => {
+                BasicMetadataTypeEnum::PointerType(ctx.i8_type().ptr_type(AddressSpace::default()))
+            }
+            CompiledType::Bool => BasicMetadataTypeEnum::IntType(ctx.bool_type()),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -69,6 +162,31 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         Context::create()
     }
 
+    #[inline]
+    pub fn i32_type(&self) -> IntType<'ctx> {
+        self.context.i32_type()
+    }
+
+    #[inline]
+    pub fn i64_type(&self) -> IntType<'ctx> {
+        self.context.i64_type()
+    }
+
+    #[inline]
+    pub fn i8_type(&self) -> IntType<'ctx> {
+        self.context.i8_type()
+    }
+
+    #[inline]
+    pub fn string_type(&self) -> PointerType<'ctx> {
+        self.i8_type().ptr_type(AddressSpace::default())
+    }
+
+    #[inline]
+    pub fn bool_type(&self) -> IntType<'ctx> {
+        self.context.bool_type()
+    }
+
     pub fn default_execution_engine(module: &'a Module<'ctx>) -> ExecutionEngine<'ctx> {
         module
             .create_jit_execution_engine(OptimizationLevel::None)
@@ -100,23 +218,106 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             .ok();
     }
 
+    pub fn declare_fn_signature(&mut self, fn_def: &FnDef) -> CodegenResult<FunctionValue<'ctx>> {
+        let func_name = fn_def.id();
+
+        if let Some(existing) = self.module.get_function(func_name.as_str()) {
+            return Ok(existing);
+        }
+
+        let first_variant = match fn_def.variants_iter().next() {
+            Some(v) => v,
+            None => return Err(unknown_error("Function has no variants")),
+        };
+
+        let args = &first_variant.0;
+        let body = &first_variant.1;
+
+        let return_type = match first_variant.return_type() {
+            Some(rexpr) => CompiledType::from_type_expression(rexpr),
+            None => match body.as_ref() {
+                FnDefBody::RogatoFn(expr) => self.infer_fn_arg_types(expr, args.len()),
+                _ => CompiledType::Float,
+            },
+        };
+
+        let return_llvm_type = return_type.as_basic_type_enum(self.context);
+
+        let fn_arg_types: Vec<BasicMetadataTypeEnum<'ctx>> = args
+            .iter()
+            .map(|_| BasicMetadataTypeEnum::FloatType(self.context.f32_type()))
+            .collect();
+
+        let fn_type = return_llvm_type.fn_type(&fn_arg_types, false);
+
+        let func = self.module.add_function(func_name, fn_type, None);
+        Ok(func)
+    }
+
+    fn infer_fn_arg_types(&self, expr: &Expression, arg_count: usize) -> CompiledType {
+        use rogato_type_checker::TypeInferrer;
+
+        let mut inferrer = TypeInferrer::new();
+
+        for i in 0..arg_count {
+            let arg_id: VarIdentifier = format!("_arg_{}", i).as_str().into();
+            inferrer
+                .env_mut()
+                .insert_variable(arg_id, Rc::new(TypeExpression::Unknown));
+        }
+
+        match inferrer.infer_expression(expr) {
+            rogato_type_checker::InferredType::Known(type_expr) => match type_expr.deref() {
+                TypeExpression::FunctionType(_lambda_args, return_type) => {
+                    CompiledType::from_type_expression(return_type)
+                }
+                _ => CompiledType::Float,
+            },
+            rogato_type_checker::InferredType::Unknown => CompiledType::Float,
+        }
+    }
+
     pub fn codegen_fn_def(&mut self, fn_def: &FnDef) -> CodegenResult<FunctionValue<'ctx>> {
         let f32_type = self.context.f32_type();
+        let FnDefVariant(args, body, return_type) = fn_def.get_variant(0).unwrap();
+        let func_name = fn_def.id();
 
-        // TODO: add support for multiple fn variants
-        let FnDefVariant(args, body, _return_type) = fn_def.get_variant(0).unwrap();
+        if let Some(existing) = self.module.get_function(func_name.as_str()) {
+            return self.codegen_fn_body(fn_def, existing);
+        }
+
+        let return_type = match return_type {
+            Some(rexpr) => CompiledType::from_type_expression(rexpr),
+            None => match body.as_ref() {
+                FnDefBody::RogatoFn(expr) => self.infer_expr_type_with_checker(expr),
+                _ => CompiledType::Float,
+            },
+        };
+
+        let return_llvm_type = return_type.as_basic_type_enum(self.context);
 
         let fn_arg_types: Vec<BasicMetadataTypeEnum<'ctx>> = args
             .iter()
             .map(|_| BasicMetadataTypeEnum::FloatType(f32_type))
             .collect();
 
-        let fn_type = f32_type.fn_type(&fn_arg_types, false);
-        let func_name = fn_def.id();
+        let fn_type = return_llvm_type.fn_type(&fn_arg_types, false);
         let func = self.module.add_function(func_name, fn_type, None);
+
+        self.codegen_fn_body(fn_def, func)
+    }
+
+    fn codegen_fn_body(
+        &mut self,
+        fn_def: &FnDef,
+        func: FunctionValue<'ctx>,
+    ) -> CodegenResult<FunctionValue<'ctx>> {
+        let f32_type = self.context.f32_type();
+        let FnDefVariant(args, body, return_type) = fn_def.get_variant(0).unwrap();
+
         self.set_current_fn_value(func);
 
-        let basic_block = self.context.append_basic_block(func, func_name);
+        let basic_block = self.context.append_basic_block(func, fn_def.id());
         self.builder.position_at_end(basic_block);
 
         for (arg, arg_name) in func.get_param_iter().zip(args.iter()) {
@@ -132,8 +333,10 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
 
         match body.as_ref() {
             FnDefBody::RogatoFn(expr) => {
-                let body = self.codegen_expr(expr)?;
-                self.builder.build_return(Some(&body))?;
+                let compiled_val = self.codegen_expr(expr)?;
+                let ret_val = compiled_val.into_basic_value();
+                self.builder.build_return(Some(&ret_val))?;
+
                 if func.verify(true) {
                     self.run_function_passes();
                     self.clear_current_fn();
@@ -143,14 +346,26 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                         self.clear_current_fn();
                         func.delete();
                     }
-                    Err(CodegenError::FnDefValidationFailed(func_name.clone()))
+                    Err(CodegenError::FnDefValidationFailed(fn_def.id().clone()))
                 }
             }
             _ => Err(unknown_error("Cannot compile function with NativeFn body!")),
         }
     }
 
-    pub fn codegen_fn_call(&mut self, fn_call: &FnCall) -> CodegenResult<FloatValue<'ctx>> {
+    fn infer_expr_type_with_checker(&self, expr: &Expression) -> CompiledType {
+        use rogato_type_checker::TypeInferrer;
+
+        let inferrer = TypeInferrer::new();
+        match inferrer.infer_expression(expr) {
+            rogato_type_checker::InferredType::Known(type_expr) => {
+                CompiledType::from_type_expression(&type_expr)
+            }
+            rogato_type_checker::InferredType::Unknown => CompiledType::Float,
+        }
+    }
+
+    pub fn codegen_fn_call(&mut self, fn_call: &FnCall) -> CodegenResult<CompiledValue<'ctx>> {
         let id = &fn_call.id;
         let args = &fn_call.args;
 
@@ -168,13 +383,14 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         let mut compiled_args = Vec::with_capacity(args.len());
 
         for arg in args.iter() {
-            compiled_args.push(self.codegen_expr(arg)?);
+            let compiled_val = self.codegen_expr(arg)?;
+            compiled_args.push(compiled_val.into_basic_value());
         }
 
         let argsv: Vec<BasicMetadataValueEnum> = compiled_args
             .iter()
             .by_ref()
-            .map(|&val| val.into())
+            .map(|val| (*val).into())
             .collect();
 
         let call_site = self.builder.build_call(function, argsv.as_slice(), "tmp")?;
@@ -184,70 +400,178 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             .basic()
             .ok_or_else(|| unknown_error("Invalid call produced."))?;
 
-        Ok(value.into_float_value())
+        Ok(CompiledValue::Float(value.into_float_value()))
     }
 
     pub fn codegen_op_call(
         &mut self,
         id: &Identifier,
-        left: &Expression,
-        right: &Expression,
-    ) -> CodegenResult<FloatValue<'ctx>> {
-        let left = self.codegen_expr(left)?;
-        let right = self.codegen_expr(right)?;
+        left_expr: &Expression,
+        right_expr: &Expression,
+    ) -> CodegenResult<CompiledValue<'ctx>> {
+        let left = self.codegen_expr(left_expr)?;
+        let right = self.codegen_expr(right_expr)?;
 
         match id.as_str() {
-            "+" => self
-                .builder
-                .build_float_add(left, right, "tmp_add")
-                .map_err(|e| unknown_error(format!("{:?}", e))),
-            "-" => self
-                .builder
-                .build_float_sub(left, right, "tmp_sub")
-                .map_err(|e| unknown_error(format!("{:?}", e))),
-            "*" => self
-                .builder
-                .build_float_mul(left, right, "tmp_mul")
-                .map_err(|e| unknown_error(format!("{:?}", e))),
-            "/" => self
-                .builder
-                .build_float_div(left, right, "tmp_div")
-                .map_err(|e| unknown_error(format!("{:?}", e))),
-            "%" => self
-                .builder
-                .build_float_rem(left, right, "tmp_rem")
-                .map_err(|e| unknown_error(format!("{:?}", e))),
-            ">" => {
-                let int_val =
+            "+" => match (&left, &right) {
+                (CompiledValue::Float(l), CompiledValue::Float(r)) => Ok(CompiledValue::Float(
                     self.builder
-                        .build_float_compare(FloatPredicate::OGT, left, right, "gt")?;
-                self.builder
-                    .build_unsigned_int_to_float(int_val, left.get_type(), "bool_to_float")
-                    .map_err(|e| unknown_error(format!("{:?}", e)))
+                        .build_float_add(*l, *r, "tmp_add")
+                        .map_err(|e| unknown_error(format!("{:?}", e)))?,
+                )),
+                (CompiledValue::Int32(l), CompiledValue::Int32(r)) => Ok(CompiledValue::Int32(
+                    self.builder
+                        .build_int_add(*l, *r, "tmp_add")
+                        .map_err(|e| unknown_error(format!("{:?}", e)))?,
+                )),
+                (CompiledValue::Int64(l), CompiledValue::Int64(r)) => Ok(CompiledValue::Int64(
+                    self.builder
+                        .build_int_add(*l, *r, "tmp_add")
+                        .map_err(|e| unknown_error(format!("{:?}", e)))?,
+                )),
+                _ => Err(unknown_error("Type mismatch for + operation")),
+            },
+            "-" => match (&left, &right) {
+                (CompiledValue::Float(l), CompiledValue::Float(r)) => Ok(CompiledValue::Float(
+                    self.builder
+                        .build_float_sub(*l, *r, "tmp_sub")
+                        .map_err(|e| unknown_error(format!("{:?}", e)))?,
+                )),
+                (CompiledValue::Int32(l), CompiledValue::Int32(r)) => Ok(CompiledValue::Int32(
+                    self.builder
+                        .build_int_sub(*l, *r, "tmp_sub")
+                        .map_err(|e| unknown_error(format!("{:?}", e)))?,
+                )),
+                (CompiledValue::Int64(l), CompiledValue::Int64(r)) => Ok(CompiledValue::Int64(
+                    self.builder
+                        .build_int_sub(*l, *r, "tmp_sub")
+                        .map_err(|e| unknown_error(format!("{:?}", e)))?,
+                )),
+                _ => Err(unknown_error("Type mismatch for - operation")),
+            },
+            "*" => match (&left, &right) {
+                (CompiledValue::Float(l), CompiledValue::Float(r)) => Ok(CompiledValue::Float(
+                    self.builder
+                        .build_float_mul(*l, *r, "tmp_mul")
+                        .map_err(|e| unknown_error(format!("{:?}", e)))?,
+                )),
+                (CompiledValue::Int32(l), CompiledValue::Int32(r)) => Ok(CompiledValue::Int32(
+                    self.builder
+                        .build_int_mul(*l, *r, "tmp_mul")
+                        .map_err(|e| unknown_error(format!("{:?}", e)))?,
+                )),
+                (CompiledValue::Int64(l), CompiledValue::Int64(r)) => Ok(CompiledValue::Int64(
+                    self.builder
+                        .build_int_mul(*l, *r, "tmp_mul")
+                        .map_err(|e| unknown_error(format!("{:?}", e)))?,
+                )),
+                _ => Err(unknown_error("Type mismatch for * operation")),
+            },
+            "/" => match (&left, &right) {
+                (CompiledValue::Float(l), CompiledValue::Float(r)) => Ok(CompiledValue::Float(
+                    self.builder
+                        .build_float_div(*l, *r, "tmp_div")
+                        .map_err(|e| unknown_error(format!("{:?}", e)))?,
+                )),
+                (CompiledValue::Int32(l), CompiledValue::Int32(r)) => Ok(CompiledValue::Int32(
+                    self.builder
+                        .build_int_signed_div(*l, *r, "tmp_div")
+                        .map_err(|e| unknown_error(format!("{:?}", e)))?,
+                )),
+                (CompiledValue::Int64(l), CompiledValue::Int64(r)) => Ok(CompiledValue::Int64(
+                    self.builder
+                        .build_int_signed_div(*l, *r, "tmp_div")
+                        .map_err(|e| unknown_error(format!("{:?}", e)))?,
+                )),
+                _ => Err(unknown_error("Type mismatch for / operation")),
+            },
+            "%" => match (&left, &right) {
+                (CompiledValue::Float(l), CompiledValue::Float(r)) => Ok(CompiledValue::Float(
+                    self.builder
+                        .build_float_rem(*l, *r, "tmp_rem")
+                        .map_err(|e| unknown_error(format!("{:?}", e)))?,
+                )),
+                (CompiledValue::Int32(l), CompiledValue::Int32(r)) => Ok(CompiledValue::Int32(
+                    self.builder
+                        .build_int_signed_rem(*l, *r, "tmp_rem")
+                        .map_err(|e| unknown_error(format!("{:?}", e)))?,
+                )),
+                (CompiledValue::Int64(l), CompiledValue::Int64(r)) => Ok(CompiledValue::Int64(
+                    self.builder
+                        .build_int_signed_rem(*l, *r, "tmp_rem")
+                        .map_err(|e| unknown_error(format!("{:?}", e)))?,
+                )),
+                _ => Err(unknown_error("Type mismatch for % operation")),
+            },
+            ">" | "<" | ">=" | "<=" => {
+                let op = match id.as_str() {
+                    ">" => FloatPredicate::OGT,
+                    "<" => FloatPredicate::OLT,
+                    ">=" => FloatPredicate::OGE,
+                    "<=" => FloatPredicate::OLE,
+                    _ => return Err(unknown_error("Invalid operator")),
+                };
+                match (&left, &right) {
+                    (CompiledValue::Float(l), CompiledValue::Float(r)) => {
+                        let cmp = self.builder.build_float_compare(op, *l, *r, "cmp")?;
+                        Ok(CompiledValue::Bool(cmp))
+                    }
+                    (CompiledValue::Int32(l), CompiledValue::Int32(r)) => {
+                        let pred = match id.as_str() {
+                            ">" => IntPredicate::SGT,
+                            "<" => IntPredicate::SLT,
+                            ">=" => IntPredicate::SGE,
+                            "<=" => IntPredicate::SLE,
+                            _ => return Err(unknown_error("Invalid operator")),
+                        };
+                        let cmp = self.builder.build_int_compare(pred, *l, *r, "cmp")?;
+                        Ok(CompiledValue::Bool(cmp))
+                    }
+                    (CompiledValue::Int64(l), CompiledValue::Int64(r)) => {
+                        let pred = match id.as_str() {
+                            ">" => IntPredicate::SGT,
+                            "<" => IntPredicate::SLT,
+                            ">=" => IntPredicate::SGE,
+                            "<=" => IntPredicate::SLE,
+                            _ => return Err(unknown_error("Invalid operator")),
+                        };
+                        let cmp = self.builder.build_int_compare(pred, *l, *r, "cmp")?;
+                        Ok(CompiledValue::Bool(cmp))
+                    }
+                    _ => Err(unknown_error("Type mismatch for comparison operation")),
+                }
             }
-            "<" => {
-                let int_val =
-                    self.builder
-                        .build_float_compare(FloatPredicate::OLT, left, right, "lt")?;
-                self.builder
-                    .build_unsigned_int_to_float(int_val, left.get_type(), "bool_to_float")
-                    .map_err(|e| unknown_error(format!("{:?}", e)))
-            }
-            ">=" => {
-                let int_val =
-                    self.builder
-                        .build_float_compare(FloatPredicate::OGE, left, right, "ge")?;
-                self.builder
-                    .build_unsigned_int_to_float(int_val, left.get_type(), "bool_to_float")
-                    .map_err(|e| unknown_error(format!("{:?}", e)))
-            }
-            "<=" => {
-                let int_val =
-                    self.builder
-                        .build_float_compare(FloatPredicate::OLE, left, right, "le")?;
-                self.builder
-                    .build_unsigned_int_to_float(int_val, left.get_type(), "bool_to_float")
-                    .map_err(|e| unknown_error(format!("{:?}", e)))
+            "==" | "!=" => {
+                let op = if id.as_str() == "==" {
+                    FloatPredicate::OEQ
+                } else {
+                    FloatPredicate::ONE
+                };
+                match (&left, &right) {
+                    (CompiledValue::Float(l), CompiledValue::Float(r)) => {
+                        let cmp = self.builder.build_float_compare(op, *l, *r, "cmp")?;
+                        Ok(CompiledValue::Bool(cmp))
+                    }
+                    (CompiledValue::Int32(l), CompiledValue::Int32(r)) => {
+                        let pred = if id.as_str() == "==" {
+                            IntPredicate::EQ
+                        } else {
+                            IntPredicate::NE
+                        };
+                        let cmp = self.builder.build_int_compare(pred, *l, *r, "cmp")?;
+                        Ok(CompiledValue::Bool(cmp))
+                    }
+                    (CompiledValue::Int64(l), CompiledValue::Int64(r)) => {
+                        let pred = if id.as_str() == "==" {
+                            IntPredicate::EQ
+                        } else {
+                            IntPredicate::NE
+                        };
+                        let cmp = self.builder.build_int_compare(pred, *l, *r, "cmp")?;
+                        Ok(CompiledValue::Bool(cmp))
+                    }
+                    _ => Err(unknown_error("Type mismatch for == operation")),
+                }
             }
             _ => Err(CodegenError::OpNotDefined(id.clone())),
         }
@@ -261,20 +585,26 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         todo!()
     }
 
-    pub fn codegen_lit_expr(&mut self, literal: &Literal) -> CodegenResult<FloatValue<'ctx>> {
+    pub fn codegen_lit_expr(&mut self, literal: &Literal) -> CodegenResult<CompiledValue<'ctx>> {
         match literal {
             Literal::Number(num) => {
                 let float_val = val::number_to_f64(num).unwrap();
-                Ok(self.context.f32_type().const_float(float_val))
+                Ok(CompiledValue::Float(
+                    self.context.f32_type().const_float(float_val),
+                ))
             }
             Literal::Bool(b) => {
                 if *b {
-                    Ok(self.context.f32_type().const_float(1.0))
+                    Ok(CompiledValue::Bool(self.bool_type().const_int(1, false)))
                 } else {
-                    Ok(self.context.f32_type().const_zero())
+                    Ok(CompiledValue::Bool(self.bool_type().const_int(0, false)))
                 }
             }
-            _ => Err(unknown_error("Literals not yet implemented!")),
+            Literal::String(s) => {
+                let ptr = self.builder.build_global_string_ptr(s, ".str")?;
+                Ok(CompiledValue::String(ptr.as_pointer_value()))
+            }
+            _ => Err(unknown_error("Literal not yet implemented!")),
         }
     }
 
@@ -291,7 +621,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         }
     }
 
-    pub fn codegen_expr(&mut self, expr: &Expression) -> CodegenResult<FloatValue<'ctx>> {
+    pub fn codegen_expr(&mut self, expr: &Expression) -> CodegenResult<CompiledValue<'ctx>> {
         match expr {
             Expression::Commented(_c, e) => self.codegen_expr(e),
             Expression::Lit(lit_expr) => self.codegen_lit_expr(lit_expr),
@@ -301,10 +631,11 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             Expression::Var(id) => match self.lookup_var(id) {
                 Some(var) => {
                     let f32_type = self.context.f32_type();
-                    Ok(self
-                        .builder
-                        .build_load(f32_type, *var, "load_var")?
-                        .into_float_value())
+                    Ok(CompiledValue::Float(
+                        self.builder
+                            .build_load(f32_type, *var, "load_var")?
+                            .into_float_value(),
+                    ))
                 }
                 None => self.codegen_fn_call(&FnCall::new(id.into(), FnCallArgs::empty())),
             },
@@ -318,9 +649,10 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                 let f32_type = self.context.f32_type();
 
                 for (var_id, var_expr) in let_expr.bindings.iter() {
-                    let value = self.codegen_expr(var_expr)?;
+                    let compiled_val = self.codegen_expr(var_expr)?;
                     let alloca = self.create_entry_block_alloca(f32_type, var_id.as_str());
-                    self.builder.build_store(alloca, value)?;
+                    self.builder
+                        .build_store(alloca, compiled_val.into_basic_value())?;
                     self.store_var(var_id.as_str(), alloca);
                 }
 
@@ -335,17 +667,43 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             Expression::UnquotedAST(_ast) => todo!(),
             Expression::InlineFnDef(fn_def) => {
                 self.codegen_fn_def(&fn_def.borrow())?;
-                Ok(self.context.f32_type().const_zero()) // TODO: Hmmm?!
+                Ok(CompiledValue::Float(self.context.f32_type().const_zero()))
             }
         }
     }
 
-    fn codegen_if_else(&mut self, if_else: &IfElse) -> CodegenResult<FloatValue<'ctx>> {
+    fn codegen_if_else(&mut self, if_else: &IfElse) -> CodegenResult<CompiledValue<'ctx>> {
         let cond = self.codegen_expr(&if_else.condition)?;
-        let zero = self.context.f32_type().const_zero();
-        let cmp =
-            self.builder
-                .build_float_compare(inkwell::FloatPredicate::ONE, cond, zero, "ifcond")?;
+
+        let cmp = match &cond {
+            CompiledValue::Float(f) => {
+                let zero = self.context.f32_type().const_zero();
+                Some(self.builder.build_float_compare(
+                    inkwell::FloatPredicate::ONE,
+                    *f,
+                    zero,
+                    "ifcond",
+                )?)
+            }
+            CompiledValue::Int32(i) => {
+                let zero = self.i32_type().const_int(0, false);
+                Some(
+                    self.builder
+                        .build_int_compare(IntPredicate::NE, *i, zero, "ifcond")?,
+                )
+            }
+            CompiledValue::Int64(i) => {
+                let zero = self.i64_type().const_int(0, false);
+                Some(
+                    self.builder
+                        .build_int_compare(IntPredicate::NE, *i, zero, "ifcond")?,
+                )
+            }
+            CompiledValue::Bool(b) => Some(*b), // i1 can be used directly as condition
+            _ => None,
+        };
+
+        let cmp = cmp.ok_or_else(|| unknown_error("Invalid condition type for if"))?;
 
         let then_block = self
             .context
@@ -362,20 +720,56 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
 
         self.builder.position_at_end(then_block);
         let then_value = self.codegen_expr(&if_else.then_expr)?;
+        let then_basic = then_value.as_basic_value();
         self.builder.build_unconditional_branch(merge_block)?;
 
         self.builder.position_at_end(else_block);
         let else_value = self.codegen_expr(&if_else.else_expr)?;
+        let else_basic = else_value.as_basic_value();
         self.builder.build_unconditional_branch(merge_block)?;
 
         self.builder.position_at_end(merge_block);
-        let phi = self.builder.build_phi(self.context.f32_type(), "if-phi")?;
-        phi.add_incoming(&[(&then_value, then_block), (&else_value, else_block)]);
 
-        Ok(phi.as_basic_value().into_float_value())
+        match (&then_value, &else_value) {
+            (CompiledValue::Float(_), CompiledValue::Float(_)) => {
+                let phi = self.builder.build_phi(self.context.f32_type(), "if-phi")?;
+                phi.add_incoming(&[(&then_basic, then_block), (&else_basic, else_block)]);
+                Ok(CompiledValue::Float(
+                    phi.as_basic_value().into_float_value(),
+                ))
+            }
+            (CompiledValue::Int32(_), CompiledValue::Int32(_)) => {
+                let phi = self.builder.build_phi(self.i32_type(), "if-phi")?;
+                phi.add_incoming(&[(&then_basic, then_block), (&else_basic, else_block)]);
+                Ok(CompiledValue::Int32(phi.as_basic_value().into_int_value()))
+            }
+            (CompiledValue::Int64(_), CompiledValue::Int64(_)) => {
+                let phi = self.builder.build_phi(self.i64_type(), "if-phi")?;
+                phi.add_incoming(&[(&then_basic, then_block), (&else_basic, else_block)]);
+                Ok(CompiledValue::Int64(phi.as_basic_value().into_int_value()))
+            }
+            _ => Err(unknown_error("Type mismatch in if-else branches")),
+        }
     }
 
     pub fn codegen_program(&mut self, program: &Program) -> CodegenResult<()> {
+        let fn_defs: Vec<Rc<AST>> = program
+            .iter()
+            .filter_map(|ast| match ast.as_ref() {
+                AST::FnDef(fn_def) => Some(Rc::clone(ast)),
+                _ => None,
+            })
+            .collect();
+
+        for ast in fn_defs.iter() {
+            match ast.as_ref() {
+                AST::FnDef(fn_def) => {
+                    self.declare_fn_signature(&fn_def.borrow())?;
+                }
+                _ => {}
+            }
+        }
+
         for ast in program.iter() {
             self.codegen_ast(ast)?;
         }

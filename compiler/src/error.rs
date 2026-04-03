@@ -23,6 +23,15 @@ pub enum CodegenError {
 
     #[error("FnDef codegen validation failed for: {0}")]
     FnDefValidationFailed(Identifier),
+
+    #[error("Type {0} not yet supported in codegen")]
+    UnsupportedLLVMType(String),
+
+    #[error("Cannot convert type {0} to {1}")]
+    TypeConversionError(String, String),
+
+    #[error("Type mismatch: {0}")]
+    TypeMismatch(String),
 }
 
 impl From<inkwell::builder::BuilderError> for CodegenError {
