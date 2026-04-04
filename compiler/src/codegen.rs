@@ -26,7 +26,7 @@ use rogato_common::{
     },
     val,
 };
-use std::{collections::HashMap, ops::Deref, rc::Rc};
+use std::{cell::RefCell, collections::HashMap, ops::Deref, rc::Rc};
 
 use crate::error::CodegenError;
 
@@ -279,12 +279,19 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
 
     pub fn codegen_fn_def(&mut self, fn_def: &FnDef) -> CodegenResult<FunctionValue<'ctx>> {
         let f32_type = self.context.f32_type();
-        let FnDefVariant(args, body, return_type) = fn_def.get_variant(0).unwrap();
         let func_name = fn_def.id();
 
-        if let Some(existing) = self.module.get_function(func_name.as_str()) {
-            return self.codegen_fn_body(fn_def, existing);
+        if self.module.get_function(func_name.as_str()).is_some() {
+            return Err(CodegenError::FnNotDefined(func_name.clone()));
         }
+
+        let variants: Vec<_> = fn_def.variants_iter().collect();
+
+        if variants.len() > 1 {
+            return self.codegen_multi_variant_fn(fn_def);
+        }
+
+        let FnDefVariant(args, body, return_type) = fn_def.get_variant(0).unwrap();
 
         let return_type = match return_type {
             Some(rexpr) => CompiledType::from_type_expression(rexpr),
@@ -353,6 +360,364 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         }
     }
 
+    fn codegen_multi_variant_fn(&mut self, fn_def: &FnDef) -> CodegenResult<FunctionValue<'ctx>> {
+        let variants: Vec<_> = fn_def.variants_iter().collect();
+
+        if variants.is_empty() {
+            return Err(CodegenError::FnDefValidationFailed(fn_def.id().clone()));
+        }
+
+        let first_variant = &variants[0];
+        let arg_count = first_variant.0.len();
+
+        for variant in variants.iter() {
+            if variant.0.len() != arg_count {
+                return Err(CodegenError::FnDefValidationFailed(fn_def.id().clone()));
+            }
+        }
+
+        let has_catch_all = variants
+            .last()
+            .map(|v| {
+                v.0.iter()
+                    .any(|p| matches!(p.deref(), Pattern::Var(_) | Pattern::Any))
+            })
+            .unwrap_or(false);
+
+        if !has_catch_all {
+            return Err(CodegenError::FnPatternUncovered(fn_def.id().clone()));
+        }
+
+        let func_name = fn_def.id();
+
+        let return_type = match &first_variant.2 {
+            Some(rexpr) => CompiledType::from_type_expression(rexpr),
+            None => match first_variant.1.deref() {
+                FnDefBody::RogatoFn(expr) => self.infer_expr_type_with_checker(expr),
+                _ => CompiledType::Float,
+            },
+        };
+
+        let return_llvm_type = return_type.as_basic_type_enum(self.context);
+
+        let f32_type = self.context.f32_type();
+        let fn_arg_types: Vec<BasicMetadataTypeEnum<'ctx>> = (0..arg_count)
+            .map(|_| BasicMetadataTypeEnum::FloatType(f32_type))
+            .collect();
+
+        let fn_type = return_llvm_type.fn_type(&fn_arg_types, false);
+        let func = self.module.add_function(func_name.as_str(), fn_type, None);
+
+        self.set_current_fn_value(func);
+
+        let entry_block = self.context.append_basic_block(func, "entry");
+        self.builder.position_at_end(entry_block);
+
+        let params: Vec<_> = func.get_param_iter().collect();
+
+        self.codegen_variant_body(fn_def, 0, &params)?;
+
+        if func.verify(true) {
+            self.run_function_passes();
+            self.clear_current_fn();
+            Ok(func)
+        } else {
+            unsafe {
+                self.clear_current_fn();
+                func.delete();
+            }
+            Err(CodegenError::FnDefValidationFailed(fn_def.id().clone()))
+        }
+    }
+
+    fn codegen_variant_body(
+        &mut self,
+        fn_def: &FnDef,
+        variant_index: usize,
+        params: &[inkwell::values::BasicValueEnum<'ctx>],
+    ) -> CodegenResult<()> {
+        let f32_type = self.context.f32_type();
+        let variants: Vec<_> = fn_def.variants_iter().collect();
+
+        if variant_index >= variants.len() {
+            return Ok(());
+        }
+
+        let current_variant = &variants[variant_index];
+        let FnDefVariant(args, body, _return_type) = current_variant;
+
+        if variant_index < variants.len() - 1 {
+            let next_variant = &variants[variant_index + 1];
+
+            let has_catch_all_at_position: Vec<bool> = args
+                .iter()
+                .enumerate()
+                .map(|(i, p)| match p.deref() {
+                    Pattern::Var(_) | Pattern::Any => true,
+                    _ => false,
+                })
+                .collect();
+
+            let first_catch_all = args
+                .iter()
+                .position(|p| matches!(p.deref(), Pattern::Var(_) | Pattern::Any));
+
+            if let Some(catch_all_idx) = first_catch_all {
+                for (i, arg_name) in args.iter().enumerate() {
+                    match &**arg_name {
+                        Pattern::Var(var_id) => {
+                            let alloca = self.create_entry_block_alloca(f32_type, var_id.as_str());
+                            self.builder.build_store(alloca, params[i])?;
+                            self.store_var(var_id.as_str(), alloca);
+                        }
+                        _ => {}
+                    }
+                }
+
+                let variant_body_block = self.context.append_basic_block(
+                    self.current_fn_value(),
+                    &format!("variant_{}_body", variant_index),
+                );
+
+                let merge_block = self.context.append_basic_block(
+                    self.current_fn_value(),
+                    &format!("variant_{}_merge", variant_index),
+                );
+
+                self.builder
+                    .build_unconditional_branch(variant_body_block)?;
+
+                self.builder.position_at_end(variant_body_block);
+
+                match body.deref() {
+                    FnDefBody::RogatoFn(expr) => {
+                        let compiled_val = self.codegen_expr(expr)?;
+                        let ret_val = compiled_val.into_basic_value();
+
+                        if variant_index < variants.len() - 1 {
+                            let next_body_block = self.context.append_basic_block(
+                                self.current_fn_value(),
+                                &format!("variant_{}_body", variant_index + 1),
+                            );
+                            self.builder.build_return(Some(&ret_val))?;
+
+                            return self.codegen_variant_body_with_block(
+                                fn_def,
+                                variant_index + 1,
+                                params,
+                                Some(next_body_block),
+                            );
+                        }
+                    }
+                    _ => return Err(unknown_error("Cannot compile function with NativeFn body!")),
+                }
+            } else {
+                let mut conditions: Vec<(usize, IntValue<'ctx>)> = Vec::new();
+
+                for (i, arg_pattern) in args.iter().enumerate() {
+                    match &**arg_pattern {
+                        Pattern::Number(num) => {
+                            let num_val = val::number_to_f64(num).unwrap_or(0.0);
+                            let const_val = f32_type.const_float(num_val);
+
+                            let cmp = self.builder.build_float_compare(
+                                FloatPredicate::OEQ,
+                                params[i].into_float_value(),
+                                const_val,
+                                &format!("cmp_arg_{}_variant_{}", i, variant_index),
+                            )?;
+
+                            conditions.push((i, cmp));
+                        }
+                        Pattern::Var(_) | Pattern::Any => {
+                            break;
+                        }
+                        _ => {}
+                    }
+                }
+
+                if !conditions.is_empty() {
+                    let last_condition = conditions.last().unwrap();
+
+                    let next_variant_block = self.context.append_basic_block(
+                        self.current_fn_value(),
+                        &format!("test_variant_{}", variant_index + 1),
+                    );
+
+                    let current_variant_block = self.context.append_basic_block(
+                        self.current_fn_value(),
+                        &format!("variant_{}_body", variant_index),
+                    );
+
+                    self.builder.build_conditional_branch(
+                        last_condition.1,
+                        current_variant_block,
+                        next_variant_block,
+                    )?;
+
+                    self.builder.position_at_end(current_variant_block);
+
+                    for (i, arg_name) in args.iter().enumerate() {
+                        match &**arg_name {
+                            Pattern::Var(var_id) => {
+                                let alloca =
+                                    self.create_entry_block_alloca(f32_type, var_id.as_str());
+                                self.builder.build_store(alloca, params[i])?;
+                                self.store_var(var_id.as_str(), alloca);
+                            }
+                            _ => {}
+                        }
+                    }
+
+                    match body.deref() {
+                        FnDefBody::RogatoFn(expr) => {
+                            let compiled_val = self.codegen_expr(expr)?;
+                            let ret_val = compiled_val.into_basic_value();
+
+                            if variant_index < variants.len() - 1 {
+                                let return_block = self.context.append_basic_block(
+                                    self.current_fn_value(),
+                                    &format!("variant_{}_return", variant_index),
+                                );
+
+                                self.builder.build_unconditional_branch(return_block)?;
+                                self.builder.position_at_end(return_block);
+
+                                let next_body_block = self.context.append_basic_block(
+                                    self.current_fn_value(),
+                                    &format!("variant_{}_body", variant_index + 1),
+                                );
+
+                                self.builder.build_return(Some(&ret_val))?;
+
+                                return self.codegen_variant_body_with_block(
+                                    fn_def,
+                                    variant_index + 1,
+                                    params,
+                                    Some(next_body_block),
+                                );
+                            }
+                        }
+                        _ => {
+                            return Err(unknown_error(
+                                "Cannot compile function with NativeFn body!",
+                            ))
+                        }
+                    }
+                } else {
+                    let variant_body_block = self.context.append_basic_block(
+                        self.current_fn_value(),
+                        &format!("variant_{}_body", variant_index),
+                    );
+
+                    self.builder
+                        .build_unconditional_branch(variant_body_block)?;
+
+                    self.builder.position_at_end(variant_body_block);
+
+                    for (i, arg_name) in args.iter().enumerate() {
+                        match &**arg_name {
+                            Pattern::Var(var_id) => {
+                                let alloca =
+                                    self.create_entry_block_alloca(f32_type, var_id.as_str());
+                                self.builder.build_store(alloca, params[i])?;
+                                self.store_var(var_id.as_str(), alloca);
+                            }
+                            _ => {}
+                        }
+                    }
+
+                    match body.deref() {
+                        FnDefBody::RogatoFn(expr) => {
+                            let compiled_val = self.codegen_expr(expr)?;
+                            let ret_val = compiled_val.into_basic_value();
+
+                            if variant_index < variants.len() - 1 {
+                                return Ok(());
+                            }
+
+                            self.builder.build_return(Some(&ret_val))?;
+                        }
+                        _ => {
+                            return Err(unknown_error(
+                                "Cannot compile function with NativeFn body!",
+                            ))
+                        }
+                    }
+                }
+            }
+        } else {
+            let variant_body_block = self.context.append_basic_block(
+                self.current_fn_value(),
+                &format!("variant_{}_body", variant_index),
+            );
+
+            self.builder
+                .build_unconditional_branch(variant_body_block)?;
+
+            self.builder.position_at_end(variant_body_block);
+
+            for (i, arg_name) in args.iter().enumerate() {
+                match &**arg_name {
+                    Pattern::Var(var_id) => {
+                        let alloca = self.create_entry_block_alloca(f32_type, var_id.as_str());
+                        self.builder.build_store(alloca, params[i])?;
+                        self.store_var(var_id.as_str(), alloca);
+                    }
+                    _ => {}
+                }
+            }
+
+            match body.deref() {
+                FnDefBody::RogatoFn(expr) => {
+                    let compiled_val = self.codegen_expr(expr)?;
+                    let ret_val = compiled_val.into_basic_value();
+                    self.builder.build_return(Some(&ret_val))?;
+                }
+                _ => return Err(unknown_error("Cannot compile function with NativeFn body!")),
+            }
+        }
+
+        Ok(())
+    }
+
+    fn codegen_variant_body_with_block(
+        &mut self,
+        fn_def: &FnDef,
+        variant_index: usize,
+        params: &[inkwell::values::BasicValueEnum<'ctx>],
+        entry_block: Option<inkwell::basic_block::BasicBlock<'ctx>>,
+    ) -> CodegenResult<()> {
+        if let Some(block) = entry_block {
+            self.builder.position_at_end(block);
+        }
+
+        if variant_index >= fn_def.variants_iter().count() {
+            return Ok(());
+        }
+
+        let f32_type = self.context.f32_type();
+
+        if variant_index >= 1 {
+            let variants: Vec<_> = fn_def.variants_iter().collect();
+
+            for (i, arg_name) in variants[variant_index].0.iter().enumerate() {
+                match &**arg_name {
+                    Pattern::Var(var_id) => {
+                        if self.lookup_var(var_id.as_str()).is_none() {
+                            let alloca = self.create_entry_block_alloca(f32_type, var_id.as_str());
+                            self.builder.build_store(alloca, params[i])?;
+                            self.store_var(var_id.as_str(), alloca);
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+
+        self.codegen_variant_body(fn_def, variant_index, params)
+    }
+
     fn infer_expr_type_with_checker(&self, expr: &Expression) -> CompiledType {
         use rogato_type_checker::TypeInferrer;
 
@@ -363,6 +728,48 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             }
             rogato_type_checker::InferredType::Unknown => CompiledType::Float,
         }
+    }
+
+    pub fn codegen_program(&mut self, program: &Program) -> CodegenResult<()> {
+        let mut fn_defs_by_name: HashMap<Identifier, Vec<Rc<RefCell<FnDef>>>> = HashMap::new();
+
+        for ast in program.iter() {
+            if let AST::FnDef(fn_def) = ast.as_ref() {
+                fn_defs_by_name
+                    .entry(fn_def.borrow().id().clone())
+                    .or_insert_with(Vec::new)
+                    .push(Rc::clone(fn_def));
+            }
+        }
+
+        let combined_fn_defs: Vec<Rc<RefCell<FnDef>>> = fn_defs_by_name
+            .into_values()
+            .map(|def_vec| {
+                if def_vec.len() == 1 {
+                    Rc::clone(&def_vec[0])
+                } else {
+                    let first_fn_def = &def_vec[0].borrow();
+
+                    let variants: Vec<_> = def_vec
+                        .iter()
+                        .flat_map(|f| f.borrow().variants_iter().cloned())
+                        .collect();
+
+                    let combined_id = first_fn_def.id().clone();
+                    FnDef::new_with_variants(combined_id, variants)
+                }
+            })
+            .collect();
+
+        for fn_def in combined_fn_defs.iter() {
+            self.declare_fn_signature(&fn_def.borrow())?;
+        }
+
+        for fn_def in combined_fn_defs.iter() {
+            self.codegen_fn_def(&fn_def.borrow())?;
+        }
+
+        Ok(())
     }
 
     pub fn codegen_fn_call(&mut self, fn_call: &FnCall) -> CodegenResult<CompiledValue<'ctx>> {
@@ -750,30 +1157,6 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             }
             _ => Err(unknown_error("Type mismatch in if-else branches")),
         }
-    }
-
-    pub fn codegen_program(&mut self, program: &Program) -> CodegenResult<()> {
-        let fn_defs: Vec<Rc<AST>> = program
-            .iter()
-            .filter_map(|ast| match ast.as_ref() {
-                AST::FnDef(fn_def) => Some(Rc::clone(ast)),
-                _ => None,
-            })
-            .collect();
-
-        for ast in fn_defs.iter() {
-            match ast.as_ref() {
-                AST::FnDef(fn_def) => {
-                    self.declare_fn_signature(&fn_def.borrow())?;
-                }
-                _ => {}
-            }
-        }
-
-        for ast in program.iter() {
-            self.codegen_ast(ast)?;
-        }
-        Ok(())
     }
 
     /// Returns the `FunctionValue` representing the function being compiled.

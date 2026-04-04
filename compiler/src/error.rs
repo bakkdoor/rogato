@@ -32,6 +32,9 @@ pub enum CodegenError {
 
     #[error("Type mismatch: {0}")]
     TypeMismatch(String),
+
+    #[error("Function '{0}' has uncovered pattern - no catch-all in last variant")]
+    FnPatternUncovered(Identifier),
 }
 
 impl From<inkwell::builder::BuilderError> for CodegenError {
