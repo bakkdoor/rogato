@@ -16,7 +16,7 @@ use rogato_common::{
     ast::{
         expression::Expression,
         fn_call::{FnCall, FnCallArgs},
-        fn_def::{FnDef, FnDefBody, FnDefVariant},
+        fn_def::{FnDef, FnDefBody, FnDefVariant, FnDefVariants},
         if_else::IfElse,
         literal::Literal,
         module_def::ModuleDef,
@@ -281,10 +281,6 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         let f32_type = self.context.f32_type();
         let func_name = fn_def.id();
 
-        if self.module.get_function(func_name.as_str()).is_some() {
-            return Err(CodegenError::FnNotDefined(func_name.clone()));
-        }
-
         let variants: Vec<_> = fn_def.variants_iter().collect();
 
         if variants.len() > 1 {
@@ -446,229 +442,87 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         let current_variant = &variants[variant_index];
         let FnDefVariant(args, body, _return_type) = current_variant;
 
-        if variant_index < variants.len() - 1 {
-            let next_variant = &variants[variant_index + 1];
+        if variant_index == variants.len() - 1 {
+            let body_block = self
+                .context
+                .append_basic_block(self.current_fn_value(), "variant_last_body");
 
-            let has_catch_all_at_position: Vec<bool> = args
-                .iter()
-                .enumerate()
-                .map(|(i, p)| match p.deref() {
-                    Pattern::Var(_) | Pattern::Any => true,
-                    _ => false,
-                })
-                .collect();
-
-            let first_catch_all = args
-                .iter()
-                .position(|p| matches!(p.deref(), Pattern::Var(_) | Pattern::Any));
-
-            if let Some(catch_all_idx) = first_catch_all {
-                for (i, arg_name) in args.iter().enumerate() {
-                    match &**arg_name {
-                        Pattern::Var(var_id) => {
-                            let alloca = self.create_entry_block_alloca(f32_type, var_id.as_str());
-                            self.builder.build_store(alloca, params[i])?;
-                            self.store_var(var_id.as_str(), alloca);
-                        }
-                        _ => {}
-                    }
-                }
-
-                let variant_body_block = self.context.append_basic_block(
-                    self.current_fn_value(),
-                    &format!("variant_{}_body", variant_index),
-                );
-
-                let merge_block = self.context.append_basic_block(
-                    self.current_fn_value(),
-                    &format!("variant_{}_merge", variant_index),
-                );
-
-                self.builder
-                    .build_unconditional_branch(variant_body_block)?;
-
-                self.builder.position_at_end(variant_body_block);
-
-                match body.deref() {
-                    FnDefBody::RogatoFn(expr) => {
-                        let compiled_val = self.codegen_expr(expr)?;
-                        let ret_val = compiled_val.into_basic_value();
-
-                        if variant_index < variants.len() - 1 {
-                            let next_body_block = self.context.append_basic_block(
-                                self.current_fn_value(),
-                                &format!("variant_{}_body", variant_index + 1),
-                            );
-                            self.builder.build_return(Some(&ret_val))?;
-
-                            return self.codegen_variant_body_with_block(
-                                fn_def,
-                                variant_index + 1,
-                                params,
-                                Some(next_body_block),
-                            );
-                        }
-                    }
-                    _ => return Err(unknown_error("Cannot compile function with NativeFn body!")),
-                }
-            } else {
-                let mut conditions: Vec<(usize, IntValue<'ctx>)> = Vec::new();
-
-                for (i, arg_pattern) in args.iter().enumerate() {
-                    match &**arg_pattern {
-                        Pattern::Number(num) => {
-                            let num_val = val::number_to_f64(num).unwrap_or(0.0);
-                            let const_val = f32_type.const_float(num_val);
-
-                            let cmp = self.builder.build_float_compare(
-                                FloatPredicate::OEQ,
-                                params[i].into_float_value(),
-                                const_val,
-                                &format!("cmp_arg_{}_variant_{}", i, variant_index),
-                            )?;
-
-                            conditions.push((i, cmp));
-                        }
-                        Pattern::Var(_) | Pattern::Any => {
-                            break;
-                        }
-                        _ => {}
-                    }
-                }
-
-                if !conditions.is_empty() {
-                    let last_condition = conditions.last().unwrap();
-
-                    let next_variant_block = self.context.append_basic_block(
-                        self.current_fn_value(),
-                        &format!("test_variant_{}", variant_index + 1),
-                    );
-
-                    let current_variant_block = self.context.append_basic_block(
-                        self.current_fn_value(),
-                        &format!("variant_{}_body", variant_index),
-                    );
-
-                    self.builder.build_conditional_branch(
-                        last_condition.1,
-                        current_variant_block,
-                        next_variant_block,
-                    )?;
-
-                    self.builder.position_at_end(current_variant_block);
-
-                    for (i, arg_name) in args.iter().enumerate() {
-                        match &**arg_name {
-                            Pattern::Var(var_id) => {
-                                let alloca =
-                                    self.create_entry_block_alloca(f32_type, var_id.as_str());
-                                self.builder.build_store(alloca, params[i])?;
-                                self.store_var(var_id.as_str(), alloca);
-                            }
-                            _ => {}
-                        }
-                    }
-
-                    match body.deref() {
-                        FnDefBody::RogatoFn(expr) => {
-                            let compiled_val = self.codegen_expr(expr)?;
-                            let ret_val = compiled_val.into_basic_value();
-
-                            if variant_index < variants.len() - 1 {
-                                let return_block = self.context.append_basic_block(
-                                    self.current_fn_value(),
-                                    &format!("variant_{}_return", variant_index),
-                                );
-
-                                self.builder.build_unconditional_branch(return_block)?;
-                                self.builder.position_at_end(return_block);
-
-                                let next_body_block = self.context.append_basic_block(
-                                    self.current_fn_value(),
-                                    &format!("variant_{}_body", variant_index + 1),
-                                );
-
-                                self.builder.build_return(Some(&ret_val))?;
-
-                                return self.codegen_variant_body_with_block(
-                                    fn_def,
-                                    variant_index + 1,
-                                    params,
-                                    Some(next_body_block),
-                                );
-                            }
-                        }
-                        _ => {
-                            return Err(unknown_error(
-                                "Cannot compile function with NativeFn body!",
-                            ))
-                        }
-                    }
-                } else {
-                    let variant_body_block = self.context.append_basic_block(
-                        self.current_fn_value(),
-                        &format!("variant_{}_body", variant_index),
-                    );
-
-                    self.builder
-                        .build_unconditional_branch(variant_body_block)?;
-
-                    self.builder.position_at_end(variant_body_block);
-
-                    for (i, arg_name) in args.iter().enumerate() {
-                        match &**arg_name {
-                            Pattern::Var(var_id) => {
-                                let alloca =
-                                    self.create_entry_block_alloca(f32_type, var_id.as_str());
-                                self.builder.build_store(alloca, params[i])?;
-                                self.store_var(var_id.as_str(), alloca);
-                            }
-                            _ => {}
-                        }
-                    }
-
-                    match body.deref() {
-                        FnDefBody::RogatoFn(expr) => {
-                            let compiled_val = self.codegen_expr(expr)?;
-                            let ret_val = compiled_val.into_basic_value();
-
-                            if variant_index < variants.len() - 1 {
-                                return Ok(());
-                            }
-
-                            self.builder.build_return(Some(&ret_val))?;
-                        }
-                        _ => {
-                            return Err(unknown_error(
-                                "Cannot compile function with NativeFn body!",
-                            ))
-                        }
-                    }
+            for (i, arg_name) in args.iter().enumerate() {
+                if let Pattern::Var(var_id) = &**arg_name {
+                    let alloca = self.create_entry_block_alloca(f32_type, var_id.as_str());
+                    self.builder.build_store(alloca, params[i])?;
+                    self.store_var(var_id.as_str(), alloca);
                 }
             }
-        } else {
-            let variant_body_block = self.context.append_basic_block(
-                self.current_fn_value(),
-                &format!("variant_{}_body", variant_index),
-            );
 
+            match body.as_ref() {
+                FnDefBody::RogatoFn(expr) => {
+                    self.builder.build_unconditional_branch(body_block)?;
+                    self.builder.position_at_end(body_block);
+
+                    let compiled_val = self.codegen_expr(expr)?;
+                    let ret_val = compiled_val.into_basic_value();
+                    self.builder.build_return(Some(&ret_val))?;
+                }
+                _ => return Err(unknown_error("Cannot compile function with NativeFn body!")),
+            }
+
+            return Ok(());
+        }
+
+        let mut conditions: Vec<(usize, IntValue<'ctx>)> = Vec::new();
+
+        // Track if we've seen any non-Var pattern (which indicates subsequent Var patterns are catch-alls)
+        let mut seen_non_var_pattern = false;
+
+        for (i, arg_pattern) in args.iter().enumerate() {
+            // Only break on complex patterns that can't be tested
+            match arg_pattern.as_ref() {
+                Pattern::Number(num) => {
+                    seen_non_var_pattern = true;
+                    let num_val = val::number_to_f64(num).unwrap_or(0.0);
+                    let const_val = f32_type.const_float(num_val);
+                    let cmp = self.builder.build_float_compare(
+                        FloatPredicate::OEQ,
+                        params[i].into_float_value(),
+                        const_val,
+                        &format!("cmp_{}", i),
+                    )?;
+                    conditions.push((i, cmp));
+                }
+                Pattern::Var(_) | Pattern::Any => {
+                    // Only treat as catch-all if we've seen a non-Var pattern before
+                    if seen_non_var_pattern {
+                        break;
+                    }
+                }
+                _ => {
+                    // Other pattern types - can't test, stop here
+                    break;
+                }
+            }
+        }
+
+        let variant_body_block = self.context.append_basic_block(
+            self.current_fn_value(),
+            &format!("variant_{}_body", variant_index),
+        );
+
+        if conditions.is_empty() {
             self.builder
                 .build_unconditional_branch(variant_body_block)?;
 
             self.builder.position_at_end(variant_body_block);
 
             for (i, arg_name) in args.iter().enumerate() {
-                match &**arg_name {
-                    Pattern::Var(var_id) => {
-                        let alloca = self.create_entry_block_alloca(f32_type, var_id.as_str());
-                        self.builder.build_store(alloca, params[i])?;
-                        self.store_var(var_id.as_str(), alloca);
-                    }
-                    _ => {}
+                if let Pattern::Var(var_id) = &**arg_name {
+                    let alloca = self.create_entry_block_alloca(f32_type, var_id.as_str());
+                    self.builder.build_store(alloca, params[i])?;
+                    self.store_var(var_id.as_str(), alloca);
                 }
             }
 
-            match body.deref() {
+            match body.as_ref() {
                 FnDefBody::RogatoFn(expr) => {
                     let compiled_val = self.codegen_expr(expr)?;
                     let ret_val = compiled_val.into_basic_value();
@@ -676,6 +530,43 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                 }
                 _ => return Err(unknown_error("Cannot compile function with NativeFn body!")),
             }
+
+            return Ok(());
+        } else {
+            let next_test_block = self.context.append_basic_block(
+                self.current_fn_value(),
+                &format!("test_variant_{}", variant_index + 1),
+            );
+
+            let last_cond = conditions.last().unwrap();
+            self.builder.build_conditional_branch(
+                last_cond.1,
+                variant_body_block,
+                next_test_block,
+            )?;
+
+            self.builder.position_at_end(variant_body_block);
+
+            for (i, arg_name) in args.iter().enumerate() {
+                if let Pattern::Var(var_id) = &**arg_name {
+                    let alloca = self.create_entry_block_alloca(f32_type, var_id.as_str());
+                    self.builder.build_store(alloca, params[i])?;
+                    self.store_var(var_id.as_str(), alloca);
+                }
+            }
+
+            match body.as_ref() {
+                FnDefBody::RogatoFn(expr) => {
+                    let compiled_val = self.codegen_expr(expr)?;
+                    let ret_val = compiled_val.into_basic_value();
+                    self.builder.build_return(Some(&ret_val))?;
+                }
+                _ => return Err(unknown_error("Cannot compile function with NativeFn body!")),
+            }
+
+            self.builder.position_at_end(next_test_block);
+
+            return self.codegen_variant_body(fn_def, variant_index + 1, params);
         }
 
         Ok(())
@@ -750,13 +641,16 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                 } else {
                     let first_fn_def = &def_vec[0].borrow();
 
-                    let variants: Vec<_> = def_vec
-                        .iter()
-                        .flat_map(|f| f.borrow().variants_iter().cloned())
-                        .collect();
+                    let mut all_variants: Vec<FnDefVariant> = Vec::new();
+                    for f in def_vec.iter() {
+                        let borrowed = f.borrow();
+                        for variant in borrowed.variants_iter() {
+                            all_variants.push(variant.clone());
+                        }
+                    }
 
                     let combined_id = first_fn_def.id().clone();
-                    FnDef::new_with_variants(combined_id, variants)
+                    FnDef::new_with_variants(combined_id, FnDefVariants::new(all_variants))
                 }
             })
             .collect();
