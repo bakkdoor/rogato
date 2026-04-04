@@ -198,6 +198,7 @@ fn compile_file(file_path: &str, opts: &CompileOptions) -> anyhow::Result<()> {
         &execution_engine,
     );
 
+    compiler.init_stdlib();
     compiler.codegen_program(&ast)?;
 
     let base_path = opts

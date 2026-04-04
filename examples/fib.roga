@@ -1,7 +1,10 @@
-module Fibonacci { fib }
+module Fibonacci { fib, main }
 
 let fib n =
   fib_ 0 1 n
 
 let fib_ n1 n2 0 = n1
 let fib_ n1 n2 n = fib_ n2 (n1 + n2) (n - 1)
+
+let main =
+  println (fib 10)

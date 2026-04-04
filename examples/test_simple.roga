@@ -1,0 +1,3 @@
+module Test { main }
+
+let main x = x + 1

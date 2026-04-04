@@ -101,6 +101,7 @@ pub fn run_repl(files_to_load: &[String]) -> anyhow::Result<()> {
         let target_machine = Codegen::default_target_machine(&module);
         let ee = Codegen::default_execution_engine(&module);
         let mut compiler = Codegen::new(&context, &module, &builder, &target_machine, &ee);
+        compiler.init_stdlib();
 
         counter += 1;
         let readline = rl.readline(format!("{counter:03} >  ").as_str());

@@ -137,6 +137,7 @@ pub struct Codegen<'a, 'ctx> {
     context: &'ctx Context,
     current_fn_value: Option<FunctionValue<'ctx>>,
     variables: HashMap<String, PointerValue<'ctx>>,
+    printf: Option<FunctionValue<'ctx>>,
 }
 
 impl<'a, 'ctx> Codegen<'a, 'ctx> {
@@ -155,7 +156,15 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             execution_engine,
             current_fn_value: None,
             variables: HashMap::new(),
+            printf: None,
         }
+    }
+
+    pub fn init_stdlib(&mut self) {
+        let ptr_type = self.context.ptr_type(AddressSpace::default());
+        let printf_type = ptr_type.fn_type(&[BasicMetadataTypeEnum::PointerType(ptr_type)], true);
+        let printf = self.module.add_function("printf", printf_type, None);
+        self.printf = Some(printf);
     }
 
     pub fn new_context() -> Context {
@@ -670,6 +679,10 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         let id = &fn_call.id;
         let args = &fn_call.args;
 
+        if id.as_str() == "print" || id.as_str() == "println" {
+            return self.codegen_println(id.as_str(), args);
+        }
+
         let function = self
             .get_function(id.as_str())
             .ok_or_else(|| CodegenError::FnNotDefined(id.clone()))?;
@@ -702,6 +715,99 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             .ok_or_else(|| unknown_error("Invalid call produced."))?;
 
         Ok(CompiledValue::Float(value.into_float_value()))
+    }
+
+    fn codegen_println(
+        &mut self,
+        fn_name: &str,
+        args: &FnCallArgs,
+    ) -> CodegenResult<CompiledValue<'ctx>> {
+        if args.is_empty() {
+            return Err(unknown_error(&format!(
+                "{} takes at least 1 argument",
+                fn_name
+            )));
+        }
+
+        let arg = args.iter().next().unwrap();
+        let compiled_val = self.codegen_expr(arg)?;
+        let isprintln = fn_name == "println";
+        let printf_fn = self
+            .printf
+            .ok_or_else(|| unknown_error("printf not initialized"))?;
+
+        let i8_type = self.context.i8_type();
+        let ptr_type = self.context.ptr_type(AddressSpace::default());
+
+        let format_str = match &compiled_val {
+            CompiledValue::Float(_) => {
+                if isprintln {
+                    "%f\n\0"
+                } else {
+                    "%f\0"
+                }
+            }
+            CompiledValue::Int32(_) | CompiledValue::Int64(_) => {
+                if isprintln {
+                    "%d\n\0"
+                } else {
+                    "%d\0"
+                }
+            }
+            CompiledValue::String(_) => {
+                if isprintln {
+                    "%s\n\0"
+                } else {
+                    "%s\0"
+                }
+            }
+            CompiledValue::Bool(_) => {
+                if isprintln {
+                    "%s\n\0"
+                } else {
+                    "%s\0"
+                }
+            }
+        };
+
+        let format_bytes = format_str.as_bytes();
+        let format_ints: Vec<_> = format_bytes
+            .iter()
+            .map(|b| i8_type.const_int(*b as u64, false))
+            .collect();
+        let format_array = i8_type.const_array(&format_ints);
+
+        let format_str_global = self
+            .module
+            .add_global(format_array.get_type(), None, "fmt_str");
+        format_str_global.set_initializer(&format_array);
+        let format_str_ptr = format_str_global.as_pointer_value();
+
+        let mut printf_args: Vec<BasicMetadataValueEnum> = vec![format_str_ptr.into()];
+
+        match &compiled_val {
+            CompiledValue::Float(fv) => {
+                let double = self.builder.build_float_cast(
+                    *fv,
+                    self.context.f64_type(),
+                    "float_to_double",
+                )?;
+                printf_args.push(double.into());
+            }
+            CompiledValue::Int32(iv) => printf_args.push((*iv).into()),
+            CompiledValue::Int64(iv) => printf_args.push((*iv).into()),
+            CompiledValue::String(pv) => printf_args.push((*pv).into()),
+            CompiledValue::Bool(bv) => {
+                let int_val = self
+                    .builder
+                    .build_int_cast(*bv, i8_type.into(), "bool_to_i8")?;
+                printf_args.push(int_val.into());
+            }
+        };
+
+        self.builder
+            .build_call(printf_fn, printf_args.as_slice(), "print_call")?;
+        Ok(compiled_val)
     }
 
     pub fn codegen_op_call(

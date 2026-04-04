@@ -4,3 +4,7 @@ rogato.db/
 rogato.test.db/
 .cargo/
 flamegraph.html
+*.o
+*.bc
+examples/*.ll
+examples/*.s
