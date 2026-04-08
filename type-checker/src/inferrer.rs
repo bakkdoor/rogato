@@ -1,7 +1,7 @@
 use std::{ops::Deref, rc::Rc};
 
 use rogato_common::ast::{
-    expression::{Expression, Literal},
+    expression::{ExprKind, Expression, Literal},
     fn_call::FnCall,
     fn_def::FnDef,
     if_else::IfElse,
@@ -47,45 +47,45 @@ impl TypeInferrer {
     // -----------------------------------------------------------------------
 
     pub fn infer_expression(&self, expr: &Expression) -> InferredType {
-        match expr {
-            Expression::Lit(lit) => self.infer_literal(lit),
-            Expression::Var(id) => match self.env.lookup_variable(id) {
+        match &expr.kind {
+            ExprKind::Lit(lit) => self.infer_literal(lit),
+            ExprKind::Var(id) => match self.env.lookup_variable(id) {
                 Some(te) => InferredType::Known(Rc::clone(te)),
                 None => InferredType::Unknown,
             },
-            Expression::FnCall(fn_call) => {
+            ExprKind::FnCall(fn_call) => {
                 if let Some(sig) = self.env.lookup_function(&fn_call.id) {
                     InferredType::Known(Rc::clone(&sig.return_type))
                 } else {
                     InferredType::Unknown
                 }
             }
-            Expression::OpCall(op, _left, _right) => self.infer_op_call(op),
-            Expression::IfElse(if_else) => {
+            ExprKind::OpCall(op, _left, _right) => self.infer_op_call(op),
+            ExprKind::IfElse(if_else) => {
                 let then_type = self.infer_expression(&if_else.then_expr);
                 let else_type = self.infer_expression(&if_else.else_expr);
                 then_type.unify(&else_type)
             }
-            Expression::Let(let_expr) => self.infer_expression(&let_expr.body),
-            Expression::Lambda(lambda) => self.infer_lambda(lambda),
-            Expression::ConstOrTypeRef(id) => {
+            ExprKind::Let(let_expr) => self.infer_expression(&let_expr.body),
+            ExprKind::Lambda(lambda) => self.infer_lambda(lambda),
+            ExprKind::ConstOrTypeRef(id) => {
                 if let Some(te) = self.env.lookup_type_def(id) {
                     InferredType::Known(Rc::clone(te))
                 } else {
                     InferredType::Unknown
                 }
             }
-            Expression::DBTypeRef(_) => InferredType::Known(Rc::new(TypeExpression::SymbolType)),
-            Expression::PropFnRef(_) => InferredType::Unknown,
-            Expression::EdgeProp(_, _) => InferredType::Known(Rc::new(TypeExpression::SymbolType)),
-            Expression::Query(_) => InferredType::Unknown,
-            Expression::Symbol(_id) => InferredType::Known(Rc::new(TypeExpression::SymbolType)),
-            Expression::Quoted(_) => InferredType::Unknown,
-            Expression::QuotedAST(_) => InferredType::Unknown,
-            Expression::Unquoted(expr) => self.infer_expression(expr),
-            Expression::UnquotedAST(_) => InferredType::Unknown,
-            Expression::InlineFnDef(fn_def) => self.infer_fn_def(&fn_def.borrow()),
-            Expression::Commented(_, expr) => self.infer_expression(expr),
+            ExprKind::DBTypeRef(_) => InferredType::Known(Rc::new(TypeExpression::SymbolType)),
+            ExprKind::PropFnRef(_) => InferredType::Unknown,
+            ExprKind::EdgeProp(_, _) => InferredType::Known(Rc::new(TypeExpression::SymbolType)),
+            ExprKind::Query(_) => InferredType::Unknown,
+            ExprKind::Symbol(_id) => InferredType::Known(Rc::new(TypeExpression::SymbolType)),
+            ExprKind::Quoted(_) => InferredType::Unknown,
+            ExprKind::QuotedAST(_) => InferredType::Unknown,
+            ExprKind::Unquoted(expr) => self.infer_expression(expr),
+            ExprKind::UnquotedAST(_) => InferredType::Unknown,
+            ExprKind::InlineFnDef(fn_def) => self.infer_fn_def(&fn_def.borrow()),
+            ExprKind::Commented(_, expr) => self.infer_expression(expr),
         }
     }
 
@@ -232,64 +232,66 @@ impl TypeInferrer {
     /// undefined variables/functions, type mismatches, argument count
     /// mismatches, etc.
     pub fn check_expression(&mut self, expr: &Expression) -> Result<InferredType, TypeCheckError> {
-        match expr {
+        match &expr.kind {
             // Literals: delegate to infer_literal which correctly uses our
             // environment (fixing the old bug where type_check_literal created
             // fresh empty TypeEnvironment::new() instances).
-            Expression::Lit(lit) => Ok(self.infer_literal(lit)),
+            ExprKind::Lit(lit) => Ok(self.infer_literal(lit)),
 
-            Expression::Var(id) => match self.env.lookup_variable(id) {
+            ExprKind::Var(id) => match self.env.lookup_variable(id) {
                 Some(te) => Ok(InferredType::Known(Rc::clone(te))),
-                None => Err(TypeCheckError::UndefinedVariable(id.clone())),
+                None => Err(TypeCheckError::UndefinedVariable(id.clone(), expr.span)),
             },
 
-            Expression::FnCall(fn_call) => self.check_fn_call(fn_call),
+            ExprKind::FnCall(fn_call) => self.check_fn_call(fn_call),
 
-            Expression::OpCall(op, left, right) => self.check_op_call(op, left, right),
+            ExprKind::OpCall(op, left, right) => self.check_op_call(op, left, right),
 
-            Expression::IfElse(if_else) => self.check_if_else(if_else),
+            ExprKind::IfElse(if_else) => self.check_if_else(if_else),
 
-            Expression::Let(let_expr) => self.check_let_expression(let_expr),
+            ExprKind::Let(let_expr) => self.check_let_expression(let_expr),
 
-            Expression::Lambda(lambda) => self.check_lambda(lambda),
+            ExprKind::Lambda(lambda) => self.check_lambda(lambda),
 
-            Expression::Query(query) => self.check_query(query),
+            ExprKind::Query(query) => self.check_query(query),
 
-            Expression::ConstOrTypeRef(id) => {
+            ExprKind::ConstOrTypeRef(id) => {
                 if let Some(te) = self.env.lookup_type_def(id) {
                     Ok(InferredType::Known(Rc::clone(te)))
                 } else {
-                    Err(TypeCheckError::UndefinedVariable(id.clone().into()))
+                    Err(TypeCheckError::UndefinedVariable(
+                        id.clone().into(),
+                        expr.span,
+                    ))
                 }
             }
 
-            Expression::DBTypeRef(_) => {
+            ExprKind::DBTypeRef(_) => Ok(InferredType::Known(Rc::new(TypeExpression::SymbolType))),
+            ExprKind::PropFnRef(_) => Ok(InferredType::Unknown),
+            ExprKind::EdgeProp(_, _) => {
                 Ok(InferredType::Known(Rc::new(TypeExpression::SymbolType)))
             }
-            Expression::PropFnRef(_) => Ok(InferredType::Unknown),
-            Expression::EdgeProp(_, _) => {
-                Ok(InferredType::Known(Rc::new(TypeExpression::SymbolType)))
-            }
-            Expression::Symbol(_) => Ok(InferredType::Known(Rc::new(TypeExpression::SymbolType))),
-            Expression::Quoted(_) => Ok(InferredType::Unknown),
-            Expression::QuotedAST(_) => Ok(InferredType::Unknown),
-            Expression::Unquoted(expr) => self.check_expression(expr),
-            Expression::UnquotedAST(_) => Ok(InferredType::Unknown),
-            Expression::InlineFnDef(fn_def) => self.check_fn_def(&fn_def.borrow()),
-            Expression::Commented(_, expr) => self.check_expression(expr),
+            ExprKind::Symbol(_) => Ok(InferredType::Known(Rc::new(TypeExpression::SymbolType))),
+            ExprKind::Quoted(_) => Ok(InferredType::Unknown),
+            ExprKind::QuotedAST(_) => Ok(InferredType::Unknown),
+            ExprKind::Unquoted(expr) => self.check_expression(expr),
+            ExprKind::UnquotedAST(_) => Ok(InferredType::Unknown),
+            ExprKind::InlineFnDef(fn_def) => self.check_fn_def(&fn_def.borrow()),
+            ExprKind::Commented(_, expr) => self.check_expression(expr),
         }
     }
 
     fn check_fn_call(&mut self, fn_call: &FnCall) -> Result<InferredType, TypeCheckError> {
         let (arg_types, return_type) = match self.env.lookup_function(&fn_call.id) {
             Some(sig) => (sig.arg_types.clone(), sig.return_type.clone()),
-            None => return Err(TypeCheckError::UndefinedFunction(fn_call.id.clone())),
+            None => return Err(TypeCheckError::UndefinedFunction(fn_call.id.clone(), None)),
         };
 
         if arg_types.len() != fn_call.args.len() {
             return Err(TypeCheckError::ArgumentCountMismatch {
                 expected: arg_types.len(),
                 actual: fn_call.args.len(),
+                span: None,
             });
         }
 
@@ -445,6 +447,7 @@ fn ensure_type(inferred: &InferredType, expected: &TypeExpression) -> Result<(),
             return Err(TypeCheckError::TypeMismatch {
                 expected: Rc::new(expected.clone()),
                 actual: Rc::clone(actual),
+                span: None,
             });
         }
     }

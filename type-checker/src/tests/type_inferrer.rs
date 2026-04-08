@@ -1,5 +1,5 @@
 use rogato_common::ast::{
-    expression::Expression,
+    expression::{ExprKind, Expression},
     fn_call::{FnCall, FnCallArgs},
     if_else::IfElse,
     lambda::{Lambda, LambdaArgs, LambdaVariant},
@@ -19,7 +19,7 @@ use crate::{InferredType, TypeCheck, TypeEnvironment, TypeInferrer};
 fn infer_number_literal() {
     let inferrer = TypeInferrer::new();
     let literal = Literal::Number(42i32.into());
-    let expr = Expression::Lit(literal);
+    let expr = Expression::unspanned(ExprKind::Lit(literal));
 
     let result = inferrer.infer_expression(&expr);
     assert!(matches!(result, InferredType::Known(_)));
@@ -29,7 +29,7 @@ fn infer_number_literal() {
 fn infer_string_literal() {
     let inferrer = TypeInferrer::new();
     let literal = Literal::String("hello".to_string());
-    let expr = Expression::Lit(literal);
+    let expr = Expression::unspanned(ExprKind::Lit(literal));
 
     let result = inferrer.infer_expression(&expr);
     assert!(matches!(result, InferredType::Known(_)));
@@ -39,7 +39,7 @@ fn infer_string_literal() {
 fn infer_bool_literal() {
     let inferrer = TypeInferrer::new();
     let literal = Literal::Bool(true);
-    let expr = Expression::Lit(literal);
+    let expr = Expression::unspanned(ExprKind::Lit(literal));
 
     let result = inferrer.infer_expression(&expr);
     assert!(matches!(result, InferredType::Known(_)));
@@ -54,9 +54,9 @@ fn infer_addition_op() {
     let right = Literal::Number(2i32.into());
 
     let op = "+".into();
-    let left_expr = Rc::new(Expression::Lit(left));
-    let right_expr = Rc::new(Expression::Lit(right));
-    let expr = Expression::OpCall(op, left_expr, right_expr);
+    let left_expr = Expression::rc(ExprKind::Lit(left));
+    let right_expr = Expression::rc(ExprKind::Lit(right));
+    let expr = Expression::unspanned(ExprKind::OpCall(op, left_expr, right_expr));
 
     let result = inferrer.infer_expression(&expr);
     assert!(matches!(result, InferredType::Known(_)));
@@ -67,7 +67,7 @@ fn infer_undefined_variable() {
     let inferrer = TypeInferrer::new();
 
     let var: VarIdentifier = "undefined_var".into();
-    let expr = Expression::Var(var);
+    let expr = Expression::unspanned(ExprKind::Var(var));
 
     let result = inferrer.infer_expression(&expr);
     assert!(matches!(result, InferredType::Unknown));
@@ -82,7 +82,7 @@ fn infer_defined_variable() {
         .insert_variable("x".into(), Rc::new(TypeExpression::NumberType));
 
     let var: VarIdentifier = "x".into();
-    let expr = Expression::Var(var);
+    let expr = Expression::unspanned(ExprKind::Var(var));
 
     let result = inferrer.infer_expression(&expr);
     assert!(matches!(result, InferredType::Known(_)));
@@ -93,12 +93,12 @@ fn infer_list_literal() {
     let inferrer = TypeInferrer::new();
 
     let items: Vec<Rc<Expression>> = vec![
-        Rc::new(Expression::Lit(Literal::Number(1i32.into()))),
-        Rc::new(Expression::Lit(Literal::Number(2i32.into()))),
+        Expression::rc(ExprKind::Lit(Literal::Number(1i32.into()))),
+        Expression::rc(ExprKind::Lit(Literal::Number(2i32.into()))),
     ];
 
     let literal = Literal::List(rogato_common::ast::literal::TupleItems::from(items));
-    let expr = Expression::Lit(literal);
+    let expr = Expression::unspanned(ExprKind::Lit(literal));
 
     let result = inferrer.infer_expression(&expr);
     assert!(matches!(result, InferredType::Known(_)));
@@ -109,12 +109,12 @@ fn infer_tuple_literal() {
     let inferrer = TypeInferrer::new();
 
     let items: Vec<Rc<Expression>> = vec![
-        Rc::new(Expression::Lit(Literal::Number(1i32.into()))),
-        Rc::new(Expression::Lit(Literal::String("hello".to_string()))),
+        Expression::rc(ExprKind::Lit(Literal::Number(1i32.into()))),
+        Expression::rc(ExprKind::Lit(Literal::String("hello".to_string()))),
     ];
 
     let literal = Literal::Tuple(rogato_common::ast::literal::TupleItems::from(items));
-    let expr = Expression::Lit(literal);
+    let expr = Expression::unspanned(ExprKind::Lit(literal));
 
     let result = inferrer.infer_expression(&expr);
     assert!(matches!(result, InferredType::Known(_)));
@@ -128,9 +128,9 @@ fn infer_comparison_op() {
     let right = Literal::Number(2i32.into());
 
     let op: Identifier = ">".into();
-    let left_expr = Rc::new(Expression::Lit(left));
-    let right_expr = Rc::new(Expression::Lit(right));
-    let expr = Expression::OpCall(op, left_expr, right_expr);
+    let left_expr = Expression::rc(ExprKind::Lit(left));
+    let right_expr = Expression::rc(ExprKind::Lit(right));
+    let expr = Expression::unspanned(ExprKind::OpCall(op, left_expr, right_expr));
 
     let result = inferrer.infer_expression(&expr);
     assert!(matches!(result, InferredType::Known(_)));
@@ -144,9 +144,9 @@ fn infer_logical_op() {
     let right = Literal::Bool(false);
 
     let op: Identifier = "&&".into();
-    let left_expr = Rc::new(Expression::Lit(left));
-    let right_expr = Rc::new(Expression::Lit(right));
-    let expr = Expression::OpCall(op, left_expr, right_expr);
+    let left_expr = Expression::rc(ExprKind::Lit(left));
+    let right_expr = Expression::rc(ExprKind::Lit(right));
+    let expr = Expression::unspanned(ExprKind::OpCall(op, left_expr, right_expr));
 
     let result = inferrer.infer_expression(&expr);
     assert!(matches!(result, InferredType::Known(_)));
@@ -159,7 +159,7 @@ mod type_check_tests {
     #[test]
     fn type_check_undefined_variable_returns_error() {
         let var: VarIdentifier = "undefined_var".into();
-        let expr = Expression::Var(var);
+        let expr = Expression::unspanned(ExprKind::Var(var));
         let mut context = TypeEnvironment::new();
 
         let result = expr.type_check(&mut context);
@@ -169,7 +169,7 @@ mod type_check_tests {
     #[test]
     fn type_check_defined_variable_returns_type() {
         let var: VarIdentifier = "x".into();
-        let expr = Expression::Var(var);
+        let expr = Expression::unspanned(ExprKind::Var(var));
         let mut context = TypeEnvironment::new();
 
         context.insert_variable("x".into(), Rc::new(TypeExpression::NumberType));
@@ -182,13 +182,13 @@ mod type_check_tests {
     fn type_check_undefined_function_returns_error() {
         let args = FnCallArgs::new(vec![]);
         let fn_call = FnCall::new("undefined_fn".into(), args);
-        let expr = Expression::FnCall(fn_call);
+        let expr = Expression::unspanned(ExprKind::FnCall(fn_call));
         let mut context = TypeEnvironment::new();
 
         let result = expr.type_check(&mut context);
         assert!(matches!(
             result,
-            Err(crate::TypeCheckError::UndefinedFunction(_))
+            Err(crate::TypeCheckError::UndefinedFunction(_, _))
         ));
     }
 
@@ -196,7 +196,7 @@ mod type_check_tests {
     fn type_check_function_call_returns_return_type() {
         let args = FnCallArgs::new(vec![]);
         let fn_call = FnCall::new("my_fn".into(), args);
-        let expr = Expression::FnCall(fn_call);
+        let expr = Expression::unspanned(ExprKind::FnCall(fn_call));
         let mut context = TypeEnvironment::new();
 
         context.insert_function(crate::FnSignature {
@@ -211,9 +211,11 @@ mod type_check_tests {
 
     #[test]
     fn type_check_fn_call_argument_count_mismatch() {
-        let args = FnCallArgs::new(vec![Rc::new(Expression::Lit(Literal::Number(1i32.into())))]);
+        let args = FnCallArgs::new(vec![Expression::rc(ExprKind::Lit(Literal::Number(
+            1i32.into(),
+        )))]);
         let fn_call = FnCall::new("my_fn".into(), args);
-        let expr = Expression::FnCall(fn_call);
+        let expr = Expression::unspanned(ExprKind::FnCall(fn_call));
         let mut context = TypeEnvironment::new();
 
         context.insert_function(crate::FnSignature {
@@ -233,11 +235,11 @@ mod type_check_tests {
     fn type_check_let_binding() {
         let bindings = LetBindings::new(vec![(
             "x".into(),
-            Rc::new(Expression::Lit(Literal::Number(1i32.into()))),
+            Expression::rc(ExprKind::Lit(Literal::Number(1i32.into()))),
         )]);
-        let body = Rc::new(Expression::Var("x".into()));
+        let body = Expression::rc(ExprKind::Var("x".into()));
         let let_expr = LetExpression::new(bindings, body);
-        let expr = Expression::Let(let_expr);
+        let expr = Expression::unspanned(ExprKind::Let(let_expr));
         let mut context = TypeEnvironment::new();
 
         let result = expr.type_check(&mut context);
@@ -246,11 +248,11 @@ mod type_check_tests {
 
     #[test]
     fn type_check_if_else_returns_then_or_else_type() {
-        let condition = Rc::new(Expression::Lit(Literal::Bool(true)));
-        let then_expr = Rc::new(Expression::Lit(Literal::Number(1i32.into())));
-        let else_expr = Rc::new(Expression::Lit(Literal::Number(2i32.into())));
+        let condition = Expression::rc(ExprKind::Lit(Literal::Bool(true)));
+        let then_expr = Expression::rc(ExprKind::Lit(Literal::Number(1i32.into())));
+        let else_expr = Expression::rc(ExprKind::Lit(Literal::Number(2i32.into())));
         let if_else = IfElse::new(condition, then_expr, else_expr);
-        let expr = Expression::IfElse(if_else);
+        let expr = Expression::unspanned(ExprKind::IfElse(if_else));
 
         let result = expr.type_check(&mut TypeEnvironment::new());
         assert!(matches!(result, Ok(InferredType::Known(_))));
@@ -258,11 +260,11 @@ mod type_check_tests {
 
     #[test]
     fn type_check_if_else_condition_must_be_bool() {
-        let condition = Rc::new(Expression::Lit(Literal::Number(1i32.into())));
-        let then_expr = Rc::new(Expression::Lit(Literal::Number(1i32.into())));
-        let else_expr = Rc::new(Expression::Lit(Literal::Number(2i32.into())));
+        let condition = Expression::rc(ExprKind::Lit(Literal::Number(1i32.into())));
+        let then_expr = Expression::rc(ExprKind::Lit(Literal::Number(1i32.into())));
+        let else_expr = Expression::rc(ExprKind::Lit(Literal::Number(2i32.into())));
         let if_else = IfElse::new(condition, then_expr, else_expr);
-        let expr = Expression::IfElse(if_else);
+        let expr = Expression::unspanned(ExprKind::IfElse(if_else));
 
         let result = expr.type_check(&mut TypeEnvironment::new());
         assert!(matches!(
@@ -273,11 +275,12 @@ mod type_check_tests {
 
     #[test]
     fn type_check_number_arithmetic_op() {
-        let left = Rc::new(Expression::Lit(Literal::Number(1i32.into())));
-        let right = Rc::new(Expression::Lit(Literal::Number(2i32.into())));
+        let left = Expression::rc(ExprKind::Lit(Literal::Number(1i32.into())));
+        let right = Expression::rc(ExprKind::Lit(Literal::Number(2i32.into())));
 
         for op in ["+", "-", "*", "/", "%"] {
-            let expr = Expression::OpCall(op.into(), left.clone(), right.clone());
+            let expr =
+                Expression::unspanned(ExprKind::OpCall(op.into(), left.clone(), right.clone()));
             let result = expr.type_check(&mut TypeEnvironment::new());
             assert!(
                 matches!(result, Ok(InferredType::Known(_))),
@@ -289,11 +292,12 @@ mod type_check_tests {
 
     #[test]
     fn type_check_comparison_op_returns_bool() {
-        let left = Rc::new(Expression::Lit(Literal::Number(1i32.into())));
-        let right = Rc::new(Expression::Lit(Literal::Number(2i32.into())));
+        let left = Expression::rc(ExprKind::Lit(Literal::Number(1i32.into())));
+        let right = Expression::rc(ExprKind::Lit(Literal::Number(2i32.into())));
 
         for op in [">", "<", ">=", "<="] {
-            let expr = Expression::OpCall(op.into(), left.clone(), right.clone());
+            let expr =
+                Expression::unspanned(ExprKind::OpCall(op.into(), left.clone(), right.clone()));
             let result = expr.type_check(&mut TypeEnvironment::new());
             assert!(
                 matches!(result, Ok(InferredType::Known(_))),
@@ -305,11 +309,12 @@ mod type_check_tests {
 
     #[test]
     fn type_check_equality_op_returns_bool() {
-        let left = Rc::new(Expression::Lit(Literal::Number(1i32.into())));
-        let right = Rc::new(Expression::Lit(Literal::Number(2i32.into())));
+        let left = Expression::rc(ExprKind::Lit(Literal::Number(1i32.into())));
+        let right = Expression::rc(ExprKind::Lit(Literal::Number(2i32.into())));
 
         for op in ["==", "!="] {
-            let expr = Expression::OpCall(op.into(), left.clone(), right.clone());
+            let expr =
+                Expression::unspanned(ExprKind::OpCall(op.into(), left.clone(), right.clone()));
             let result = expr.type_check(&mut TypeEnvironment::new());
             assert!(
                 matches!(result, Ok(InferredType::Known(_))),
@@ -321,11 +326,12 @@ mod type_check_tests {
 
     #[test]
     fn type_check_logical_op_both_operands_must_be_bool() {
-        let left = Rc::new(Expression::Lit(Literal::Number(1i32.into())));
-        let right = Rc::new(Expression::Lit(Literal::Bool(true)));
+        let left = Expression::rc(ExprKind::Lit(Literal::Number(1i32.into())));
+        let right = Expression::rc(ExprKind::Lit(Literal::Bool(true)));
 
         for op in ["&&", "||"] {
-            let expr = Expression::OpCall(op.into(), left.clone(), right.clone());
+            let expr =
+                Expression::unspanned(ExprKind::OpCall(op.into(), left.clone(), right.clone()));
             let result = expr.type_check(&mut TypeEnvironment::new());
             assert!(
                 matches!(result, Err(crate::TypeCheckError::TypeMismatch { .. })),
@@ -339,14 +345,14 @@ mod type_check_tests {
     fn type_check_query() {
         let binding = QueryBinding::new(
             vec!["person".into()],
-            Rc::new(Expression::Symbol("Person".into())),
+            Expression::rc(ExprKind::Symbol("Person".into())),
         );
         let bindings = QueryBindings::new(vec![binding]);
         let guards = QueryGuards::new(vec![]);
-        let production = Rc::new(Expression::Symbol("name".into()));
+        let production = Expression::rc(ExprKind::Symbol("name".into()));
         let query = Query::new(bindings, guards, production);
 
-        let expr = Expression::Query(query);
+        let expr = Expression::unspanned(ExprKind::Query(query));
         let result = expr.type_check(&mut TypeEnvironment::new());
 
         assert!(matches!(result, Ok(InferredType::Known(_))));
@@ -356,17 +362,17 @@ mod type_check_tests {
     fn type_check_query_with_guard() {
         let binding = QueryBinding::new(
             vec!["person".into()],
-            Rc::new(Expression::Symbol("Person".into())),
+            Expression::rc(ExprKind::Symbol("Person".into())),
         );
         let bindings = QueryBindings::new(vec![binding]);
 
-        let guard = Rc::new(Expression::Lit(Literal::Bool(true)));
+        let guard = Expression::rc(ExprKind::Lit(Literal::Bool(true)));
         let guards = QueryGuards::new(vec![guard]);
 
-        let production = Rc::new(Expression::Symbol("name".into()));
+        let production = Expression::rc(ExprKind::Symbol("name".into()));
         let query = Query::new(bindings, guards, production);
 
-        let expr = Expression::Query(query);
+        let expr = Expression::unspanned(ExprKind::Query(query));
         let result = expr.type_check(&mut TypeEnvironment::new());
 
         assert!(matches!(result, Ok(InferredType::Known(_))));
@@ -376,17 +382,17 @@ mod type_check_tests {
     fn type_check_query_guard_must_be_bool() {
         let binding = QueryBinding::new(
             vec!["person".into()],
-            Rc::new(Expression::Symbol("Person".into())),
+            Expression::rc(ExprKind::Symbol("Person".into())),
         );
         let bindings = QueryBindings::new(vec![binding]);
 
-        let guard = Rc::new(Expression::Lit(Literal::Number(42i32.into())));
+        let guard = Expression::rc(ExprKind::Lit(Literal::Number(42i32.into())));
         let guards = QueryGuards::new(vec![guard]);
 
-        let production = Rc::new(Expression::Symbol("name".into()));
+        let production = Expression::rc(ExprKind::Symbol("name".into()));
         let query = Query::new(bindings, guards, production);
 
-        let expr = Expression::Query(query);
+        let expr = Expression::unspanned(ExprKind::Query(query));
         let result = expr.type_check(&mut TypeEnvironment::new());
 
         assert!(matches!(
@@ -397,7 +403,7 @@ mod type_check_tests {
 
     #[test]
     fn type_check_symbol() {
-        let expr = Expression::Symbol("my_symbol".into());
+        let expr = Expression::unspanned(ExprKind::Symbol("my_symbol".into()));
         let result = expr.type_check(&mut TypeEnvironment::new());
 
         assert!(matches!(result, Ok(InferredType::Known(_))));
@@ -408,7 +414,7 @@ mod type_check_tests {
         let mut context = TypeEnvironment::new();
         context.insert_type_def("Person".into(), Rc::new(TypeExpression::SymbolType));
 
-        let expr = Expression::ConstOrTypeRef("Person".into());
+        let expr = Expression::unspanned(ExprKind::ConstOrTypeRef("Person".into()));
         let result = expr.type_check(&mut context);
 
         assert!(matches!(result, Ok(InferredType::Known(_))));
@@ -416,12 +422,12 @@ mod type_check_tests {
 
     #[test]
     fn type_check_undefined_const_or_type_ref() {
-        let expr = Expression::ConstOrTypeRef("UndefinedType".into());
+        let expr = Expression::unspanned(ExprKind::ConstOrTypeRef("UndefinedType".into()));
         let result = expr.type_check(&mut TypeEnvironment::new());
 
         assert!(matches!(
             result,
-            Err(crate::TypeCheckError::UndefinedVariable(_))
+            Err(crate::TypeCheckError::UndefinedVariable(_, _))
         ));
     }
 
@@ -429,16 +435,16 @@ mod type_check_tests {
     fn type_check_map_literal() {
         let kv_pairs = rogato_common::ast::literal::TupleItems::from(vec![
             Rc::new(rogato_common::ast::literal::MapKVPair {
-                key: Rc::new(Expression::Lit(Literal::String("key1".to_string()))),
-                value: Rc::new(Expression::Lit(Literal::Number(1i32.into()))),
+                key: Expression::rc(ExprKind::Lit(Literal::String("key1".to_string()))),
+                value: Expression::rc(ExprKind::Lit(Literal::Number(1i32.into()))),
             }),
             Rc::new(rogato_common::ast::literal::MapKVPair {
-                key: Rc::new(Expression::Lit(Literal::String("key2".to_string()))),
-                value: Rc::new(Expression::Lit(Literal::Number(2i32.into()))),
+                key: Expression::rc(ExprKind::Lit(Literal::String("key2".to_string()))),
+                value: Expression::rc(ExprKind::Lit(Literal::Number(2i32.into()))),
             }),
         ]);
         let literal = Literal::Map(kv_pairs);
-        let expr = Expression::Lit(literal);
+        let expr = Expression::unspanned(ExprKind::Lit(literal));
 
         let result = expr.type_check(&mut TypeEnvironment::new());
         assert!(matches!(result, Ok(InferredType::Known(_))));
@@ -449,10 +455,10 @@ mod type_check_tests {
         use rogato_common::ast::lambda::{Lambda, LambdaArgs};
 
         let args = LambdaArgs::new(vec![]);
-        let body = Rc::new(Expression::Lit(Literal::Number(1i32.into())));
+        let body = Expression::rc(ExprKind::Lit(Literal::Number(1i32.into())));
         let variant = rogato_common::ast::lambda::LambdaVariant::new(args, body);
         let lambda = Rc::new(Lambda::new(vec![Rc::new(variant)]));
-        let expr = Expression::Lambda(lambda);
+        let expr = Expression::unspanned(ExprKind::Lambda(lambda));
 
         let result = expr.type_check(&mut TypeEnvironment::new());
         assert!(matches!(result, Ok(InferredType::Known(_))));
@@ -466,14 +472,14 @@ mod type_check_tests {
         // Unknown (the inferred type for a bare Var pattern) as not NumberType,
         // whereas == does not enforce operand types.
         let args = LambdaArgs::new(vec![Rc::new(Pattern::Var("x".into()))]);
-        let body = Rc::new(Expression::OpCall(
+        let body = Expression::rc(ExprKind::OpCall(
             "==".into(),
-            Rc::new(Expression::Var("x".into())),
-            Rc::new(Expression::Lit(Literal::Number(1i32.into()))),
+            Expression::rc(ExprKind::Var("x".into())),
+            Expression::rc(ExprKind::Lit(Literal::Number(1i32.into()))),
         ));
         let variant = LambdaVariant::new(args, body);
         let lambda = Rc::new(Lambda::new(vec![Rc::new(variant)]));
-        let expr = Expression::Lambda(lambda);
+        let expr = Expression::unspanned(ExprKind::Lambda(lambda));
 
         let mut env = TypeEnvironment::new();
         let result = expr.type_check(&mut env);
@@ -487,10 +493,10 @@ mod type_check_tests {
         // Lambda: (x -> x)  — identity function
         // The body references 'x' which is a lambda arg — should NOT error as undefined
         let args = LambdaArgs::new(vec![Rc::new(Pattern::Var("x".into()))]);
-        let body = Rc::new(Expression::Var("x".into()));
+        let body = Expression::rc(ExprKind::Var("x".into()));
         let variant = LambdaVariant::new(args, body);
         let lambda = Rc::new(Lambda::new(vec![Rc::new(variant)]));
-        let expr = Expression::Lambda(lambda);
+        let expr = Expression::unspanned(ExprKind::Lambda(lambda));
 
         let mut env = TypeEnvironment::new();
         let result = expr.type_check(&mut env);
@@ -506,10 +512,10 @@ mod type_check_tests {
     fn type_infer_lambda_with_number_pattern() {
         // Lambda with number pattern: (0 -> true)
         let args = LambdaArgs::new(vec![Rc::new(Pattern::Number(0i32.into()))]);
-        let body = Rc::new(Expression::Lit(Literal::Bool(true)));
+        let body = Expression::rc(ExprKind::Lit(Literal::Bool(true)));
         let variant = LambdaVariant::new(args, body);
         let lambda = Rc::new(Lambda::new(vec![Rc::new(variant)]));
-        let expr = Expression::Lambda(lambda);
+        let expr = Expression::unspanned(ExprKind::Lambda(lambda));
 
         let inferrer = TypeInferrer::new();
         let result = inferrer.infer_expression(&expr);
@@ -534,11 +540,11 @@ mod type_check_tests {
         use rogato_common::ast::fn_def::{FnDef, FnDefBody};
 
         let args = FnDefArgs::new(vec![]);
-        let body = Rc::new(FnDefBody::RogatoFn(Rc::new(Expression::Lit(
+        let body = Rc::new(FnDefBody::RogatoFn(Expression::rc(ExprKind::Lit(
             Literal::Number(1i32.into()),
         ))));
         let fn_def = FnDef::new("my_fn", args, body);
-        let expr = Expression::InlineFnDef(fn_def);
+        let expr = Expression::unspanned(ExprKind::InlineFnDef(fn_def));
 
         let result = expr.type_check(&mut TypeEnvironment::new());
         assert!(matches!(result, Ok(_)));

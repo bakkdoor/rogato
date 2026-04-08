@@ -8,7 +8,7 @@ use crate::{
 };
 use rogato_common::{
     ast::{
-        expression::Expression,
+        expression::ExprKind,
         fn_def::{FnDefBody, FnDefVariant},
         lambda::{Lambda, LambdaClosureContext, LambdaClosureEvalError},
         Identifier, VarIdentifier,
@@ -252,8 +252,8 @@ impl EvalContext {
                             return_val = Some(f(&mut fn_ctx, args).map_err(EvalError::from)?);
                             break 'looping;
                         }
-                        FnDefBody::RogatoFn(expr) => match &**expr {
-                            Expression::FnCall(fn_call) => {
+                        FnDefBody::RogatoFn(expr) => match &expr.kind {
+                            ExprKind::FnCall(fn_call) => {
                                 if fn_call.id == func.id {
                                     loop_args = Vec::with_capacity(fn_call.args.len());
                                     for arg_expr in fn_call.args.iter() {
@@ -265,8 +265,8 @@ impl EvalContext {
                                     break 'looping;
                                 }
                             }
-                            Expression::Let(let_expr) => match &*let_expr.body {
-                                Expression::FnCall(fn_call) => {
+                            ExprKind::Let(let_expr) => match &let_expr.body.kind {
+                                ExprKind::FnCall(fn_call) => {
                                     for (id, expr) in let_expr.bindings.iter() {
                                         let val = expr.evaluate(&mut fn_ctx)?;
                                         self.define_var(id, val);
@@ -282,7 +282,7 @@ impl EvalContext {
                                         break 'looping;
                                     }
                                 }
-                                expr => {
+                                _ => {
                                     return_val = Some(expr.evaluate(&mut fn_ctx)?);
                                     break 'looping;
                                 }

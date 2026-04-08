@@ -2,7 +2,12 @@ use std::{fmt::Display, rc::Rc};
 
 use crate::util::indent;
 
-use super::{expression::Expression, visitor::Visitor, walker::Walk, ASTDepth, VarIdentifier};
+use super::{
+    expression::{ExprKind, Expression},
+    visitor::Visitor,
+    walker::Walk,
+    ASTDepth, VarIdentifier,
+};
 
 #[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub struct LetExpression {
@@ -70,8 +75,8 @@ impl Display for LetBindings {
         let fmt_str = self
             .bindings
             .iter()
-            .map(|(ident, expr)| match &**expr {
-                Expression::InlineFnDef(fn_def) => {
+            .map(|(ident, expr)| match &expr.kind {
+                ExprKind::InlineFnDef(fn_def) => {
                     format!("{}", fn_def.borrow_mut())
                 }
                 _ => {

@@ -12,9 +12,10 @@ use inkwell::{
     },
     AddressSpace, FloatPredicate, IntPredicate, OptimizationLevel,
 };
+use rogato_common::span::Span;
 use rogato_common::{
     ast::{
-        expression::Expression,
+        expression::{ExprKind, Expression},
         fn_call::{FnCall, FnCallArgs},
         fn_def::{FnDef, FnDefArgs, FnDefBody, FnDefVariant, FnDefVariants},
         if_else::IfElse,
@@ -378,7 +379,10 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                         self.clear_current_fn();
                         func.delete();
                     }
-                    Err(CodegenError::FnDefValidationFailed(fn_def.id().clone()))
+                    Err(CodegenError::FnDefValidationFailed(
+                        fn_def.id().clone(),
+                        None,
+                    ))
                 }
             }
             _ => Err(unknown_error("Cannot compile function with NativeFn body!")),
@@ -422,7 +426,10 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         let variants: Vec<_> = fn_def.variants_iter().collect();
 
         if variants.is_empty() {
-            return Err(CodegenError::FnDefValidationFailed(fn_def.id().clone()));
+            return Err(CodegenError::FnDefValidationFailed(
+                fn_def.id().clone(),
+                None,
+            ));
         }
 
         let first_variant = &variants[0];
@@ -430,7 +437,10 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
 
         for variant in variants.iter() {
             if variant.0.len() != arg_count {
-                return Err(CodegenError::FnDefValidationFailed(fn_def.id().clone()));
+                return Err(CodegenError::FnDefValidationFailed(
+                    fn_def.id().clone(),
+                    None,
+                ));
             }
         }
 
@@ -443,7 +453,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             .unwrap_or(false);
 
         if !has_catch_all {
-            return Err(CodegenError::FnPatternUncovered(fn_def.id().clone()));
+            return Err(CodegenError::FnPatternUncovered(fn_def.id().clone(), None));
         }
 
         let func_name = fn_def.id();
@@ -484,7 +494,10 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                 self.clear_current_fn();
                 func.delete();
             }
-            Err(CodegenError::FnDefValidationFailed(fn_def.id().clone()))
+            Err(CodegenError::FnDefValidationFailed(
+                fn_def.id().clone(),
+                None,
+            ))
         }
     }
 
@@ -706,7 +719,11 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         Ok(())
     }
 
-    pub fn codegen_fn_call(&mut self, fn_call: &FnCall) -> CodegenResult<CompiledValue<'ctx>> {
+    pub fn codegen_fn_call(
+        &mut self,
+        fn_call: &FnCall,
+        span: Option<Span>,
+    ) -> CodegenResult<CompiledValue<'ctx>> {
         let id = &fn_call.id;
         let args = &fn_call.args;
 
@@ -751,7 +768,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             return self.codegen_closure_call(id.as_str(), args, &info);
         }
 
-        Err(CodegenError::FnNotDefined(id.clone()))
+        Err(CodegenError::FnNotDefined(id.clone(), span))
     }
 
     /// Compiles an indirect call to a lambda/closure stored in a variable.
@@ -769,7 +786,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         let closure_ptr = self
             .lookup_var(var_name)
             .copied()
-            .ok_or_else(|| CodegenError::VarNotFound(var_name.into()))?;
+            .ok_or_else(|| CodegenError::VarNotFound(var_name.into(), None))?;
 
         // Build closure struct type to extract fn_ptr
         let mut struct_fields: Vec<BasicTypeEnum<'ctx>> = vec![ptr_type.into()];
@@ -936,6 +953,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         id: &Identifier,
         left_expr: &Expression,
         right_expr: &Expression,
+        span: Option<Span>,
     ) -> CodegenResult<CompiledValue<'ctx>> {
         let left = self.codegen_expr(left_expr)?;
         let right = self.codegen_expr(right_expr)?;
@@ -1023,7 +1041,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                 IntPredicate::NE,
                 "cmp",
             ),
-            _ => Err(CodegenError::OpNotDefined(id.clone())),
+            _ => Err(CodegenError::OpNotDefined(id.clone(), span)),
         }
     }
 
@@ -1131,19 +1149,19 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
     }
 
     pub fn codegen_expr(&mut self, expr: &Expression) -> CodegenResult<CompiledValue<'ctx>> {
-        match expr {
-            Expression::Commented(_c, e) => self.codegen_expr(e),
-            Expression::Lit(lit_expr) => self.codegen_lit_expr(lit_expr),
-            Expression::FnCall(fn_call) => self.codegen_fn_call(fn_call),
-            Expression::OpCall(id, left, right) => self.codegen_op_call(id, left, right),
+        match &expr.kind {
+            ExprKind::Commented(_c, e) => self.codegen_expr(e),
+            ExprKind::Lit(lit_expr) => self.codegen_lit_expr(lit_expr),
+            ExprKind::FnCall(fn_call) => self.codegen_fn_call(fn_call, expr.span),
+            ExprKind::OpCall(id, left, right) => self.codegen_op_call(id, left, right, expr.span),
 
-            Expression::Var(id) => {
+            ExprKind::Var(id) => {
                 // Check if this variable holds a lambda/closure
                 if let Some(info) = self.lambda_info.get(id.as_str()).cloned() {
                     let var_ptr = self
                         .lookup_var(id)
                         .copied()
-                        .ok_or_else(|| CodegenError::VarNotFound(id.into()))?;
+                        .ok_or_else(|| CodegenError::VarNotFound(id.into(), expr.span))?;
                     return Ok(CompiledValue::Lambda(var_ptr, info));
                 }
                 match self.lookup_var(id) {
@@ -1155,24 +1173,25 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                                 .into_float_value(),
                         ))
                     }
-                    None => self.codegen_fn_call(&FnCall::new(id.into(), FnCallArgs::empty())),
+                    None => self
+                        .codegen_fn_call(&FnCall::new(id.into(), FnCallArgs::empty()), expr.span),
                 }
             }
 
-            Expression::ConstOrTypeRef(_id) => Err(CodegenError::NotYetImplemented(
+            ExprKind::ConstOrTypeRef(_id) => Err(CodegenError::NotYetImplemented(
                 "Constant/type reference expressions".into(),
             )),
-            Expression::DBTypeRef(_id) => Err(CodegenError::NotYetImplemented(
+            ExprKind::DBTypeRef(_id) => Err(CodegenError::NotYetImplemented(
                 "Database type reference expressions".into(),
             )),
-            Expression::PropFnRef(_id) => Err(CodegenError::NotYetImplemented(
+            ExprKind::PropFnRef(_id) => Err(CodegenError::NotYetImplemented(
                 "Property function reference expressions".into(),
             )),
-            Expression::EdgeProp(_id, _edge) => Err(CodegenError::NotYetImplemented(
+            ExprKind::EdgeProp(_id, _edge) => Err(CodegenError::NotYetImplemented(
                 "Edge property expressions".into(),
             )),
-            Expression::IfElse(if_else) => self.codegen_if_else(if_else),
-            Expression::Let(let_expr) => {
+            ExprKind::IfElse(if_else) => self.codegen_if_else(if_else),
+            ExprKind::Let(let_expr) => {
                 let f32_type = self.context.f32_type();
 
                 self.push_scope();
@@ -1200,26 +1219,26 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
 
                 result
             }
-            Expression::Lambda(lambda) => self.codegen_lambda(lambda),
-            Expression::Query(_query) => {
+            ExprKind::Lambda(lambda) => self.codegen_lambda(lambda),
+            ExprKind::Query(_query) => {
                 Err(CodegenError::NotYetImplemented("Query expressions".into()))
             }
-            Expression::Symbol(_id) => {
+            ExprKind::Symbol(_id) => {
                 Err(CodegenError::NotYetImplemented("Symbol expressions".into()))
             }
-            Expression::Quoted(_expr) => {
+            ExprKind::Quoted(_expr) => {
                 Err(CodegenError::NotYetImplemented("Quoted expressions".into()))
             }
-            Expression::QuotedAST(_ast) => Err(CodegenError::NotYetImplemented(
+            ExprKind::QuotedAST(_ast) => Err(CodegenError::NotYetImplemented(
                 "Quoted AST expressions".into(),
             )),
-            Expression::Unquoted(_expr) => Err(CodegenError::NotYetImplemented(
+            ExprKind::Unquoted(_expr) => Err(CodegenError::NotYetImplemented(
                 "Unquoted expressions".into(),
             )),
-            Expression::UnquotedAST(_ast) => Err(CodegenError::NotYetImplemented(
+            ExprKind::UnquotedAST(_ast) => Err(CodegenError::NotYetImplemented(
                 "Unquoted AST expressions".into(),
             )),
-            Expression::InlineFnDef(fn_def) => {
+            ExprKind::InlineFnDef(fn_def) => {
                 self.codegen_fn_def(&fn_def.borrow())?;
                 Ok(CompiledValue::Float(self.context.f32_type().const_zero()))
             }
@@ -1430,7 +1449,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             let var_ptr = self
                 .lookup_var(cap_var.as_str())
                 .copied()
-                .ok_or_else(|| CodegenError::VarNotFound(cap_var.as_str().into()))?;
+                .ok_or_else(|| CodegenError::VarNotFound(cap_var.as_str().into(), None))?;
             let var_val = self.builder.build_load(
                 f32_type,
                 var_ptr,

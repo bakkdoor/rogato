@@ -1,5 +1,5 @@
 use super::{
-    expression::{Expression, Literal},
+    expression::{ExprKind, Expression, Literal},
     fn_def::FnDefVariant,
     visitor::Visitor,
     AST,
@@ -32,12 +32,12 @@ impl Walk for AST {
 
 impl Walk for Expression {
     fn walk<V: Visitor<()>>(&self, v: &mut V) {
-        match self {
-            Expression::Commented(c, expr) => {
+        match &self.kind {
+            ExprKind::Commented(c, expr) => {
                 v.commented(c, expr);
                 expr.walk(v);
             }
-            Expression::Lit(lit_exp) => {
+            ExprKind::Lit(lit_exp) => {
                 v.lit(lit_exp);
                 match lit_exp {
                     Literal::Bool(_) => {}
@@ -77,32 +77,32 @@ impl Walk for Expression {
                     }
                 }
             }
-            Expression::FnCall(fn_call) => {
+            ExprKind::FnCall(fn_call) => {
                 v.fn_call(fn_call);
                 for a in fn_call.args.iter() {
                     a.walk(v);
                 }
             }
-            Expression::OpCall(id, left, right) => {
+            ExprKind::OpCall(id, left, right) => {
                 v.op_call(id, left, right);
                 left.walk(v);
                 right.walk(v);
             }
-            Expression::Var(id) => v.var(id),
-            Expression::ConstOrTypeRef(id) => v.const_or_type_ref(id),
-            Expression::DBTypeRef(id) => v.db_type_ref(id),
-            Expression::PropFnRef(id) => v.prop_fn_ref(id),
-            Expression::EdgeProp(id, edge) => v.edge_prop(id, edge),
-            Expression::IfElse(if_else) => if_else.walk(v),
-            Expression::Let(let_expr) => let_expr.walk(v),
-            Expression::Lambda(lambda) => lambda.walk(v),
-            Expression::Query(query) => query.walk(v),
-            Expression::Symbol(id) => v.symbol(id),
-            Expression::Quoted(expr) => v.quoted(expr),
-            Expression::QuotedAST(ast) => v.quoted_ast(ast),
-            Expression::Unquoted(expr) => v.unquoted(expr),
-            Expression::UnquotedAST(ast) => v.unquoted_ast(ast),
-            Expression::InlineFnDef(fn_def) => v.inline_fn_def(&fn_def.borrow()),
+            ExprKind::Var(id) => v.var(id),
+            ExprKind::ConstOrTypeRef(id) => v.const_or_type_ref(id),
+            ExprKind::DBTypeRef(id) => v.db_type_ref(id),
+            ExprKind::PropFnRef(id) => v.prop_fn_ref(id),
+            ExprKind::EdgeProp(id, edge) => v.edge_prop(id, edge),
+            ExprKind::IfElse(if_else) => if_else.walk(v),
+            ExprKind::Let(let_expr) => let_expr.walk(v),
+            ExprKind::Lambda(lambda) => lambda.walk(v),
+            ExprKind::Query(query) => query.walk(v),
+            ExprKind::Symbol(id) => v.symbol(id),
+            ExprKind::Quoted(expr) => v.quoted(expr),
+            ExprKind::QuotedAST(ast) => v.quoted_ast(ast),
+            ExprKind::Unquoted(expr) => v.unquoted(expr),
+            ExprKind::UnquotedAST(ast) => v.unquoted_ast(ast),
+            ExprKind::InlineFnDef(fn_def) => v.inline_fn_def(&fn_def.borrow()),
         }
     }
 }

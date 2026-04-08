@@ -3,7 +3,7 @@ use std::rc::Rc;
 use crate::{EvalContext, EvalError, Evaluate};
 use rogato_common::{
     ast::{
-        expression::Expression, fn_def::FnDefVariant as CommonFnDefVariant,
+        expression::ExprKind, fn_def::FnDefVariant as CommonFnDefVariant,
         let_expression::LetExpression,
     },
     val::ValueRef,
@@ -18,8 +18,8 @@ impl Evaluate<ValueRef> for LetExpression {
         let mut context = context.with_child_env();
 
         for (id, expr) in self.bindings.iter() {
-            match &**expr {
-                Expression::InlineFnDef(fn_def) => {
+            match &expr.kind {
+                ExprKind::InlineFnDef(fn_def) => {
                     let fn_def = fn_def.borrow();
                     for variant in fn_def.variants_iter() {
                         let fn_variant = match &variant.2 {

@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::ops::Deref;
 
 use super::{
-    expression::Expression,
+    expression::{ExprKind, Expression},
     fn_def::FnDefBody,
     lambda::{Lambda, LambdaVariant},
     pattern::Pattern,
@@ -84,32 +84,32 @@ fn collect_expr_free_vars(
     bound: &HashSet<VarIdentifier>,
     free: &mut HashSet<VarIdentifier>,
 ) {
-    match expr {
-        Expression::Var(id) => {
+    match &expr.kind {
+        ExprKind::Var(id) => {
             if !bound.contains(id) {
                 free.insert(id.clone());
             }
         }
-        Expression::Lit(_) => {
+        ExprKind::Lit(_) => {
             // Literals don't reference variables
         }
-        Expression::FnCall(fn_call) => {
+        ExprKind::FnCall(fn_call) => {
             // Don't treat the function identifier as a free variable — it's resolved separately.
             // Only analyze the arguments.
             for arg in fn_call.args.iter() {
                 collect_expr_free_vars(arg, bound, free);
             }
         }
-        Expression::OpCall(_op, left, right) => {
+        ExprKind::OpCall(_op, left, right) => {
             collect_expr_free_vars(left, bound, free);
             collect_expr_free_vars(right, bound, free);
         }
-        Expression::IfElse(if_else) => {
+        ExprKind::IfElse(if_else) => {
             collect_expr_free_vars(&if_else.condition, bound, free);
             collect_expr_free_vars(&if_else.then_expr, bound, free);
             collect_expr_free_vars(&if_else.else_expr, bound, free);
         }
-        Expression::Let(let_expr) => {
+        ExprKind::Let(let_expr) => {
             let mut inner_bound = bound.clone();
             for (var_id, val_expr) in let_expr.bindings.iter() {
                 // The binding's value expression is evaluated in the outer scope
@@ -119,7 +119,7 @@ fn collect_expr_free_vars(
             // The body is evaluated with the new bindings in scope
             collect_expr_free_vars(&let_expr.body, &inner_bound, free);
         }
-        Expression::Lambda(inner_lambda) => {
+        ExprKind::Lambda(inner_lambda) => {
             let inner_lambda = inner_lambda.deref();
             // For nested lambdas, their free variables that aren't in our bound set
             // become our free variables too.
@@ -131,7 +131,7 @@ fn collect_expr_free_vars(
                 collect_expr_free_vars(&variant.body, &inner_bound, free);
             }
         }
-        Expression::InlineFnDef(fn_def) => {
+        ExprKind::InlineFnDef(fn_def) => {
             let fn_def = fn_def.borrow();
             // The function name itself becomes bound (for recursive references)
             let mut inner_bound = bound.clone();
@@ -149,26 +149,26 @@ fn collect_expr_free_vars(
                 }
             }
         }
-        Expression::Commented(_, inner_expr) => {
+        ExprKind::Commented(_, inner_expr) => {
             collect_expr_free_vars(inner_expr, bound, free);
         }
-        Expression::Quoted(inner_expr) => {
+        ExprKind::Quoted(inner_expr) => {
             collect_expr_free_vars(inner_expr, bound, free);
         }
-        Expression::Unquoted(inner_expr) => {
+        ExprKind::Unquoted(inner_expr) => {
             collect_expr_free_vars(inner_expr, bound, free);
         }
-        Expression::EdgeProp(inner_expr, _edge) => {
+        ExprKind::EdgeProp(inner_expr, _edge) => {
             collect_expr_free_vars(inner_expr, bound, free);
         }
         // These don't reference variables in a way that constitutes free variable capture
-        Expression::ConstOrTypeRef(_)
-        | Expression::DBTypeRef(_)
-        | Expression::PropFnRef(_)
-        | Expression::Symbol(_)
-        | Expression::QuotedAST(_)
-        | Expression::UnquotedAST(_) => {}
-        Expression::Query(_) => {
+        ExprKind::ConstOrTypeRef(_)
+        | ExprKind::DBTypeRef(_)
+        | ExprKind::PropFnRef(_)
+        | ExprKind::Symbol(_)
+        | ExprKind::QuotedAST(_)
+        | ExprKind::UnquotedAST(_) => {}
+        ExprKind::Query(_) => {
             // TODO: Query expressions have their own binding structure (QueryBindings)
             // and would require deeper analysis. For now, treat as opaque.
         }
@@ -179,7 +179,7 @@ fn collect_expr_free_vars(
 mod tests {
     use super::*;
     use crate::ast::{
-        expression::Expression,
+        expression::{ExprKind, Expression},
         fn_call::{FnCall, FnCallArgs},
         if_else::IfElse,
         lambda::{Lambda, LambdaArgs, LambdaVariant},
@@ -190,11 +190,11 @@ mod tests {
     use std::rc::Rc;
 
     fn var_expr(name: &str) -> Rc<Expression> {
-        Rc::new(Expression::Var(VarIdentifier::from(name)))
+        Expression::rc(ExprKind::Var(VarIdentifier::from(name)))
     }
 
     fn num_expr(n: i32) -> Rc<Expression> {
-        Rc::new(Expression::Lit(Literal::Number(n.into())))
+        Expression::rc(ExprKind::Lit(Literal::Number(n.into())))
     }
 
     fn var_pattern(name: &str) -> Rc<Pattern> {
@@ -218,7 +218,7 @@ mod tests {
     #[test]
     fn one_free_var() {
         // (x -> x + y) — y is free
-        let body = Rc::new(Expression::OpCall("+".into(), var_expr("x"), var_expr("y")));
+        let body = Expression::rc(ExprKind::OpCall("+".into(), var_expr("x"), var_expr("y")));
         let lambda = make_lambda(vec!["x"], body);
         let free = collect_free_vars(&lambda);
         assert_eq!(free.len(), 1);
@@ -228,8 +228,8 @@ mod tests {
     #[test]
     fn multiple_free_vars() {
         // (x -> (x + y) + z) — y and z are free
-        let inner = Rc::new(Expression::OpCall("+".into(), var_expr("x"), var_expr("y")));
-        let body = Rc::new(Expression::OpCall("+".into(), inner, var_expr("z")));
+        let inner = Expression::rc(ExprKind::OpCall("+".into(), var_expr("x"), var_expr("y")));
+        let body = Expression::rc(ExprKind::OpCall("+".into(), inner, var_expr("z")));
         let lambda = make_lambda(vec!["x"], body);
         let free = collect_free_vars(&lambda);
         assert_eq!(free.len(), 2);
@@ -242,9 +242,9 @@ mod tests {
         // (x -> let y = 5 in x + y) — no free vars, y is locally bound
         let let_expr = LetExpression::new(
             LetBindings::new(vec![(VarIdentifier::from("y"), num_expr(5))]),
-            Rc::new(Expression::OpCall("+".into(), var_expr("x"), var_expr("y"))),
+            Expression::rc(ExprKind::OpCall("+".into(), var_expr("x"), var_expr("y"))),
         );
-        let body = Rc::new(Expression::Let(let_expr));
+        let body = Expression::rc(ExprKind::Let(let_expr));
         let lambda = make_lambda(vec!["x"], body);
         let free = collect_free_vars(&lambda);
         assert!(free.is_empty());
@@ -255,9 +255,9 @@ mod tests {
         // (x -> let y = z in x + y) — z is free (referenced in binding value)
         let let_expr = LetExpression::new(
             LetBindings::new(vec![(VarIdentifier::from("y"), var_expr("z"))]),
-            Rc::new(Expression::OpCall("+".into(), var_expr("x"), var_expr("y"))),
+            Expression::rc(ExprKind::OpCall("+".into(), var_expr("x"), var_expr("y"))),
         );
-        let body = Rc::new(Expression::Let(let_expr));
+        let body = Expression::rc(ExprKind::Let(let_expr));
         let lambda = make_lambda(vec!["x"], body);
         let free = collect_free_vars(&lambda);
         assert_eq!(free.len(), 1);
@@ -267,13 +267,13 @@ mod tests {
     #[test]
     fn nested_lambda_captures() {
         // (x -> (y -> x + y + z)) — z is free, x comes from outer lambda
-        let inner_body = Rc::new(Expression::OpCall(
+        let inner_body = Expression::rc(ExprKind::OpCall(
             "+".into(),
-            Rc::new(Expression::OpCall("+".into(), var_expr("x"), var_expr("y"))),
+            Expression::rc(ExprKind::OpCall("+".into(), var_expr("x"), var_expr("y"))),
             var_expr("z"),
         ));
         let inner_lambda = make_lambda(vec!["y"], inner_body);
-        let body = Rc::new(Expression::Lambda(Rc::new(inner_lambda)));
+        let body = Expression::rc(ExprKind::Lambda(Rc::new(inner_lambda)));
         let lambda = make_lambda(vec!["x"], body);
         let free = collect_free_vars(&lambda);
         // z is free (not bound by either lambda)
@@ -289,7 +289,7 @@ mod tests {
             "someFunc".into(),
             FnCallArgs::new(vec![var_expr("y"), var_expr("x")]),
         );
-        let body = Rc::new(Expression::FnCall(fn_call));
+        let body = Expression::rc(ExprKind::FnCall(fn_call));
         let lambda = make_lambda(vec!["x"], body);
         let free = collect_free_vars(&lambda);
         assert_eq!(free.len(), 1);
@@ -300,7 +300,7 @@ mod tests {
     fn fn_call_name_not_captured() {
         // (x -> someFunc x) — someFunc is NOT treated as a free variable
         let fn_call = FnCall::new("someFunc".into(), FnCallArgs::new(vec![var_expr("x")]));
-        let body = Rc::new(Expression::FnCall(fn_call));
+        let body = Expression::rc(ExprKind::FnCall(fn_call));
         let lambda = make_lambda(vec!["x"], body);
         let free = collect_free_vars(&lambda);
         assert!(free.is_empty());
@@ -310,7 +310,7 @@ mod tests {
     fn if_else_analyzed() {
         // (x -> if cond then x else y) — cond and y are free
         let if_else = IfElse::new(var_expr("cond"), var_expr("x"), var_expr("y"));
-        let body = Rc::new(Expression::IfElse(if_else));
+        let body = Expression::rc(ExprKind::IfElse(if_else));
         let lambda = make_lambda(vec!["x"], body);
         let free = collect_free_vars(&lambda);
         assert_eq!(free.len(), 2);
@@ -321,7 +321,7 @@ mod tests {
     #[test]
     fn multiple_args_bound() {
         // (x y -> x + y) — no free vars
-        let body = Rc::new(Expression::OpCall("+".into(), var_expr("x"), var_expr("y")));
+        let body = Expression::rc(ExprKind::OpCall("+".into(), var_expr("x"), var_expr("y")));
         let lambda = make_lambda(vec!["x", "y"], body);
         let free = collect_free_vars(&lambda);
         assert!(free.is_empty());
@@ -331,7 +331,7 @@ mod tests {
     fn variant_free_vars() {
         // Test collect_variant_free_vars directly
         let arg_patterns = vec![var_pattern("x")];
-        let body = Rc::new(Expression::OpCall("+".into(), var_expr("x"), var_expr("y")));
+        let body = Expression::rc(ExprKind::OpCall("+".into(), var_expr("x"), var_expr("y")));
         let variant = LambdaVariant::new(LambdaArgs::new(arg_patterns), body);
         let free = collect_variant_free_vars(&variant);
         assert_eq!(free.len(), 1);
@@ -349,10 +349,7 @@ mod tests {
     #[test]
     fn commented_expr_analyzed() {
         // (x -> // comment \n y) — y is free
-        let body = Rc::new(Expression::Commented(
-            " a comment".to_string(),
-            var_expr("y"),
-        ));
+        let body = Expression::rc(ExprKind::Commented(" a comment".to_string(), var_expr("y")));
         let lambda = make_lambda(vec!["x"], body);
         let free = collect_free_vars(&lambda);
         assert_eq!(free.len(), 1);

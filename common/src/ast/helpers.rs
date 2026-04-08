@@ -1,16 +1,16 @@
 use rust_decimal::Decimal;
 
 use crate::ast::expression::{
-    FnCall, FnCallArgs, Lambda, LambdaArgs, LambdaVariant, LetBindings, LetExpression, Query,
-    QueryBinding, QueryBindings, QueryGuards, StructProps, TupleItems,
+    FnCallArgs, LambdaArgs, LambdaVariant, LetBindings, LetExpression, QueryBinding, QueryBindings,
+    QueryGuards, StructProps, TupleItems,
 };
 use crate::ast::fn_def::FnDef;
 use crate::ast::module_def::{ModuleDef, ModuleExports};
 use crate::ast::type_expression::TypeDef;
 use crate::ast::{
     expression::{
-        Expression::{self, *},
-        FnDefArgs,
+        ExprKind::*,
+        Expression, FnDefArgs,
         Literal::{self, *},
     },
     AST,
@@ -18,7 +18,7 @@ use crate::ast::{
 use crate::ast::{type_expression::TypeExpression, Program};
 use std::rc::Rc;
 
-use super::expression::{IfElse, MapKVPair};
+use super::expression::MapKVPair;
 use super::fn_def::FnDefBody;
 use super::pattern::Pattern;
 use super::type_expression::StructTypeProperties;
@@ -29,7 +29,7 @@ pub fn program<Nodes: IntoIterator<Item = Rc<AST>>>(nodes: Nodes) -> Program {
 }
 
 pub fn lit(lit: Literal) -> Rc<Expression> {
-    Rc::new(Lit(lit))
+    Expression::rc(Lit(lit))
 }
 
 pub fn number_lit<Num>(val: Num) -> Rc<Expression>
@@ -91,19 +91,19 @@ pub fn map_cons_lit<Iter: IntoIterator<Item = (Rc<Expression>, Rc<Expression>)>>
 }
 
 pub fn var(id: &str) -> Rc<Expression> {
-    Rc::new(Var(id.into()))
+    Expression::rc(Var(id.into()))
 }
 
 pub fn const_or_type_ref(id: &str) -> Rc<Expression> {
-    Rc::new(ConstOrTypeRef(id.into()))
+    Expression::rc(ConstOrTypeRef(id.into()))
 }
 
 pub fn db_type_ref(id: &str) -> Rc<Expression> {
-    Rc::new(DBTypeRef(id.into()))
+    Expression::rc(DBTypeRef(id.into()))
 }
 
 pub fn prop_fn_ref(id: &str) -> Rc<Expression> {
-    Rc::new(PropFnRef(id.into()))
+    Expression::rc(PropFnRef(id.into()))
 }
 
 pub fn fn_def<P: Into<Rc<Pattern>>, Args: IntoIterator<Item = P>>(
@@ -127,7 +127,9 @@ pub fn if_else(
     then_expr: Rc<Expression>,
     else_expr: Rc<Expression>,
 ) -> Rc<Expression> {
-    Rc::new(Expression::IfElse(IfElse::new(cond, then_expr, else_expr)))
+    Expression::rc(IfElse(super::expression::IfElse::new(
+        cond, then_expr, else_expr,
+    )))
 }
 pub fn let_expr<
     VarName: Into<VarIdentifier>,
@@ -141,7 +143,7 @@ pub fn let_expr<
         .map(|(name, expr)| (name.into(), expr))
         .collect();
 
-    Rc::new(Let(LetExpression::new(LetBindings::new(bindings), body)))
+    Expression::rc(Let(LetExpression::new(LetBindings::new(bindings), body)))
 }
 
 pub fn module_def<Exports: IntoIterator<Item = &'static str>>(
@@ -165,11 +167,14 @@ pub fn call_args<Args: IntoIterator<Item = Rc<Expression>>>(args: Args) -> FnCal
 }
 
 pub fn fn_call<Args: IntoIterator<Item = Rc<Expression>>>(id: &str, args: Args) -> Rc<Expression> {
-    Rc::new(Expression::FnCall(FnCall::new(id.into(), call_args(args))))
+    Expression::rc(FnCall(super::fn_call::FnCall::new(
+        id.into(),
+        call_args(args),
+    )))
 }
 
 pub fn op_call(id: &str, left: Rc<Expression>, right: Rc<Expression>) -> Rc<Expression> {
-    Rc::new(Expression::OpCall(id.into(), left, right))
+    Expression::rc(OpCall(id.into(), left, right))
 }
 
 pub fn root_comment(comment: &str) -> Rc<AST> {
@@ -177,7 +182,7 @@ pub fn root_comment(comment: &str) -> Rc<AST> {
 }
 
 pub fn commented(comment: &str, exp: Rc<Expression>) -> Rc<Expression> {
-    Rc::new(Expression::Commented(comment.to_string(), exp))
+    Expression::rc(Commented(comment.to_string(), exp))
 }
 
 pub fn type_def(id: &str, type_expr: Rc<TypeExpression>) -> Rc<AST> {
@@ -266,7 +271,7 @@ pub fn query<
             }
         })
         .collect();
-    Rc::new(Expression::Query(Query::new(
+    Expression::rc(Query(super::query::Query::new(
         QueryBindings::new(query_bindings),
         QueryGuards::new(guards),
         production,
@@ -274,7 +279,7 @@ pub fn query<
 }
 
 pub fn edge_prop(expr: Rc<Expression>, edge: &str) -> Rc<Expression> {
-    Rc::new(Expression::EdgeProp(expr, edge.into()))
+    Expression::rc(EdgeProp(expr, edge.into()))
 }
 
 pub fn lambda<Args: IntoIterator<Item = &'static str>>(
@@ -282,7 +287,7 @@ pub fn lambda<Args: IntoIterator<Item = &'static str>>(
     body: Rc<Expression>,
 ) -> Rc<Expression> {
     let args = args.into_iter().map(|a| Rc::new(a.into())).collect();
-    Rc::new(Expression::Lambda(Rc::new(Lambda::new(vec![Rc::new(
+    Expression::rc(Lambda(Rc::new(super::lambda::Lambda::new(vec![Rc::new(
         LambdaVariant::new(LambdaArgs::new(args), body),
     )]))))
 }
@@ -308,27 +313,27 @@ pub fn lambda_p<
             Rc::new(LambdaVariant::new(args, Rc::clone(&body)))
         })
         .collect();
-    Rc::new(Expression::Lambda(Rc::new(Lambda::new(variants))))
+    Expression::rc(Lambda(Rc::new(super::lambda::Lambda::new(variants))))
 }
 
 pub fn symbol(id: &str) -> Rc<Expression> {
-    Rc::new(Expression::Symbol(id.into()))
+    Expression::rc(Symbol(id.into()))
 }
 
 pub fn quoted(expr: Rc<Expression>) -> Rc<Expression> {
-    Rc::new(Expression::Quoted(expr))
+    Expression::rc(Quoted(expr))
 }
 
 pub fn quoted_ast(ast: Rc<AST>) -> Rc<Expression> {
-    Rc::new(Expression::QuotedAST(ast))
+    Expression::rc(QuotedAST(ast))
 }
 
 pub fn unquoted(expr: Rc<Expression>) -> Rc<Expression> {
-    Rc::new(Expression::Unquoted(expr))
+    Expression::rc(Unquoted(expr))
 }
 
 pub fn unquoted_ast(ast: Rc<AST>) -> Rc<Expression> {
-    Rc::new(Expression::UnquotedAST(ast))
+    Expression::rc(UnquotedAST(ast))
 }
 
 pub fn inline_fn_def<Args: IntoIterator<Item = Rc<Pattern>>>(
@@ -336,7 +341,7 @@ pub fn inline_fn_def<Args: IntoIterator<Item = Rc<Pattern>>>(
     args: Args,
     body: Rc<Expression>,
 ) -> Rc<Expression> {
-    Rc::new(Expression::InlineFnDef(FnDef::new_inline(
+    Expression::rc(InlineFnDef(FnDef::new_inline(
         id,
         fn_def_args(args),
         Rc::new(FnDefBody::rogato(body)),

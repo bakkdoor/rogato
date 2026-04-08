@@ -1,6 +1,9 @@
 use super::pattern::Pattern;
 use super::{
-    expression::Expression, type_expression::TypeExpression, walker::Walk, ASTDepth, Identifier,
+    expression::{ExprKind, Expression},
+    type_expression::TypeExpression,
+    walker::Walk,
+    ASTDepth, Identifier,
 };
 use crate::{native_fn::NativeFn, util::indent};
 use std::cell::RefCell;
@@ -189,8 +192,8 @@ impl FnDefVariant {
 
     pub fn is_tail_recursive(&self, id: &Identifier) -> bool {
         match &*self.1 {
-            FnDefBody::RogatoFn(body) => match &**body {
-                Expression::FnCall(fn_call) => fn_call.id == *id,
+            FnDefBody::RogatoFn(body) => match &body.kind {
+                ExprKind::FnCall(fn_call) => fn_call.id == *id,
                 _ => false,
             },
             _ => false,
@@ -344,10 +347,10 @@ impl FnDefBody {
 
     pub fn is_tail_recursive(&self, id: &Identifier) -> bool {
         match self {
-            Self::RogatoFn(body) => match &**body {
-                Expression::FnCall(fn_call) => fn_call.id == *id,
-                Expression::Let(let_expr) => match &*let_expr.body {
-                    Expression::FnCall(fn_call) => fn_call.id == *id,
+            Self::RogatoFn(body) => match &body.kind {
+                ExprKind::FnCall(fn_call) => fn_call.id == *id,
+                ExprKind::Let(let_expr) => match &let_expr.body.kind {
+                    ExprKind::FnCall(fn_call) => fn_call.id == *id,
                     _ => false,
                 },
                 _ => false,

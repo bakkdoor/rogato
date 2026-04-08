@@ -4,9 +4,9 @@ use super::ParserContext;
 use peg::{error::ParseError, parser, str::LineCol};
 use rogato_common::ast::{
     expression::{
-        Expression, FnCall, FnCallArgs, FnDefArgs, Lambda, LambdaArgs, LambdaVariant, LetBindings,
-        LetExpression, Literal, Query, QueryBinding, QueryBindings, QueryGuards, StructProps,
-        TupleItems,
+        ExprKind, Expression, FnCall, FnCallArgs, FnDefArgs, Lambda, LambdaArgs, LambdaVariant,
+        LetBindings, LetExpression, Literal, Query, QueryBinding, QueryBindings, QueryGuards,
+        StructProps, TupleItems,
     },
     fn_def::{FnDef, FnDefBody},
     if_else::IfElse,
@@ -16,6 +16,7 @@ use rogato_common::ast::{
     type_expression::{StructTypeProperties, TypeDef, TypeExpression},
     Identifier, Program, VarIdentifier, AST,
 };
+use rogato_common::span::Span;
 use rust_decimal::prelude::*;
 use rust_decimal::Decimal;
 use smol_str::SmolStr;
@@ -215,14 +216,16 @@ grammar parser(context: &ParserContext) for str {
         / commented_expr()
 
     rule fn_pipe() -> Expression
-        = a:fn_pipe_arg() calls:(fn_pipe_call())+ {
+        = start:position!() a:fn_pipe_arg() calls:(fn_pipe_call())+ end:position!() {
+            let span = Span::new(start, end);
             let call = calls.iter().fold(a, |acc, call|{
-                if let Expression::FnCall(fn_call) = call {
+                if let ExprKind::FnCall(fn_call) = &call.kind {
                     let mut args = fn_call.args.clone();
                     args.prepend_arg(Rc::new(acc));
-                    return Expression::FnCall(FnCall::new(fn_call.id.clone(), args))
+                    Expression::new(ExprKind::FnCall(FnCall::new(fn_call.id.clone(), args)), span)
+                } else {
+                    panic!("Failed to create fn call pipeline")
                 }
-                panic!("Failed to create fn call pipeline")
             });
 
             call
@@ -237,13 +240,13 @@ grammar parser(context: &ParserContext) for str {
         = _ "|>" _ fc:fn_call() {
             fc
         }
-        / _ "|>" _ id:identifier() {
-            Expression::FnCall(FnCall::new(id, FnCallArgs::empty()))
+        / _ "|>" _ start:position!() id:identifier() end:position!() {
+            Expression::new(ExprKind::FnCall(FnCall::new(id, FnCallArgs::empty())), Span::new(start, end))
         }
 
     rule commented_expr() -> Expression
-        = c:comment() _ e:expression() {
-            Expression::Commented(c, Rc::new(e))
+        = start:position!() c:comment() _ e:expression() end:position!() {
+            Expression::new(ExprKind::Commented(c, Rc::new(e)), Span::new(start, end))
         }
 
     rule atom() -> Expression
@@ -258,48 +261,48 @@ grammar parser(context: &ParserContext) for str {
 
 
     rule variable() -> Expression
-        = id:variable_identifier() {
-            Expression::Var(id.into())
+        = start:position!() id:variable_identifier() end:position!() {
+            Expression::new(ExprKind::Var(id.into()), Span::new(start, end))
         }
-        / "." id:variable_identifier() {
-            Expression::PropFnRef(id)
+        / start:position!() "." id:variable_identifier() end:position!() {
+            Expression::new(ExprKind::PropFnRef(id), Span::new(start, end))
         }
 
     rule quoted_expr() -> Expression
-        = "^" "(" expr:expression() ")" {
-            Expression::Quoted(Rc::new(expr))
+        = start:position!() "^" "(" expr:expression() ")" end:position!() {
+            Expression::new(ExprKind::Quoted(Rc::new(expr)), Span::new(start, end))
         }
-        / "^" "(" ast:root_def() ")" {
-            Expression::QuotedAST(Rc::new(ast))
+        / start:position!() "^" "(" ast:root_def() ")" end:position!() {
+            Expression::new(ExprKind::QuotedAST(Rc::new(ast)), Span::new(start, end))
         }
         / symbol()
         / unquoted_expr()
 
     rule unquoted_expr() -> Expression
-        = "~" "(" expr:expression() ")" {
-            Expression::Unquoted(Rc::new(expr))
+        = start:position!() "~" "(" expr:expression() ")" end:position!() {
+            Expression::new(ExprKind::Unquoted(Rc::new(expr)), Span::new(start, end))
         }
-        / "~" "(" ast:root_def() ")" {
-            Expression::UnquotedAST(Rc::new(ast))
+        / start:position!() "~" "(" ast:root_def() ")" end:position!() {
+            Expression::new(ExprKind::UnquotedAST(Rc::new(ast)), Span::new(start, end))
         }
-        / "~" var:variable() {
-            Expression::Unquoted(Rc::new(var))
+        / start:position!() "~" var:variable() end:position!() {
+            Expression::new(ExprKind::Unquoted(Rc::new(var)), Span::new(start, end))
         }
 
     rule symbol() -> Expression
-        = "^" id:symbol_identifier() {
-            Expression::Symbol(id)
+        = start:position!() "^" id:symbol_identifier() end:position!() {
+            Expression::new(ExprKind::Symbol(id), Span::new(start, end))
         }
 
     rule query() -> Expression
-        = bindings:query_binding()+ guards:query_guard()* _ prod:query_production() {
-            Expression::Query(
+        = start:position!() bindings:query_binding()+ guards:query_guard()* _ prod:query_production() end:position!() {
+            Expression::new(ExprKind::Query(
                 Query::new(
                     QueryBindings::new(bindings),
                     QueryGuards::new(guards),
                     Rc::new(prod)
                 )
-            )
+            ), Span::new(start, end))
         }
 
     rule query_binding() -> QueryBinding
@@ -337,8 +340,8 @@ grammar parser(context: &ParserContext) for str {
         / literal_expr()
 
     rule edge_prop() -> Expression
-        = expr:edge_prop_expr() "#" edge:struct_identifier() {
-            Expression::EdgeProp(Rc::new(expr), edge)
+        = start:position!() expr:edge_prop_expr() "#" edge:struct_identifier() end:position!() {
+            Expression::new(ExprKind::EdgeProp(Rc::new(expr), edge), Span::new(start, end))
         }
 
     rule edge_prop_expr() -> Expression
@@ -347,16 +350,16 @@ grammar parser(context: &ParserContext) for str {
         / "(" _ c:(fn_pipe() / fn_call() / op_call()) _ ")" { c }
 
     rule query_guard() -> Rc<Expression>
-        = _ c:comment() _ g:query_guard() {
-            Rc::new(Expression::Commented(c, g))
+        = start:position!() _ c:comment() _ g:query_guard() end:position!() {
+            Expression::rc_spanned(ExprKind::Commented(c, g), Span::new(start, end))
         }
         / _ "! " _ expr:query_expr() {
             Rc::new(expr)
         }
 
     rule query_production() -> Expression
-        = c:comment() _ qp:query_production() {
-            Expression::Commented(c, Rc::new(qp))
+        = start:position!() c:comment() _ qp:query_production() end:position!() {
+            Expression::new(ExprKind::Commented(c, Rc::new(qp)), Span::new(start, end))
         }
         / "!> " _ expr:query_expr() _ {
             expr
@@ -364,25 +367,25 @@ grammar parser(context: &ParserContext) for str {
 
 
     rule fn_call() -> Expression
-        = _ ids:(identifier() ** ".") args:(fn_arg())+ _ {
+        = start:position!() _ ids:(identifier() ** ".") args:(fn_arg())+ _ end:position!() {
             let args = FnCallArgs::from_owned(args);
-            Expression::FnCall(FnCall::new(ids.join(".").into(), args))
+            Expression::new(ExprKind::FnCall(FnCall::new(ids.join(".").into(), args)), Span::new(start, end))
         }
-        / _ id:identifier() args:(fn_arg())+ _ {
+        / start:position!() _ id:identifier() args:(fn_arg())+ _ end:position!() {
             let args = FnCallArgs::from_owned(args);
-            Expression::FnCall(FnCall::new(id, args))
+            Expression::new(ExprKind::FnCall(FnCall::new(id, args)), Span::new(start, end))
         }
 
     #[cache_left_rec]
     rule op_call() -> Expression
-        = left:op_call() " "+ id:operator() ws() right:op_arg() {
-            Expression::OpCall(id, Rc::new(left), Rc::new(right))
+        = start:position!() left:op_call() " "+ id:operator() ws() right:op_arg() end:position!() {
+            Expression::new(ExprKind::OpCall(id, Rc::new(left), Rc::new(right)), Span::new(start, end))
         }
-        / left:op_arg() " "+ id:operator() ws() right:op_arg() {
-            Expression::OpCall(id, Rc::new(left), Rc::new(right))
+        / start:position!() left:op_arg() " "+ id:operator() ws() right:op_arg() end:position!() {
+            Expression::new(ExprKind::OpCall(id, Rc::new(left), Rc::new(right)), Span::new(start, end))
         }
-        / left:op_arg() ws() id:operator() " "+ right:op_arg() {
-            Expression::OpCall(id, Rc::new(left), Rc::new(right))
+        / start:position!() left:op_arg() ws() id:operator() " "+ right:op_arg() end:position!() {
+            Expression::new(ExprKind::OpCall(id, Rc::new(left), Rc::new(right)), Span::new(start, end))
         }
 
 
@@ -396,10 +399,10 @@ grammar parser(context: &ParserContext) for str {
         / atom()
 
     rule let_expr() -> Expression
-        = "let" _ bindings:let_bindings() _ "in" _ body:let_body() {
-            Expression::Let(
+        = start:position!() "let" _ bindings:let_bindings() _ "in" _ body:let_body() end:position!() {
+            Expression::new(ExprKind::Let(
                 LetExpression::new(bindings, Rc::new(body))
-            )
+            ), Span::new(start, end))
         }
 
     rule let_bindings() -> LetBindings
@@ -422,8 +425,8 @@ grammar parser(context: &ParserContext) for str {
         = _ id:identifier() _ "=" _ val:let_body() {
             (VarIdentifier::new(id.clone()), val)
         }
-        / _ id:identifier() _ args:(pattern() ** s()) _ "=" _ body:let_body() {
-            (VarIdentifier::new(id.clone()), Expression::InlineFnDef(FnDef::new_inline(id, FnDefArgs::new(args), Rc::new(FnDefBody::rogato(Rc::new(body))))))
+        / start:position!() _ id:identifier() _ args:(pattern() ** s()) _ "=" _ body:let_body() end:position!() {
+            (VarIdentifier::new(id.clone()), Expression::new(ExprKind::InlineFnDef(FnDef::new_inline(id, FnDefArgs::new(args), Rc::new(FnDefBody::rogato(Rc::new(body))))), Span::new(start, end)))
         }
 
     rule let_body() -> Expression
@@ -437,13 +440,13 @@ grammar parser(context: &ParserContext) for str {
         / commented_let_body()
 
     rule commented_let_body() -> Expression
-        = c:comment() _ body:let_body() {
-            Expression::Commented(c, Rc::new(body))
+        = start:position!() c:comment() _ body:let_body() end:position!() {
+            Expression::new(ExprKind::Commented(c, Rc::new(body)), Span::new(start, end))
         }
 
     rule if_else() -> Expression
-        = "if" " "+ cond:if_else_condition() " "+ "then" _ then_expr:atom() _ "else" _ else_expr:atom() {
-            Expression::IfElse(IfElse::new(Rc::new(cond), Rc::new(then_expr), Rc::new(else_expr)))
+        = start:position!() "if" " "+ cond:if_else_condition() " "+ "then" _ then_expr:atom() _ "else" _ else_expr:atom() end:position!() {
+            Expression::new(ExprKind::IfElse(IfElse::new(Rc::new(cond), Rc::new(then_expr), Rc::new(else_expr))), Span::new(start, end))
         }
 
     rule if_else_condition() -> Expression
@@ -460,48 +463,48 @@ grammar parser(context: &ParserContext) for str {
         / list_lit_expr()
 
     rule number_lit_expr() -> Expression
-        = n:number_lit() {
-            Expression::Lit(Literal::Number(n))
+        = start:position!() n:number_lit() end:position!() {
+            Expression::new(ExprKind::Lit(Literal::Number(n)), Span::new(start, end))
         }
 
     rule bool_lit_expr() -> Expression
-        = b:bool_lit() {
-            Expression::Lit(Literal::Bool(b))
+        = start:position!() b:bool_lit() end:position!() {
+            Expression::new(ExprKind::Lit(Literal::Bool(b)), Span::new(start, end))
         }
 
     rule string_lit_expr() -> Expression
-        = s:string_lit() {
-            Expression::Lit(Literal::String(s))
+        = start:position!() s:string_lit() end:position!() {
+            Expression::new(ExprKind::Lit(Literal::String(s)), Span::new(start, end))
         }
 
     rule tuple_lit_expr() -> Expression
-        = "{" _ first:tuple_item() rest:(additional_tuple_item())+ _ ("," _)? "}" {
-            Expression::Lit(Literal::Tuple(TupleItems::new(first, rest)))
+        = start:position!() "{" _ first:tuple_item() rest:(additional_tuple_item())+ _ ("," _)? "}" end:position!() {
+            Expression::new(ExprKind::Lit(Literal::Tuple(TupleItems::new(first, rest))), Span::new(start, end))
         }
 
     rule list_lit_expr() -> Expression
-        = "[" _ first:tuple_item() rest:(additional_tuple_item())+ _ ("," _)? "]" {
-            Expression::Lit(Literal::List(TupleItems::new(first, rest)))
+        = start:position!() "[" _ first:tuple_item() rest:(additional_tuple_item())+ _ ("," _)? "]" end:position!() {
+            Expression::new(ExprKind::Lit(Literal::List(TupleItems::new(first, rest))), Span::new(start, end))
         }
-        / "[" _ item:tuple_item() _ "]" {
-            Expression::Lit(Literal::List(TupleItems::new(item, vec![])))
+        / start:position!() "[" _ item:tuple_item() _ "]" end:position!() {
+            Expression::new(ExprKind::Lit(Literal::List(TupleItems::new(item, vec![]))), Span::new(start, end))
         }
-        / "[" _ first:tuple_item() _ "::" _ rest:tuple_item() "]" {
-            Expression::Lit(Literal::ListCons(Rc::new(first), Rc::new(rest)))
+        / start:position!() "[" _ first:tuple_item() _ "::" _ rest:tuple_item() "]" end:position!() {
+            Expression::new(ExprKind::Lit(Literal::ListCons(Rc::new(first), Rc::new(rest))), Span::new(start, end))
         }
-        / "[" _ "]" {
-            Expression::Lit(Literal::List(TupleItems::from(vec![])))
+        / start:position!() "[" _ "]" end:position!() {
+            Expression::new(ExprKind::Lit(Literal::List(TupleItems::from(vec![]))), Span::new(start, end))
         }
-        / "[" _ comment() _ "]" {
-            Expression::Lit(Literal::List(TupleItems::from(vec![])))
+        / start:position!() "[" _ comment() _ "]" end:position!() {
+            Expression::new(ExprKind::Lit(Literal::List(TupleItems::from(vec![]))), Span::new(start, end))
         }
 
     rule map_lit_expr() -> Expression
-        = "{" _ kv_pairs:(kv_pair() ** (_ "," _)) _ "}" {
-            Expression::Lit(Literal::Map(TupleItems::from(kv_pairs)))
+        = start:position!() "{" _ kv_pairs:(kv_pair() ** (_ "," _)) _ "}" end:position!() {
+            Expression::new(ExprKind::Lit(Literal::Map(TupleItems::from(kv_pairs))), Span::new(start, end))
         }
-        / "{" _ rest:tuple_item() _ "::" _ kv_pairs:(kv_pair() ** (_ "," _)) _ "}" {
-            Expression::Lit(Literal::MapCons(TupleItems::from(kv_pairs), Rc::new(rest)))
+        / start:position!() "{" _ rest:tuple_item() _ "::" _ kv_pairs:(kv_pair() ** (_ "," _)) _ "}" end:position!() {
+            Expression::new(ExprKind::Lit(Literal::MapCons(TupleItems::from(kv_pairs), Rc::new(rest))), Span::new(start, end))
         }
 
     rule kv_pair() -> Rc<MapKVPair<Expression>>
@@ -517,8 +520,8 @@ grammar parser(context: &ParserContext) for str {
         / commented_tuple_item()
 
     rule commented_tuple_item() -> Expression
-        = c:comment() _ item:tuple_item() {
-            Expression::Commented(c, Rc::new(item))
+        = start:position!() c:comment() _ item:tuple_item() end:position!() {
+            Expression::new(ExprKind::Commented(c, Rc::new(item)), Span::new(start, end))
         }
 
     rule additional_tuple_item() -> Expression
@@ -527,8 +530,8 @@ grammar parser(context: &ParserContext) for str {
         }
 
     rule struct_lit_expr() -> Expression
-        = id:struct_identifier() "{" _ first:struct_prop() rest:(additional_struct_prop())*  _ ("," _)? "}" {
-            Expression::Lit(Literal::Struct(id, Rc::new(StructProps::new(first, rest))))
+        = start:position!() id:struct_identifier() "{" _ first:struct_prop() rest:(additional_struct_prop())*  _ ("," _)? "}" end:position!() {
+            Expression::new(ExprKind::Lit(Literal::Struct(id, Rc::new(StructProps::new(first, rest)))), Span::new(start, end))
         }
 
     rule additional_struct_prop() -> (Identifier, Rc<Expression>)
@@ -542,11 +545,11 @@ grammar parser(context: &ParserContext) for str {
         }
 
     rule lambda() -> Expression
-        = "(" _ variants:(lambda_variant() ** (_ "," _)) _ ")" {
-            Expression::Lambda(Rc::new(Lambda::new(variants)))
+        = start:position!() "(" _ variants:(lambda_variant() ** (_ "," _)) _ ")" end:position!() {
+            Expression::new(ExprKind::Lambda(Rc::new(Lambda::new(variants))), Span::new(start, end))
         }
-        / variant:lambda_variant() {
-            Expression::Lambda(Rc::new(Lambda::new(vec![variant])))
+        / start:position!() variant:lambda_variant() end:position!() {
+            Expression::new(ExprKind::Lambda(Rc::new(Lambda::new(vec![variant]))), Span::new(start, end))
         }
 
     rule lambda_variant() -> Rc<LambdaVariant>
@@ -578,15 +581,15 @@ grammar parser(context: &ParserContext) for str {
         }
 
     rule constant_or_type_ref() -> Expression
-        = id:struct_identifier() {
+        = start:position!() id:struct_identifier() end:position!() {
             if is_qualified_fn_call(&id) {
-                Expression::FnCall(FnCall::new(id, FnCallArgs::empty()))
-            }else{
-                Expression::ConstOrTypeRef(id)
+                Expression::new(ExprKind::FnCall(FnCall::new(id, FnCallArgs::empty())), Span::new(start, end))
+            } else {
+                Expression::new(ExprKind::ConstOrTypeRef(id), Span::new(start, end))
             }
         }
-        / "@" id:struct_identifier() {
-            Expression::DBTypeRef(id)
+        / start:position!() "@" id:struct_identifier() end:position!() {
+            Expression::new(ExprKind::DBTypeRef(id), Span::new(start, end))
         }
 
     rule struct_identifier() -> Identifier
