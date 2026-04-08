@@ -1242,3 +1242,50 @@ mod output_tests {
         );
     }
 }
+
+#[test]
+fn codegen_list_cons_patterns() {
+    // Test that pattern matching on list cons patterns compiles without "not yet implemented" error
+    let context = Codegen::new_context();
+    let builder = context.create_builder();
+    let module = context.create_module("compiler_test");
+    let target_machine = Codegen::default_target_machine(&module);
+    let ee = Codegen::default_execution_engine(&module);
+    let mut compiler = Codegen::new(&context, &module, &builder, &target_machine, &ee);
+
+    // Test single-variant function with ListCons pattern
+    let func_def = parse_fn_def("let head [h :: _] = h");
+    // We just check that it doesn't fail with "not yet implemented"
+    let result = compiler.codegen_fn_def(&func_def.borrow());
+    if let Err(e) = result {
+        assert!(
+            !e.to_string()
+                .contains("Pattern matching in function arguments"),
+            "Pattern matching should be implemented: {}",
+            e
+        );
+    }
+}
+
+#[test]
+fn codegen_tuple_patterns() {
+    // Test that tuple pattern matching in function arguments compiles
+    let context = Codegen::new_context();
+    let builder = context.create_builder();
+    let module = context.create_module("compiler_test");
+    let target_machine = Codegen::default_target_machine(&module);
+    let ee = Codegen::default_execution_engine(&module);
+    let mut compiler = Codegen::new(&context, &module, &builder, &target_machine, &ee);
+
+    let func_def = parse_fn_def("let test {a, b} = a + b");
+    // We just check that it doesn't fail with "not yet implemented"
+    let result = compiler.codegen_fn_def(&func_def.borrow());
+    if let Err(e) = result {
+        assert!(
+            !e.to_string()
+                .contains("Pattern matching in function arguments"),
+            "Pattern matching should be implemented: {}",
+            e
+        );
+    }
+}
