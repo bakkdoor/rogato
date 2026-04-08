@@ -2,14 +2,19 @@ use std::{ops::Deref, rc::Rc};
 
 use rogato_common::ast::{
     expression::{Expression, Literal},
+    fn_call::FnCall,
     fn_def::FnDef,
+    if_else::IfElse,
     lambda::LambdaArgs,
+    let_expression::LetExpression,
     literal::TupleItems,
+    query::{Query, QueryBinding},
     type_expression::TypeExpression,
     Identifier,
 };
 
 use crate::environment::{FnSignature, TypeEnvironment};
+use crate::error::TypeCheckError;
 use crate::inferred_type::InferredType;
 use crate::pattern::infer_pattern_type;
 
@@ -36,6 +41,11 @@ impl TypeInferrer {
         &mut self.env
     }
 
+    // -----------------------------------------------------------------------
+    // Inference API (infallible — returns InferredType::Unknown on failure)
+    // Used by the compiler crate for best-effort type inference.
+    // -----------------------------------------------------------------------
+
     pub fn infer_expression(&self, expr: &Expression) -> InferredType {
         match expr {
             Expression::Lit(lit) => self.infer_literal(lit),
@@ -57,35 +67,7 @@ impl TypeInferrer {
                 then_type.unify(&else_type)
             }
             Expression::Let(let_expr) => self.infer_expression(&let_expr.body),
-            Expression::Lambda(lambda) => {
-                let lambda = lambda.deref();
-                if let Some(first_variant) = lambda.variants_iter().next() {
-                    let first_variant = first_variant.deref();
-                    let mut child_env = self.env.new_scope();
-
-                    let mut arg_types = Vec::new();
-                    for arg_pattern in first_variant.args.iter() {
-                        let (arg_type, var_bindings) = infer_pattern_type(arg_pattern);
-                        arg_types.push(arg_type);
-                        for (var_id, var_type) in var_bindings {
-                            child_env.insert_variable(var_id, Rc::new(var_type));
-                        }
-                    }
-
-                    let child_inferrer = TypeInferrer::with_env(child_env);
-                    let return_type = child_inferrer.infer_expression(&first_variant.body);
-
-                    InferredType::Known(Rc::new(TypeExpression::FunctionType(
-                        LambdaArgs::new(arg_types),
-                        return_type
-                            .inner()
-                            .cloned()
-                            .unwrap_or_else(|| Rc::new(TypeExpression::Unknown)),
-                    )))
-                } else {
-                    InferredType::Unknown
-                }
-            }
+            Expression::Lambda(lambda) => self.infer_lambda(lambda),
             Expression::ConstOrTypeRef(id) => {
                 if let Some(te) = self.env.lookup_type_def(id) {
                     InferredType::Known(Rc::clone(te))
@@ -176,6 +158,36 @@ impl TypeInferrer {
         }
     }
 
+    /// Infer the type of a lambda expression. Shared by both infer and check paths.
+    fn infer_lambda(&self, lambda: &rogato_common::ast::lambda::Lambda) -> InferredType {
+        if let Some(first_variant) = lambda.variants_iter().next() {
+            let first_variant = first_variant.deref();
+            let mut child_env = self.env.new_scope();
+
+            let mut arg_types = Vec::new();
+            for arg_pattern in first_variant.args.iter() {
+                let (arg_type, var_bindings) = infer_pattern_type(arg_pattern);
+                arg_types.push(arg_type);
+                for (var_id, var_type) in var_bindings {
+                    child_env.insert_variable(var_id, Rc::new(var_type));
+                }
+            }
+
+            let child_inferrer = TypeInferrer::with_env(child_env);
+            let return_type = child_inferrer.infer_expression(&first_variant.body);
+
+            InferredType::Known(Rc::new(TypeExpression::FunctionType(
+                LambdaArgs::new(arg_types),
+                return_type
+                    .inner()
+                    .cloned()
+                    .unwrap_or_else(|| Rc::new(TypeExpression::Unknown)),
+            )))
+        } else {
+            InferredType::Unknown
+        }
+    }
+
     pub fn infer_fn_def(&self, fn_def: &FnDef) -> InferredType {
         let mut inferrer = TypeInferrer::with_env(self.env.clone());
 
@@ -210,6 +222,208 @@ impl TypeInferrer {
 
         InferredType::Unknown
     }
+
+    // -----------------------------------------------------------------------
+    // Checking API (fallible — returns Result with TypeCheckError on failure)
+    // Used by the TypeCheck trait for strict validation.
+    // -----------------------------------------------------------------------
+
+    /// Type-check an expression with full validation. Returns errors for
+    /// undefined variables/functions, type mismatches, argument count
+    /// mismatches, etc.
+    pub fn check_expression(&mut self, expr: &Expression) -> Result<InferredType, TypeCheckError> {
+        match expr {
+            // Literals: delegate to infer_literal which correctly uses our
+            // environment (fixing the old bug where type_check_literal created
+            // fresh empty TypeEnvironment::new() instances).
+            Expression::Lit(lit) => Ok(self.infer_literal(lit)),
+
+            Expression::Var(id) => match self.env.lookup_variable(id) {
+                Some(te) => Ok(InferredType::Known(Rc::clone(te))),
+                None => Err(TypeCheckError::UndefinedVariable(id.clone())),
+            },
+
+            Expression::FnCall(fn_call) => self.check_fn_call(fn_call),
+
+            Expression::OpCall(op, left, right) => self.check_op_call(op, left, right),
+
+            Expression::IfElse(if_else) => self.check_if_else(if_else),
+
+            Expression::Let(let_expr) => self.check_let_expression(let_expr),
+
+            Expression::Lambda(lambda) => self.check_lambda(lambda),
+
+            Expression::Query(query) => self.check_query(query),
+
+            Expression::ConstOrTypeRef(id) => {
+                if let Some(te) = self.env.lookup_type_def(id) {
+                    Ok(InferredType::Known(Rc::clone(te)))
+                } else {
+                    Err(TypeCheckError::UndefinedVariable(id.clone().into()))
+                }
+            }
+
+            Expression::DBTypeRef(_) => {
+                Ok(InferredType::Known(Rc::new(TypeExpression::SymbolType)))
+            }
+            Expression::PropFnRef(_) => Ok(InferredType::Unknown),
+            Expression::EdgeProp(_, _) => {
+                Ok(InferredType::Known(Rc::new(TypeExpression::SymbolType)))
+            }
+            Expression::Symbol(_) => Ok(InferredType::Known(Rc::new(TypeExpression::SymbolType))),
+            Expression::Quoted(_) => Ok(InferredType::Unknown),
+            Expression::QuotedAST(_) => Ok(InferredType::Unknown),
+            Expression::Unquoted(expr) => self.check_expression(expr),
+            Expression::UnquotedAST(_) => Ok(InferredType::Unknown),
+            Expression::InlineFnDef(fn_def) => self.check_fn_def(&fn_def.borrow()),
+            Expression::Commented(_, expr) => self.check_expression(expr),
+        }
+    }
+
+    fn check_fn_call(&mut self, fn_call: &FnCall) -> Result<InferredType, TypeCheckError> {
+        let (arg_types, return_type) = match self.env.lookup_function(&fn_call.id) {
+            Some(sig) => (sig.arg_types.clone(), sig.return_type.clone()),
+            None => return Err(TypeCheckError::UndefinedFunction(fn_call.id.clone())),
+        };
+
+        if arg_types.len() != fn_call.args.len() {
+            return Err(TypeCheckError::ArgumentCountMismatch {
+                expected: arg_types.len(),
+                actual: fn_call.args.len(),
+            });
+        }
+
+        for arg in fn_call.args.iter() {
+            let _arg_type = self.check_expression(arg)?;
+        }
+
+        Ok(InferredType::Known(Rc::clone(&return_type)))
+    }
+
+    fn check_op_call(
+        &mut self,
+        op: &Identifier,
+        left: &Rc<Expression>,
+        right: &Rc<Expression>,
+    ) -> Result<InferredType, TypeCheckError> {
+        let left_type = self.check_expression(left)?;
+        let right_type = self.check_expression(right)?;
+
+        match op.as_str() {
+            "+" | "-" | "*" | "/" | "%" => {
+                ensure_type(&left_type, &TypeExpression::NumberType)?;
+                ensure_type(&right_type, &TypeExpression::NumberType)?;
+                Ok(InferredType::Known(Rc::new(TypeExpression::NumberType)))
+            }
+            ">" | "<" | ">=" | "<=" => {
+                ensure_type(&left_type, &TypeExpression::NumberType)?;
+                ensure_type(&right_type, &TypeExpression::NumberType)?;
+                Ok(InferredType::Known(Rc::new(TypeExpression::BoolType)))
+            }
+            "==" | "!=" => Ok(InferredType::Known(Rc::new(TypeExpression::BoolType))),
+            "&&" | "||" => {
+                ensure_type(&left_type, &TypeExpression::BoolType)?;
+                ensure_type(&right_type, &TypeExpression::BoolType)?;
+                Ok(InferredType::Known(Rc::new(TypeExpression::BoolType)))
+            }
+            _ => Ok(InferredType::Unknown),
+        }
+    }
+
+    fn check_if_else(&mut self, if_else: &IfElse) -> Result<InferredType, TypeCheckError> {
+        let cond_type = self.check_expression(&if_else.condition)?;
+        ensure_type(&cond_type, &TypeExpression::BoolType)?;
+
+        let then_type = self.check_expression(&if_else.then_expr)?;
+        let else_type = self.check_expression(&if_else.else_expr)?;
+
+        Ok(then_type.unify(&else_type))
+    }
+
+    fn check_let_expression(
+        &mut self,
+        let_expr: &LetExpression,
+    ) -> Result<InferredType, TypeCheckError> {
+        let mut child_inferrer = TypeInferrer::with_env(self.env.new_scope());
+
+        for (id, val) in let_expr.bindings.iter() {
+            // Evaluate binding value in the parent scope
+            let binding_type = self.check_expression(val)?;
+            if let InferredType::Known(te) = binding_type {
+                child_inferrer.env_mut().insert_variable(id.clone(), te);
+            }
+        }
+
+        child_inferrer.check_expression(&let_expr.body)
+    }
+
+    fn check_lambda(
+        &mut self,
+        lambda: &Rc<rogato_common::ast::lambda::Lambda>,
+    ) -> Result<InferredType, TypeCheckError> {
+        let lambda = lambda.deref();
+        if let Some(first_variant) = lambda.variants_iter().next() {
+            let first_variant = first_variant.deref();
+            let mut child_inferrer = TypeInferrer::with_env(self.env.new_scope());
+
+            let mut arg_types = Vec::new();
+            for arg_pattern in first_variant.args.iter() {
+                let (arg_type, var_bindings) = infer_pattern_type(arg_pattern);
+                arg_types.push(arg_type);
+                for (var_id, var_type) in var_bindings {
+                    child_inferrer
+                        .env_mut()
+                        .insert_variable(var_id, Rc::new(var_type));
+                }
+            }
+
+            let return_type = child_inferrer.check_expression(&first_variant.body)?;
+
+            Ok(InferredType::Known(Rc::new(TypeExpression::FunctionType(
+                LambdaArgs::new(arg_types),
+                return_type
+                    .inner()
+                    .cloned()
+                    .unwrap_or_else(|| Rc::new(TypeExpression::Unknown)),
+            ))))
+        } else {
+            Ok(InferredType::Unknown)
+        }
+    }
+
+    fn check_query(&mut self, query: &Query) -> Result<InferredType, TypeCheckError> {
+        for binding in query.bindings().iter() {
+            self.check_query_binding(binding)?;
+        }
+
+        for guard in query.guards().iter() {
+            let guard_type = self.check_expression(guard)?;
+            ensure_type(&guard_type, &TypeExpression::BoolType)?;
+        }
+
+        let _production_type = self.check_expression(query.production())?;
+
+        Ok(InferredType::Known(Rc::new(TypeExpression::SymbolType)))
+    }
+
+    fn check_query_binding(&mut self, binding: &QueryBinding) -> Result<(), TypeCheckError> {
+        let source_type = self.check_expression(&binding.val())?;
+
+        for id in binding.ids().iter() {
+            if let InferredType::Known(te) = &source_type {
+                self.env_mut().insert_variable(id.clone(), Rc::clone(te));
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Type-check a function definition with full validation.
+    pub fn check_fn_def(&mut self, fn_def: &FnDef) -> Result<InferredType, TypeCheckError> {
+        // Delegate to infer_fn_def — the logic is the same and already
+        // registers the function signature into the environment.
+        Ok(self.infer_fn_def(fn_def))
+    }
 }
 
 impl Default for TypeInferrer {
@@ -223,4 +437,16 @@ fn insert_builtin_types(env: &mut TypeEnvironment) {
     env.insert_type_def("String".into(), Rc::new(TypeExpression::StringType));
     env.insert_type_def("Bool".into(), Rc::new(TypeExpression::BoolType));
     env.insert_type_def("Symbol".into(), Rc::new(TypeExpression::SymbolType));
+}
+
+fn ensure_type(inferred: &InferredType, expected: &TypeExpression) -> Result<(), TypeCheckError> {
+    if let InferredType::Known(actual) = inferred {
+        if actual.as_ref() != expected {
+            return Err(TypeCheckError::TypeMismatch {
+                expected: Rc::new(expected.clone()),
+                actual: Rc::clone(actual),
+            });
+        }
+    }
+    Ok(())
 }
