@@ -9,6 +9,7 @@ use self::{
 pub mod expression;
 pub mod fn_call;
 pub mod fn_def;
+pub mod free_vars;
 pub mod helpers;
 pub mod identifier;
 pub mod if_else;

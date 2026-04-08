@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use std::ops::Deref;
 
-use rogato_common::ast::{
+use super::{
     expression::Expression,
     fn_def::FnDefBody,
     lambda::{Lambda, LambdaVariant},
@@ -178,13 +178,14 @@ fn collect_expr_free_vars(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rogato_common::ast::{
+    use crate::ast::{
         expression::Expression,
         fn_call::{FnCall, FnCallArgs},
         if_else::IfElse,
         lambda::{Lambda, LambdaArgs, LambdaVariant},
         let_expression::{LetBindings, LetExpression},
         literal::Literal,
+        VarIdentifier,
     };
     use std::rc::Rc;
 

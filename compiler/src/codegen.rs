@@ -30,7 +30,7 @@ use rogato_common::{
 use std::{cell::RefCell, collections::HashMap, ops::Deref, rc::Rc};
 
 use crate::error::CodegenError;
-use crate::free_vars::collect_free_vars;
+use rogato_common::ast::free_vars::collect_free_vars;
 
 /// Metadata about a compiled lambda/closure, used for calling it later.
 #[derive(Debug, Clone)]
