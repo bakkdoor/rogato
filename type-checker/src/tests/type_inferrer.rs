@@ -547,6 +547,6 @@ mod type_check_tests {
         let expr = Expression::unspanned(ExprKind::InlineFnDef(fn_def));
 
         let result = expr.type_check(&mut TypeEnvironment::new());
-        assert!(matches!(result, Ok(_)));
+        assert!(result.is_ok());
     }
 }

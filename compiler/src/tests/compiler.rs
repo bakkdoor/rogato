@@ -6,8 +6,8 @@ use rogato_parser::{parse_ast, parse_expr, ParserContext};
 use crate::Codegen;
 
 pub fn parse_fn_def(code: &str) -> Rc<RefCell<FnDef>> {
-    let mut parser_ctx = ParserContext::new();
-    let ast = parse_ast(code, &mut parser_ctx).unwrap();
+    let parser_ctx = ParserContext::new();
+    let ast = parse_ast(code, &parser_ctx).unwrap();
     match ast.as_ref() {
         AST::FnDef(f) => Rc::clone(f),
         _ => panic!("Invalid AST node, expected FnDef"),

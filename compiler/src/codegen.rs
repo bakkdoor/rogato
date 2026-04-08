@@ -935,7 +935,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                 | Pattern::Symbol(_)
                 | Pattern::Any => {}
                 // List cons pattern: [head :: tail] - extract head and tail from list
-                Pattern::ListCons(head_pattern, tail_pattern) => {
+                Pattern::ListCons(..) => {
                     self.codegen_store_list_cons_pattern(
                         arg_pattern.as_ref(),
                         params[i].into_pointer_value(),
@@ -947,28 +947,28 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                     // If not empty, this variant won't match (handled by multi-variant fallback or error)
                 }
                 // List pattern: [a, b, c] - match against list of specific length
-                Pattern::List(patterns) => {
+                Pattern::List(..) => {
                     self.codegen_store_list_pattern(
                         arg_pattern.as_ref(),
                         params[i].into_pointer_value(),
                     )?;
                 }
                 // Tuple pattern: {a, b, c}
-                Pattern::Tuple(len, patterns) => {
+                Pattern::Tuple(..) => {
                     self.codegen_store_tuple_pattern(
                         arg_pattern.as_ref(),
                         params[i].into_pointer_value(),
                     )?;
                 }
                 // Map pattern: {key1: val1, key2: val2}
-                Pattern::Map(kv_pairs) => {
+                Pattern::Map(..) => {
                     self.codegen_store_map_pattern(
                         arg_pattern.as_ref(),
                         params[i].into_pointer_value(),
                     )?;
                 }
                 // Map cons pattern: {key1: val1, key2: val2 :: rest}
-                Pattern::MapCons(kv_pairs, rest_pattern) => {
+                Pattern::MapCons(..) => {
                     self.codegen_store_map_cons_pattern(
                         arg_pattern.as_ref(),
                         params[i].into_pointer_value(),
@@ -1183,10 +1183,9 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         map_ptr: PointerValue<'ctx>,
     ) -> CodegenResult<()> {
         if let Pattern::Map(kv_pairs) = pattern {
-            let ptr_type = self.context.ptr_type(AddressSpace::default());
             let i32_type = self.i32_type();
 
-            // Check map length matches
+            let expected_len = i32_type.const_int(kv_pairs.len() as u64, false);
             let map_len_fn = self
                 .module
                 .get_function("rogato_map_len")
@@ -1198,7 +1197,6 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                 .basic()
                 .ok_or_else(|| unknown_error("Invalid call produced"))?
                 .into_int_value();
-            let expected_len = i32_type.const_int(kv_pairs.len() as u64, false);
             let _len_matches = self.builder.build_int_compare(
                 IntPredicate::EQ,
                 map_len,
@@ -1209,9 +1207,9 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             // If length doesn't match, this pattern won't bind variables
             // Store each key-value pair
             for kv_pair in kv_pairs.iter() {
-                let (key_pattern, val_pattern) = kv_pair.pair();
+                let (_key_pattern, val_pattern) = kv_pair.pair();
                 match val_pattern.as_ref() {
-                    Pattern::Var(var_id) => {
+                    Pattern::Var(_var_id) => {
                         // For map patterns with var values, we need to get the value
                         // This would require more complex runtime support for key matching
                         // For now, skip binding - literal keys are handled by condition matching
@@ -1232,7 +1230,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         pattern: &Pattern,
         map_ptr: PointerValue<'ctx>,
     ) -> CodegenResult<()> {
-        if let Pattern::MapCons(kv_pairs, rest_pattern) = pattern {
+        if let Pattern::MapCons(.., rest_pattern) = pattern {
             // For map cons patterns, we extract values for specific keys
             // and bind the rest to a variable if present
             match rest_pattern.as_ref() {
@@ -1276,23 +1274,17 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             }
         }
 
-        // Check if any variant has at least one position with a catch-all pattern (Var or Any)
-        // This is required for multi-variant functions to ensure all inputs are covered
-        let has_catch_all = variants
-            .iter()
-            .any(|v| {
-                v.0.iter()
-                    .any(|p| matches!(p.deref(), Pattern::Var(_) | Pattern::Any))
-            });
-
         // Only require catch-all if all variants have literal-only patterns (no Var/Any at any position)
         // This allows partial matching where some variants have literal patterns and others are catch-all
         let all_literal = variants.iter().all(|v| {
             v.0.iter().all(|p| {
                 matches!(
                     p.deref(),
-                    Pattern::Number(_) | Pattern::Bool(_) | Pattern::String(_)
-                        | Pattern::Symbol(_) | Pattern::EmptyList
+                    Pattern::Number(_)
+                        | Pattern::Bool(_)
+                        | Pattern::String(_)
+                        | Pattern::Symbol(_)
+                        | Pattern::EmptyList
                 )
             })
         });

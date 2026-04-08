@@ -217,7 +217,7 @@ fn if_else_expr() {
 
 #[test]
 fn lambda_closures() {
-    let code_with_vals = vec![(
+    let code_with_vals = [(
         "let
             f x = [1, 2, 3] |> List.map (y -> x + y)
             g x = {f x, f (x * 2)}

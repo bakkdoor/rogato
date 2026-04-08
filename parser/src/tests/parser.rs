@@ -955,7 +955,7 @@ fn variables() {
          ! (hasFriends p)
          !> {p.name, p}
         ",
-        &mut ParserContext::new(),
+        &ParserContext::new(),
     )
     .unwrap();
 }
