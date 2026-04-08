@@ -94,11 +94,7 @@ impl TypeEnvironment {
     }
 
     pub fn new_scope(&self) -> TypeEnvironment {
-        let mut new_env = self.clone();
-        new_env.variables = self.variables.clone();
-        new_env.functions = self.functions.clone();
-        new_env.type_defs = self.type_defs.clone();
-        new_env
+        self.clone()
     }
 }
 
