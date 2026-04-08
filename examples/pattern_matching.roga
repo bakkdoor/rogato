@@ -3,6 +3,25 @@ module PatternMatching { head, tail, pairs, transform }
 let head [h :: _] = h
 let tail [_ :: t] = t
 
+let reverse list =
+  let
+    reverse_ acc [] =
+      acc
+    reverse_ acc [x :: xs] =
+      reverse_ [x :: acc] xs
+  in
+    reverse_ [] list
+
+let map list f =
+  let
+    map_ acc [] _ =
+      reverse acc
+
+    map_ acc [x :: xs] f =
+      map_ [f x :: acc] xs f
+  in
+    map_ [] list f
+
 let transform {1, 2, 3} = ^got_123
 let transform {a, 0, c} = {a, ^zero, c}
 let transform {0, b, c} = {b, b * c, c}
