@@ -103,21 +103,25 @@ pub enum CompiledType {
 }
 
 impl<'ctx> CompiledType {
-    #[allow(dead_code)]
-    pub fn from_type_expression(te: &rogato_common::ast::type_expression::TypeExpression) -> Self {
-        let te_str = format!("{:?}", te);
-        if te_str.contains("FunctionType") {
-            CompiledType::Lambda
-        } else if te_str.contains("Int32") {
-            CompiledType::Int32
-        } else if te_str.contains("Int64") {
-            CompiledType::Int64
-        } else if te_str.contains("String") || te_str.contains("Symbol") {
-            CompiledType::String
-        } else if te_str.contains("Bool") || te_str.contains("True") {
-            CompiledType::Bool
-        } else {
-            CompiledType::Float
+    pub fn from_type_expression(te: &TypeExpression) -> Self {
+        match te {
+            TypeExpression::FunctionType(_, _) => CompiledType::Lambda,
+            TypeExpression::Int32Type => CompiledType::Int32,
+            TypeExpression::Int64Type => CompiledType::Int64,
+            TypeExpression::StringType | TypeExpression::SymbolType => CompiledType::String,
+            TypeExpression::BoolType => CompiledType::Bool,
+            TypeExpression::NumberType => CompiledType::Float,
+            // Compound/container types are represented as pointers (like Lambda)
+            TypeExpression::ListType(_)
+            | TypeExpression::SetType(_)
+            | TypeExpression::MapType(_, _)
+            | TypeExpression::VectorType(_)
+            | TypeExpression::StackType(_)
+            | TypeExpression::QueueType(_)
+            | TypeExpression::StructType(_)
+            | TypeExpression::TupleType(_) => CompiledType::Lambda, // pointer type
+            TypeExpression::TypeRef(_) => CompiledType::Float, // fallback for now
+            TypeExpression::Unknown => CompiledType::Float,    // fallback
         }
     }
 
@@ -908,9 +912,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             CompiledValue::Int64(iv) => printf_args.push((*iv).into()),
             CompiledValue::String(pv) => printf_args.push((*pv).into()),
             CompiledValue::Bool(bv) => {
-                let int_val = self
-                    .builder
-                    .build_int_cast(*bv, i8_type, "bool_to_i8")?;
+                let int_val = self.builder.build_int_cast(*bv, i8_type, "bool_to_i8")?;
                 printf_args.push(int_val.into());
             }
             CompiledValue::Lambda(_, _) => {
