@@ -18,6 +18,7 @@ use rogato_common::{
         fn_call::{FnCall, FnCallArgs},
         fn_def::{FnDef, FnDefBody, FnDefVariant, FnDefVariants},
         if_else::IfElse,
+        lambda::Lambda,
         literal::Literal,
         module_def::ModuleDef,
         pattern::Pattern,
@@ -109,7 +110,7 @@ impl<'ctx> CompiledType {
             CompiledType::Float => ctx.f32_type().into(),
             CompiledType::Int32 => ctx.i32_type().into(),
             CompiledType::Int64 => ctx.i64_type().into(),
-            CompiledType::String => ctx.i8_type().ptr_type(AddressSpace::default()).into(),
+            CompiledType::String => ctx.ptr_type(AddressSpace::default()).into(),
             CompiledType::Bool => ctx.bool_type().into(),
         }
     }
@@ -120,7 +121,7 @@ impl<'ctx> CompiledType {
             CompiledType::Int32 => BasicMetadataTypeEnum::IntType(ctx.i32_type()),
             CompiledType::Int64 => BasicMetadataTypeEnum::IntType(ctx.i64_type()),
             CompiledType::String => {
-                BasicMetadataTypeEnum::PointerType(ctx.i8_type().ptr_type(AddressSpace::default()))
+                BasicMetadataTypeEnum::PointerType(ctx.ptr_type(AddressSpace::default()))
             }
             CompiledType::Bool => BasicMetadataTypeEnum::IntType(ctx.bool_type()),
         }
@@ -188,7 +189,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
 
     #[inline]
     pub fn string_type(&self) -> PointerType<'ctx> {
-        self.i8_type().ptr_type(AddressSpace::default())
+        self.context.ptr_type(AddressSpace::default())
     }
 
     #[inline]
@@ -296,9 +297,9 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             return self.codegen_multi_variant_fn(fn_def);
         }
 
-        let FnDefVariant(args, body, return_type) = fn_def.get_variant(0).unwrap();
+        let FnDefVariant(args, body, _return_type) = fn_def.get_variant(0).unwrap();
 
-        let return_type = match return_type {
+        let return_type = match _return_type {
             Some(rexpr) => CompiledType::from_type_expression(rexpr),
             None => match body.as_ref() {
                 FnDefBody::RogatoFn(expr) => self.infer_expr_type_with_checker(expr),
@@ -325,7 +326,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         func: FunctionValue<'ctx>,
     ) -> CodegenResult<FunctionValue<'ctx>> {
         let f32_type = self.context.f32_type();
-        let FnDefVariant(args, body, return_type) = fn_def.get_variant(0).unwrap();
+        let FnDefVariant(args, body, _return_type) = fn_def.get_variant(0).unwrap();
 
         self.set_current_fn_value(func);
 
@@ -577,10 +578,9 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
 
             return self.codegen_variant_body(fn_def, variant_index + 1, params);
         }
-
-        Ok(())
     }
 
+    #[allow(dead_code)]
     fn codegen_variant_body_with_block(
         &mut self,
         fn_def: &FnDef,
@@ -737,7 +737,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             .ok_or_else(|| unknown_error("printf not initialized"))?;
 
         let i8_type = self.context.i8_type();
-        let ptr_type = self.context.ptr_type(AddressSpace::default());
+        let _ptr_type = self.context.ptr_type(AddressSpace::default());
 
         let format_str = match &compiled_val {
             CompiledValue::Float(_) => {
@@ -1065,7 +1065,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
 
                 self.codegen_expr(&let_expr.body)
             }
-            Expression::Lambda(_lambda) => todo!(),
+            Expression::Lambda(lambda) => self.codegen_lambda(lambda),
             Expression::Query(_query) => todo!(),
             Expression::Symbol(_id) => todo!(),
             Expression::Quoted(_expr) => todo!(),
@@ -1157,6 +1157,65 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             }
             _ => Err(unknown_error("Type mismatch in if-else branches")),
         }
+    }
+
+    /// Compiles a lambda expression to an LLVM function.
+    /// For now, this only supports simple lambdas without closures.
+    fn codegen_lambda(&mut self, lambda: &Lambda) -> CodegenResult<CompiledValue<'ctx>> {
+        let f32_type = self.context.f32_type();
+
+        // Get the first variant of the lambda (lambdas can have multiple variants like functions)
+        let Some(first_variant) = lambda.variants_iter().next() else {
+            return Err(unknown_error("Lambda has no variants"));
+        };
+        let first_variant = first_variant.deref();
+
+        // Determine argument types and return type
+        let arg_count = first_variant.arg_count();
+        let fn_arg_types: Vec<BasicMetadataTypeEnum<'ctx>> = (0..arg_count)
+            .map(|_| BasicMetadataTypeEnum::FloatType(f32_type))
+            .collect();
+
+        // Infer return type from the body
+        let return_type = self.infer_expr_type_with_checker(&first_variant.body);
+        let return_llvm_type = return_type.as_basic_type_enum(self.context);
+
+        // Generate a unique name for the lambda function
+        let lambda_name = format!("lambda_{}", self.module.get_functions().count());
+        let fn_type = return_llvm_type.fn_type(&fn_arg_types, false);
+        let func = self.module.add_function(&lambda_name, fn_type, None);
+
+        // Set up the function body
+        self.set_current_fn_value(func);
+        let entry_block = self.context.append_basic_block(func, "entry");
+        self.builder.position_at_end(entry_block);
+
+        // Store function parameters
+        for (i, arg) in func.get_param_iter().enumerate() {
+            if let Some(pattern) = first_variant.args.get(i) {
+                if let Pattern::Var(var_id) = pattern.deref() {
+                    let alloca = self.create_entry_block_alloca(f32_type, var_id.as_str());
+                    self.builder.build_store(alloca, arg)?;
+                    self.store_var(var_id.as_str(), alloca);
+                }
+            }
+        }
+
+        // Compile the lambda body
+        let compiled_val = self.codegen_expr(&first_variant.body)?;
+        let ret_val = compiled_val.into_basic_value();
+        self.builder.build_return(Some(&ret_val))?;
+
+        // Verify and apply passes
+        if func.verify(true) {
+            self.run_function_passes();
+        }
+
+        // Return a pointer to the function (as a callable reference)
+        let func_ptr = func.as_global_value().as_pointer_value();
+        self.clear_current_fn();
+
+        Ok(CompiledValue::String(func_ptr))
     }
 
     /// Returns the `FunctionValue` representing the function being compiled.
