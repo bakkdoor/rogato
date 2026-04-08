@@ -16,7 +16,7 @@ use rogato_common::{
     ast::{
         expression::Expression,
         fn_call::{FnCall, FnCallArgs},
-        fn_def::{FnDef, FnDefBody, FnDefVariant, FnDefVariants},
+        fn_def::{FnDef, FnDefArgs, FnDefBody, FnDefVariant, FnDefVariants},
         if_else::IfElse,
         lambda::Lambda,
         literal::Literal,
@@ -353,7 +353,6 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         fn_def: &FnDef,
         func: FunctionValue<'ctx>,
     ) -> CodegenResult<FunctionValue<'ctx>> {
-        let f32_type = self.context.f32_type();
         let FnDefVariant(args, body, _return_type) = fn_def.get_variant(0).unwrap();
 
         self.set_current_fn_value(func);
@@ -361,20 +360,8 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         let basic_block = self.context.append_basic_block(func, fn_def.id());
         self.builder.position_at_end(basic_block);
 
-        for (arg, arg_name) in func.get_param_iter().zip(args.iter()) {
-            match &**arg_name {
-                Pattern::Var(arg_name) => {
-                    let alloca = self.create_entry_block_alloca(f32_type, arg_name.as_str());
-                    self.builder.build_store(alloca, arg)?;
-                    self.store_var(arg_name, alloca)
-                }
-                _ => {
-                    return Err(CodegenError::NotYetImplemented(
-                        "Pattern matching in function arguments".into(),
-                    ))
-                }
-            }
-        }
+        let params: Vec<_> = func.get_param_iter().collect();
+        self.store_pattern_args(args, &params)?;
 
         match body.as_ref() {
             FnDefBody::RogatoFn(expr) => {
@@ -396,6 +383,39 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             }
             _ => Err(unknown_error("Cannot compile function with NativeFn body!")),
         }
+    }
+
+    /// Stores function/lambda arguments into stack allocas based on pattern matching.
+    /// Currently only handles `Pattern::Var`; literal and wildcard patterns are skipped
+    /// as they are handled by variant condition matching. Other complex patterns are not
+    /// yet supported.
+    fn store_pattern_args(
+        &mut self,
+        args: &FnDefArgs,
+        params: &[BasicValueEnum<'ctx>],
+    ) -> CodegenResult<()> {
+        let f32_type = self.context.f32_type();
+        for (i, arg_pattern) in args.iter().enumerate() {
+            match arg_pattern.as_ref() {
+                Pattern::Var(var_id) => {
+                    let alloca = self.create_entry_block_alloca(f32_type, var_id.as_str());
+                    self.builder.build_store(alloca, params[i])?;
+                    self.store_var(var_id.as_str(), alloca);
+                }
+                // Literal and wildcard patterns are already handled by variant condition matching
+                Pattern::Number(_)
+                | Pattern::Bool(_)
+                | Pattern::String(_)
+                | Pattern::Symbol(_)
+                | Pattern::Any => {}
+                _ => {
+                    return Err(CodegenError::NotYetImplemented(
+                        "Pattern matching in function arguments".into(),
+                    ));
+                }
+            }
+        }
+        Ok(())
     }
 
     fn codegen_multi_variant_fn(&mut self, fn_def: &FnDef) -> CodegenResult<FunctionValue<'ctx>> {
@@ -489,13 +509,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                 .context
                 .append_basic_block(self.current_fn_value(), "variant_last_body");
 
-            for (i, arg_name) in args.iter().enumerate() {
-                if let Pattern::Var(var_id) = &**arg_name {
-                    let alloca = self.create_entry_block_alloca(f32_type, var_id.as_str());
-                    self.builder.build_store(alloca, params[i])?;
-                    self.store_var(var_id.as_str(), alloca);
-                }
-            }
+            self.store_pattern_args(args, params)?;
 
             match body.as_ref() {
                 FnDefBody::RogatoFn(expr) => {
@@ -556,13 +570,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
 
             self.builder.position_at_end(variant_body_block);
 
-            for (i, arg_name) in args.iter().enumerate() {
-                if let Pattern::Var(var_id) = &**arg_name {
-                    let alloca = self.create_entry_block_alloca(f32_type, var_id.as_str());
-                    self.builder.build_store(alloca, params[i])?;
-                    self.store_var(var_id.as_str(), alloca);
-                }
-            }
+            self.store_pattern_args(args, params)?;
 
             match body.as_ref() {
                 FnDefBody::RogatoFn(expr) => {
@@ -589,13 +597,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
 
             self.builder.position_at_end(variant_body_block);
 
-            for (i, arg_name) in args.iter().enumerate() {
-                if let Pattern::Var(var_id) = &**arg_name {
-                    let alloca = self.create_entry_block_alloca(f32_type, var_id.as_str());
-                    self.builder.build_store(alloca, params[i])?;
-                    self.store_var(var_id.as_str(), alloca);
-                }
-            }
+            self.store_pattern_args(args, params)?;
 
             match body.as_ref() {
                 FnDefBody::RogatoFn(expr) => {
