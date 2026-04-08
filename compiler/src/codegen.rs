@@ -1,5 +1,5 @@
 use inkwell::{
-    builder::Builder,
+    builder::{Builder, BuilderError},
     context::Context,
     execution_engine::ExecutionEngine,
     module::Module,
@@ -939,167 +939,146 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         let right = self.codegen_expr(right_expr)?;
 
         match id.as_str() {
-            "+" => match (&left, &right) {
-                (CompiledValue::Float(l), CompiledValue::Float(r)) => Ok(CompiledValue::Float(
-                    self.builder
-                        .build_float_add(*l, *r, "tmp_add")
-                        .map_err(|e| unknown_error(format!("{:?}", e)))?,
-                )),
-                (CompiledValue::Int32(l), CompiledValue::Int32(r)) => Ok(CompiledValue::Int32(
-                    self.builder
-                        .build_int_add(*l, *r, "tmp_add")
-                        .map_err(|e| unknown_error(format!("{:?}", e)))?,
-                )),
-                (CompiledValue::Int64(l), CompiledValue::Int64(r)) => Ok(CompiledValue::Int64(
-                    self.builder
-                        .build_int_add(*l, *r, "tmp_add")
-                        .map_err(|e| unknown_error(format!("{:?}", e)))?,
-                )),
-                _ => Err(unknown_error("Type mismatch for + operation")),
-            },
-            "-" => match (&left, &right) {
-                (CompiledValue::Float(l), CompiledValue::Float(r)) => Ok(CompiledValue::Float(
-                    self.builder
-                        .build_float_sub(*l, *r, "tmp_sub")
-                        .map_err(|e| unknown_error(format!("{:?}", e)))?,
-                )),
-                (CompiledValue::Int32(l), CompiledValue::Int32(r)) => Ok(CompiledValue::Int32(
-                    self.builder
-                        .build_int_sub(*l, *r, "tmp_sub")
-                        .map_err(|e| unknown_error(format!("{:?}", e)))?,
-                )),
-                (CompiledValue::Int64(l), CompiledValue::Int64(r)) => Ok(CompiledValue::Int64(
-                    self.builder
-                        .build_int_sub(*l, *r, "tmp_sub")
-                        .map_err(|e| unknown_error(format!("{:?}", e)))?,
-                )),
-                _ => Err(unknown_error("Type mismatch for - operation")),
-            },
-            "*" => match (&left, &right) {
-                (CompiledValue::Float(l), CompiledValue::Float(r)) => Ok(CompiledValue::Float(
-                    self.builder
-                        .build_float_mul(*l, *r, "tmp_mul")
-                        .map_err(|e| unknown_error(format!("{:?}", e)))?,
-                )),
-                (CompiledValue::Int32(l), CompiledValue::Int32(r)) => Ok(CompiledValue::Int32(
-                    self.builder
-                        .build_int_mul(*l, *r, "tmp_mul")
-                        .map_err(|e| unknown_error(format!("{:?}", e)))?,
-                )),
-                (CompiledValue::Int64(l), CompiledValue::Int64(r)) => Ok(CompiledValue::Int64(
-                    self.builder
-                        .build_int_mul(*l, *r, "tmp_mul")
-                        .map_err(|e| unknown_error(format!("{:?}", e)))?,
-                )),
-                _ => Err(unknown_error("Type mismatch for * operation")),
-            },
-            "/" => match (&left, &right) {
-                (CompiledValue::Float(l), CompiledValue::Float(r)) => Ok(CompiledValue::Float(
-                    self.builder
-                        .build_float_div(*l, *r, "tmp_div")
-                        .map_err(|e| unknown_error(format!("{:?}", e)))?,
-                )),
-                (CompiledValue::Int32(l), CompiledValue::Int32(r)) => Ok(CompiledValue::Int32(
-                    self.builder
-                        .build_int_signed_div(*l, *r, "tmp_div")
-                        .map_err(|e| unknown_error(format!("{:?}", e)))?,
-                )),
-                (CompiledValue::Int64(l), CompiledValue::Int64(r)) => Ok(CompiledValue::Int64(
-                    self.builder
-                        .build_int_signed_div(*l, *r, "tmp_div")
-                        .map_err(|e| unknown_error(format!("{:?}", e)))?,
-                )),
-                _ => Err(unknown_error("Type mismatch for / operation")),
-            },
-            "%" => match (&left, &right) {
-                (CompiledValue::Float(l), CompiledValue::Float(r)) => Ok(CompiledValue::Float(
-                    self.builder
-                        .build_float_rem(*l, *r, "tmp_rem")
-                        .map_err(|e| unknown_error(format!("{:?}", e)))?,
-                )),
-                (CompiledValue::Int32(l), CompiledValue::Int32(r)) => Ok(CompiledValue::Int32(
-                    self.builder
-                        .build_int_signed_rem(*l, *r, "tmp_rem")
-                        .map_err(|e| unknown_error(format!("{:?}", e)))?,
-                )),
-                (CompiledValue::Int64(l), CompiledValue::Int64(r)) => Ok(CompiledValue::Int64(
-                    self.builder
-                        .build_int_signed_rem(*l, *r, "tmp_rem")
-                        .map_err(|e| unknown_error(format!("{:?}", e)))?,
-                )),
-                _ => Err(unknown_error("Type mismatch for % operation")),
-            },
-            ">" | "<" | ">=" | "<=" => {
-                let op = match id.as_str() {
-                    ">" => FloatPredicate::OGT,
-                    "<" => FloatPredicate::OLT,
-                    ">=" => FloatPredicate::OGE,
-                    "<=" => FloatPredicate::OLE,
-                    _ => return Err(unknown_error("Invalid operator")),
-                };
-                match (&left, &right) {
-                    (CompiledValue::Float(l), CompiledValue::Float(r)) => {
-                        let cmp = self.builder.build_float_compare(op, *l, *r, "cmp")?;
-                        Ok(CompiledValue::Bool(cmp))
-                    }
-                    (CompiledValue::Int32(l), CompiledValue::Int32(r)) => {
-                        let pred = match id.as_str() {
-                            ">" => IntPredicate::SGT,
-                            "<" => IntPredicate::SLT,
-                            ">=" => IntPredicate::SGE,
-                            "<=" => IntPredicate::SLE,
-                            _ => return Err(unknown_error("Invalid operator")),
-                        };
-                        let cmp = self.builder.build_int_compare(pred, *l, *r, "cmp")?;
-                        Ok(CompiledValue::Bool(cmp))
-                    }
-                    (CompiledValue::Int64(l), CompiledValue::Int64(r)) => {
-                        let pred = match id.as_str() {
-                            ">" => IntPredicate::SGT,
-                            "<" => IntPredicate::SLT,
-                            ">=" => IntPredicate::SGE,
-                            "<=" => IntPredicate::SLE,
-                            _ => return Err(unknown_error("Invalid operator")),
-                        };
-                        let cmp = self.builder.build_int_compare(pred, *l, *r, "cmp")?;
-                        Ok(CompiledValue::Bool(cmp))
-                    }
-                    _ => Err(unknown_error("Type mismatch for comparison operation")),
-                }
-            }
-            "==" | "!=" => {
-                let op = if id.as_str() == "==" {
-                    FloatPredicate::OEQ
-                } else {
-                    FloatPredicate::ONE
-                };
-                match (&left, &right) {
-                    (CompiledValue::Float(l), CompiledValue::Float(r)) => {
-                        let cmp = self.builder.build_float_compare(op, *l, *r, "cmp")?;
-                        Ok(CompiledValue::Bool(cmp))
-                    }
-                    (CompiledValue::Int32(l), CompiledValue::Int32(r)) => {
-                        let pred = if id.as_str() == "==" {
-                            IntPredicate::EQ
-                        } else {
-                            IntPredicate::NE
-                        };
-                        let cmp = self.builder.build_int_compare(pred, *l, *r, "cmp")?;
-                        Ok(CompiledValue::Bool(cmp))
-                    }
-                    (CompiledValue::Int64(l), CompiledValue::Int64(r)) => {
-                        let pred = if id.as_str() == "==" {
-                            IntPredicate::EQ
-                        } else {
-                            IntPredicate::NE
-                        };
-                        let cmp = self.builder.build_int_compare(pred, *l, *r, "cmp")?;
-                        Ok(CompiledValue::Bool(cmp))
-                    }
-                    _ => Err(unknown_error("Type mismatch for == operation")),
-                }
-            }
+            "+" => self.build_numeric_binop(
+                &left,
+                &right,
+                Builder::build_float_add,
+                Builder::build_int_add,
+                "tmp_add",
+                "+",
+            ),
+            "-" => self.build_numeric_binop(
+                &left,
+                &right,
+                Builder::build_float_sub,
+                Builder::build_int_sub,
+                "tmp_sub",
+                "-",
+            ),
+            "*" => self.build_numeric_binop(
+                &left,
+                &right,
+                Builder::build_float_mul,
+                Builder::build_int_mul,
+                "tmp_mul",
+                "*",
+            ),
+            "/" => self.build_numeric_binop(
+                &left,
+                &right,
+                Builder::build_float_div,
+                Builder::build_int_signed_div,
+                "tmp_div",
+                "/",
+            ),
+            "%" => self.build_numeric_binop(
+                &left,
+                &right,
+                Builder::build_float_rem,
+                Builder::build_int_signed_rem,
+                "tmp_rem",
+                "%",
+            ),
+            ">" => self.build_comparison_op(
+                &left,
+                &right,
+                FloatPredicate::OGT,
+                IntPredicate::SGT,
+                "cmp",
+            ),
+            "<" => self.build_comparison_op(
+                &left,
+                &right,
+                FloatPredicate::OLT,
+                IntPredicate::SLT,
+                "cmp",
+            ),
+            ">=" => self.build_comparison_op(
+                &left,
+                &right,
+                FloatPredicate::OGE,
+                IntPredicate::SGE,
+                "cmp",
+            ),
+            "<=" => self.build_comparison_op(
+                &left,
+                &right,
+                FloatPredicate::OLE,
+                IntPredicate::SLE,
+                "cmp",
+            ),
+            "==" => self.build_comparison_op(
+                &left,
+                &right,
+                FloatPredicate::OEQ,
+                IntPredicate::EQ,
+                "cmp",
+            ),
+            "!=" => self.build_comparison_op(
+                &left,
+                &right,
+                FloatPredicate::ONE,
+                IntPredicate::NE,
+                "cmp",
+            ),
             _ => Err(CodegenError::OpNotDefined(id.clone())),
+        }
+    }
+
+    fn build_numeric_binop(
+        &self,
+        left: &CompiledValue<'ctx>,
+        right: &CompiledValue<'ctx>,
+        float_op: impl Fn(
+            &Builder<'ctx>,
+            FloatValue<'ctx>,
+            FloatValue<'ctx>,
+            &str,
+        ) -> Result<FloatValue<'ctx>, BuilderError>,
+        int_op: impl Fn(
+            &Builder<'ctx>,
+            IntValue<'ctx>,
+            IntValue<'ctx>,
+            &str,
+        ) -> Result<IntValue<'ctx>, BuilderError>,
+        name: &str,
+        op_symbol: &str,
+    ) -> CodegenResult<CompiledValue<'ctx>> {
+        match (left, right) {
+            (CompiledValue::Float(l), CompiledValue::Float(r)) => {
+                Ok(CompiledValue::Float(float_op(self.builder, *l, *r, name)?))
+            }
+            (CompiledValue::Int32(l), CompiledValue::Int32(r)) => {
+                Ok(CompiledValue::Int32(int_op(self.builder, *l, *r, name)?))
+            }
+            (CompiledValue::Int64(l), CompiledValue::Int64(r)) => {
+                Ok(CompiledValue::Int64(int_op(self.builder, *l, *r, name)?))
+            }
+            _ => Err(unknown_error(format!(
+                "Type mismatch for {op_symbol} operation"
+            ))),
+        }
+    }
+
+    fn build_comparison_op(
+        &self,
+        left: &CompiledValue<'ctx>,
+        right: &CompiledValue<'ctx>,
+        float_pred: FloatPredicate,
+        int_pred: IntPredicate,
+        name: &str,
+    ) -> CodegenResult<CompiledValue<'ctx>> {
+        match (left, right) {
+            (CompiledValue::Float(l), CompiledValue::Float(r)) => Ok(CompiledValue::Bool(
+                self.builder.build_float_compare(float_pred, *l, *r, name)?,
+            )),
+            (CompiledValue::Int32(l), CompiledValue::Int32(r)) => Ok(CompiledValue::Bool(
+                self.builder.build_int_compare(int_pred, *l, *r, name)?,
+            )),
+            (CompiledValue::Int64(l), CompiledValue::Int64(r)) => Ok(CompiledValue::Bool(
+                self.builder.build_int_compare(int_pred, *l, *r, name)?,
+            )),
+            _ => Err(unknown_error("Type mismatch for comparison operation")),
         }
     }
 
