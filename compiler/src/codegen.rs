@@ -565,7 +565,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                 _ => return Err(unknown_error("Cannot compile function with NativeFn body!")),
             }
 
-            return Ok(());
+            Ok(())
         } else {
             let next_test_block = self.context.append_basic_block(
                 self.current_fn_value(),
@@ -600,7 +600,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
 
             self.builder.position_at_end(next_test_block);
 
-            return self.codegen_variant_body(fn_def, variant_index + 1, params);
+            self.codegen_variant_body(fn_def, variant_index + 1, params)
         }
     }
 
@@ -626,15 +626,12 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             let variants: Vec<_> = fn_def.variants_iter().collect();
 
             for (i, arg_name) in variants[variant_index].0.iter().enumerate() {
-                match &**arg_name {
-                    Pattern::Var(var_id) => {
-                        if self.lookup_var(var_id.as_str()).is_none() {
-                            let alloca = self.create_entry_block_alloca(f32_type, var_id.as_str());
-                            self.builder.build_store(alloca, params[i])?;
-                            self.store_var(var_id.as_str(), alloca);
-                        }
+                if let Pattern::Var(var_id) = &**arg_name {
+                    if self.lookup_var(var_id.as_str()).is_none() {
+                        let alloca = self.create_entry_block_alloca(f32_type, var_id.as_str());
+                        self.builder.build_store(alloca, params[i])?;
+                        self.store_var(var_id.as_str(), alloca);
                     }
-                    _ => {}
                 }
             }
         }
@@ -661,7 +658,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             if let AST::FnDef(fn_def) = ast.as_ref() {
                 fn_defs_by_name
                     .entry(fn_def.borrow().id().clone())
-                    .or_insert_with(Vec::new)
+                    .or_default()
                     .push(Rc::clone(fn_def));
             }
         }
@@ -829,7 +826,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         args: &FnCallArgs,
     ) -> CodegenResult<CompiledValue<'ctx>> {
         if args.is_empty() {
-            return Err(unknown_error(&format!(
+            return Err(unknown_error(format!(
                 "{} takes at least 1 argument",
                 fn_name
             )));
@@ -913,7 +910,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             CompiledValue::Bool(bv) => {
                 let int_val = self
                     .builder
-                    .build_int_cast(*bv, i8_type.into(), "bool_to_i8")?;
+                    .build_int_cast(*bv, i8_type, "bool_to_i8")?;
                 printf_args.push(int_val.into());
             }
             CompiledValue::Lambda(_, _) => {
