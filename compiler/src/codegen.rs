@@ -1175,6 +1175,8 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             Expression::Let(let_expr) => {
                 let f32_type = self.context.f32_type();
 
+                self.push_scope();
+
                 for (var_id, var_expr) in let_expr.bindings.iter() {
                     let compiled_val = self.codegen_expr(var_expr)?;
                     match compiled_val {
@@ -1192,7 +1194,11 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                     }
                 }
 
-                self.codegen_expr(&let_expr.body)
+                let result = self.codegen_expr(&let_expr.body);
+
+                self.pop_scope();
+
+                result
             }
             Expression::Lambda(lambda) => self.codegen_lambda(lambda),
             Expression::Query(_query) => {
@@ -1347,67 +1353,61 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         }
         let closure_struct_type = self.context.struct_type(&struct_fields, false);
 
-        // Save current compilation state (isolate the lambda's scope)
-        let saved_fn = self.current_fn_value;
-        let saved_block = self.builder.get_insert_block();
-        let saved_scopes = std::mem::replace(&mut self.variable_scopes, vec![HashMap::new()]);
-        let saved_lambda_info = self.lambda_info.clone();
+        // Compile the lambda function body in an isolated context.
+        // with_lambda_context saves and restores: variable scopes, lambda info,
+        // current function value, and builder position — even on early return/error.
+        let func_result = self.with_lambda_context(|this| -> CodegenResult<()> {
+            // Set up the lambda function body
+            this.set_current_fn_value(func);
+            let entry_block = this.context.append_basic_block(func, "entry");
+            this.builder.position_at_end(entry_block);
 
-        // Set up the lambda function body
-        self.set_current_fn_value(func);
-        let entry_block = self.context.append_basic_block(func, "entry");
-        self.builder.position_at_end(entry_block);
-
-        // Load captured variables from env struct (if any)
-        let param_offset: usize = if capture_count > 0 { 1 } else { 0 };
-        if capture_count > 0 {
-            let env_ptr = func.get_nth_param(0).unwrap().into_pointer_value();
-            for (i, cap_var) in sorted_captures.iter().enumerate() {
-                let gep = self.builder.build_struct_gep(
-                    closure_struct_type,
-                    env_ptr,
-                    (i + 1) as u32,
-                    &format!("cap_{}", cap_var.as_str()),
-                )?;
-                let loaded = self.builder.build_load(
-                    f32_type,
-                    gep,
-                    &format!("load_cap_{}", cap_var.as_str()),
-                )?;
-                let alloca = self.create_entry_block_alloca(f32_type, cap_var.as_str());
-                self.builder.build_store(alloca, loaded)?;
-                self.store_var(cap_var.as_str(), alloca);
-            }
-        }
-
-        // Store function parameters (lambda args)
-        for (i, arg) in func.get_param_iter().skip(param_offset).enumerate() {
-            if let Some(pattern) = first_variant.args.get(i) {
-                if let Pattern::Var(var_id) = pattern.deref() {
-                    let alloca = self.create_entry_block_alloca(f32_type, var_id.as_str());
-                    self.builder.build_store(alloca, arg)?;
-                    self.store_var(var_id.as_str(), alloca);
+            // Load captured variables from env struct (if any)
+            let param_offset: usize = if capture_count > 0 { 1 } else { 0 };
+            if capture_count > 0 {
+                let env_ptr = func.get_nth_param(0).unwrap().into_pointer_value();
+                for (i, cap_var) in sorted_captures.iter().enumerate() {
+                    let gep = this.builder.build_struct_gep(
+                        closure_struct_type,
+                        env_ptr,
+                        (i + 1) as u32,
+                        &format!("cap_{}", cap_var.as_str()),
+                    )?;
+                    let loaded = this.builder.build_load(
+                        f32_type,
+                        gep,
+                        &format!("load_cap_{}", cap_var.as_str()),
+                    )?;
+                    let alloca = this.create_entry_block_alloca(f32_type, cap_var.as_str());
+                    this.builder.build_store(alloca, loaded)?;
+                    this.store_var(cap_var.as_str(), alloca);
                 }
             }
-        }
 
-        // Compile the lambda body
-        let compiled_val = self.codegen_expr(&first_variant.body)?;
-        let ret_val = compiled_val.into_basic_value();
-        self.builder.build_return(Some(&ret_val))?;
+            // Store function parameters (lambda args)
+            for (i, arg) in func.get_param_iter().skip(param_offset).enumerate() {
+                if let Some(pattern) = first_variant.args.get(i) {
+                    if let Pattern::Var(var_id) = pattern.deref() {
+                        let alloca = this.create_entry_block_alloca(f32_type, var_id.as_str());
+                        this.builder.build_store(alloca, arg)?;
+                        this.store_var(var_id.as_str(), alloca);
+                    }
+                }
+            }
 
-        // Verify and apply passes
-        if func.verify(true) {
-            self.run_function_passes();
-        }
+            // Compile the lambda body
+            let compiled_val = this.codegen_expr(&first_variant.body)?;
+            let ret_val = compiled_val.into_basic_value();
+            this.builder.build_return(Some(&ret_val))?;
 
-        // Restore compilation state
-        self.variable_scopes = saved_scopes;
-        self.lambda_info = saved_lambda_info;
-        self.current_fn_value = saved_fn;
-        if let Some(block) = saved_block {
-            self.builder.position_at_end(block);
-        }
+            // Verify and apply passes
+            if func.verify(true) {
+                this.run_function_passes();
+            }
+
+            Ok(())
+        });
+        func_result?;
 
         // Allocate and populate the closure struct in the calling function
         let closure_alloc = self.create_entry_block_alloca(closure_struct_type, "closure");
@@ -1490,6 +1490,53 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         if let Some(scope) = self.variable_scopes.last_mut() {
             scope.insert(name.to_string(), pointer_val);
         }
+    }
+
+    fn push_scope(&mut self) {
+        self.variable_scopes.push(HashMap::new());
+    }
+
+    fn pop_scope(&mut self) {
+        self.variable_scopes.pop();
+    }
+
+    /// Runs a closure with a completely isolated variable scope stack.
+    /// The current scopes are saved and restored after the closure completes.
+    /// This is used for compilation contexts where the body should not
+    /// see the enclosing function's variables (captures are loaded from the closure struct).
+    #[allow(dead_code)]
+    fn with_isolated_scope<F, R>(&mut self, f: F) -> R
+    where
+        F: FnOnce(&mut Self) -> R,
+    {
+        let saved_scopes = std::mem::replace(&mut self.variable_scopes, vec![HashMap::new()]);
+        let saved_lambda_info = self.lambda_info.clone();
+        let result = f(self);
+        self.variable_scopes = saved_scopes;
+        self.lambda_info = saved_lambda_info;
+        result
+    }
+
+    /// Runs a closure with full lambda compilation context isolation.
+    /// Saves and restores: variable scopes, lambda info, current function value,
+    /// and builder insertion position. This ensures that lambda body compilation
+    /// cannot corrupt the enclosing compilation state, even on early returns or errors.
+    fn with_lambda_context<F, R>(&mut self, f: F) -> R
+    where
+        F: FnOnce(&mut Self) -> R,
+    {
+        let saved_fn = self.current_fn_value;
+        let saved_block = self.builder.get_insert_block();
+        let saved_scopes = std::mem::replace(&mut self.variable_scopes, vec![HashMap::new()]);
+        let saved_lambda_info = self.lambda_info.clone();
+        let result = f(self);
+        self.variable_scopes = saved_scopes;
+        self.lambda_info = saved_lambda_info;
+        self.current_fn_value = saved_fn;
+        if let Some(block) = saved_block {
+            self.builder.position_at_end(block);
+        }
+        result
     }
 
     fn create_entry_block_alloca<T: BasicType<'ctx>>(
