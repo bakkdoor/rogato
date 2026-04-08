@@ -695,6 +695,222 @@ fn codegen_lambda_non_capturing() {
     }
 }
 
+#[test]
+fn codegen_let_binding_with_bool() {
+    let context = Codegen::new_context();
+    let builder = context.create_builder();
+    let module = context.create_module("compiler_test");
+    let target_machine = Codegen::default_target_machine(&module);
+    let ee = Codegen::default_execution_engine(&module);
+    let mut compiler = Codegen::new(&context, &module, &builder, &target_machine, &ee);
+
+    // Bool let binding: the variable `cond` should be tracked as Bool, not Float
+    let func_def = parse_fn_def(
+        "let testBoolLet x y =
+  let
+    cond = x > y
+  in
+    if cond then 1.0 else 0.0",
+    );
+    compiler.codegen_fn_def(&func_def.borrow()).unwrap();
+
+    unsafe {
+        let function = compiler
+            .execution_engine
+            .get_function::<unsafe extern "C" fn(f32, f32) -> f32>("testBoolLet")
+            .unwrap();
+
+        assert_eq!(function.call(5.0, 3.0), 1.0);
+        assert_eq!(function.call(3.0, 5.0), 0.0);
+        assert_eq!(function.call(3.0, 3.0), 0.0);
+    }
+}
+
+#[test]
+fn codegen_let_binding_multiple_bools() {
+    let context = Codegen::new_context();
+    let builder = context.create_builder();
+    let module = context.create_module("compiler_test");
+    let target_machine = Codegen::default_target_machine(&module);
+    let ee = Codegen::default_execution_engine(&module);
+    let mut compiler = Codegen::new(&context, &module, &builder, &target_machine, &ee);
+
+    // Multiple bool let bindings reused in nested if-else
+    let func_def = parse_fn_def(
+        "let testMultiBool x y =
+  let
+    gt = x > y
+    eq = x == y
+    result = if gt then 1.0 else 0.0
+  in
+    if eq then 2.0 else result",
+    );
+    compiler.codegen_fn_def(&func_def.borrow()).unwrap();
+
+    unsafe {
+        let function = compiler
+            .execution_engine
+            .get_function::<unsafe extern "C" fn(f32, f32) -> f32>("testMultiBool")
+            .unwrap();
+
+        // x > y: gt=true, eq=false → result=1.0, not eq → 1.0
+        assert_eq!(function.call(5.0, 3.0), 1.0);
+        // x == y: gt=false, eq=true → result=0.0, eq → 2.0
+        assert_eq!(function.call(3.0, 3.0), 2.0);
+        // x < y: gt=false, eq=false → result=0.0, not eq → 0.0
+        assert_eq!(function.call(2.0, 5.0), 0.0);
+    }
+}
+
+#[test]
+fn codegen_fn_call_bool_return_type() {
+    let context = Codegen::new_context();
+    let builder = context.create_builder();
+    let module = context.create_module("compiler_test");
+    let target_machine = Codegen::default_target_machine(&module);
+    let ee = Codegen::default_execution_engine(&module);
+    let mut compiler = Codegen::new(&context, &module, &builder, &target_machine, &ee);
+
+    // A helper that returns Bool, called from another function
+    let helper_def = parse_fn_def("let isPositive x = x > 0.0");
+    compiler.codegen_fn_def(&helper_def.borrow()).unwrap();
+
+    let func_def = parse_fn_def("let absVal x = if (isPositive x) then x else (0.0 - x)");
+    compiler.codegen_fn_def(&func_def.borrow()).unwrap();
+
+    unsafe {
+        let function = compiler
+            .execution_engine
+            .get_function::<unsafe extern "C" fn(f32) -> f32>("absVal")
+            .unwrap();
+
+        assert_eq!(function.call(5.0), 5.0);
+        assert_eq!(function.call(-3.0), 3.0);
+        assert_eq!(function.call(0.0), 0.0);
+    }
+}
+
+#[test]
+fn codegen_lambda_captures_bool() {
+    let context = Codegen::new_context();
+    let builder = context.create_builder();
+    let module = context.create_module("compiler_test");
+    let target_machine = Codegen::default_target_machine(&module);
+    let ee = Codegen::default_execution_engine(&module);
+    let mut compiler = Codegen::new(&context, &module, &builder, &target_machine, &ee);
+
+    // Lambda captures a bool from enclosing let scope
+    let func_def = parse_fn_def(
+        "let testBoolCapture x y =
+  let
+    cond = x > y
+    pick = (a b -> if cond then a else b)
+  in
+    pick 10.0 20.0",
+    );
+    compiler.codegen_fn_def(&func_def.borrow()).unwrap();
+
+    unsafe {
+        let function = compiler
+            .execution_engine
+            .get_function::<unsafe extern "C" fn(f32, f32) -> f32>("testBoolCapture")
+            .unwrap();
+
+        // x > y is true, so pick returns first arg (10.0)
+        assert_eq!(function.call(5.0, 3.0), 10.0);
+        // x > y is false, so pick returns second arg (20.0)
+        assert_eq!(function.call(3.0, 5.0), 20.0);
+    }
+}
+
+#[test]
+fn codegen_let_binding_mixed_types() {
+    let context = Codegen::new_context();
+    let builder = context.create_builder();
+    let module = context.create_module("compiler_test");
+    let target_machine = Codegen::default_target_machine(&module);
+    let ee = Codegen::default_execution_engine(&module);
+    let mut compiler = Codegen::new(&context, &module, &builder, &target_machine, &ee);
+
+    // Let bindings with mixed types: float computation and bool check
+    let func_def = parse_fn_def(
+        "let testMixed x y =
+  let
+    sum = x + y
+    isLarge = sum > 100.0
+  in
+    if isLarge then sum else 0.0",
+    );
+    compiler.codegen_fn_def(&func_def.borrow()).unwrap();
+
+    unsafe {
+        let function = compiler
+            .execution_engine
+            .get_function::<unsafe extern "C" fn(f32, f32) -> f32>("testMixed")
+            .unwrap();
+
+        assert_eq!(function.call(60.0, 50.0), 110.0);
+        assert_eq!(function.call(30.0, 20.0), 0.0);
+        assert_eq!(function.call(100.0, 1.0), 101.0);
+    }
+}
+
+#[test]
+fn codegen_bool_arg_inferred_from_if_condition() {
+    let context = Codegen::new_context();
+    let builder = context.create_builder();
+    let module = context.create_module("compiler_test");
+    let target_machine = Codegen::default_target_machine(&module);
+    let ee = Codegen::default_execution_engine(&module);
+    let mut compiler = Codegen::new(&context, &module, &builder, &target_machine, &ee);
+
+    // The arg `cond` is used directly as an if-else condition, so it should be
+    // inferred as Bool (i1), not Float. This verifies the body-analysis path
+    // in infer_var_type_from_body.
+    let func_def = parse_fn_def("let choose cond x y = if cond then x else y");
+    compiler.codegen_fn_def(&func_def.borrow()).unwrap();
+
+    unsafe {
+        let function = compiler
+            .execution_engine
+            .get_function::<unsafe extern "C" fn(bool, f32, f32) -> f32>("choose")
+            .unwrap();
+
+        assert_eq!(function.call(true, 10.0, 20.0), 10.0);
+        assert_eq!(function.call(false, 10.0, 20.0), 20.0);
+    }
+}
+
+#[test]
+fn codegen_bool_arg_passed_cross_function() {
+    let context = Codegen::new_context();
+    let builder = context.create_builder();
+    let module = context.create_module("compiler_test");
+    let target_machine = Codegen::default_target_machine(&module);
+    let ee = Codegen::default_execution_engine(&module);
+    let mut compiler = Codegen::new(&context, &module, &builder, &target_machine, &ee);
+
+    // `choose` takes a bool first arg (inferred from if-condition usage).
+    // `pickFirst` computes a bool and passes it to `choose`.
+    let choose_def = parse_fn_def("let choose cond x y = if cond then x else y");
+    compiler.codegen_fn_def(&choose_def.borrow()).unwrap();
+
+    let pick_def = parse_fn_def("let pickFirst a b = choose (a > b) a b");
+    compiler.codegen_fn_def(&pick_def.borrow()).unwrap();
+
+    unsafe {
+        let function = compiler
+            .execution_engine
+            .get_function::<unsafe extern "C" fn(f32, f32) -> f32>("pickFirst")
+            .unwrap();
+
+        // a > b is true → returns a
+        assert_eq!(function.call(5.0, 3.0), 5.0);
+        // a > b is false → returns b
+        assert_eq!(function.call(2.0, 7.0), 7.0);
+    }
+}
+
 #[cfg(test)]
 mod output_tests {
     use super::*;

@@ -38,6 +38,8 @@ use rogato_common::ast::free_vars::collect_free_vars;
 pub struct LambdaCallInfo {
     pub arg_count: usize,
     pub capture_count: usize,
+    pub capture_types: Vec<CompiledType>,
+    pub arg_types: Vec<CompiledType>,
     pub return_type: CompiledType,
 }
 
@@ -84,6 +86,22 @@ impl<'ctx> CompiledValue<'ctx> {
             CompiledValue::Lambda(_, _) => CompiledType::Lambda,
         }
     }
+
+    /// Converts a `BasicValueEnum` into a `CompiledValue` using the given `CompiledType`
+    /// to determine which variant to construct. Panics for `CompiledType::Lambda` since
+    /// lambda values require additional `LambdaCallInfo` metadata.
+    pub fn from_basic_value(value: BasicValueEnum<'ctx>, compiled_type: CompiledType) -> Self {
+        match compiled_type {
+            CompiledType::Float => CompiledValue::Float(value.into_float_value()),
+            CompiledType::Int32 => CompiledValue::Int32(value.into_int_value()),
+            CompiledType::Int64 => CompiledValue::Int64(value.into_int_value()),
+            CompiledType::String => CompiledValue::String(value.into_pointer_value()),
+            CompiledType::Bool => CompiledValue::Bool(value.into_int_value()),
+            CompiledType::Lambda => {
+                panic!("Cannot create Lambda CompiledValue without LambdaCallInfo; use CompiledValue::Lambda directly")
+            }
+        }
+    }
 }
 
 pub type CodegenResult<T> = Result<T, CodegenError>;
@@ -91,6 +109,105 @@ pub type CodegenResult<T> = Result<T, CodegenError>;
 #[inline]
 fn unknown_error<S: Into<String>>(message: S) -> CodegenError {
     CodegenError::Unknown(message.into())
+}
+
+/// Returns true if the expression is exactly `Var(name)`.
+fn is_var_expr(var_name: &str, expr: &Expression) -> bool {
+    matches!(&expr.kind, ExprKind::Var(id) if id.as_str() == var_name)
+}
+
+/// Infers the type of a variable by analyzing how it's used in an expression body.
+/// - Used as condition in if-else → Bool
+/// - Used as operand in arithmetic ops (+, -, *, /, %) → Float
+/// - Used as operand in comparison ops (>, <, >=, <=, ==, !=) → Float
+/// - Used as operand in boolean ops (&&, ||) → Bool
+/// - Otherwise → Float (safe default)
+fn infer_var_type_from_body(var_name: &str, expr: &Expression) -> CompiledType {
+    match &expr.kind {
+        // If the variable is used directly as the condition of an if-else → Bool
+        ExprKind::IfElse(if_else) => {
+            if is_var_expr(var_name, &if_else.condition) {
+                return CompiledType::Bool;
+            }
+            // Recurse into branches
+            let from_cond = infer_var_type_from_body(var_name, &if_else.condition);
+            if from_cond != CompiledType::Float {
+                return from_cond;
+            }
+            let from_then = infer_var_type_from_body(var_name, &if_else.then_expr);
+            if from_then != CompiledType::Float {
+                return from_then;
+            }
+            infer_var_type_from_body(var_name, &if_else.else_expr)
+        }
+        // Variable used in arithmetic → Float
+        ExprKind::OpCall(op, left, right) => {
+            let is_arithmetic = matches!(op.as_str(), "+" | "-" | "*" | "/" | "%");
+            let is_comparison = matches!(op.as_str(), ">" | "<" | ">=" | "<=" | "==" | "!=");
+            if (is_arithmetic || is_comparison)
+                && (is_var_expr(var_name, left) || is_var_expr(var_name, right))
+            {
+                return CompiledType::Float;
+            }
+            // Check if used in boolean ops as operand → Bool
+            let is_boolean_op = matches!(op.as_str(), "&&" | "||");
+            if is_boolean_op && (is_var_expr(var_name, left) || is_var_expr(var_name, right)) {
+                return CompiledType::Bool;
+            }
+            // Recurse
+            let from_left = infer_var_type_from_body(var_name, left);
+            if from_left != CompiledType::Float {
+                return from_left;
+            }
+            infer_var_type_from_body(var_name, right)
+        }
+        ExprKind::Let(let_expr) => {
+            // Check bindings - if the var is rebound, stop (shadowed)
+            for (binding_id, binding_expr) in let_expr.bindings.iter() {
+                if binding_id.as_str() == var_name {
+                    return CompiledType::Float; // shadowed, can't infer further
+                }
+                let from_binding = infer_var_type_from_body(var_name, binding_expr);
+                if from_binding != CompiledType::Float {
+                    return from_binding;
+                }
+            }
+            infer_var_type_from_body(var_name, &let_expr.body)
+        }
+        ExprKind::FnCall(fn_call) => {
+            // Recurse into fn call args
+            for arg in fn_call.args.iter() {
+                let from_arg = infer_var_type_from_body(var_name, arg);
+                if from_arg != CompiledType::Float {
+                    return from_arg;
+                }
+            }
+            CompiledType::Float
+        }
+        ExprKind::Commented(_, inner) => infer_var_type_from_body(var_name, inner),
+        ExprKind::Lambda(_) => CompiledType::Float, // don't recurse into lambda bodies (different scope)
+        _ => CompiledType::Float,
+    }
+}
+
+/// Infers the compiled types for each argument from patterns and a body expression.
+/// 1. Literal patterns (Number, Bool, String, Symbol) directly indicate the type.
+/// 2. For `Var` patterns, analyzes how the variable is used in the body.
+/// 3. Falls back to `Float` if the type cannot be determined.
+fn infer_arg_types_from_patterns<'a>(
+    patterns: impl Iterator<Item = &'a Rc<Pattern>>,
+    body: &Expression,
+) -> Vec<CompiledType> {
+    patterns
+        .map(|pattern| match pattern.as_ref() {
+            Pattern::Number(_) => CompiledType::Float,
+            Pattern::Bool(_) => CompiledType::Bool,
+            Pattern::String(_) => CompiledType::String,
+            Pattern::Symbol(_) => CompiledType::String,
+            Pattern::Var(var_id) => infer_var_type_from_body(var_id.as_str(), body),
+            _ => CompiledType::Float,
+        })
+        .collect()
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -151,6 +268,23 @@ impl<'ctx> CompiledType {
             }
         }
     }
+
+    /// Determines the `CompiledType` from an LLVM `BasicTypeEnum`.
+    /// Uses bit-width to distinguish between Bool (i1), Int32 (i32), and Int64 (i64).
+    /// Pointer types default to `String` (could also be `Lambda` — callers should
+    /// use additional context to distinguish when needed).
+    pub fn from_basic_type_enum(ty: BasicTypeEnum<'ctx>) -> Self {
+        match ty {
+            BasicTypeEnum::FloatType(_) => CompiledType::Float,
+            BasicTypeEnum::IntType(it) => match it.get_bit_width() {
+                1 => CompiledType::Bool,
+                64 => CompiledType::Int64,
+                _ => CompiledType::Int32,
+            },
+            BasicTypeEnum::PointerType(_) => CompiledType::String,
+            _ => CompiledType::Float, // fallback for array, struct, vector types
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -162,7 +296,7 @@ pub struct Codegen<'a, 'ctx> {
 
     context: &'ctx Context,
     current_fn_value: Option<FunctionValue<'ctx>>,
-    variable_scopes: Vec<HashMap<String, PointerValue<'ctx>>>,
+    variable_scopes: Vec<HashMap<String, (PointerValue<'ctx>, CompiledType)>>,
     lambda_info: HashMap<String, LambdaCallInfo>,
     lambda_counter: usize,
     printf: Option<FunctionValue<'ctx>>,
@@ -282,9 +416,13 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
 
         let return_llvm_type = return_type.as_basic_type_enum(self.context);
 
-        let fn_arg_types: Vec<BasicMetadataTypeEnum<'ctx>> = args
+        let arg_types = match body.as_ref() {
+            FnDefBody::RogatoFn(expr) => self.infer_variant_arg_types(args, expr),
+            _ => args.iter().map(|_| CompiledType::Float).collect(),
+        };
+        let fn_arg_types: Vec<BasicMetadataTypeEnum<'ctx>> = arg_types
             .iter()
-            .map(|_| BasicMetadataTypeEnum::FloatType(self.context.f32_type()))
+            .map(|t| t.as_metadata_type_enum(self.context))
             .collect();
 
         let fn_type = return_llvm_type.fn_type(&fn_arg_types, false);
@@ -316,8 +454,61 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         }
     }
 
+    /// Infers the compiled types for each argument of a function variant.
+    /// Uses pattern analysis and body expression walking:
+    /// 1. Literal patterns (Number, Bool, String, Symbol) directly indicate the type.
+    /// 2. For `Var` patterns, analyzes how the variable is used in the body.
+    /// 3. Falls back to `Float` if the type cannot be determined.
+    fn infer_variant_arg_types(&self, args: &FnDefArgs, body: &Expression) -> Vec<CompiledType> {
+        infer_arg_types_from_patterns(args.iter(), body)
+    }
+
+    /// Infers argument types for a multi-variant function by merging type info across variants.
+    /// Concrete patterns (Number, Bool, String) in any variant determine the type for that position.
+    /// For positions with only Var/Any patterns, analyzes the last variant's body.
+    fn infer_multi_variant_arg_types(&self, fn_def: &FnDef) -> Vec<CompiledType> {
+        let variants: Vec<_> = fn_def.variants_iter().collect();
+        if variants.is_empty() {
+            return vec![];
+        }
+        let arg_count = variants[0].0.len();
+        let mut arg_types = vec![None; arg_count];
+
+        // Scan all variants for concrete patterns
+        for variant in &variants {
+            for (i, pattern) in variant.0.iter().enumerate() {
+                if arg_types[i].is_some() {
+                    continue;
+                }
+                match pattern.as_ref() {
+                    Pattern::Number(_) => arg_types[i] = Some(CompiledType::Float),
+                    Pattern::Bool(_) => arg_types[i] = Some(CompiledType::Bool),
+                    Pattern::String(_) => arg_types[i] = Some(CompiledType::String),
+                    Pattern::Symbol(_) => arg_types[i] = Some(CompiledType::String),
+                    _ => {}
+                }
+            }
+        }
+
+        // For remaining unknowns, analyze the last variant's body (the catch-all)
+        let last_variant = variants.last().unwrap();
+        if let FnDefBody::RogatoFn(body) = last_variant.1.deref() {
+            for (i, pattern) in last_variant.0.iter().enumerate() {
+                if arg_types[i].is_none() {
+                    if let Pattern::Var(var_id) = pattern.as_ref() {
+                        arg_types[i] = Some(infer_var_type_from_body(var_id.as_str(), body));
+                    }
+                }
+            }
+        }
+
+        arg_types
+            .into_iter()
+            .map(|t| t.unwrap_or(CompiledType::Float))
+            .collect()
+    }
+
     pub fn codegen_fn_def(&mut self, fn_def: &FnDef) -> CodegenResult<FunctionValue<'ctx>> {
-        let f32_type = self.context.f32_type();
         let func_name = fn_def.id();
 
         let variants: Vec<_> = fn_def.variants_iter().collect();
@@ -338,9 +529,13 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
 
         let return_llvm_type = return_type.as_basic_type_enum(self.context);
 
-        let fn_arg_types: Vec<BasicMetadataTypeEnum<'ctx>> = args
+        let arg_types = match body.as_ref() {
+            FnDefBody::RogatoFn(expr) => self.infer_variant_arg_types(args, expr),
+            _ => args.iter().map(|_| CompiledType::Float).collect(),
+        };
+        let fn_arg_types: Vec<BasicMetadataTypeEnum<'ctx>> = arg_types
             .iter()
-            .map(|_| BasicMetadataTypeEnum::FloatType(f32_type))
+            .map(|t| t.as_metadata_type_enum(self.context))
             .collect();
 
         let fn_type = return_llvm_type.fn_type(&fn_arg_types, false);
@@ -398,13 +593,14 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         args: &FnDefArgs,
         params: &[BasicValueEnum<'ctx>],
     ) -> CodegenResult<()> {
-        let f32_type = self.context.f32_type();
         for (i, arg_pattern) in args.iter().enumerate() {
             match arg_pattern.as_ref() {
                 Pattern::Var(var_id) => {
-                    let alloca = self.create_entry_block_alloca(f32_type, var_id.as_str());
+                    let param_type = CompiledType::from_basic_type_enum(params[i].get_type());
+                    let llvm_type = param_type.as_basic_type_enum(self.context);
+                    let alloca = self.create_entry_block_alloca(llvm_type, var_id.as_str());
                     self.builder.build_store(alloca, params[i])?;
-                    self.store_var(var_id.as_str(), alloca);
+                    self.store_var(var_id.as_str(), alloca, param_type);
                 }
                 // Literal and wildcard patterns are already handled by variant condition matching
                 Pattern::Number(_)
@@ -468,9 +664,10 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
 
         let return_llvm_type = return_type.as_basic_type_enum(self.context);
 
-        let f32_type = self.context.f32_type();
-        let fn_arg_types: Vec<BasicMetadataTypeEnum<'ctx>> = (0..arg_count)
-            .map(|_| BasicMetadataTypeEnum::FloatType(f32_type))
+        let arg_types = self.infer_multi_variant_arg_types(fn_def);
+        let fn_arg_types: Vec<BasicMetadataTypeEnum<'ctx>> = arg_types
+            .iter()
+            .map(|t| t.as_metadata_type_enum(self.context))
             .collect();
 
         let fn_type = return_llvm_type.fn_type(&fn_arg_types, false);
@@ -507,7 +704,6 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         variant_index: usize,
         params: &[inkwell::values::BasicValueEnum<'ctx>],
     ) -> CodegenResult<()> {
-        let f32_type = self.context.f32_type();
         let variants: Vec<_> = fn_def.variants_iter().collect();
 
         if variant_index >= variants.len() {
@@ -550,7 +746,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                 Pattern::Number(num) => {
                     seen_non_var_pattern = true;
                     let num_val = val::number_to_f64(num).unwrap_or(0.0);
-                    let const_val = f32_type.const_float(num_val);
+                    let const_val = self.context.f32_type().const_float(num_val);
                     let cmp = self.builder.build_float_compare(
                         FloatPredicate::OEQ,
                         params[i].into_float_value(),
@@ -643,17 +839,16 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             return Ok(());
         }
 
-        let f32_type = self.context.f32_type();
-
         if variant_index >= 1 {
             let variants: Vec<_> = fn_def.variants_iter().collect();
-
             for (i, arg_name) in variants[variant_index].0.iter().enumerate() {
                 if let Pattern::Var(var_id) = &**arg_name {
                     if self.lookup_var(var_id.as_str()).is_none() {
-                        let alloca = self.create_entry_block_alloca(f32_type, var_id.as_str());
+                        let param_type = CompiledType::from_basic_type_enum(params[i].get_type());
+                        let llvm_type = param_type.as_basic_type_enum(self.context);
+                        let alloca = self.create_entry_block_alloca(llvm_type, var_id.as_str());
                         self.builder.build_store(alloca, params[i])?;
-                        self.store_var(var_id.as_str(), alloca);
+                        self.store_var(var_id.as_str(), alloca, param_type);
                     }
                 }
             }
@@ -760,7 +955,8 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                 .basic()
                 .ok_or_else(|| unknown_error("Invalid call produced."))?;
 
-            return Ok(CompiledValue::Float(value.into_float_value()));
+            let return_type = CompiledType::from_basic_type_enum(value.get_type());
+            return Ok(CompiledValue::from_basic_value(value, return_type));
         }
 
         // Try as a lambda variable (closure indirect call)
@@ -779,19 +975,18 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         args: &FnCallArgs,
         info: &LambdaCallInfo,
     ) -> CodegenResult<CompiledValue<'ctx>> {
-        let f32_type = self.context.f32_type();
         let ptr_type = self.context.ptr_type(AddressSpace::default());
 
         // Get the closure struct pointer from the variable
         let closure_ptr = self
             .lookup_var(var_name)
-            .copied()
+            .map(|(ptr, _)| *ptr)
             .ok_or_else(|| CodegenError::VarNotFound(var_name.into(), None))?;
 
         // Build closure struct type to extract fn_ptr
         let mut struct_fields: Vec<BasicTypeEnum<'ctx>> = vec![ptr_type.into()];
-        for _ in 0..info.capture_count {
-            struct_fields.push(f32_type.into());
+        for cap_type in &info.capture_types {
+            struct_fields.push(cap_type.as_basic_type_enum(self.context));
         }
         let closure_struct_type = self.context.struct_type(&struct_fields, false);
 
@@ -819,8 +1014,8 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         if info.capture_count > 0 {
             fn_param_types.push(BasicMetadataTypeEnum::PointerType(ptr_type));
         }
-        for _ in 0..info.arg_count {
-            fn_param_types.push(BasicMetadataTypeEnum::FloatType(f32_type));
+        for arg_type in &info.arg_types {
+            fn_param_types.push(arg_type.as_metadata_type_enum(self.context));
         }
         let return_llvm_type = info.return_type.as_basic_type_enum(self.context);
         let fn_type = return_llvm_type.fn_type(&fn_param_types, false);
@@ -1160,18 +1355,15 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                 if let Some(info) = self.lambda_info.get(id.as_str()).cloned() {
                     let var_ptr = self
                         .lookup_var(id)
-                        .copied()
+                        .map(|(ptr, _)| *ptr)
                         .ok_or_else(|| CodegenError::VarNotFound(id.into(), expr.span))?;
                     return Ok(CompiledValue::Lambda(var_ptr, info));
                 }
                 match self.lookup_var(id) {
-                    Some(var) => {
-                        let f32_type = self.context.f32_type();
-                        Ok(CompiledValue::Float(
-                            self.builder
-                                .build_load(f32_type, *var, "load_var")?
-                                .into_float_value(),
-                        ))
+                    Some((var_ptr, compiled_type)) => {
+                        let llvm_type = compiled_type.as_basic_type_enum(self.context);
+                        let loaded = self.builder.build_load(llvm_type, *var_ptr, "load_var")?;
+                        Ok(CompiledValue::from_basic_value(loaded, *compiled_type))
                     }
                     None => self
                         .codegen_fn_call(&FnCall::new(id.into(), FnCallArgs::empty()), expr.span),
@@ -1192,8 +1384,6 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             )),
             ExprKind::IfElse(if_else) => self.codegen_if_else(if_else),
             ExprKind::Let(let_expr) => {
-                let f32_type = self.context.f32_type();
-
                 self.push_scope();
 
                 for (var_id, var_expr) in let_expr.bindings.iter() {
@@ -1201,14 +1391,16 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                     match compiled_val {
                         CompiledValue::Lambda(closure_ptr, ref info) => {
                             // Lambda values: the closure struct pointer IS the variable
-                            self.store_var(var_id.as_str(), closure_ptr);
+                            self.store_var(var_id.as_str(), closure_ptr, CompiledType::Lambda);
                             self.lambda_info.insert(var_id.to_string(), info.clone());
                         }
                         _ => {
-                            let alloca = self.create_entry_block_alloca(f32_type, var_id.as_str());
+                            let val_type = compiled_val.get_type();
+                            let llvm_type = val_type.as_basic_type_enum(self.context);
+                            let alloca = self.create_entry_block_alloca(llvm_type, var_id.as_str());
                             self.builder
                                 .build_store(alloca, compiled_val.into_basic_value())?;
-                            self.store_var(var_id.as_str(), alloca);
+                            self.store_var(var_id.as_str(), alloca, val_type);
                         }
                     }
                 }
@@ -1331,7 +1523,6 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
     /// If the lambda captures variables from its enclosing scope, the generated
     /// function takes an extra `env` pointer parameter (the closure struct itself).
     fn codegen_lambda(&mut self, lambda: &Lambda) -> CodegenResult<CompiledValue<'ctx>> {
-        let f32_type = self.context.f32_type();
         let ptr_type = self.context.ptr_type(AddressSpace::default());
 
         // Get the first variant of the lambda
@@ -1356,8 +1547,10 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         if capture_count > 0 {
             fn_arg_types.push(BasicMetadataTypeEnum::PointerType(ptr_type));
         }
-        for _ in 0..arg_count {
-            fn_arg_types.push(BasicMetadataTypeEnum::FloatType(f32_type));
+        let arg_types =
+            infer_arg_types_from_patterns(first_variant.args.iter(), &first_variant.body);
+        for arg_type in &arg_types {
+            fn_arg_types.push(arg_type.as_metadata_type_enum(self.context));
         }
 
         let fn_type = return_llvm_type.fn_type(&fn_arg_types, false);
@@ -1365,10 +1558,20 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         self.lambda_counter += 1;
         let func = self.module.add_function(&lambda_name, fn_type, None);
 
+        // Determine capture types from the enclosing scope
+        let capture_types: Vec<CompiledType> = sorted_captures
+            .iter()
+            .map(|cap_var| {
+                self.lookup_var(cap_var.as_str())
+                    .map(|(_, ct)| *ct)
+                    .unwrap_or(CompiledType::Float)
+            })
+            .collect();
+
         // Build the closure struct type: { fn_ptr, captured_var_1, captured_var_2, ... }
         let mut struct_fields: Vec<BasicTypeEnum<'ctx>> = vec![ptr_type.into()];
-        for _ in 0..capture_count {
-            struct_fields.push(f32_type.into());
+        for cap_type in &capture_types {
+            struct_fields.push(cap_type.as_basic_type_enum(self.context));
         }
         let closure_struct_type = self.context.struct_type(&struct_fields, false);
 
@@ -1386,6 +1589,8 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             if capture_count > 0 {
                 let env_ptr = func.get_nth_param(0).unwrap().into_pointer_value();
                 for (i, cap_var) in sorted_captures.iter().enumerate() {
+                    let cap_type = capture_types[i];
+                    let cap_llvm_type = cap_type.as_basic_type_enum(this.context);
                     let gep = this.builder.build_struct_gep(
                         closure_struct_type,
                         env_ptr,
@@ -1393,13 +1598,13 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                         &format!("cap_{}", cap_var.as_str()),
                     )?;
                     let loaded = this.builder.build_load(
-                        f32_type,
+                        cap_llvm_type,
                         gep,
                         &format!("load_cap_{}", cap_var.as_str()),
                     )?;
-                    let alloca = this.create_entry_block_alloca(f32_type, cap_var.as_str());
+                    let alloca = this.create_entry_block_alloca(cap_llvm_type, cap_var.as_str());
                     this.builder.build_store(alloca, loaded)?;
-                    this.store_var(cap_var.as_str(), alloca);
+                    this.store_var(cap_var.as_str(), alloca, cap_type);
                 }
             }
 
@@ -1407,9 +1612,11 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             for (i, arg) in func.get_param_iter().skip(param_offset).enumerate() {
                 if let Some(pattern) = first_variant.args.get(i) {
                     if let Pattern::Var(var_id) = pattern.deref() {
-                        let alloca = this.create_entry_block_alloca(f32_type, var_id.as_str());
+                        let param_type = CompiledType::from_basic_type_enum(arg.get_type());
+                        let llvm_type = param_type.as_basic_type_enum(this.context);
+                        let alloca = this.create_entry_block_alloca(llvm_type, var_id.as_str());
                         this.builder.build_store(alloca, arg)?;
-                        this.store_var(var_id.as_str(), alloca);
+                        this.store_var(var_id.as_str(), alloca, param_type);
                     }
                 }
             }
@@ -1446,12 +1653,13 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                 (i + 1) as u32,
                 &format!("cap_field_{}", cap_var.as_str()),
             )?;
-            let var_ptr = self
+            let (var_ptr, cap_type) = self
                 .lookup_var(cap_var.as_str())
                 .copied()
                 .ok_or_else(|| CodegenError::VarNotFound(cap_var.as_str().into(), None))?;
+            let cap_llvm_type = cap_type.as_basic_type_enum(self.context);
             let var_val = self.builder.build_load(
-                f32_type,
+                cap_llvm_type,
                 var_ptr,
                 &format!("load_{}", cap_var.as_str()),
             )?;
@@ -1461,6 +1669,8 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         let call_info = LambdaCallInfo {
             arg_count,
             capture_count,
+            capture_types,
+            arg_types,
             return_type,
         };
 
@@ -1495,19 +1705,24 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         self.context.create_module(name)
     }
 
-    fn lookup_var<S: ToString>(&self, name: S) -> Option<&PointerValue<'ctx>> {
+    fn lookup_var<S: ToString>(&self, name: S) -> Option<&(PointerValue<'ctx>, CompiledType)> {
         let name = name.to_string();
         for scope in self.variable_scopes.iter().rev() {
-            if let Some(ptr) = scope.get(&name) {
-                return Some(ptr);
+            if let Some(entry) = scope.get(&name) {
+                return Some(entry);
             }
         }
         None
     }
 
-    fn store_var<S: ToString>(&mut self, name: S, pointer_val: PointerValue<'ctx>) {
+    fn store_var<S: ToString>(
+        &mut self,
+        name: S,
+        pointer_val: PointerValue<'ctx>,
+        compiled_type: CompiledType,
+    ) {
         if let Some(scope) = self.variable_scopes.last_mut() {
-            scope.insert(name.to_string(), pointer_val);
+            scope.insert(name.to_string(), (pointer_val, compiled_type));
         }
     }
 
