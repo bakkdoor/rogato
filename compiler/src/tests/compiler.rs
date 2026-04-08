@@ -911,6 +911,83 @@ fn codegen_bool_arg_passed_cross_function() {
     }
 }
 
+#[test]
+fn codegen_lambda_as_fn_body() {
+    // A 0-arg function whose body is a non-capturing lambda should be
+    // compiled as if the lambda's args were the function's args.
+    // i.e. `let double = x -> x * 2` compiles like `let double x = x * 2`.
+    let context = Codegen::new_context();
+    let builder = context.create_builder();
+    let module = context.create_module("lambda_fn_body_test");
+    let target_machine = Codegen::default_target_machine(&module);
+    let ee = Codegen::default_execution_engine(&module);
+    let mut compiler = Codegen::new(&context, &module, &builder, &target_machine, &ee);
+
+    let double_def = parse_fn_def("let double = x -> x * 2.0");
+    compiler.codegen_fn_def(&double_def.borrow()).unwrap();
+
+    let triple_def = parse_fn_def("let triple = x -> x * 3.0");
+    compiler.codegen_fn_def(&triple_def.borrow()).unwrap();
+
+    unsafe {
+        let double_fn = compiler
+            .execution_engine
+            .get_function::<unsafe extern "C" fn(f32) -> f32>("double")
+            .unwrap();
+
+        assert_eq!(double_fn.call(5.0), 10.0);
+        assert_eq!(double_fn.call(0.0), 0.0);
+        assert_eq!(double_fn.call(-3.0), -6.0);
+
+        let triple_fn = compiler
+            .execution_engine
+            .get_function::<unsafe extern "C" fn(f32) -> f32>("triple")
+            .unwrap();
+
+        assert_eq!(triple_fn.call(5.0), 15.0);
+        assert_eq!(triple_fn.call(0.0), 0.0);
+        assert_eq!(triple_fn.call(-2.0), -6.0);
+    }
+}
+
+#[test]
+fn codegen_lambda_as_fn_body_composed() {
+    // Verify that lambda-wrapper functions can be called from other functions.
+    // This is the pattern from examples/lambda.roga:
+    //   let double = x -> x * 2
+    //   let triple = x -> x * 3
+    //   let apply x = double (triple x)
+    let context = Codegen::new_context();
+    let builder = context.create_builder();
+    let module = context.create_module("lambda_fn_body_composed_test");
+    let target_machine = Codegen::default_target_machine(&module);
+    let ee = Codegen::default_execution_engine(&module);
+    let mut compiler = Codegen::new(&context, &module, &builder, &target_machine, &ee);
+
+    let double_def = parse_fn_def("let double = x -> x * 2.0");
+    compiler.codegen_fn_def(&double_def.borrow()).unwrap();
+
+    let triple_def = parse_fn_def("let triple = x -> x * 3.0");
+    compiler.codegen_fn_def(&triple_def.borrow()).unwrap();
+
+    let apply_def = parse_fn_def("let apply x = double (triple x)");
+    compiler.codegen_fn_def(&apply_def.borrow()).unwrap();
+
+    unsafe {
+        let apply_fn = compiler
+            .execution_engine
+            .get_function::<unsafe extern "C" fn(f32) -> f32>("apply")
+            .unwrap();
+
+        // double(triple(3)) = double(9) = 18
+        assert_eq!(apply_fn.call(3.0), 18.0);
+        // double(triple(0)) = 0
+        assert_eq!(apply_fn.call(0.0), 0.0);
+        // double(triple(5)) = double(15) = 30
+        assert_eq!(apply_fn.call(5.0), 30.0);
+    }
+}
+
 #[cfg(test)]
 mod output_tests {
     use super::*;
