@@ -368,7 +368,11 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                     self.builder.build_store(alloca, arg)?;
                     self.store_var(arg_name, alloca)
                 }
-                _ => todo!("pattern matching not yet supported"),
+                _ => {
+                    return Err(CodegenError::NotYetImplemented(
+                        "Pattern matching in function arguments".into(),
+                    ))
+                }
             }
         }
 
@@ -1104,7 +1108,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
     }
 
     pub fn codegen_type_def(&mut self, _mod_def: &TypeDef) -> CodegenResult<()> {
-        todo!()
+        Err(CodegenError::NotYetImplemented("Type definitions".into()))
     }
 
     pub fn codegen_lit_expr(&mut self, literal: &Literal) -> CodegenResult<CompiledValue<'ctx>> {
@@ -1138,7 +1142,9 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                 Ok(())
             }
             AST::ModuleDef(mod_def) => self.codegen_module_def(mod_def),
-            AST::Use(_id, _imports) => todo!(),
+            AST::Use(_id, _imports) => Err(CodegenError::NotYetImplemented(
+                "Use/import statements".into(),
+            )),
             AST::TypeDef(type_def) => self.codegen_type_def(type_def),
         }
     }
@@ -1172,10 +1178,18 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                 }
             }
 
-            Expression::ConstOrTypeRef(_id) => todo!(),
-            Expression::DBTypeRef(_id) => todo!(),
-            Expression::PropFnRef(_id) => todo!(),
-            Expression::EdgeProp(_id, _edge) => todo!(),
+            Expression::ConstOrTypeRef(_id) => Err(CodegenError::NotYetImplemented(
+                "Constant/type reference expressions".into(),
+            )),
+            Expression::DBTypeRef(_id) => Err(CodegenError::NotYetImplemented(
+                "Database type reference expressions".into(),
+            )),
+            Expression::PropFnRef(_id) => Err(CodegenError::NotYetImplemented(
+                "Property function reference expressions".into(),
+            )),
+            Expression::EdgeProp(_id, _edge) => Err(CodegenError::NotYetImplemented(
+                "Edge property expressions".into(),
+            )),
             Expression::IfElse(if_else) => self.codegen_if_else(if_else),
             Expression::Let(let_expr) => {
                 let f32_type = self.context.f32_type();
@@ -1200,12 +1214,24 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                 self.codegen_expr(&let_expr.body)
             }
             Expression::Lambda(lambda) => self.codegen_lambda(lambda),
-            Expression::Query(_query) => todo!(),
-            Expression::Symbol(_id) => todo!(),
-            Expression::Quoted(_expr) => todo!(),
-            Expression::QuotedAST(_ast) => todo!(),
-            Expression::Unquoted(_expr) => todo!(),
-            Expression::UnquotedAST(_ast) => todo!(),
+            Expression::Query(_query) => {
+                Err(CodegenError::NotYetImplemented("Query expressions".into()))
+            }
+            Expression::Symbol(_id) => {
+                Err(CodegenError::NotYetImplemented("Symbol expressions".into()))
+            }
+            Expression::Quoted(_expr) => {
+                Err(CodegenError::NotYetImplemented("Quoted expressions".into()))
+            }
+            Expression::QuotedAST(_ast) => Err(CodegenError::NotYetImplemented(
+                "Quoted AST expressions".into(),
+            )),
+            Expression::Unquoted(_expr) => Err(CodegenError::NotYetImplemented(
+                "Unquoted expressions".into(),
+            )),
+            Expression::UnquotedAST(_ast) => Err(CodegenError::NotYetImplemented(
+                "Unquoted AST expressions".into(),
+            )),
             Expression::InlineFnDef(fn_def) => {
                 self.codegen_fn_def(&fn_def.borrow())?;
                 Ok(CompiledValue::Float(self.context.f32_type().const_zero()))
