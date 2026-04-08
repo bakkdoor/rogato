@@ -988,6 +988,160 @@ fn codegen_lambda_as_fn_body_composed() {
     }
 }
 
+#[test]
+fn codegen_fn_returning_lambda_single_arg() {
+    // A function with 1 arg whose body is a lambda (capturing that arg).
+    // `let addTo x = y -> x + y` should flatten to `let addTo x y = x + y`.
+    let context = Codegen::new_context();
+    let builder = context.create_builder();
+    let module = context.create_module("fn_returning_lambda_test");
+    let target_machine = Codegen::default_target_machine(&module);
+    let ee = Codegen::default_execution_engine(&module);
+    let mut compiler = Codegen::new(&context, &module, &builder, &target_machine, &ee);
+
+    let func_def = parse_fn_def("let addTo x = y -> x + y");
+    compiler.codegen_fn_def(&func_def.borrow()).unwrap();
+
+    unsafe {
+        let function = compiler
+            .execution_engine
+            .get_function::<unsafe extern "C" fn(f32, f32) -> f32>("addTo")
+            .unwrap();
+
+        assert_eq!(function.call(3.0, 2.0), 5.0);
+        assert_eq!(function.call(0.0, 0.0), 0.0);
+        assert_eq!(function.call(10.0, -3.0), 7.0);
+        assert_eq!(function.call(-1.0, -1.0), -2.0);
+    }
+}
+
+#[test]
+fn codegen_fn_returning_lambda_multi_arg() {
+    // A function with 2 args whose body is a lambda.
+    // `let addMul x y = z -> (x + y) * z` flattens to `let addMul x y z = (x + y) * z`.
+    let context = Codegen::new_context();
+    let builder = context.create_builder();
+    let module = context.create_module("fn_returning_lambda_multi_test");
+    let target_machine = Codegen::default_target_machine(&module);
+    let ee = Codegen::default_execution_engine(&module);
+    let mut compiler = Codegen::new(&context, &module, &builder, &target_machine, &ee);
+
+    let func_def = parse_fn_def("let addMul x y = z -> (x + y) * z");
+    compiler.codegen_fn_def(&func_def.borrow()).unwrap();
+
+    unsafe {
+        let function = compiler
+            .execution_engine
+            .get_function::<unsafe extern "C" fn(f32, f32, f32) -> f32>("addMul")
+            .unwrap();
+
+        // (3 + 2) * 4 = 20
+        assert_eq!(function.call(3.0, 2.0, 4.0), 20.0);
+        // (0 + 0) * 5 = 0
+        assert_eq!(function.call(0.0, 0.0, 5.0), 0.0);
+        // (10 + -3) * 2 = 14
+        assert_eq!(function.call(10.0, -3.0, 2.0), 14.0);
+    }
+}
+
+#[test]
+fn codegen_fn_returning_lambda_calls_other_fns() {
+    // Reproduces the original bug from examples/lambda.roga:
+    //   let double = x -> x * 2
+    //   let quadruple x = x * 4
+    //   let quadrupleAndAddDoubleOf x = y -> (quadruple y) + (double x)
+    //   quadrupleAndAddDoubleOf 3 2  =>  (quadruple 2) + (double 3) = 8 + 6 = 14
+    let context = Codegen::new_context();
+    let builder = context.create_builder();
+    let module = context.create_module("fn_returning_lambda_calls_test");
+    let target_machine = Codegen::default_target_machine(&module);
+    let ee = Codegen::default_execution_engine(&module);
+    let mut compiler = Codegen::new(&context, &module, &builder, &target_machine, &ee);
+
+    let double_def = parse_fn_def("let double = x -> x * 2.0");
+    compiler.codegen_fn_def(&double_def.borrow()).unwrap();
+
+    let quadruple_def = parse_fn_def("let quadruple x = x * 4.0");
+    compiler.codegen_fn_def(&quadruple_def.borrow()).unwrap();
+
+    let combined_def =
+        parse_fn_def("let quadrupleAndAddDoubleOf x = y -> (quadruple y) + (double x)");
+    compiler.codegen_fn_def(&combined_def.borrow()).unwrap();
+
+    unsafe {
+        let function = compiler
+            .execution_engine
+            .get_function::<unsafe extern "C" fn(f32, f32) -> f32>("quadrupleAndAddDoubleOf")
+            .unwrap();
+
+        // (quadruple 2) + (double 3) = 8 + 6 = 14
+        assert_eq!(function.call(3.0, 2.0), 14.0);
+        // (quadruple 0) + (double 0) = 0 + 0 = 0
+        assert_eq!(function.call(0.0, 0.0), 0.0);
+        // (quadruple 5) + (double 10) = 20 + 20 = 40
+        assert_eq!(function.call(10.0, 5.0), 40.0);
+        // (quadruple 1) + (double 1) = 4 + 2 = 6
+        assert_eq!(function.call(1.0, 1.0), 6.0);
+    }
+}
+
+#[test]
+fn codegen_fn_returning_lambda_only_uses_lambda_arg() {
+    // The lambda body only uses its own arg, not the enclosing fn arg.
+    // `let ignoringFirst x = y -> y * y` flattens to `let ignoringFirst x y = y * y`.
+    let context = Codegen::new_context();
+    let builder = context.create_builder();
+    let module = context.create_module("fn_returning_lambda_no_capture_test");
+    let target_machine = Codegen::default_target_machine(&module);
+    let ee = Codegen::default_execution_engine(&module);
+    let mut compiler = Codegen::new(&context, &module, &builder, &target_machine, &ee);
+
+    let func_def = parse_fn_def("let ignoringFirst x = y -> y * y");
+    compiler.codegen_fn_def(&func_def.borrow()).unwrap();
+
+    unsafe {
+        let function = compiler
+            .execution_engine
+            .get_function::<unsafe extern "C" fn(f32, f32) -> f32>("ignoringFirst")
+            .unwrap();
+
+        // First arg is ignored; result = y * y
+        assert_eq!(function.call(999.0, 5.0), 25.0);
+        assert_eq!(function.call(0.0, 3.0), 9.0);
+        assert_eq!(function.call(-1.0, 0.0), 0.0);
+    }
+}
+
+#[test]
+fn codegen_fn_returning_lambda_with_if_else() {
+    // A flattened lambda whose body contains an if-else expression.
+    // `let clampedAdd x = y -> if y > 0.0 then x + y else x`
+    let context = Codegen::new_context();
+    let builder = context.create_builder();
+    let module = context.create_module("fn_returning_lambda_if_else_test");
+    let target_machine = Codegen::default_target_machine(&module);
+    let ee = Codegen::default_execution_engine(&module);
+    let mut compiler = Codegen::new(&context, &module, &builder, &target_machine, &ee);
+
+    let func_def = parse_fn_def("let clampedAdd x = y -> if (y > 0.0) then (x + y) else x");
+    compiler.codegen_fn_def(&func_def.borrow()).unwrap();
+
+    unsafe {
+        let function = compiler
+            .execution_engine
+            .get_function::<unsafe extern "C" fn(f32, f32) -> f32>("clampedAdd")
+            .unwrap();
+
+        // y > 0: result = x + y
+        assert_eq!(function.call(10.0, 5.0), 15.0);
+        // y <= 0: result = x
+        assert_eq!(function.call(10.0, -3.0), 10.0);
+        assert_eq!(function.call(10.0, 0.0), 10.0);
+        // y > 0: result = x + y
+        assert_eq!(function.call(0.0, 1.0), 1.0);
+    }
+}
+
 #[cfg(test)]
 mod output_tests {
     use super::*;

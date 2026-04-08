@@ -4,5 +4,15 @@ let double =
 let triple =
     x -> x * 3
 
+let quadruple x =
+    x * 4
+
+let quadrupleAndAddDoubleOf x =
+    y -> (quadruple y) + (double x)
+
 let main =
-    println (double (triple 3))
+    let
+        _ = println (double (triple 3)),
+        _ = println (quadrupleAndAddDoubleOf 3 2)
+    in
+        42

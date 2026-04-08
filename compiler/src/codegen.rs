@@ -138,6 +138,26 @@ fn unwrap_lambda_fn_def(fn_def: &FnDef) -> Option<&Rc<Lambda>> {
     None
 }
 
+/// Checks if a function definition with N>0 args has a lambda as its body.
+/// If so, returns the function's own args and the lambda reference so that the
+/// caller can "flatten" the definition — merging fn args with lambda args.
+///
+/// This allows `let f x = y -> body` to be compiled as `let f x y = body`,
+/// so that direct calls like `f 3 2` work correctly at the LLVM level.
+fn flatten_lambda_fn_def(fn_def: &FnDef) -> Option<(&FnDefArgs, &Rc<Lambda>)> {
+    let variant = fn_def.get_variant(0)?;
+    let FnDefVariant(args, body, _) = variant;
+    if args.is_empty() {
+        return None; // 0-arg case is handled by unwrap_lambda_fn_def
+    }
+    if let FnDefBody::RogatoFn(expr) = body.as_ref() {
+        if let ExprKind::Lambda(lambda) = &expr.kind {
+            return Some((args, lambda));
+        }
+    }
+    None
+}
+
 /// Infers the type of a variable by analyzing how it's used in an expression body.
 /// - Used as condition in if-else → Bool
 /// - Used as operand in arithmetic ops (+, -, *, /, %) → Float
@@ -438,6 +458,28 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             }
         }
 
+        // If this is an N-arg function whose body is a lambda expression,
+        // declare the function with merged args (fn_args ++ lambda_args).
+        // This flattens `let f x = y -> body` into `let f x y = body`.
+        if let Some((fn_args, lambda)) = flatten_lambda_fn_def(fn_def) {
+            if let Some(first_lv) = lambda.variants_iter().next() {
+                let first_lv = first_lv.deref();
+                let return_type = self.infer_expr_type_with_checker(&first_lv.body);
+                let return_llvm_type = return_type.as_basic_type_enum(self.context);
+                let arg_types = infer_arg_types_from_patterns(
+                    fn_args.iter().chain(first_lv.args.iter()),
+                    &first_lv.body,
+                );
+                let fn_arg_types: Vec<BasicMetadataTypeEnum<'ctx>> = arg_types
+                    .iter()
+                    .map(|t| t.as_metadata_type_enum(self.context))
+                    .collect();
+                let fn_type = return_llvm_type.fn_type(&fn_arg_types, false);
+                let func = self.module.add_function(func_name, fn_type, None);
+                return Ok(func);
+            }
+        }
+
         let first_variant = match fn_def.variants_iter().next() {
             Some(v) => v,
             None => return Err(unknown_error("Function has no variants")),
@@ -584,6 +626,36 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             }
         }
 
+        // If this is an N-arg function whose body is a lambda expression,
+        // flatten it by merging fn args with lambda args and compiling the lambda body directly.
+        // This compiles `let f x = y -> body` as if it were `let f x y = body`.
+        if let Some((fn_args, lambda)) = flatten_lambda_fn_def(fn_def) {
+            if let Some(first_lv) = lambda.variants_iter().next() {
+                let first_lv = first_lv.deref();
+                let arg_types = infer_arg_types_from_patterns(
+                    fn_args.iter().chain(first_lv.args.iter()),
+                    &first_lv.body,
+                );
+
+                let func = match self.module.get_function(func_name.as_str()) {
+                    Some(f) => f,
+                    None => {
+                        let return_type = self.infer_expr_type_with_checker(&first_lv.body);
+                        let return_llvm_type = return_type.as_basic_type_enum(self.context);
+                        let fn_arg_types: Vec<BasicMetadataTypeEnum<'ctx>> = arg_types
+                            .iter()
+                            .map(|t| t.as_metadata_type_enum(self.context))
+                            .collect();
+                        let fn_type = return_llvm_type.fn_type(&fn_arg_types, false);
+                        self.module.add_function(func_name, fn_type, None)
+                    }
+                };
+
+                return self
+                    .codegen_flattened_lambda_body(fn_def, func, fn_args, first_lv, &arg_types);
+            }
+        }
+
         let FnDefVariant(args, body, _return_type) = fn_def.get_variant(0).unwrap();
 
         let return_type = match _return_type {
@@ -616,6 +688,58 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         };
 
         self.codegen_fn_body(fn_def, func)
+    }
+
+    /// Compiles a function whose N>0 args are merged with its lambda body's args.
+    /// This is used when a function with explicit params returns a lambda, e.g.
+    /// `let f x = y -> (quadruple y) + (double x)` is compiled as `let f x y = (quadruple y) + (double x)`.
+    fn codegen_flattened_lambda_body(
+        &mut self,
+        fn_def: &FnDef,
+        func: FunctionValue<'ctx>,
+        fn_args: &FnDefArgs,
+        lambda_variant: &rogato_common::ast::lambda::LambdaVariant,
+        arg_types: &[CompiledType],
+    ) -> CodegenResult<FunctionValue<'ctx>> {
+        self.set_current_fn_value(func);
+
+        let basic_block = self.context.append_basic_block(func, fn_def.id());
+        self.builder.position_at_end(basic_block);
+
+        // Merge fn_def args and lambda args into one combined parameter list
+        let all_patterns: Vec<&Rc<Pattern>> =
+            fn_args.iter().chain(lambda_variant.args.iter()).collect();
+        let params: Vec<_> = func.get_param_iter().collect();
+
+        for (i, pattern) in all_patterns.iter().enumerate() {
+            if let Pattern::Var(var_id) = pattern.as_ref() {
+                let param_type = arg_types.get(i).copied().unwrap_or(CompiledType::Float);
+                let llvm_type = param_type.as_basic_type_enum(self.context);
+                let alloca = self.create_entry_block_alloca(llvm_type, var_id.as_str());
+                self.builder.build_store(alloca, params[i])?;
+                self.store_var(var_id.as_str(), alloca, param_type);
+            }
+        }
+
+        // Compile the lambda body directly (not the lambda expression itself)
+        let compiled_val = self.codegen_expr(&lambda_variant.body)?;
+        let ret_val = compiled_val.into_basic_value();
+        self.builder.build_return(Some(&ret_val))?;
+
+        if func.verify(true) {
+            self.run_function_passes();
+            self.clear_current_fn();
+            Ok(func)
+        } else {
+            unsafe {
+                self.clear_current_fn();
+                func.delete();
+            }
+            Err(CodegenError::FnDefValidationFailed(
+                fn_def.id().clone(),
+                None,
+            ))
+        }
     }
 
     /// Compiles a function whose body was a lambda expression, using the lambda's
