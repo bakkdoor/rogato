@@ -2,12 +2,15 @@ use rogato_common::ast::{
     expression::Expression,
     fn_call::{FnCall, FnCallArgs},
     if_else::IfElse,
+    lambda::{Lambda, LambdaArgs, LambdaVariant},
     let_expression::{LetBindings, LetExpression},
     literal::Literal,
+    pattern::Pattern,
     query::{Query, QueryBinding, QueryBindings, QueryGuards},
     type_expression::TypeExpression,
     Identifier, VarIdentifier,
 };
+use std::ops::Deref;
 use std::rc::Rc;
 
 use crate::{InferredType, TypeCheck, TypeEnvironment, TypeInferrer};
@@ -453,6 +456,76 @@ mod type_check_tests {
 
         let result = expr.type_check(&mut TypeEnvironment::new());
         assert!(matches!(result, Ok(InferredType::Known(_))));
+    }
+
+    #[test]
+    fn type_check_lambda_with_args() {
+        // Lambda: (x -> x == 1)
+        // Should infer as FunctionType(Unknown -> Bool)
+        // We use == instead of + because + calls ensure_type which rejects
+        // Unknown (the inferred type for a bare Var pattern) as not NumberType,
+        // whereas == does not enforce operand types.
+        let args = LambdaArgs::new(vec![Rc::new(Pattern::Var("x".into()))]);
+        let body = Rc::new(Expression::OpCall(
+            "==".into(),
+            Rc::new(Expression::Var("x".into())),
+            Rc::new(Expression::Lit(Literal::Number(1i32.into()))),
+        ));
+        let variant = LambdaVariant::new(args, body);
+        let lambda = Rc::new(Lambda::new(vec![Rc::new(variant)]));
+        let expr = Expression::Lambda(lambda);
+
+        let mut env = TypeEnvironment::new();
+        let result = expr.type_check(&mut env);
+        assert!(result.is_ok());
+        let inferred = result.unwrap();
+        assert!(matches!(inferred, InferredType::Known(_)));
+    }
+
+    #[test]
+    fn type_check_lambda_body_sees_args() {
+        // Lambda: (x -> x)  — identity function
+        // The body references 'x' which is a lambda arg — should NOT error as undefined
+        let args = LambdaArgs::new(vec![Rc::new(Pattern::Var("x".into()))]);
+        let body = Rc::new(Expression::Var("x".into()));
+        let variant = LambdaVariant::new(args, body);
+        let lambda = Rc::new(Lambda::new(vec![Rc::new(variant)]));
+        let expr = Expression::Lambda(lambda);
+
+        let mut env = TypeEnvironment::new();
+        let result = expr.type_check(&mut env);
+        // This should succeed — 'x' should be in scope from the lambda arg
+        assert!(
+            result.is_ok(),
+            "Lambda body should see lambda args: {:?}",
+            result
+        );
+    }
+
+    #[test]
+    fn type_infer_lambda_with_number_pattern() {
+        // Lambda with number pattern: (0 -> true)
+        let args = LambdaArgs::new(vec![Rc::new(Pattern::Number(0i32.into()))]);
+        let body = Rc::new(Expression::Lit(Literal::Bool(true)));
+        let variant = LambdaVariant::new(args, body);
+        let lambda = Rc::new(Lambda::new(vec![Rc::new(variant)]));
+        let expr = Expression::Lambda(lambda);
+
+        let inferrer = TypeInferrer::new();
+        let result = inferrer.infer_expression(&expr);
+        assert!(matches!(result, InferredType::Known(_)));
+
+        if let InferredType::Known(type_expr) = result {
+            match type_expr.deref() {
+                TypeExpression::FunctionType(arg_types, return_type) => {
+                    // Arg type should be NumberType (inferred from pattern)
+                    assert_eq!(arg_types.len(), 1);
+                    // Return type should be BoolType
+                    assert!(matches!(return_type.deref(), TypeExpression::BoolType));
+                }
+                _ => panic!("Expected FunctionType"),
+            }
+        }
     }
 
     #[test]

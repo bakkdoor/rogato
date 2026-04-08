@@ -8,6 +8,7 @@ use rogato_common::ast::{
     lambda::LambdaArgs,
     let_expression::LetExpression,
     literal::TupleItems,
+    pattern::Pattern,
     query::{Query, QueryBinding},
     type_expression::TypeExpression,
     Identifier, VarIdentifier,
@@ -200,10 +201,20 @@ impl TypeInferrer {
                 let lambda = lambda.deref();
                 if let Some(first_variant) = lambda.variants_iter().next() {
                     let first_variant = first_variant.deref();
-                    let arg_types: Vec<TypeExpression> = (0..first_variant.arg_count())
-                        .map(|_| TypeExpression::Unknown)
-                        .collect();
-                    let return_type = self.infer_expression(&first_variant.body);
+                    let mut child_env = self.env.new_scope();
+
+                    let mut arg_types = Vec::new();
+                    for arg_pattern in first_variant.args.iter() {
+                        let (arg_type, var_bindings) = infer_pattern_type(arg_pattern);
+                        arg_types.push(arg_type);
+                        for (var_id, var_type) in var_bindings {
+                            child_env.insert_variable(var_id, Rc::new(var_type));
+                        }
+                    }
+
+                    let child_inferrer = TypeInferrer::with_env(child_env);
+                    let return_type = child_inferrer.infer_expression(&first_variant.body);
+
                     InferredType::Known(Rc::new(TypeExpression::FunctionType(
                         LambdaArgs::new(arg_types),
                         return_type
@@ -347,6 +358,57 @@ impl Default for TypeInferrer {
     }
 }
 
+/// Infers the type from a pattern and returns (type, variable_bindings).
+/// The variable_bindings map each bound variable to its inferred type.
+fn infer_pattern_type(pattern: &Pattern) -> (TypeExpression, Vec<(VarIdentifier, TypeExpression)>) {
+    match pattern {
+        Pattern::Var(id) => (
+            TypeExpression::Unknown,
+            vec![(id.clone(), TypeExpression::Unknown)],
+        ),
+        Pattern::Number(_) => (TypeExpression::NumberType, vec![]),
+        Pattern::Bool(_) => (TypeExpression::BoolType, vec![]),
+        Pattern::String(_) => (TypeExpression::StringType, vec![]),
+        Pattern::Symbol(_) => (TypeExpression::SymbolType, vec![]),
+        Pattern::Any => (TypeExpression::Unknown, vec![]),
+        Pattern::EmptyList => (
+            TypeExpression::ListType(Rc::new(TypeExpression::Unknown)),
+            vec![],
+        ),
+        Pattern::ListCons(head, tail) => {
+            let (head_type, mut bindings) = infer_pattern_type(head);
+            let (_tail_type, tail_bindings) = infer_pattern_type(tail);
+            bindings.extend(tail_bindings);
+            (TypeExpression::ListType(Rc::new(head_type)), bindings)
+        }
+        Pattern::List(items) => {
+            let mut bindings = vec![];
+            let mut elem_type = TypeExpression::Unknown;
+            for item in items.iter() {
+                let (item_type, item_bindings) = infer_pattern_type(item);
+                if !matches!(item_type, TypeExpression::Unknown) {
+                    elem_type = item_type;
+                }
+                bindings.extend(item_bindings);
+            }
+            (TypeExpression::ListType(Rc::new(elem_type)), bindings)
+        }
+        Pattern::Tuple(_, items) => {
+            let mut bindings = vec![];
+            for item in items.iter() {
+                let (_item_type, item_bindings) = infer_pattern_type(item);
+                bindings.extend(item_bindings);
+            }
+            // Tuple type inference is limited for now
+            (TypeExpression::Unknown, bindings)
+        }
+        Pattern::Map(_) | Pattern::MapCons(_, _) => {
+            // Map patterns are complex, just return Unknown for now
+            (TypeExpression::Unknown, vec![])
+        }
+    }
+}
+
 fn insert_builtin_types(env: &mut TypeEnvironment) {
     env.insert_type_def("Number".into(), Rc::new(TypeExpression::NumberType));
     env.insert_type_def("String".into(), Rc::new(TypeExpression::StringType));
@@ -374,10 +436,19 @@ impl TypeCheck<InferredType> for Expression {
                 let lambda = lambda.deref();
                 if let Some(first_variant) = lambda.variants_iter().next() {
                     let first_variant = first_variant.deref();
-                    let arg_types: Vec<TypeExpression> = (0..first_variant.arg_count())
-                        .map(|_| TypeExpression::Unknown)
-                        .collect();
-                    let return_type = first_variant.body.type_check(context)?;
+                    let mut child_ctx = context.new_scope();
+
+                    let mut arg_types = Vec::new();
+                    for arg_pattern in first_variant.args.iter() {
+                        let (arg_type, var_bindings) = infer_pattern_type(arg_pattern);
+                        arg_types.push(arg_type);
+                        for (var_id, var_type) in var_bindings {
+                            child_ctx.insert_variable(var_id, Rc::new(var_type));
+                        }
+                    }
+
+                    let return_type = first_variant.body.type_check(&mut child_ctx)?;
+
                     Ok(InferredType::Known(Rc::new(TypeExpression::FunctionType(
                         LambdaArgs::new(arg_types),
                         return_type
