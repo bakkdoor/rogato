@@ -629,23 +629,17 @@ fn type_check_let_expression(
     let_expr: &LetExpression,
     context: &mut TypeEnvironment,
 ) -> Result<InferredType, TypeCheckError> {
-    let mut new_scope = context.new_scope();
+    let mut child_scope = context.new_scope();
 
     for (id, val) in let_expr.bindings.iter() {
+        // Evaluate binding value in the parent scope (correct — bindings can't see each other)
         let binding_type = val.type_check(context)?;
         if let InferredType::Known(te) = binding_type {
-            new_scope.insert_variable(id.clone(), te);
+            child_scope.insert_variable(id.clone(), te);
         }
     }
 
-    let mut final_context = context.new_scope();
-    for (id, _) in let_expr.bindings.iter() {
-        if let Some(te) = new_scope.lookup_variable(id) {
-            final_context.insert_variable(id.clone(), Rc::clone(te));
-        }
-    }
-
-    let_expr.body.type_check(&mut final_context)
+    let_expr.body.type_check(&mut child_scope)
 }
 
 fn type_check_query(
