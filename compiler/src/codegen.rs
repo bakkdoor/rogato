@@ -1579,10 +1579,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         // Try as a module-level function first
         if let Some(function) = self.get_function(id.as_str()) {
             if rogato_common::util::is_debug_enabled() {
-                println!(
-                    "📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟\n\n{}\n📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟📟\n",
-                    function.print_to_string().to_string()
-                );
+                print!("{}", function.print_to_string().to_string());
             }
 
             let mut compiled_args = Vec::with_capacity(args.len());
