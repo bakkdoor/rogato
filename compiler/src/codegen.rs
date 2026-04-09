@@ -1321,7 +1321,10 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             .collect();
 
         let fn_type = return_llvm_type.fn_type(&fn_arg_types, false);
-        let func = self.module.add_function(func_name.as_str(), fn_type, None);
+        let func = match self.module.get_function(func_name.as_str()) {
+            Some(f) => f,
+            None => self.module.add_function(func_name.as_str(), fn_type, None),
+        };
 
         self.set_current_fn_value(func);
 
@@ -1971,7 +1974,10 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                 let ptr = self.builder.build_global_string_ptr(s, ".str")?;
                 Ok(CompiledValue::String(ptr.as_pointer_value()))
             }
-            _ => Err(unknown_error("Literal not yet implemented!")),
+            _ => Err(unknown_error(format!(
+                "Literal not yet implemented:\n{:?}",
+                literal
+            ))),
         }
     }
 

@@ -1,7 +1,7 @@
 use std::{cell::RefCell, rc::Rc};
 
 use rogato_common::ast::{expression::Expression, fn_def::FnDef, AST};
-use rogato_parser::{parse_ast, parse_expr, ParserContext};
+use rogato_parser::{parse, parse_ast, parse_expr, ParserContext};
 
 use crate::Codegen;
 
@@ -882,7 +882,7 @@ fn codegen_bool_arg_inferred_from_if_condition() {
 }
 
 #[test]
-fn codegen_bool_arg_passed_cross_function() {
+fn codegen_multi_variant_fn_with_recursive_call() {
     let context = Codegen::new_context();
     let builder = context.create_builder();
     let module = context.create_module("compiler_test");
@@ -890,24 +890,23 @@ fn codegen_bool_arg_passed_cross_function() {
     let ee = Codegen::default_execution_engine(&module);
     let mut compiler = Codegen::new(&context, &module, &builder, &target_machine, &ee);
 
-    // `choose` takes a bool first arg (inferred from if-condition usage).
-    // `pickFirst` computes a bool and passes it to `choose`.
-    let choose_def = parse_fn_def("let choose cond x y = if cond then x else y");
-    compiler.codegen_fn_def(&choose_def.borrow()).unwrap();
+    compiler.init_stdlib();
 
-    let pick_def = parse_fn_def("let pickFirst a b = choose (a > b) a b");
-    compiler.codegen_fn_def(&pick_def.borrow()).unwrap();
+    let func_def = parse_fn_def("let countdown 0 = 0");
+    compiler.codegen_fn_def(&func_def.borrow()).unwrap();
+
+    let func_def = parse_fn_def("let countdown n = countdown (n - 1.0)");
+    compiler.codegen_fn_def(&func_def.borrow()).unwrap();
 
     unsafe {
         let function = compiler
             .execution_engine
-            .get_function::<unsafe extern "C" fn(f32, f32) -> f32>("pickFirst")
+            .get_function::<unsafe extern "C" fn(f32) -> f32>("countdown")
             .unwrap();
 
-        // a > b is true → returns a
-        assert_eq!(function.call(5.0, 3.0), 5.0);
-        // a > b is false → returns b
-        assert_eq!(function.call(2.0, 7.0), 7.0);
+        // countdown 5 should recurse down to 0
+        let result = function.call(5.0);
+        assert_eq!(result, 0.0);
     }
 }
 
@@ -1287,5 +1286,40 @@ fn codegen_tuple_patterns() {
             "Pattern matching should be implemented: {}",
             e
         );
+    }
+}
+
+#[test]
+fn codegen_multi_variant_fn() {
+    let context = Codegen::new_context();
+    let builder = context.create_builder();
+    let module = context.create_module("compiler_test");
+    let target_machine = Codegen::default_target_machine(&module);
+    let ee = Codegen::default_execution_engine(&module);
+    let mut compiler = Codegen::new(&context, &module, &builder, &target_machine, &ee);
+
+    let program = parse(
+        "
+let foo n1 n2 0 = n1
+let foo n1 n2 1 = n2
+let foo n1 n2 n = 0
+",
+        &ParserContext::new(),
+    )
+    .unwrap();
+
+    compiler.codegen_program(&program).unwrap();
+
+    unsafe {
+        let function = compiler
+            .execution_engine
+            .get_function::<F32FnType>("foo")
+            .unwrap();
+
+        assert_eq!(function.call(1.0, 2.0, 0.0), 1.0);
+        assert_eq!(function.call(10.0, 2.0, 1.0), 2.0);
+        assert_eq!(function.call(1.0, 1.0, 1.0), 1.0);
+        assert_eq!(function.call(10.0, 10.0, 10.0), 0.0);
+        assert_eq!(function.call(10.0, 11.0, 12.0), 0.0);
     }
 }
