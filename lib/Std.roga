@@ -1,4 +1,4 @@
-module Std { always, id, not }
+module Std { always, id, not, match, or, and, range }
 
 let always x =
   _ -> x
@@ -25,3 +25,16 @@ let or _ _ = false
 
 let and true true = true
 let and _ _ = false
+
+
+let range limit =
+    reverse (range_ [] 0 limit)
+
+let range start limit =
+    reverse (range_ [] start limit)
+
+let range_ acc current limit =
+    if (current >= limit) then
+      acc
+    else
+      (range_ [current :: acc] (current + 1) limit)
