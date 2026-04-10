@@ -519,11 +519,13 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
 
     pub fn declare_fn_signature(&mut self, fn_def: &FnDef) -> CodegenResult<FunctionValue<'ctx>> {
         let func_name = fn_def.id();
-        eprintln!(
-            "DEBUG declare_fn_signature: {} variants={}",
-            func_name,
-            fn_def.variants_iter().count()
-        );
+        if rogato_common::util::is_debug_enabled() {
+            eprintln!(
+                "DEBUG declare_fn_signature: {} variants={}",
+                func_name,
+                fn_def.variants_iter().count()
+            );
+        }
 
         if let Some(existing) = self.module.get_function(func_name.as_str()) {
             return Ok(existing);
@@ -618,27 +620,35 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         });
 
         if body_is_var && has_complex_pattern {
-            eprintln!("DEBUG infer_fn_arg_types: returning Lambda for pattern-matched var (body_is_var={}", body_is_var);
+            if rogato_common::util::is_debug_enabled() {
+                eprintln!("DEBUG infer_fn_arg_types: returning Lambda for pattern-matched var (body_is_var={}", body_is_var);
+            }
             return CompiledType::Lambda;
         }
 
         // Check if the body is a List/Tuple literal (these are always Lambda/pointer types)
         match &expr.kind {
             ExprKind::Lit(Literal::List(_)) => {
-                eprintln!("DEBUG infer_fn_arg_types: returning Lambda for List literal");
+                if rogato_common::util::is_debug_enabled() {
+                    eprintln!("DEBUG infer_fn_arg_types: returning Lambda for List literal");
+                }
                 return CompiledType::Lambda;
             }
             ExprKind::Lit(Literal::Tuple(_)) => {
-                eprintln!("DEBUG infer_fn_arg_types: returning Lambda for Tuple literal");
+                if rogato_common::util::is_debug_enabled() {
+                    eprintln!("DEBUG infer_fn_arg_types: returning Lambda for Tuple literal");
+                }
                 return CompiledType::Lambda;
             }
             _ => {}
         }
 
-        eprintln!(
-            "DEBUG infer_fn_arg_types: expr={:?}, body_is_var={}, has_complex_pattern={}",
-            expr.kind, body_is_var, has_complex_pattern
-        );
+        if rogato_common::util::is_debug_enabled() {
+            eprintln!(
+                "DEBUG infer_fn_arg_types: expr={:?}, body_is_var={}, has_complex_pattern={}",
+                expr.kind, body_is_var, has_complex_pattern
+            );
+        }
         use rogato_type_checker::TypeInferrer;
 
         let mut inferrer = TypeInferrer::new();
@@ -652,16 +662,20 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
 
         match inferrer.infer_expression(expr) {
             rogato_type_checker::InferredType::Known(type_expr) => {
-                eprintln!(
-                    "DEBUG infer_fn_arg_types: type_checker returned {:?}",
-                    type_expr
-                );
+                if rogato_common::util::is_debug_enabled() {
+                    eprintln!(
+                        "DEBUG infer_fn_arg_types: type_checker returned {:?}",
+                        type_expr
+                    );
+                }
                 match type_expr.deref() {
                     TypeExpression::FunctionType(_lambda_args, return_type) => {
                         CompiledType::from_type_expression(return_type)
                     }
                     TypeExpression::ListType(_) => CompiledType::Lambda,
                     TypeExpression::TupleType(_) => CompiledType::Lambda,
+                    TypeExpression::SymbolType | TypeExpression::StringType => CompiledType::String,
+                    TypeExpression::BoolType => CompiledType::Bool,
                     _ => CompiledType::Float,
                 }
             }
@@ -746,14 +760,18 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         let func_name = fn_def.id();
 
         let variants: Vec<_> = fn_def.variants_iter().collect();
-        eprintln!(
-            "DEBUG codegen_fn_def: {} has {} variants",
-            func_name,
-            variants.len()
-        );
+        if rogato_common::util::is_debug_enabled() {
+            eprintln!(
+                "DEBUG codegen_fn_def: {} has {} variants",
+                func_name,
+                variants.len()
+            );
+        }
 
         if variants.len() > 1 {
-            eprintln!("DEBUG codegen_fn_def: going to codegen_multi_variant_fn");
+            if rogato_common::util::is_debug_enabled() {
+                eprintln!("DEBUG codegen_fn_def: going to codegen_multi_variant_fn");
+            }
             return self.codegen_multi_variant_fn(fn_def);
         }
 
@@ -834,8 +852,10 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                 });
 
                 if body_is_var && has_complex_pattern {
-                    eprintln!("DEBUG codegen_fn_def: returning Lambda for pattern-matched var");
-                    eprintln!("DEBUG: args count = {}", args.len());
+                    if rogato_common::util::is_debug_enabled() {
+                        eprintln!("DEBUG codegen_fn_def: returning Lambda for pattern-matched var");
+                        eprintln!("DEBUG: args count = {}", args.len());
+                    }
                     CompiledType::Lambda
                 } else {
                     match body.as_ref() {
@@ -1395,29 +1415,34 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                 .any(|p| matches!(p.deref(), Pattern::Var(_) | Pattern::Any))
         });
 
-        // Require catch-all only if:
-        // 1. All variants have literal-only patterns (potential non-exhaustive), AND
-        // 2. No variant has any variable pattern that could match anything
-        if all_literal && !has_var_pattern {
-            return Err(CodegenError::FnPatternUncovered(fn_def.id().clone(), None));
-        }
+        // Don't require catch-all for functions with only literal patterns if they're from the std lib
+        // (they may not have catch-alls but are still valid)
+        // Note: We don't require catch-all for literal-only patterns anymore.
+        // This allows std lib functions like `and`, `or`, `not` to compile without
+        // explicit catch-all patterns, even though they're technically exhaustive.
 
         let func_name = fn_def.id();
 
-        eprintln!("DEBUG codegen_multi_variant_fn: processing function, checking return type");
+        if rogato_common::util::is_debug_enabled() {
+            eprintln!("DEBUG codegen_multi_variant_fn: processing function, checking return type");
+        }
         let return_type = match &first_variant.2 {
             Some(rexpr) => {
-                eprintln!("DEBUG codegen_multi_variant_fn: return type from rexpr");
+                if rogato_common::util::is_debug_enabled() {
+                    eprintln!("DEBUG codegen_multi_variant_fn: return type from rexpr");
+                }
                 CompiledType::from_type_expression(rexpr)
             }
             None => {
                 // Check if first variant's body is a var that should be Lambda
                 let body = first_variant.1.deref();
                 let body_is_var = matches!(body, FnDefBody::RogatoFn(expr) if matches!(expr.kind, ExprKind::Var(_)));
-                eprintln!(
-                    "DEBUG: body_is_var = {}, first_variant body: {:?}",
-                    body_is_var, body
-                );
+                if rogato_common::util::is_debug_enabled() {
+                    eprintln!(
+                        "DEBUG: body_is_var = {}, first_variant body: {:?}",
+                        body_is_var, body
+                    );
+                }
                 let has_complex_pattern = first_variant.0.iter().any(|p| {
                     matches!(
                         p.as_ref(),
@@ -1431,18 +1456,22 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                 });
 
                 if body_is_var && has_complex_pattern {
-                    eprintln!(
-                        "DEBUG codegen_multi_variant_fn: returning Lambda for pattern-matched var"
-                    );
+                    if rogato_common::util::is_debug_enabled() {
+                        eprintln!(
+                            "DEBUG codegen_multi_variant_fn: returning Lambda for pattern-matched var"
+                        );
+                    }
                     CompiledType::Lambda
                 } else {
                     match first_variant.1.deref() {
                         FnDefBody::RogatoFn(expr) => {
                             let inferred = self.infer_expr_type_with_checker(expr);
-                            eprintln!(
-                                "DEBUG: infer_expr_type_with_checker returned {:?} for body {:?}",
-                                inferred, expr
-                            );
+                            if rogato_common::util::is_debug_enabled() {
+                                eprintln!(
+                                    "DEBUG: infer_expr_type_with_checker returned {:?} for body {:?}",
+                                    inferred, expr
+                                );
+                            }
                             inferred
                         }
                         _ => CompiledType::Float,

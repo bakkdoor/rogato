@@ -1,6 +1,8 @@
 #[allow(unused_imports)]
+use rogato_common::ast::{Program, AST};
 use rogato_compiler::Codegen;
 use rogato_parser::{parse, ParserContext};
+use std::rc::Rc;
 
 use clap::Parser;
 use indent_write::indentable::Indentable;
@@ -173,12 +175,94 @@ fn compile_file(file_path: &str, opts: &CompileOptions) -> anyhow::Result<()> {
         return Ok(());
     }
 
+    // Get the project root directory (where lib/ folder is located)
+    let project_root = std::env::current_dir()
+        .ok()
+        .unwrap_or_else(|| PathBuf::from("."));
+
+    let lib_dir = project_root.join("lib");
+
+    // Load stdlib files first
+    let mut asts: Vec<Rc<AST>> = Vec::new();
+
+    for std_lib_file in std_lib_preloads() {
+        // Strip "lib/" prefix from the path since we're already in lib_dir
+        let relative_path = std_lib_file.strip_prefix("lib/").unwrap_or(&std_lib_file);
+        let lib_path = lib_dir.join(relative_path);
+        if lib_path.exists() {
+            let mut file = File::open(&lib_path).map_err(|e| {
+                anyhow::anyhow!("Failed to open stdlib file {}: {}", lib_path.display(), e)
+            })?;
+            let mut source_code = String::new();
+            file.read_to_string(&mut source_code)?;
+
+            let program = parse(source_code.as_str(), &ParserContext::new()).map_err(|e| {
+                anyhow::anyhow!(
+                    "Parse error in {} at line {}: {}",
+                    lib_path.display(),
+                    e.location.line,
+                    e
+                )
+            })?;
+
+            let fn_count = program
+                .iter()
+                .filter(|ast| matches!(ast.as_ref(), AST::FnDef(_)))
+                .count();
+            if rogato_common::util::is_debug_enabled() {
+                eprintln!(
+                    "DEBUG: Loaded stdlib {} ({} functions)",
+                    lib_path.display(),
+                    fn_count
+                );
+            }
+            asts.extend(program.iter().cloned());
+        } else {
+            if rogato_common::util::is_debug_enabled() {
+                eprintln!("DEBUG: Stdlib file not found: {}", lib_path.display());
+            }
+        }
+    }
+
+    // Parse user file
     let mut source_file = File::open(path)?;
     let mut source_code = String::new();
     source_file.read_to_string(&mut source_code)?;
 
-    let ast = parse(source_code.as_str(), &ParserContext::new())
-        .map_err(|e| anyhow::anyhow!("Parse error: {}", e))?;
+    let user_program = parse(source_code.as_str(), &ParserContext::new()).map_err(|e| {
+        anyhow::anyhow!(
+            "Parse error in {} at line {}: {}",
+            path.display(),
+            e.location.line,
+            e
+        )
+    })?;
+
+    let fn_count = user_program
+        .iter()
+        .filter(|ast| matches!(ast.as_ref(), AST::FnDef(_)))
+        .count();
+    if rogato_common::util::is_debug_enabled() {
+        eprintln!(
+            "DEBUG: User file {} ({} functions)",
+            path.display(),
+            fn_count
+        );
+    }
+
+    asts.extend(user_program.iter().cloned());
+
+    let combined_program = Program::new(asts);
+
+    if rogato_common::util::is_debug_enabled() {
+        eprintln!(
+            "DEBUG: Combined program has {} functions",
+            combined_program
+                .iter()
+                .filter(|ast| matches!(ast.as_ref(), AST::FnDef(_)))
+                .count()
+        );
+    }
 
     let context = Codegen::new_context();
     let builder = context.create_builder();
@@ -199,7 +283,13 @@ fn compile_file(file_path: &str, opts: &CompileOptions) -> anyhow::Result<()> {
     );
 
     compiler.init_stdlib();
-    compiler.codegen_program(&ast)?;
+    if rogato_common::util::is_debug_enabled() {
+        eprintln!(
+            "DEBUG: Starting codegen for combined program with {} AST nodes",
+            combined_program.len()
+        );
+    }
+    compiler.codegen_program(&combined_program)?;
 
     let base_path = opts
         .output

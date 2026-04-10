@@ -455,8 +455,8 @@ grammar parser(context: &ParserContext) for str {
 
     rule literal_expr() -> Expression
         = number_lit_expr()
-        / map_lit_expr()
         / bool_lit_expr()
+        / map_lit_expr()
         / string_lit_expr()
         / struct_lit_expr()
         / tuple_lit_expr()
