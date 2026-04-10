@@ -50,6 +50,8 @@ pub enum CompiledValue<'ctx> {
     Int64(IntValue<'ctx>),
     String(PointerValue<'ctx>),
     Bool(IntValue<'ctx>),
+    List(PointerValue<'ctx>),
+    Tuple(PointerValue<'ctx>),
     Lambda(PointerValue<'ctx>, LambdaCallInfo),
 }
 
@@ -61,6 +63,8 @@ impl<'ctx> CompiledValue<'ctx> {
             CompiledValue::Int64(v) => v.into(),
             CompiledValue::String(v) => v.into(),
             CompiledValue::Bool(v) => v.into(),
+            CompiledValue::List(v) => v.into(),
+            CompiledValue::Tuple(v) => v.into(),
             CompiledValue::Lambda(v, _) => v.into(),
         }
     }
@@ -72,6 +76,8 @@ impl<'ctx> CompiledValue<'ctx> {
             CompiledValue::Int64(v) => (*v).into(),
             CompiledValue::String(v) => (*v).into(),
             CompiledValue::Bool(v) => (*v).into(),
+            CompiledValue::List(v) => (*v).into(),
+            CompiledValue::Tuple(v) => (*v).into(),
             CompiledValue::Lambda(v, _) => (*v).into(),
         }
     }
@@ -83,6 +89,8 @@ impl<'ctx> CompiledValue<'ctx> {
             CompiledValue::Int64(_) => CompiledType::Int64,
             CompiledValue::String(_) => CompiledType::String,
             CompiledValue::Bool(_) => CompiledType::Bool,
+            CompiledValue::List(_) => CompiledType::Lambda,
+            CompiledValue::Tuple(_) => CompiledType::Lambda,
             CompiledValue::Lambda(_, _) => CompiledType::Lambda,
         }
     }
@@ -379,9 +387,14 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         let printf = self.module.add_function("printf", printf_type, None);
         self.printf = Some(printf);
 
-        // Declare runtime helper functions for list pattern matching
+        // Declare runtime helper functions for list/tuple operations
         let i8_type = self.context.i8_type();
         let i32_type = self.context.i32_type();
+
+        // rogato_list_make(items_ptr, count) -> ValueRef*
+        let list_make_type = ptr_type.fn_type(&[ptr_type.into(), i32_type.into()], false);
+        self.module
+            .add_function("rogato_list_make", list_make_type, None);
 
         // rogato_list_is_empty(list_ptr) -> i8 (returns 1 if empty, 0 otherwise)
         let list_is_empty_type = i8_type.fn_type(&[ptr_type.into()], false);
@@ -403,11 +416,6 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         self.module
             .add_function("rogato_tuple_len", tuple_len_type, None);
 
-        // rogato_tuple_get(tuple_ptr, index) -> ValueRef (returns tuple element at index)
-        let tuple_get_type = ptr_type.fn_type(&[ptr_type.into(), i32_type.into()], false);
-        self.module
-            .add_function("rogato_tuple_get", tuple_get_type, None);
-
         // rogato_list_len(list_ptr) -> i32 (returns list length)
         let list_len_type = i32_type.fn_type(&[ptr_type.into()], false);
         self.module
@@ -417,6 +425,21 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         let list_get_type = ptr_type.fn_type(&[ptr_type.into(), i32_type.into()], false);
         self.module
             .add_function("rogato_list_get", list_get_type, None);
+
+        // rogato_tuple_len(tuple_ptr) -> i32 (returns tuple length)
+        let tuple_len_type = i32_type.fn_type(&[ptr_type.into()], false);
+        self.module
+            .add_function("rogato_tuple_len", tuple_len_type, None);
+
+        // rogato_tuple_get(tuple_ptr, index) -> ValueRef (returns tuple element at index)
+        let tuple_get_type = ptr_type.fn_type(&[ptr_type.into(), i32_type.into()], false);
+        self.module
+            .add_function("rogato_tuple_get", tuple_get_type, None);
+
+        // rogato_tuple_make(items_ptr, count) -> ValueRef
+        let tuple_make_type = ptr_type.fn_type(&[ptr_type.into(), i32_type.into()], false);
+        self.module
+            .add_function("rogato_tuple_make", tuple_make_type, None);
 
         // rogato_map_len(map_ptr) -> i32 (returns map length)
         let map_len_type = i32_type.fn_type(&[ptr_type.into()], false);
@@ -496,6 +519,11 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
 
     pub fn declare_fn_signature(&mut self, fn_def: &FnDef) -> CodegenResult<FunctionValue<'ctx>> {
         let func_name = fn_def.id();
+        eprintln!(
+            "DEBUG declare_fn_signature: {} variants={}",
+            func_name,
+            fn_def.variants_iter().count()
+        );
 
         if let Some(existing) = self.module.get_function(func_name.as_str()) {
             return Ok(existing);
@@ -552,7 +580,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         let return_type = match first_variant.return_type() {
             Some(rexpr) => CompiledType::from_type_expression(rexpr),
             None => match body.as_ref() {
-                FnDefBody::RogatoFn(expr) => self.infer_fn_arg_types(expr, args.len()),
+                FnDefBody::RogatoFn(expr) => self.infer_fn_arg_types(expr, args),
                 _ => CompiledType::Float,
             },
         };
@@ -574,12 +602,48 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         Ok(func)
     }
 
-    fn infer_fn_arg_types(&self, expr: &Expression, arg_count: usize) -> CompiledType {
+    fn infer_fn_arg_types(&self, expr: &Expression, args: &FnDefArgs) -> CompiledType {
+        // Check if body is a var that should be Lambda due to complex patterns
+        let body_is_var = matches!(expr.kind, ExprKind::Var(_));
+        let has_complex_pattern = args.iter().any(|p| {
+            matches!(
+                p.as_ref(),
+                Pattern::ListCons(..)
+                    | Pattern::EmptyList
+                    | Pattern::List(_)
+                    | Pattern::Tuple(..)
+                    | Pattern::Map(..)
+                    | Pattern::MapCons(..)
+            )
+        });
+
+        if body_is_var && has_complex_pattern {
+            eprintln!("DEBUG infer_fn_arg_types: returning Lambda for pattern-matched var (body_is_var={}", body_is_var);
+            return CompiledType::Lambda;
+        }
+
+        // Check if the body is a List/Tuple literal (these are always Lambda/pointer types)
+        match &expr.kind {
+            ExprKind::Lit(Literal::List(_)) => {
+                eprintln!("DEBUG infer_fn_arg_types: returning Lambda for List literal");
+                return CompiledType::Lambda;
+            }
+            ExprKind::Lit(Literal::Tuple(_)) => {
+                eprintln!("DEBUG infer_fn_arg_types: returning Lambda for Tuple literal");
+                return CompiledType::Lambda;
+            }
+            _ => {}
+        }
+
+        eprintln!(
+            "DEBUG infer_fn_arg_types: expr={:?}, body_is_var={}, has_complex_pattern={}",
+            expr.kind, body_is_var, has_complex_pattern
+        );
         use rogato_type_checker::TypeInferrer;
 
         let mut inferrer = TypeInferrer::new();
 
-        for i in 0..arg_count {
+        for i in 0..args.len() {
             let arg_id: VarIdentifier = format!("_arg_{}", i).as_str().into();
             inferrer
                 .env_mut()
@@ -587,12 +651,20 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         }
 
         match inferrer.infer_expression(expr) {
-            rogato_type_checker::InferredType::Known(type_expr) => match type_expr.deref() {
-                TypeExpression::FunctionType(_lambda_args, return_type) => {
-                    CompiledType::from_type_expression(return_type)
+            rogato_type_checker::InferredType::Known(type_expr) => {
+                eprintln!(
+                    "DEBUG infer_fn_arg_types: type_checker returned {:?}",
+                    type_expr
+                );
+                match type_expr.deref() {
+                    TypeExpression::FunctionType(_lambda_args, return_type) => {
+                        CompiledType::from_type_expression(return_type)
+                    }
+                    TypeExpression::ListType(_) => CompiledType::Lambda,
+                    TypeExpression::TupleType(_) => CompiledType::Lambda,
+                    _ => CompiledType::Float,
                 }
-                _ => CompiledType::Float,
-            },
+            }
             rogato_type_checker::InferredType::Unknown => CompiledType::Float,
         }
     }
@@ -674,8 +746,14 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         let func_name = fn_def.id();
 
         let variants: Vec<_> = fn_def.variants_iter().collect();
+        eprintln!(
+            "DEBUG codegen_fn_def: {} has {} variants",
+            func_name,
+            variants.len()
+        );
 
         if variants.len() > 1 {
+            eprintln!("DEBUG codegen_fn_def: going to codegen_multi_variant_fn");
             return self.codegen_multi_variant_fn(fn_def);
         }
 
@@ -740,10 +818,32 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
 
         let return_type = match _return_type {
             Some(rexpr) => CompiledType::from_type_expression(rexpr),
-            None => match body.as_ref() {
-                FnDefBody::RogatoFn(expr) => self.infer_expr_type_with_checker(expr),
-                _ => CompiledType::Float,
-            },
+            None => {
+                // Check if body is a var that should be Lambda due to complex patterns
+                let body_is_var = matches!(body.as_ref(), FnDefBody::RogatoFn(expr) if matches!(expr.kind, ExprKind::Var(_)));
+                let has_complex_pattern = args.iter().any(|p| {
+                    matches!(
+                        p.as_ref(),
+                        Pattern::ListCons(..)
+                            | Pattern::EmptyList
+                            | Pattern::List(_)
+                            | Pattern::Tuple(..)
+                            | Pattern::Map(..)
+                            | Pattern::MapCons(..)
+                    )
+                });
+
+                if body_is_var && has_complex_pattern {
+                    eprintln!("DEBUG codegen_fn_def: returning Lambda for pattern-matched var");
+                    eprintln!("DEBUG: args count = {}", args.len());
+                    CompiledType::Lambda
+                } else {
+                    match body.as_ref() {
+                        FnDefBody::RogatoFn(expr) => self.infer_expr_type_with_checker(expr),
+                        _ => CompiledType::Float,
+                    }
+                }
+            }
         };
 
         let return_llvm_type = return_type.as_basic_type_enum(self.context);
@@ -1304,12 +1404,51 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
 
         let func_name = fn_def.id();
 
+        eprintln!("DEBUG codegen_multi_variant_fn: processing function, checking return type");
         let return_type = match &first_variant.2 {
-            Some(rexpr) => CompiledType::from_type_expression(rexpr),
-            None => match first_variant.1.deref() {
-                FnDefBody::RogatoFn(expr) => self.infer_expr_type_with_checker(expr),
-                _ => CompiledType::Float,
-            },
+            Some(rexpr) => {
+                eprintln!("DEBUG codegen_multi_variant_fn: return type from rexpr");
+                CompiledType::from_type_expression(rexpr)
+            }
+            None => {
+                // Check if first variant's body is a var that should be Lambda
+                let body = first_variant.1.deref();
+                let body_is_var = matches!(body, FnDefBody::RogatoFn(expr) if matches!(expr.kind, ExprKind::Var(_)));
+                eprintln!(
+                    "DEBUG: body_is_var = {}, first_variant body: {:?}",
+                    body_is_var, body
+                );
+                let has_complex_pattern = first_variant.0.iter().any(|p| {
+                    matches!(
+                        p.as_ref(),
+                        Pattern::ListCons(..)
+                            | Pattern::EmptyList
+                            | Pattern::List(_)
+                            | Pattern::Tuple(..)
+                            | Pattern::Map(..)
+                            | Pattern::MapCons(..)
+                    )
+                });
+
+                if body_is_var && has_complex_pattern {
+                    eprintln!(
+                        "DEBUG codegen_multi_variant_fn: returning Lambda for pattern-matched var"
+                    );
+                    CompiledType::Lambda
+                } else {
+                    match first_variant.1.deref() {
+                        FnDefBody::RogatoFn(expr) => {
+                            let inferred = self.infer_expr_type_with_checker(expr);
+                            eprintln!(
+                                "DEBUG: infer_expr_type_with_checker returned {:?} for body {:?}",
+                                inferred, expr
+                            );
+                            inferred
+                        }
+                        _ => CompiledType::Float,
+                    }
+                }
+            }
         };
 
         let return_llvm_type = return_type.as_basic_type_enum(self.context);
@@ -1334,6 +1473,11 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         let params: Vec<_> = func.get_param_iter().collect();
 
         self.codegen_variant_body(fn_def, 0, &params)?;
+
+        if rogato_common::util::is_debug_enabled() {
+            eprintln!("DEBUG: Generated LLVM IR for function {}:", fn_def.id());
+            eprintln!("{}", func.print_to_string().to_string());
+        }
 
         if func.verify(true) {
             self.run_function_passes();
@@ -1743,6 +1887,20 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                     "%s\0"
                 }
             }
+            CompiledValue::List(_) => {
+                if isprintln {
+                    "<list>\n\0"
+                } else {
+                    "<list>\0"
+                }
+            }
+            CompiledValue::Tuple(_) => {
+                if isprintln {
+                    "<tuple>\n\0"
+                } else {
+                    "<tuple>\0"
+                }
+            }
             CompiledValue::Lambda(_, _) => {
                 if isprintln {
                     "<lambda>\n\0"
@@ -1782,6 +1940,14 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             CompiledValue::Bool(bv) => {
                 let int_val = self.builder.build_int_cast(*bv, i8_type, "bool_to_i8")?;
                 printf_args.push(int_val.into());
+            }
+            CompiledValue::List(_) | CompiledValue::Tuple(_) => {
+                // List/Tuple values are pointers; use %p format
+                let ptr_val = match compiled_val.as_basic_value() {
+                    BasicValueEnum::PointerValue(pv) => pv,
+                    _ => panic!("List/Tuple should be pointer"),
+                };
+                printf_args.push(ptr_val.into());
             }
             CompiledValue::Lambda(_, _) => {
                 // Lambda format string is a literal with no specifiers; no extra args needed
@@ -1974,10 +2140,122 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                 let ptr = self.builder.build_global_string_ptr(s, ".str")?;
                 Ok(CompiledValue::String(ptr.as_pointer_value()))
             }
-            _ => Err(unknown_error(format!(
-                "Literal not yet implemented:\n{:?}",
-                literal
-            ))),
+            Literal::Tuple(items) => {
+                let ptr_type = self.context.ptr_type(AddressSpace::default());
+
+                // Evaluate each item in the tuple and store them in an alloca
+                let num_items = items.len();
+                let item_array_type = ptr_type.array_type(num_items as u32);
+                let item_array_ptr =
+                    self.create_entry_block_alloca(item_array_type, "tuple_item_array");
+
+                for (i, item) in items.iter().enumerate() {
+                    let compiled_val = self.codegen_expr(item)?;
+                    // Use GEP for array element access
+                    let indices = [
+                        self.context.i32_type().const_zero(),
+                        self.context.i32_type().const_int(i as u64, false),
+                    ];
+                    let item_ptr = unsafe {
+                        self.builder.build_in_bounds_gep(
+                            item_array_type,
+                            item_array_ptr,
+                            &indices,
+                            &format!("item_{}", i),
+                        )?
+                    };
+                    self.builder
+                        .build_store(item_ptr, compiled_val.as_basic_value())?;
+                }
+
+                // Call rogato_tuple_make(items_ptr, count)
+                let tuple_make_fn = self
+                    .module
+                    .get_function("rogato_tuple_make")
+                    .ok_or_else(|| unknown_error("rogato_tuple_make not found"))?;
+
+                let count = self.context.i32_type().const_int(num_items as u64, false);
+
+                let result = self
+                    .builder
+                    .build_call(
+                        tuple_make_fn,
+                        &[item_array_ptr.into(), count.into()],
+                        "tuple_make_result",
+                    )?
+                    .try_as_basic_value()
+                    .basic()
+                    .ok_or_else(|| unknown_error("Invalid tuple_make result"))?;
+
+                Ok(CompiledValue::Tuple(result.into_pointer_value()))
+            }
+            Literal::List(items) => {
+                let ptr_type = self.context.ptr_type(AddressSpace::default());
+
+                // Evaluate each item in the list and store them in an alloca
+                let num_items = items.len();
+                let item_array_type = ptr_type.array_type(num_items as u32);
+                let item_array_ptr =
+                    self.create_entry_block_alloca(item_array_type, "list_item_array");
+
+                for (i, item) in items.iter().enumerate() {
+                    let compiled_val = self.codegen_expr(item)?;
+                    // Use GEP for array element access
+                    let indices = [
+                        self.context.i32_type().const_zero(),
+                        self.context.i32_type().const_int(i as u64, false),
+                    ];
+                    let item_ptr = unsafe {
+                        self.builder.build_in_bounds_gep(
+                            item_array_type,
+                            item_array_ptr,
+                            &indices,
+                            &format!("item_{}", i),
+                        )?
+                    };
+                    self.builder
+                        .build_store(item_ptr, compiled_val.as_basic_value())?;
+                }
+
+                // Call rogato_list_make(items_ptr, count)
+                let list_make_fn = self
+                    .module
+                    .get_function("rogato_list_make")
+                    .ok_or_else(|| unknown_error("rogato_list_make not found"))?;
+
+                let count = self.context.i32_type().const_int(num_items as u64, false);
+
+                let result = self
+                    .builder
+                    .build_call(
+                        list_make_fn,
+                        &[item_array_ptr.into(), count.into()],
+                        "list_make_result",
+                    )?
+                    .try_as_basic_value()
+                    .basic()
+                    .ok_or_else(|| unknown_error("Invalid list_make result"))?;
+
+                Ok(CompiledValue::List(result.into_pointer_value()))
+            }
+            Literal::ListCons(first, rest) => {
+                // [first :: rest] - evaluate both and build list
+                let first_val = self.codegen_expr(first)?;
+                let rest_val = self.codegen_expr(rest)?;
+
+                // Call Std.List.make with items from rest and prepend first
+                // For simplicity, build a list manually by calling list_make with computed items
+                Err(unknown_error(
+                    "ListCons not yet implemented in codegen_lit_expr",
+                ))
+            }
+            Literal::Struct(_, _) => Err(unknown_error("Struct literals not yet implemented")),
+            Literal::Map(kv_pairs) => {
+                // For now, map literals are not supported in codegen_lit_expr
+                // This would require a runtime helper for map creation
+                Err(unknown_error("Map literals not yet implemented"))
+            }
+            Literal::MapCons(_, _) => Err(unknown_error("MapCons not yet implemented")),
         }
     }
 
@@ -2068,8 +2346,10 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             ExprKind::Query(_query) => {
                 Err(CodegenError::NotYetImplemented("Query expressions".into()))
             }
-            ExprKind::Symbol(_id) => {
-                Err(CodegenError::NotYetImplemented("Symbol expressions".into()))
+            ExprKind::Symbol(id) => {
+                // Symbol expressions return pointer to the symbol string
+                let ptr = self.builder.build_global_string_ptr(id.as_str(), ".sym")?;
+                Ok(CompiledValue::String(ptr.as_pointer_value()))
             }
             ExprKind::Quoted(_expr) => {
                 Err(CodegenError::NotYetImplemented("Quoted expressions".into()))
@@ -2084,7 +2364,8 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                 "Unquoted AST expressions".into(),
             )),
             ExprKind::InlineFnDef(fn_def) => {
-                self.codegen_fn_def(&fn_def.borrow())?;
+                // Preserve the current function context when compiling nested InlineFnDefs
+                self.with_fn_def_context(|this| this.codegen_fn_def(&fn_def.borrow()))?;
                 Ok(CompiledValue::Float(self.context.f32_type().const_zero()))
             }
         }
@@ -2328,6 +2609,23 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         };
 
         Ok(CompiledValue::Lambda(closure_alloc, call_info))
+    }
+
+    /// Saves and restores current_fn_value for nested function compilation.
+    /// When compiling a let-bound function (InlineFnDef) inside another function's body,
+    /// we need to preserve the outer function's context.
+    fn with_fn_def_context<F, R>(&mut self, f: F) -> R
+    where
+        F: FnOnce(&mut Self) -> R,
+    {
+        let saved_fn = self.current_fn_value;
+        let saved_block = self.builder.get_insert_block();
+        let result = f(self);
+        self.current_fn_value = saved_fn;
+        if let Some(block) = saved_block {
+            self.builder.position_at_end(block);
+        }
+        result
     }
 
     /// Returns the `FunctionValue` representing the function being compiled.

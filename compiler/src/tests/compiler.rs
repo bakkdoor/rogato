@@ -1323,3 +1323,36 @@ let foo n1 n2 n = 0
         assert_eq!(function.call(10.0, 11.0, 12.0), 0.0);
     }
 }
+
+#[test]
+fn codegen_function_returning_pattern_var() {
+    let context = Codegen::new_context();
+    let builder = context.create_builder();
+    let module = context.create_module("compiler_test");
+    let target_machine = Codegen::default_target_machine(&module);
+    let ee = Codegen::default_execution_engine(&module);
+    let mut compiler = Codegen::new(&context, &module, &builder, &target_machine, &ee);
+
+    compiler.init_stdlib();
+
+    let program = parse(
+        "
+        let first2 [h] = [h]
+        let first2 [h :: [t :: _]] = [h, t]
+        let first2 _ = []
+        ",
+        &ParserContext::new(),
+    )
+    .unwrap();
+
+    compiler.codegen_program(&program).unwrap();
+
+    unsafe {
+        let function = compiler
+            .execution_engine
+            .get_function::<F32FnType>("first2")
+            .unwrap();
+
+        // TODO: call the function with list arguments and check their return values
+    }
+}

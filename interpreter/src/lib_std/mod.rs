@@ -429,6 +429,10 @@ pub fn std_module() -> Module {
         },
     );
 
+    module.fn_def_native("tuple_make", &["?items"], move |_ctx, args| {
+        Ok(tuple_make(args)?)
+    });
+
     module
 }
 
@@ -473,4 +477,8 @@ pub fn invalid_args(id: &str) -> NativeFnError {
 
 pub fn unknown_err<E: Debug>(id: &str, error: E) -> NativeFnError {
     NativeFnError::Unknown(id.into(), format!("{error:?}"))
+}
+
+pub fn tuple_make(args: &[ValueRef]) -> Result<ValueRef, NativeFnError> {
+    Ok(val::tuple(args.iter().cloned().collect::<Vec<ValueRef>>()))
 }

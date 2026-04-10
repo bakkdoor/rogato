@@ -27,6 +27,7 @@ pub fn module() -> Module {
         "contains".into(),
         "findIndex".into(),
         "findLastIndex".into(),
+        "make".into(),
     ]));
 
     module.fn_def_native(
@@ -521,6 +522,20 @@ pub fn module() -> Module {
             }
         },
     );
+
+    module.fn_def_native("make", &["?items"], move |_ctx, args| {
+        let error = Err(invalid_args("Std.List.make"));
+
+        match (args.len(), args.first()) {
+            (1, Some(items)) => match &**items {
+                Value::List(list_items) => Ok(val::list(
+                    list_items.iter().cloned().collect::<Vec<ValueRef>>(),
+                )),
+                _ => error,
+            },
+            _ => Ok(val::list(Vec::<ValueRef>::new())),
+        }
+    });
 
     module
 }

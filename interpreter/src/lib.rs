@@ -115,6 +115,148 @@ impl From<LambdaClosureEvalError> for EvalError {
     }
 }
 
+pub mod runtime {
+    use rogato_common::val::{self, Value, ValueRef};
+    use std::rc::Rc;
+
+    #[no_mangle]
+    pub extern "C" fn rogato_list_make(items: *const ValueRef, count: usize) -> ValueRef {
+        let mut vec = Vec::with_capacity(count);
+        for i in 0..count {
+            unsafe {
+                vec.push(Rc::clone(&(*items.add(i))));
+            }
+        }
+        val::list(vec)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rogato_list_is_empty(list: ValueRef) -> i8 {
+        if let Value::List(l) = &*list {
+            if l.is_empty() {
+                1
+            } else {
+                0
+            }
+        } else {
+            0
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rogato_list_head(list: ValueRef) -> ValueRef {
+        if let Value::List(l) = &*list {
+            match l.head() {
+                Some(h) => h.clone(),
+                None => val::none(),
+            }
+        } else {
+            val::none()
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rogato_list_tail(list: ValueRef) -> ValueRef {
+        if let Value::List(l) = &*list {
+            if l.is_empty() {
+                val::list(Vec::<ValueRef>::new())
+            } else {
+                let mut vec = Vec::with_capacity(l.len() - 1);
+                for item in l.iter().skip(1) {
+                    vec.push(item.clone());
+                }
+                val::list(vec)
+            }
+        } else {
+            val::list(Vec::<ValueRef>::new())
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rogato_list_len(list: ValueRef) -> i32 {
+        if let Value::List(l) = &*list {
+            l.len() as i32
+        } else {
+            0
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rogato_list_get(list: ValueRef, index: i32) -> ValueRef {
+        if let Value::List(l) = &*list {
+            match l.iter().nth(index as usize) {
+                Some(v) => v.clone(),
+                None => val::none(),
+            }
+        } else {
+            val::none()
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rogato_tuple_make(items: *const ValueRef, count: usize) -> ValueRef {
+        let mut vec = Vec::with_capacity(count);
+        for i in 0..count {
+            unsafe {
+                vec.push(Rc::clone(&(*items.add(i))));
+            }
+        }
+        val::tuple(vec)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rogato_tuple_len(tuple: ValueRef) -> i32 {
+        if let Value::Tuple(count, _) = &*tuple {
+            *count as i32
+        } else {
+            0
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rogato_tuple_get(tuple: ValueRef, index: i32) -> ValueRef {
+        if let Value::Tuple(_, items) = &*tuple {
+            match items.get(index as usize) {
+                Some(v) => v.clone(),
+                None => val::none(),
+            }
+        } else {
+            val::none()
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rogato_map_len(map: ValueRef) -> i32 {
+        if let Value::Map(m) = &*map {
+            m.len() as i32
+        } else {
+            0
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rogato_map_keys(map: ValueRef) -> ValueRef {
+        if let Value::Map(m) = &*map {
+            let keys: Vec<ValueRef> = m.iter().map(|(k, _)| k.clone()).collect();
+            val::list(keys)
+        } else {
+            val::list(Vec::<ValueRef>::new())
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rogato_map_get(map: ValueRef, key: ValueRef) -> ValueRef {
+        if let Value::Map(m) = &*map {
+            match m.get(&key) {
+                Some(v) => v.clone(),
+                None => val::none(),
+            }
+        } else {
+            val::none()
+        }
+    }
+}
+
 pub trait Evaluate<T> {
     fn evaluate(&self, context: &mut EvalContext) -> Result<T, EvalError>;
 }
